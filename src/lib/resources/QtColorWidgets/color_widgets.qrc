@@ -1,0 +1,10 @@
+<RCC>
+    <qresource prefix="/color_widgets">
+        <file>alphaback.png</file>
+        <file>drop-fill.png</file>
+        <file>drop-line.png</file>
+        <file>delete-bin-7-line.png</file>
+        <file>arrow-down-s-line.png</file>
+        <file>arrow-up-s-line.png</file>
+    </qresource>
+</RCC>
