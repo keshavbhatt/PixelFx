@@ -45,6 +45,7 @@ private:
     graphicsViewControls *graphicsViewControlsWidget = nullptr;
     QAction *compareAction;
     QAction *cropAction;
+    QAction *saveAction;
     QAction *undoAction, *redoAction;
 
 private slots:

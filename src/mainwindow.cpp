@@ -82,6 +82,7 @@ void MainWindow::init_toolbar()
     ui->mainToolBar->actions().last()->setShortcut(QKeySequence::Open);
 
     ui->mainToolBar->addAction(QIcon(":/icons/save-line.png"),tr("Save"),this->gift,SLOT(saveFile()));
+    saveAction = ui->mainToolBar->actions().last();
     ui->mainToolBar->actions().last()->setShortcut(QKeySequence::Save);
 
     ui->mainToolBar->addSeparator();
@@ -106,7 +107,7 @@ void MainWindow::init_toolbar()
 //    ui->mainToolBar->addAction(QIcon(":/icons/fx-line.png"),tr("FX"),this,SLOT(aboutApp()));
 //    ui->mainToolBar->addAction(QIcon(":/icons/grid-line.png"),tr("Texture"),this,SLOT(aboutApp()));
 //    ui->mainToolBar->addAction(QIcon(":/icons/shape-line.png"),tr("Frame"),this,SLOT(aboutApp()));
-    ui->mainToolBar->addAction(QIcon(":/icons/crop-line.png"),tr("Crop"),ui->view,SLOT(crop()));
+    ui->mainToolBar->addAction(QIcon(":/icons/crop-line.png"),tr("Crop"),this->gift,SLOT(crop()));
     cropAction = ui->mainToolBar->actions().last();
     cropAction->setEnabled(!ui->view->isSceneEmpty());
 
@@ -122,6 +123,8 @@ void MainWindow::init_toolbar()
 
     ui->mainToolBar->addAction(QIcon(":/icons/setting-line.png"),tr("Preferences"),this,SLOT(aboutApp()));
     ui->mainToolBar->addAction(QIcon(":/icons/app/icon-64.png"),tr("About"),this,SLOT(aboutApp()));
+
+    updateToolBar(!ui->view->isSceneEmpty());
 }
 
 
@@ -129,6 +132,8 @@ void MainWindow::updateToolBar(bool hasImage)
 {
     compareAction->setEnabled(hasImage);
     cropAction->setEnabled(hasImage);
+    saveAction->setEnabled(hasImage);
+
 
     QAction *info = this->findChild<QAction*>("infoAction");
     info->setEnabled(hasImage);

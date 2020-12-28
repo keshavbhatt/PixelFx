@@ -277,26 +277,62 @@ void coreFilters::apply()
 // updates the main filterchain
 void coreFilters::updateFilterChain()
 {
-    filterChain = QString("-brightness " +valueStr(ui->brightness)
-                         +" -contrast "  +valueStr(ui->contrast)
-                         +" -sigmoid 0.5,"   +QString::number(ui->sigmoidal->value()/10)
-                         +" -saturation "+valueStr(ui->saturation)
+    filterChain = QString(getBrightness()
+                         +getContrast()
+                         +getSigmoidalContrast()
+                         +getSaturation()
                          +getGamma()
                          +getRgb()
                          +getSepia()
                          +getThreshold()
                          +getHue()
                          +getSharpness()
-                         +" -pixelate "+valueStr(ui->pixelate)
+                         +getPixelate()
                          +getBlur()
-                         +" -hue "+valueStr(ui->hslider)
+                         +getHueShift()
                          +getNoiseFilter()
                          +viewControls->getFilter()
                          );
 }
 
-//get noise reduction filters
+QString coreFilters::getBrightness()
+{
+    int val = ui->brightness->value();
+    return val == 0 ?  "" : QString(" -brightness " +valueStr(ui->brightness));
+}
 
+QString coreFilters::getContrast()
+{
+    int val = ui->contrast->value();
+    return val == 0 ?  "" : QString(" -contrast " +valueStr(ui->contrast));
+}
+
+QString coreFilters::getSigmoidalContrast()
+{
+    int val = ui->sigmoidal->value();
+    return val == 0 ?  "" : QString(" -sigmoid 0.5,"   +QString::number(ui->sigmoidal->value()/10));
+}
+
+
+QString coreFilters::getSaturation()
+{
+    int val = ui->saturation->value();
+    return val == 0 ? "" : QString(" -saturation "+valueStr(ui->saturation));
+}
+
+QString coreFilters::getPixelate()
+{
+    int val = ui->pixelate->value();
+    return val == 0 ? "" : QString(" -pixelate "+valueStr(ui->pixelate));
+}
+
+QString coreFilters::getHueShift()
+{
+    int val = ui->hslider->value();
+    return val == 0 ? "" : QString(" -hue "+valueStr(ui->hslider));
+}
+
+//get noise reduction filters
 QString coreFilters::getNoiseFilter()
 {
     QString mean, median;
@@ -321,6 +357,12 @@ QString coreFilters::getBlur()
 // get unsharpen/sharpen filter
 QString coreFilters::getSharpness()
 {
+
+    // return blank if values make no sense
+    if(ui->sharpen->value() == 0){
+        return "";
+    }
+
     double sigma = double(ui->sharpen->value())/(10.0/2.0);
     //prepare final mask
     QString unsharpenVal;
@@ -423,6 +465,13 @@ QString coreFilters::getRgb()
     auto redSlider = this->findChild<GradientSlider*>("red");
     auto greenSlider = this->findChild<GradientSlider*>("green");
     auto blueSlider = this->findChild<GradientSlider*>("blue");
+
+    // return blank if values make no sense
+    if(redSlider->value() == 50 &&
+       greenSlider->value() == 50 &&
+            blueSlider->value() == 50){
+        return "";
+    }
 
     double red = double(redSlider->value());
     double green = double(greenSlider->value());

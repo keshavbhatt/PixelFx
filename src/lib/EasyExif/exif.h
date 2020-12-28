@@ -1,168 +1,353 @@
-/**************************************************************************
-  exif.h  -- A simple ISO C++ library to parse basic EXIF
-             information from a JPEG file.
+/****************************************************************************
+**
+** Copyright (C) 2010 Nokia Corporation and/or its subsidiary(-ies).
+** All rights reserved.
+** Contact: Nokia Corporation (qt-info@nokia.com)
+**
+** This file is part of the Qt scene graph research project.
+**
+** $QT_BEGIN_LICENSE:LGPL$
+** No Commercial Usage
+** This file contains pre-release code and may not be distributed.
+** You may use this file in accordance with the terms and conditions
+** contained in the Technology Preview License Agreement accompanying
+** this package.
+**
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain additional
+** rights.  These rights are described in the Nokia Qt LGPL Exception
+** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
+**
+** If you have questions regarding the use of this file, please contact
+** Nokia at qt-info@nokia.com.
+**
+**
+**
+**
+**
+**
+**
+**
+** $QT_END_LICENSE$
+**
+****************************************************************************/
 
-  Based on the description of the EXIF file format at:
-  -- http://park2.wakwak.com/~tsuruzoh/Computer/Digicams/exif-e.html
-  -- http://www.media.mit.edu/pia/Research/deepview/exif.html
-  -- http://www.exif.org/Exif2-2.PDF
+// This file was copied from Qt Extended 4.5
 
-  Copyright (c) 2010-2016 Mayank Lahiri
-  mlahiri@gmail.com
-  All rights reserved.
+#ifndef QEXIFIMAGEHEADER_H
+#define QEXIFIMAGEHEADER_H
 
-  Redistribution and use in source and binary forms, with or without
-  modification, are permitted provided that the following conditions are met:
+#include <QPair>
+#include <QVector>
+#include <QSharedData>
+#include <QVariant>
+#include <QSysInfo>
+#include <QIODevice>
 
-  -- Redistributions of source code must retain the above copyright notice,
-     this list of conditions and the following disclaimer.
-  -- Redistributions in binary form must reproduce the above copyright notice,
-     this list of conditions and the following disclaimer in the documentation
-   and/or other materials provided with the distribution.
+typedef QPair< quint32, quint32 > QExifURational;
+typedef QPair< qint32, qint32 > QExifSRational;
 
-   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS ``AS IS'' AND ANY EXPRESS
-   OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
-   OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
-   NO EVENT SHALL THE FREEBSD PROJECT OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
-   INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
-   BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
-   OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-   NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
-   EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-*/
-#ifndef __EXIF_H
-#define __EXIF_H
+Q_DECLARE_METATYPE(QExifURational)
+Q_DECLARE_METATYPE(QExifSRational)
 
-#include <string>
+class QExifValuePrivate;
 
-namespace easyexif {
+class QExifValue
+{
+public:
+    enum Type
+    {
+        Byte           = 1,
+        Ascii          = 2,
+        Short          = 3,
+        Long           = 4,
+        Rational       = 5,
+        Undefined      = 7,
+        SignedLong     = 9,
+        SignedRational = 10
+    };
 
-//
-// Class responsible for storing and parsing EXIF information from a JPEG blob
-//
-class EXIFInfo {
- public:
-  // Parsing function for an entire JPEG image buffer.
-  //
-  // PARAM 'data': A pointer to a JPEG image.
-  // PARAM 'length': The length of the JPEG image.
-  // RETURN:  PARSE_EXIF_SUCCESS (0) on succes with 'result' filled out
-  //          error code otherwise, as defined by the PARSE_EXIF_ERROR_* macros
-  int parseFrom(const unsigned char *data, unsigned length);
-  int parseFrom(const std::string &data);
+    enum TextEncoding
+    {
+        NoEncoding,
+        AsciiEncoding,
+        JisEncoding,
+        UnicodeEncoding,
+        UndefinedEncoding
+    };
 
-  // Parsing function for an EXIF segment. This is used internally by parseFrom()
-  // but can be called for special cases where only the EXIF section is
-  // available (i.e., a blob starting with the bytes "Exif\0\0").
-  int parseFromEXIFSegment(const unsigned char *buf, unsigned len);
+    QExifValue();
+    QExifValue( quint8 value );
+    QExifValue( const QVector< quint8 > &value );
+    QExifValue( const QString &value, TextEncoding encoding = NoEncoding );
+    QExifValue( quint16 value );
+    QExifValue( const QVector< quint16 > &value );
+    QExifValue( quint32 value );
+    QExifValue( const QVector< quint32 > &value );
+    QExifValue( const QExifURational &value );
+    QExifValue( const QVector< QExifURational > &value );
+    QExifValue( const QByteArray &value );
+    QExifValue( qint32 value );
+    QExifValue( const QVector< qint32 > &value );
+    QExifValue( const QExifSRational &value );
+    QExifValue( const QVector< QExifSRational > &value );
+    QExifValue( const QDateTime &value );
+    QExifValue( const QExifValue &other );
+    QExifValue &operator =( const QExifValue &other );
+    ~QExifValue();
 
-  // Set all data members to default values.
-  void clear();
+    bool operator ==( const QExifValue &other ) const;
 
-  // Data fields filled out by parseFrom()
-  char ByteAlign;                   // 0 = Motorola byte alignment, 1 = Intel
-  std::string ImageDescription;     // Image description
-  std::string Make;                 // Camera manufacturer's name
-  std::string Model;                // Camera model
-  unsigned short Orientation;       // Image orientation, start of data corresponds to
-                                    // 0: unspecified in EXIF data
-                                    // 1: upper left of image
-                                    // 3: lower right of image
-                                    // 6: upper right of image
-                                    // 8: lower left of image
-                                    // 9: undefined
-  unsigned short BitsPerSample;     // Number of bits per component
-  std::string Software;             // Software used
-  std::string DateTime;             // File change date and time
-  std::string DateTimeOriginal;     // Original file date and time (may not exist)
-  std::string DateTimeDigitized;    // Digitization date and time (may not exist)
-  std::string SubSecTimeOriginal;   // Sub-second time that original picture was taken
-  std::string Copyright;            // File copyright information
-  double ExposureTime;              // Exposure time in seconds
-  double FNumber;                   // F/stop
-  unsigned short ExposureProgram;   // Exposure program
-                                    // 0: Not defined
-                                    // 1: Manual
-                                    // 2: Normal program
-                                    // 3: Aperture priority
-                                    // 4: Shutter priority
-                                    // 5: Creative program
-                                    // 6: Action program
-                                    // 7: Portrait mode
-                                    // 8: Landscape mode
-  unsigned short ISOSpeedRatings;   // ISO speed
-  double ShutterSpeedValue;         // Shutter speed (reciprocal of exposure time)
-  double ExposureBiasValue;         // Exposure bias value in EV
-  double SubjectDistance;           // Distance to focus point in meters
-  double FocalLength;               // Focal length of lens in millimeters
-  unsigned short FocalLengthIn35mm; // Focal length in 35mm film
-  char Flash;                       // 0 = no flash, 1 = flash used
-  unsigned short FlashReturnedLight;// Flash returned light status
-                                    // 0: No strobe return detection function
-                                    // 1: Reserved
-                                    // 2: Strobe return light not detected
-                                    // 3: Strobe return light detected
-  unsigned short FlashMode;         // Flash mode
-                                    // 0: Unknown
-                                    // 1: Compulsory flash firing
-                                    // 2: Compulsory flash suppression
-                                    // 3: Automatic mode
-  unsigned short MeteringMode;      // Metering mode
-                                    // 1: average
-                                    // 2: center weighted average
-                                    // 3: spot
-                                    // 4: multi-spot
-                                    // 5: multi-segment
-  unsigned ImageWidth;              // Image width reported in EXIF data
-  unsigned ImageHeight;             // Image height reported in EXIF data
-  struct Geolocation_t {            // GPS information embedded in file
-    double Latitude;                  // Image latitude expressed as decimal
-    double Longitude;                 // Image longitude expressed as decimal
-    double Altitude;                  // Altitude in meters, relative to sea level
-    char AltitudeRef;                 // 0 = above sea level, -1 = below sea level
-    double DOP;                       // GPS degree of precision (DOP)
-    struct Coord_t {
-      double degrees;
-      double minutes;
-      double seconds;
-      char direction;
-    } LatComponents, LonComponents;   // Latitude, Longitude expressed in deg/min/sec
-  } GeoLocation;
-  struct LensInfo_t {               // Lens information
-    double FStopMin;                // Min aperture (f-stop)
-    double FStopMax;                // Max aperture (f-stop)
-    double FocalLengthMin;          // Min focal length (mm)
-    double FocalLengthMax;          // Max focal length (mm)
-    double FocalPlaneXResolution;   // Focal plane X-resolution
-    double FocalPlaneYResolution;   // Focal plane Y-resolution
-    unsigned short FocalPlaneResolutionUnit; // Focal plane resolution unit
-                                             // 1: No absolute unit of measurement.
-                                             // 2: Inch.
-                                             // 3: Centimeter.
-                                             // 4: Millimeter.
-                                             // 5: Micrometer.
-    std::string Make;               // Lens manufacturer
-    std::string Model;              // Lens model
-  } LensInfo;
+    bool isNull() const;
 
+    int type() const;
+    int count() const;
 
-  EXIFInfo() {
-    clear();
-  }
+    TextEncoding encoding() const;
+
+    quint8 toByte() const;
+    QVector< quint8 > toByteVector() const;
+    QString toString() const;
+    quint16 toShort() const;
+    QVector< quint16 > toShortVector() const;
+    quint32 toLong() const;
+    QVector< quint32 > toLongVector() const;
+    QExifURational toRational() const;
+    QVector< QExifURational > toRationalVector() const;
+    QByteArray toByteArray() const;
+    qint32 toSignedLong() const;
+    QVector< qint32 > toSignedLongVector() const;
+    QExifSRational toSignedRational() const;
+    QVector< QExifSRational > toSignedRationalVector() const;
+    QDateTime toDateTime() const;
+
+private:
+    QExplicitlySharedDataPointer< QExifValuePrivate > d;
 };
 
-}
+struct ExifIfdHeader;
 
-// Parse was successful
-#define PARSE_EXIF_SUCCESS                    0
-// No JPEG markers found in buffer, possibly invalid JPEG file
-#define PARSE_EXIF_ERROR_NO_JPEG              1982
-// No EXIF header found in JPEG file.
-#define PARSE_EXIF_ERROR_NO_EXIF              1983
-// Byte alignment specified in EXIF file was unknown (not Motorola or Intel).
-#define PARSE_EXIF_ERROR_UNKNOWN_BYTEALIGN    1984
-// EXIF header was found, but data was corrupted.
-#define PARSE_EXIF_ERROR_CORRUPT              1985
+class QExifImageHeaderPrivate;
+
+class QExifImageHeader
+{
+    Q_GADGET
+    Q_DISABLE_COPY(QExifImageHeader)
+
+public:
+    enum ImageTag
+    {
+
+        ImageWidth                = 0x0100,
+        ImageLength               = 0x0101,
+        BitsPerSample             = 0x0102,
+        Compression               = 0x0103,
+        PhotometricInterpretation = 0x0106,
+        Orientation               = 0x0112,
+        SamplesPerPixel           = 0x0115,
+        PlanarConfiguration       = 0x011C,
+        YCbCrSubSampling          = 0x0212,
+        XResolution               = 0x011A,
+        YResolution               = 0x011B,
+        ResolutionUnit            = 0x0128,
+        StripOffsets              = 0x0111,
+        RowsPerStrip              = 0x0116,
+        StripByteCounts           = 0x0117,
+        TransferFunction          = 0x012D,
+        WhitePoint                = 0x013E,
+        PrimaryChromaciticies     = 0x013F,
+        YCbCrCoefficients         = 0x0211,
+        ReferenceBlackWhite       = 0x0214,
+        DateTime                  = 0x0132,
+        ImageDescription          = 0x010E,
+        Make                      = 0x010F,
+        Model                     = 0x0110,
+        Software                  = 0x0131,
+        Artist                    = 0x013B,
+        Copyright                 = 0x8298
+    };
+    Q_ENUM(ImageTag)
+
+    enum ExifExtendedTag
+    {
+        ExifVersion              = 0x9000,
+        FlashPixVersion          = 0xA000,
+        ColorSpace               = 0xA001,
+        ComponentsConfiguration  = 0x9101,
+        CompressedBitsPerPixel   = 0x9102,
+        PixelXDimension          = 0xA002,
+        PixelYDimension          = 0xA003,
+        MakerNote                = 0x927C,
+        UserComment              = 0x9286,
+        RelatedSoundFile         = 0xA004,
+        DateTimeOriginal         = 0x9003,
+        DateTimeDigitized        = 0x9004,
+        SubSecTime               = 0x9290,
+        SubSecTimeOriginal       = 0x9291,
+        SubSecTimeDigitized      = 0x9292,
+        ImageUniqueId            = 0xA420,
+
+        ExposureTime             = 0x829A,
+        FNumber                  = 0x829D,
+        ExposureProgram          = 0x8822,
+        SpectralSensitivity      = 0x8824,
+        ISOSpeedRatings          = 0x8827,
+        Oecf                     = 0x8828,
+        ShutterSpeedValue        = 0x9201,
+        ApertureValue            = 0x9202,
+        BrightnessValue          = 0x9203,
+        ExposureBiasValue        = 0x9204,
+        MaxApertureValue         = 0x9205,
+        SubjectDistance          = 0x9206,
+        MeteringMode             = 0x9207,
+        LightSource              = 0x9208,
+        Flash                    = 0x9209,
+        FocalLength              = 0x920A,
+        SubjectArea              = 0x9214,
+        FlashEnergy              = 0xA20B,
+        SpatialFrequencyResponse = 0xA20C,
+        FocalPlaneXResolution    = 0xA20E,
+        FocalPlaneYResolution    = 0xA20F,
+        FocalPlaneResolutionUnit = 0xA210,
+        SubjectLocation          = 0xA214,
+        ExposureIndex            = 0xA215,
+        SensingMethod            = 0xA217,
+        FileSource               = 0xA300,
+        SceneType                = 0xA301,
+        CfaPattern               = 0xA302,
+        CustomRendered           = 0xA401,
+        ExposureMode             = 0xA402,
+        WhiteBalance             = 0xA403,
+        DigitalZoomRatio         = 0xA404,
+        FocalLengthIn35mmFilm    = 0xA405,
+        SceneCaptureType         = 0xA406,
+        GainControl              = 0xA407,
+        Contrast                 = 0xA408,
+        Saturation               = 0xA409,
+        Sharpness                = 0xA40A,
+        DeviceSettingDescription = 0xA40B,
+        SubjectDistanceRange     = 0x40C
+    };
+    Q_ENUM(ExifExtendedTag)
+
+    enum GpsTag
+    {
+        GpsVersionId         = 0x0000,
+        GpsLatitudeRef       = 0x0001,
+        GpsLatitude          = 0x0002,
+        GpsLongitudeRef      = 0x0003,
+        GpsLongitude         = 0x0004,
+        GpsAltitudeRef       = 0x0005,
+        GpsAltitude          = 0x0006,
+        GpsTimeStamp         = 0x0007,
+        GpsSatellites        = 0x0008,
+        GpsStatus            = 0x0009,
+        GpsMeasureMode       = 0x000A,
+        GpsDop               = 0x000B,
+        GpsSpeedRef          = 0x000C,
+        GpsSpeed             = 0x000D,
+        GpsTrackRef          = 0x000E,
+        GpsTrack             = 0x000F,
+        GpsImageDirectionRef = 0x0010,
+        GpsImageDirection    = 0x0011,
+        GpsMapDatum          = 0x0012,
+        GpsDestLatitudeRef   = 0x0013,
+        GpsDestLatitude      = 0x0014,
+        GpsDestLongitudeRef  = 0x0015,
+        GpsDestLongitude     = 0x0016,
+        GpsDestBearingRef    = 0x0017,
+        GpsDestBearing       = 0x0018,
+        GpsDestDistanceRef   = 0x0019,
+        GpsDestDistance      = 0x001A,
+        GpsProcessingMethod  = 0x001B,
+        GpsAreaInformation   = 0x001C,
+        GpsDateStamp         = 0x001D,
+        GpsDifferential      = 0x001E
+    };
+    Q_ENUM(GpsTag)
+
+    QExifImageHeader();
+    explicit QExifImageHeader(const QString &fileName);
+    ~QExifImageHeader();
+
+    bool loadFromJpeg(const QString &fileName);
+    bool loadFromJpeg(QIODevice *device);
+    bool saveToJpeg(const QString &fileName) const;
+    bool saveToJpeg(QIODevice *device) const;
+
+    bool read(QIODevice *device);
+    qint64 write(QIODevice *device) const;
+
+    qint64 size() const;
+
+    QSysInfo::Endian byteOrder() const;
+
+    void clear();
+
+    QList<ImageTag> imageTags() const;
+    QList<ExifExtendedTag> extendedTags() const;
+    QList<GpsTag> gpsTags() const;
+
+    bool contains(ImageTag tag) const;
+    bool contains(ExifExtendedTag tag) const;
+    bool contains(GpsTag tag) const;
+
+    void remove(ImageTag tag);
+    void remove(ExifExtendedTag tag);
+    void remove(GpsTag tag);
+
+    QExifValue value(ImageTag tag) const;
+    QExifValue value(ExifExtendedTag tag) const;
+    QExifValue value(GpsTag tag) const;
+
+    void setValue(ImageTag tag, const QExifValue &value);
+    void setValue(ExifExtendedTag tag, const QExifValue &value);
+    void setValue(GpsTag tag, const QExifValue &value);
+
+    QImage thumbnail() const;
+    void setThumbnail( const QImage &thumbnail );
+
+private:
+    enum PrivateTag
+    {
+        ExifIfdPointer              = 0x8769,
+        GpsInfoIfdPointer           = 0x8825,
+        InteroperabilityIfdPointer  = 0xA005,
+        JpegInterchangeFormat       = 0x0201,
+        JpegInterchangeFormatLength = 0x0202
+    };
+
+    QByteArray extractExif( QIODevice *device ) const;
+
+    QList< ExifIfdHeader > readIfdHeaders( QDataStream &stream ) const;
+
+    QExifValue readIfdValue(QDataStream &stream, int startPos, const ExifIfdHeader &header) const;
+    template <typename T> QMap<T, QExifValue> readIfdValues(
+            QDataStream &stream, int startPos, const QList<ExifIfdHeader> &headers) const;
+    template <typename T> QMap<T, QExifValue> readIfdValues(
+            QDataStream &stream, int startPos, const QExifValue &pointer) const;
+
+    quint32 writeExifHeader(QDataStream &stream, quint16 tag, const QExifValue &value, quint32 offset) const;
+    void writeExifValue(QDataStream &stream, const QExifValue &value) const;
+
+    template <typename T> quint32 writeExifHeaders(
+            QDataStream &stream, const QMap<T, QExifValue > &values, quint32 offset) const;
+    template <typename T> void writeExifValues(
+            QDataStream &target, const QMap<T, QExifValue> &values) const;
+
+    quint32 sizeOf(const QExifValue &value) const;
+
+    template <typename T> quint32 calculateSize(
+            const QMap<T, QExifValue> &values) const;
+
+    QExifImageHeaderPrivate *d;
+};
 
 #endif

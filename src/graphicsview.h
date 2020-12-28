@@ -17,7 +17,6 @@
 #include <QPropertyAnimation>
 #include <QVariantAnimation>
 
-#include "cropwidget.h"
 
 class graphicsView : public QGraphicsView
 {
@@ -37,7 +36,8 @@ public slots:
     void resetZoom();
     bool isSceneEmpty();
     void setFitToView(bool fitToView);
-    void crop();
+    QPixmap getCurrentImage();
+    void centerItem(QRect rect);
 public:
     bool fitToViewChecked = true;
 protected slots:

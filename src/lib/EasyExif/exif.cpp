@@ -1,918 +1,1950 @@
-/**************************************************************************
-  exif.cpp  -- A simple ISO C++ library to parse basic EXIF
-               information from a JPEG file.
+/****************************************************************************
+**
+** Copyright (C) 2010 Nokia Corporation and/or its subsidiary(-ies).
+** All rights reserved.
+** Contact: Nokia Corporation (qt-info@nokia.com)
+**
+** This file is part of the Qt scene graph research project.
+**
+** $QT_BEGIN_LICENSE:LGPL$
+** No Commercial Usage
+** This file contains pre-release code and may not be distributed.
+** You may use this file in accordance with the terms and conditions
+** contained in the Technology Preview License Agreement accompanying
+** this package.
+**
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain additional
+** rights.  These rights are described in the Nokia Qt LGPL Exception
+** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
+**
+** If you have questions regarding the use of this file, please contact
+** Nokia at qt-info@nokia.com.
+**
+**
+**
+**
+**
+**
+**
+**
+** $QT_END_LICENSE$
+**
+****************************************************************************/
 
-  Copyright (c) 2010-2015 Mayank Lahiri
-  mlahiri@gmail.com
-  All rights reserved (BSD License).
+// This file was copied from Qt Extended 4.5
 
-  See exif.h for version history.
+#include "lib/EasyExif/exif.h"
 
-  Redistribution and use in source and binary forms, with or without
-  modification, are permitted provided that the following conditions are met:
+#include <QFile>
+#include <QImage>
+#include <QDataStream>
+#include <QBuffer>
+#include <QDateTime>
+#include <QtDebug>
+#include <QTextCodec>
 
-  -- Redistributions of source code must retain the above copyright notice,
-     this list of conditions and the following disclaimer.
-  -- Redistributions in binary form must reproduce the above copyright notice,
-     this list of conditions and the following disclaimer in the documentation
-     and/or other materials provided with the distribution.
-
-  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS ``AS IS'' AND ANY EXPRESS
-  OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
-  OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
-  NO EVENT SHALL THE FREEBSD PROJECT OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
-  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
-  BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-  DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
-  OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
-  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+/*!
+    \typedef QExifSRational
+    A synonym for \c QPair<qint32,qint32> representing a signed rational number as stored in EXIF
+    headers.  The first integer in the pair is the numerator and the second the denominator.
 */
-#include "exif.h"
 
-#include <algorithm>
-#include <cstdint>
-#include <stdio.h>
-#include <vector>
+/*!
+    \typedef QExifURational
+    A synonym for \c QPair<qint32,qint32> representing an unsigned rational number as stored in
+    EXIF headers.  The first integer in the pair is the numerator and the second the denominator.
+*/
 
-using std::string;
-
-namespace {
-
-struct Rational {
-  uint32_t numerator, denominator;
-  operator double() const {
-    if (denominator < 1e-20) {
-      return 0;
-    }
-    return static_cast<double>(numerator) / static_cast<double>(denominator);
-  }
+struct ExifIfdHeader
+{
+    quint16 tag;
+    quint16 type;
+    quint32 count;
+    union
+    {
+        quint32 offset;
+        quint8 offsetBytes[ 4 ];
+        char offsetAscii[ 4 ];
+        quint16 offsetShorts[ 2 ];
+    };
 };
 
-// IF Entry
-class IFEntry {
- public:
-  using byte_vector = std::vector<uint8_t>;
-  using ascii_vector = std::string;
-  using short_vector = std::vector<uint16_t>;
-  using long_vector = std::vector<uint32_t>;
-  using rational_vector = std::vector<Rational>;
+QDataStream &operator >>( QDataStream &stream, ExifIfdHeader &header )
+{
+    stream >> header.tag;
+    stream >> header.type;
+    stream >> header.count;
 
-  IFEntry()
-      : tag_(0xFF), format_(0xFF), data_(0), length_(0), val_byte_(nullptr) {}
-  IFEntry(const IFEntry &) = delete;
-  IFEntry &operator=(const IFEntry &) = delete;
-  IFEntry(IFEntry &&other)
-      : tag_(other.tag_),
-        format_(other.format_),
-        data_(other.data_),
-        length_(other.length_),
-        val_byte_(other.val_byte_) {
-    other.tag_ = 0xFF;
-    other.format_ = 0xFF;
-    other.data_ = 0;
-    other.length_ = 0;
-    other.val_byte_ = nullptr;
-  }
-  ~IFEntry() { delete_union(); }
-  unsigned short tag() const { return tag_; }
-  void tag(unsigned short tag) { tag_ = tag; }
-  unsigned short format() const { return format_; }
-  bool format(unsigned short format) {
-    switch (format) {
-      case 0x01:
-      case 0x02:
-      case 0x03:
-      case 0x04:
-      case 0x05:
-      case 0x07:
-      case 0x09:
-      case 0x0a:
-      case 0xff:
+    if( header.type == QExifValue::Byte && header.count <= 4 )
+    {
+        stream.readRawData( header.offsetAscii, 4 );
+    }
+    else if( header.type == QExifValue::Ascii && header.count <= 4 )
+    {
+        stream.readRawData( header.offsetAscii, 4 );
+    }
+    else if( header.type == QExifValue::Short && header.count <= 2 )
+    {
+        stream >> header.offsetShorts[ 0 ];
+        stream >> header.offsetShorts[ 1 ];
+    }
+    else
+    {
+        stream >> header.offset;
+    }
+
+    return stream;
+}
+
+
+class QExifValuePrivate : public QSharedData
+{
+public:
+    QExifValuePrivate( quint16 t, int c )
+        : type( t ), count( c )
+    {}
+    virtual ~QExifValuePrivate(){}
+
+    quint16 type;
+    int count;
+};
+
+class QExifByteValuePrivate : public QExifValuePrivate
+{
+public:
+    QExifByteValuePrivate()
+        : QExifValuePrivate(QExifValue::Byte, 0)
+    { ref.ref(); }
+    QExifByteValuePrivate( const QVector< quint8 > &v )
+        : QExifValuePrivate( QExifValue::Byte, v.size() ), value( v )
+    {}
+
+    QVector< quint8 > value;
+};
+
+class QExifUndefinedValuePrivate : public QExifValuePrivate
+{
+public:
+    QExifUndefinedValuePrivate( const QByteArray &v )
+        : QExifValuePrivate( QExifValue::Undefined, v.size() ), value( v )
+    {}
+
+    QByteArray value;
+};
+
+class QExifAsciiValuePrivate : public QExifValuePrivate
+{
+public:
+    QExifAsciiValuePrivate( const QString &v )
+        : QExifValuePrivate( QExifValue::Ascii, v.size() + 1 ), value( v )
+    {}
+
+    QString value;
+};
+
+class QExifShortValuePrivate : public QExifValuePrivate
+{
+public:
+    QExifShortValuePrivate( const QVector< quint16 > &v )
+        : QExifValuePrivate( QExifValue::Short, v.size() ), value( v )
+    {}
+
+    QVector< quint16 > value;
+};
+
+class QExifLongValuePrivate : public QExifValuePrivate
+{
+public:
+    QExifLongValuePrivate( const QVector< quint32 > &v )
+        : QExifValuePrivate( QExifValue::Long, v.size() ), value( v )
+    {}
+
+    QVector< quint32 > value;
+};
+
+class QExifSignedLongValuePrivate : public QExifValuePrivate
+{
+public:
+    QExifSignedLongValuePrivate( const QVector< qint32 > &v )
+        : QExifValuePrivate( QExifValue::SignedLong, v.size() ), value( v )
+    {}
+
+    QVector< qint32 > value;
+};
+
+class QExifRationalValuePrivate : public QExifValuePrivate
+{
+public:
+    QExifRationalValuePrivate( const QVector< QExifURational > &v )
+        : QExifValuePrivate( QExifValue::Rational, v.size() ), value( v )
+    {}
+
+    QVector< QExifURational > value;
+};
+
+class QExifSignedRationalValuePrivate : public QExifValuePrivate
+{
+public:
+    QExifSignedRationalValuePrivate( const QVector< QExifSRational > &v )
+        : QExifValuePrivate( QExifValue::SignedRational, v.size() ), value( v )
+    {}
+
+    QVector< QExifSRational > value;
+};
+
+Q_GLOBAL_STATIC(QExifByteValuePrivate,qExifValuePrivateSharedNull)
+
+/*!
+    \class QExifValue
+    \inpublicgroup QtBaseModule
+    \brief The QExifValue class represents data types found in EXIF image headers.
+    Tag values in EXIF headers are stored as arrays of a limited number of data types. QExifValue
+    encapsulates a union of these types and provides conversions to and from appropriate Qt types.
+    \section1 String encoding
+    Most tags with string values in EXIF headers are ASCII encoded and have the Ascii value type,
+    but some tags allow other encodings.  In this case the value type is Undefined and the encoding
+    of the text is given by the encoding function().
+    \section1 Date-time values
+    Date-time values in EXIF headers are stored in ASCII encoded strings of the form
+    \c {yyyy:MM:dd HH:mm:ss}.  Constructing a QExifValue from a QDateTime will perform this
+    conversion and likewise an appropriately formed QExifValue can be converted to a QDateTime
+    using the toDateTime() function.
+    \sa QExifImageHeader
+    \preliminary
+*/
+
+/*!
+    \enum QExifValue::Type
+    Enumerates the possible types of EXIF values.
+    \value Byte An unsigned 8 bit integer.
+    \value Ascii A null terminated ascii string.
+    \value Short An unsigned 16 bit integer.
+    \value Long An unsigned 32 bit integer.
+    \value Rational Two unsigned 32 bit integers, representing a the numerator and denominator of an unsigned rational number.
+    \value Undefined An array of 8 bit integers.
+    \value SignedLong A signed 32 bit integer.
+    \value SignedRational Two signed 32 bit integers representing the numerator and denominator of a signed rational number.
+*/
+
+/*!
+      \enum QExifValue::TextEncoding
+      Enumerates the encodings of text strings in EXIF values of Undefined type.
+      \value NoEncoding An ASCII string of Ascii type.
+      \value AsciiEncoding An ASCII string of Undefined type.
+      \value JisEncoding A JIS X208-1990 string of Undefined type.
+      \value UnicodeEncoding A Unicode string of Undefined type.
+      \value UndefinedEncoding An unspecified string encoding of Undefined type.  Assumed to be the local 8-bit encoding.
+*/
+
+/*!
+    Constructs a null QExifValue.
+*/
+QExifValue::QExifValue()
+    : d( qExifValuePrivateSharedNull() )
+{
+}
+
+/*!
+    Constructs a QExifValue with a \a value of type Byte.
+*/
+QExifValue::QExifValue( quint8 value )
+    : d( new QExifByteValuePrivate( QVector< quint8 >( 1, value ) ) )
+{
+}
+
+/*!
+    Constructs a QExifValue with an array of \a values of type Byte.
+*/
+QExifValue::QExifValue( const QVector< quint8 > &values )
+    : d( new QExifByteValuePrivate( values ) )
+{
+}
+
+/*!
+    Constructs a QExifValue with a \a value of type Ascii or Undefined.
+    If the \a encoding is NoEncoding the value will be of type Ascii, otherwise it will be Undefined and the string
+    encoded using the given \a encoding.
+*/
+QExifValue::QExifValue( const QString &value, TextEncoding encoding )
+    : d( qExifValuePrivateSharedNull() )
+{
+    switch( encoding )
+    {
+    case AsciiEncoding:
+        d = new QExifUndefinedValuePrivate( QByteArray::fromRawData( "ASCII\0\0\0", 8 ) + value.toLatin1() );
         break;
-      default:
+    case JisEncoding:
+        {
+            QTextCodec *codec = QTextCodec::codecForName( "JIS X 0208" );
+            if( codec )
+                d = new QExifUndefinedValuePrivate( QByteArray::fromRawData( "JIS\0\0\0\0\0", 8 ) + codec->fromUnicode( value ) );
+        }
+        break;
+    case UnicodeEncoding:
+        {
+            QTextCodec *codec = QTextCodec::codecForName( "UTF-16" );
+            if( codec )
+                d = new QExifUndefinedValuePrivate( QByteArray::fromRawData( "UNICODE\0", 8 ) + codec->fromUnicode( value ) );
+        }
+        break;
+    case UndefinedEncoding:
+        d = new QExifUndefinedValuePrivate( QByteArray::fromRawData( "\0\0\0\0\0\0\0\\0", 8 ) + value.toLocal8Bit() );
+        break;
+    default:
+        d = new QExifAsciiValuePrivate( value );
+    }
+}
+
+/*!
+    Constructs a QExifValue with a \a value of type Short.
+*/
+QExifValue::QExifValue( quint16 value )
+    : d( new QExifShortValuePrivate( QVector< quint16 >( 1, value ) ) )
+{
+}
+
+/*!
+    Constructs a QExifValue with an array of \a values of type Short.
+*/
+QExifValue::QExifValue( const QVector< quint16 > &values )
+    : d( new QExifShortValuePrivate( values ) )
+{
+}
+
+/*!
+    Constructs a QExifValue with a \a value of type Long.
+*/
+QExifValue::QExifValue( quint32 value )
+    : d( new QExifLongValuePrivate( QVector< quint32 >( 1, value ) ) )
+{
+}
+
+/*!
+    Constructs a QExifValue with an array of \a values of type Long.
+*/
+QExifValue::QExifValue( const QVector< quint32 > &values )
+    : d( new QExifLongValuePrivate( values ) )
+{
+}
+
+/*!
+    Constructs a QExifValue with a \a value of type Rational.
+*/
+QExifValue::QExifValue( const QExifURational &value )
+    : d( new QExifRationalValuePrivate( QVector< QExifURational >( 1, value ) ) )
+{
+}
+
+/*!
+    Constructs a QExifValue with an array of \a values of type Rational.
+*/
+QExifValue::QExifValue( const QVector< QExifURational > &values )
+    : d( new QExifRationalValuePrivate( values ) )
+{
+}
+
+/*!
+    Constructs a QExifValue with a \a value of type Undefined.
+*/
+QExifValue::QExifValue( const QByteArray &value )
+    : d( new QExifUndefinedValuePrivate( value ) )
+{
+}
+
+/*!
+    Constructs a QExifValue with a \a value of type SignedLong.
+*/
+QExifValue::QExifValue( qint32 value )
+    : d( new QExifSignedLongValuePrivate( QVector< qint32 >( 1, value ) ) )
+{
+}
+
+/*!
+    Constructs a QExifValue with an array of \a values of type SignedLong.
+*/
+QExifValue::QExifValue( const QVector< qint32 > &values )
+    : d( new QExifSignedLongValuePrivate( values ) )
+{
+}
+
+/*!
+    Constructs a QExifValue with a \a value of type SignedRational.
+*/
+QExifValue::QExifValue( const QExifSRational &value )
+    : d( new QExifSignedRationalValuePrivate( QVector< QExifSRational >( 1, value ) ) )
+{
+}
+
+/*!
+    Constructs a QExifValue with an array of \a values of type SignedRational.
+*/
+QExifValue::QExifValue( const QVector< QExifSRational > &values )
+    : d( new QExifSignedRationalValuePrivate( values ) )
+{
+}
+
+/*!
+    Constructs a QExifValue of type Ascii with an ascii string formatted from a date-time \a value.
+    Date-times are stored as strings in the format \c {yyyy:MM:dd HH:mm:ss}.
+*/
+QExifValue::QExifValue( const QDateTime &value )
+    : d( new QExifAsciiValuePrivate( value.toString( QLatin1String( "yyyy:MM:dd HH:mm:ss" ) ) ) )
+{
+}
+
+/*!
+    Constructs a copy of the QExifValue \a other.
+*/
+QExifValue::QExifValue( const QExifValue &other )
+    : d( other.d )
+{
+}
+
+/*!
+    Assigns the value of \a other to a QExifValue.
+*/
+QExifValue &QExifValue::operator =( const QExifValue &other )
+{
+    d = other.d;
+
+    return *this;
+}
+
+/*!
+    Destroys a QExifValue.
+*/
+QExifValue::~QExifValue()
+{
+}
+
+/*!
+    Compares a QExifValue to \a other.  Returns true if they are the same value and false otherwise.
+*/
+bool QExifValue::operator ==( const QExifValue &other ) const
+{
+    return d == other.d;
+}
+
+/*!
+    Returns true if a QExifValue has a null value and false otherwise.
+*/
+bool QExifValue::isNull() const
+{
+    return d == qExifValuePrivateSharedNull();
+}
+
+/*!
+    Returns the type of a QExifValue.
+*/
+int QExifValue::type() const
+{
+    return d->type;
+}
+
+/*!
+    Returns the number of elements in a QExifValue.  For ascii strings this is the length of the string
+    including the terminating null.
+*/
+int QExifValue::count() const
+{
+    return d->count;
+}
+
+/*!
+      Returns the encoding of strings stored in Undefined values.
+*/
+QExifValue::TextEncoding QExifValue::encoding() const
+{
+    if( d->type == Undefined && d->count > 8 )
+    {
+        QByteArray value = static_cast< const QExifUndefinedValuePrivate * >( d.constData() )->value;
+
+        if( value.startsWith( QByteArray::fromRawData( "ASCII\0\0\0", 8 ) ) )
+            return AsciiEncoding;
+        else if( value.startsWith( QByteArray::fromRawData( "JIS\0\0\0\0\0", 8 ) ) )
+            return JisEncoding;
+        else if( value.startsWith( QByteArray::fromRawData( "UNICODE\0", 8 ) ) )
+            return UnicodeEncoding;
+        else if( value.startsWith( QByteArray::fromRawData( "\0\0\0\0\0\0\0\0", 8 ) ) )
+            return UndefinedEncoding;
+    }
+    return NoEncoding;
+}
+
+/*!
+    Returns the value of a single element QExifValue of type Byte.
+*/
+quint8 QExifValue::toByte() const
+{
+    return d->type == Byte && d->count == 1
+        ? static_cast< const QExifByteValuePrivate * >( d.constData() )->value.at( 0 )
+        : 0;
+}
+
+/*!
+    Returns the value of a multiple element QExifValue of type Byte.
+*/
+QVector< quint8 > QExifValue::toByteVector() const
+{
+    return d->type == Byte
+        ? static_cast< const QExifByteValuePrivate * >( d.constData() )->value
+        : QVector< quint8 >();
+}
+
+/*!
+    Returns the value of a QExifValue of type Ascii.
+*/
+QString QExifValue::toString() const
+{
+    switch( d->type )
+    {
+    case Ascii:
+        return static_cast< const QExifAsciiValuePrivate * >( d.constData() )->value;
+    case Undefined:
+        {
+            QByteArray string = static_cast< const QExifUndefinedValuePrivate * >( d.constData() )->value.mid( 8 );
+
+            switch( encoding() )
+            {
+            case AsciiEncoding:
+                return QString::fromLatin1( string.constData(), string.length() );
+            case JisEncoding:
+                {
+                    QTextCodec *codec = QTextCodec::codecForName( "JIS X 0208" );
+                    if( codec )
+                        return codec->toUnicode( string );
+                }
+            break;
+            case UnicodeEncoding:
+                {
+                    QTextCodec *codec = QTextCodec::codecForName( "UTF-16" );
+                    if( codec )
+                        return codec->toUnicode( string );
+                }
+            case UndefinedEncoding:
+                return QString::fromLocal8Bit( string.constData(), string.length() );
+            default:
+                break;
+            }
+        }
+    default:
+        return QString();
+    }
+}
+
+/*!
+    Returns the value of a single element QExifValue of type Byte or Short.
+*/
+quint16 QExifValue::toShort() const
+{
+    if( d->count == 1 )
+    {
+        switch( d->type )
+        {
+        case Byte:
+            return static_cast< const QExifByteValuePrivate * >( d.constData() )->value.at( 0 );
+        case Short:
+            return static_cast< const QExifShortValuePrivate * >( d.constData() )->value.at( 0 );
+        }
+    }
+    return 0;
+}
+
+/*!
+    Returns the value of a single element QExifValue of type Short.
+*/
+QVector< quint16 > QExifValue::toShortVector() const
+{
+    return d->type == Short
+        ? static_cast< const QExifShortValuePrivate * >( d.constData() )->value
+        : QVector< quint16 >();
+}
+
+/*!
+    Returns the value of a single element QExifValue of type Byte, Short, Long, or SignedLong.
+*/
+quint32 QExifValue::toLong() const
+{
+    if( d->count == 1 )
+    {
+        switch( d->type )
+        {
+        case Byte:
+            return static_cast< const QExifByteValuePrivate * >( d.constData() )->value.at( 0 );
+        case Short:
+            return static_cast< const QExifShortValuePrivate * >( d.constData() )->value.at( 0 );
+        case Long:
+            return static_cast< const QExifLongValuePrivate * >( d.constData() )->value.at( 0 );
+        case SignedLong:
+            return static_cast< const QExifSignedLongValuePrivate * >( d.constData() )->value.at( 0 );
+        }
+    }
+    return 0;
+}
+
+/*!
+    Returns the value of a multiple element QExifValue of type Long.
+*/
+QVector< quint32 > QExifValue::toLongVector() const
+{
+    return d->type == Long
+        ? static_cast< const QExifLongValuePrivate * >( d.constData() )->value
+        : QVector< quint32 >();
+}
+
+/*!
+    Returns the value of a multiple element QExifValue of type Rational.
+*/
+QExifURational QExifValue::toRational() const
+{
+    return d->type == Rational && d->count == 1
+        ? static_cast< const QExifRationalValuePrivate * >( d.constData() )->value.at( 0 )
+        : QExifURational();
+}
+
+/*!
+    Returns the value of a multiple element QExifValue of type Rational.
+*/
+QVector< QExifURational > QExifValue::toRationalVector() const
+{
+    return d->type == Rational
+        ? static_cast< const QExifRationalValuePrivate * >( d.constData() )->value
+        : QVector< QExifURational >();
+}
+
+/*!
+    Returns the value of a QExifValue of type Undefined.
+*/
+QByteArray QExifValue::toByteArray() const
+{
+    switch( d->type )
+    {
+    case Ascii:
+        return static_cast< const QExifAsciiValuePrivate * >( d.constData() )->value.toLatin1();
+    case Undefined:
+        return static_cast< const QExifUndefinedValuePrivate * >( d.constData() )->value;
+    default:
+        return QByteArray();
+    }
+}
+
+/*!
+    Returns the value of a single element QExifValue of type Byte, Short, Long, or SignedLong.
+*/
+qint32 QExifValue::toSignedLong() const
+{
+    if( d->count == 1 )
+    {
+        switch( d->type )
+        {
+        case Byte:
+            return static_cast< const QExifByteValuePrivate * >( d.constData() )->value.at( 0 );
+        case Short:
+            return static_cast< const QExifShortValuePrivate * >( d.constData() )->value.at( 0 );
+        case Long:
+            return static_cast< const QExifLongValuePrivate * >( d.constData() )->value.at( 0 );
+        case SignedLong:
+            return static_cast< const QExifSignedLongValuePrivate * >( d.constData() )->value.at( 0 );
+        }
+    }
+    return 0;
+}
+
+/*!
+    Returns the value of a multiple element QExifValue of type SignedLong.
+*/
+QVector< qint32 > QExifValue::toSignedLongVector() const
+{
+    return d->type == SignedLong
+        ? static_cast< const QExifSignedLongValuePrivate * >( d.constData() )->value
+        : QVector< qint32 >();
+}
+
+/*!
+    Returns the value of a single element QExifValue of type SignedRational.
+*/
+QExifSRational QExifValue::toSignedRational() const
+{
+    return d->type == SignedRational && d->count == 1
+        ? static_cast< const QExifSignedRationalValuePrivate * >( d.constData() )->value.at( 0 )
+        : QExifSRational();
+}
+
+/*!
+    Returns the value of a multiple element QExifValue of type SignedRational.
+*/
+QVector< QExifSRational > QExifValue::toSignedRationalVector() const
+{
+    return d->type == SignedRational
+        ? static_cast< const QExifSignedRationalValuePrivate * >( d.constData() )->value
+        : QVector< QExifSRational >();
+}
+
+/*!
+    Returns the value of QExifValue storing a date-time.
+    Date-times are stored as ascii strings in the format \c {yyyy:MM:dd HH:mm:ss}.
+*/
+QDateTime QExifValue::toDateTime() const
+{
+    return d->type == Ascii && d->count == 20
+        ? QDateTime::fromString( static_cast< const QExifAsciiValuePrivate * >( d.constData() )->value, QLatin1String( "yyyy:MM:dd HH:mm:ss" ) )
+        : QDateTime();
+}
+
+class QExifImageHeaderPrivate
+{
+public:
+    QSysInfo::Endian byteOrder;
+    mutable qint64 size;
+    QMap<QExifImageHeader::ImageTag, QExifValue > imageIfdValues;
+    QMap<QExifImageHeader::ExifExtendedTag, QExifValue > exifIfdValues;
+    QMap<QExifImageHeader::GpsTag, QExifValue > gpsIfdValues;
+
+    QSize thumbnailSize;
+    QByteArray thumbnailData;
+    QExifValue thumbnailXResolution;
+    QExifValue thumbnailYResolution;
+    QExifValue thumbnailResolutionUnit;
+    QExifValue thumbnailOrientation;
+};
+
+/*!
+    \class QExifImageHeader
+    \inpublicgroup QtBaseModule
+    \brief The QExifImageHeader class provides functionality for reading and writing EXIF image headers.
+    EXIF headers are a collection of properties that describe the image they're embedded in.
+    Each property is identified by a tag of which there are three kinds.  \l {ImageTag}{Image tags}
+    which mostly describe the format (dimensions, resolution, orientation) but also include some
+    descriptive information (description, camera make and model, artist).  \l {ExifExtendedTag}
+    {EXIF extended tags} which elaborate on some of the image tags and record the camera settings at
+    time of capture among other things.  Finally there are \l {GpsTag}{GPS tags} which record the
+    location the image was captured.
+    EXIF tags are typically found in JPEG images but may be found in other image formats.  To read
+    headers from a JPEG image QExifImageHeader provides the loadFromJpeg() function, and the
+    complementary saveToJpeg() function for writing.  To allow reading and writing arbitrary
+    formats QExifImageHeader provides the read() and write() functions which work with just the
+    EXIF header data itself.
+    \preliminary
+*/
+
+/*!
+    \enum QExifImageHeader::ImageTag
+    Enumerates the TIFF image tag IDs defined in the EXIF specification.
+    \value ImageWidth
+    \value ImageLength
+    \value BitsPerSample
+    \value Compression
+    \value PhotometricInterpretation
+    \value Orientation
+    \value SamplesPerPixel
+    \value PlanarConfiguration
+    \value YCbCrSubSampling
+    \value XResolution
+    \value YResolution
+    \value ResolutionUnit
+    \value StripOffsets
+    \value RowsPerStrip
+    \value StripByteCounts
+    \value TransferFunction
+    \value WhitePoint
+    \value PrimaryChromaciticies
+    \value YCbCrCoefficients
+    \value ReferenceBlackWhite
+    \value DateTime
+    \value ImageDescription
+    \value Make
+    \value Model
+    \value Software
+    \value Artist
+    \value Copyright
+*/
+
+/*!
+    \enum QExifImageHeader::ExifExtendedTag
+    Enumerates the extended EXIF tag IDs defined in the EXIF specification.
+    \value ExifVersion
+    \value FlashPixVersion
+    \value ColorSpace
+    \value ComponentsConfiguration
+    \value CompressedBitsPerPixel
+    \value PixelXDimension
+    \value PixelYDimension
+    \value MakerNote
+    \value UserComment
+    \value RelatedSoundFile
+    \value DateTimeOriginal
+    \value DateTimeDigitized
+    \value SubSecTime
+    \value SubSecTimeOriginal
+    \value SubSecTimeDigitized
+    \value ImageUniqueId
+    \value ExposureTime
+    \value FNumber
+    \value ExposureProgram
+    \value SpectralSensitivity
+    \value ISOSpeedRatings
+    \value Oecf
+    \value ShutterSpeedValue
+    \value ApertureValue
+    \value BrightnessValue
+    \value ExposureBiasValue
+    \value MaxApertureValue
+    \value SubjectDistance
+    \value MeteringMode
+    \value LightSource
+    \value Flash
+    \value FocalLength
+    \value SubjectArea
+    \value FlashEnergy
+    \value SpatialFrequencyResponse
+    \value FocalPlaneXResolution
+    \value FocalPlaneYResolution
+    \value FocalPlaneResolutionUnit
+    \value SubjectLocation
+    \value ExposureIndex
+    \value SensingMethod
+    \value FileSource
+    \value SceneType
+    \value CfaPattern
+    \value CustomRendered
+    \value ExposureMode
+    \value WhiteBalance
+    \value DigitalZoomRatio
+    \value FocalLengthIn35mmFilm
+    \value SceneCaptureType
+    \value GainControl
+    \value Contrast
+    \value Saturation
+    \value Sharpness
+    \value DeviceSettingDescription
+    \value SubjectDistanceRange
+*/
+
+/*!
+    \enum QExifImageHeader::GpsTag
+    Enumerates the GPS tag IDs from the EXIF specification.
+    \value GpsVersionId
+    \value GpsLatitudeRef
+    \value GpsLatitude
+    \value GpsLongitudeRef
+    \value GpsLongitude
+    \value GpsAltitudeRef
+    \value GpsAltitude
+    \value GpsTimeStamp
+    \value GpsSatellites
+    \value GpsStatus
+    \value GpsMeasureMode
+    \value GpsDop
+    \value GpsSpeedRef
+    \value GpsSpeed
+    \value GpsTrackRef
+    \value GpsTrack
+    \value GpsImageDirectionRef
+    \value GpsImageDirection
+    \value GpsMapDatum
+    \value GpsDestLatitudeRef
+    \value GpsDestLatitude
+    \value GpsDestLongitudeRef
+    \value GpsDestLongitude
+    \value GpsDestBearingRef
+    \value GpsDestBearing
+    \value GpsDestDistanceRef
+    \value GpsDestDistance
+    \value GpsProcessingMethod
+    \value GpsAreaInformation
+    \value GpsDateStamp
+    \value GpsDifferential
+*/
+
+/*!
+    Constructs a new EXIF image data editor.
+*/
+QExifImageHeader::QExifImageHeader()
+    : d( new QExifImageHeaderPrivate )
+{
+    d->byteOrder = QSysInfo::ByteOrder;
+    d->size = -1;
+}
+
+/*!
+    Constructs a new EXIF image data editor and reads the meta-data from a JPEG image with the given \a fileName.
+*/
+QExifImageHeader::QExifImageHeader(const QString &fileName)
+    : d(new QExifImageHeaderPrivate)
+{
+    d->byteOrder = QSysInfo::ByteOrder;
+    d->size = -1;
+
+    loadFromJpeg(fileName);
+}
+
+/*!
+    Destroys an EXIF image data editor.
+*/
+QExifImageHeader::~QExifImageHeader()
+{
+    clear();
+
+    delete d;
+}
+
+/*!
+    Reads meta-data from a JPEG image with the given \a fileName.
+    Returns true if the data was successfully parsed and false otherwise.
+*/
+bool QExifImageHeader::loadFromJpeg(const QString &fileName)
+{
+    QFile file(fileName);
+
+    if(file.open(QIODevice::ReadOnly))
+        return loadFromJpeg(&file);
+    else
+        return false;
+}
+
+/*!
+    Reads meta-data from an I/O \a device containing a JPEG image.
+    Returns true if the data was successfully parsed and false otherwise.
+*/
+bool QExifImageHeader::loadFromJpeg(QIODevice *device)
+{
+    clear();
+
+    QByteArray exifData = extractExif(device);
+
+    if (!exifData.isEmpty()) {
+        QBuffer buffer(&exifData);
+
+        return buffer.open(QIODevice::ReadOnly) && read(&buffer);
+    }
+
+    return false;
+}
+
+/*!
+    Saves meta-data to a JPEG image with the given \a fileName.
+    Returns true if the data was successfully written.
+*/
+bool QExifImageHeader::saveToJpeg(const QString &fileName) const
+{
+    QFile file(fileName);
+
+    if (file.open(QIODevice::ReadWrite))
+        return saveToJpeg(&file);
+    else
+        return false;
+}
+
+/*!
+    Save meta-data to the given I/O \a device.
+    The device must be non-sequential and already contain a valid JPEG image.
+    Returns true if the data was successfully written.
+*/
+bool QExifImageHeader::saveToJpeg(QIODevice *device) const
+{
+    if( device->isSequential() )
+        return false;
+
+    QByteArray exif;
+
+    {
+        QBuffer buffer( &exif );
+
+        if( !buffer.open( QIODevice::WriteOnly ) )
+            return false;
+
+        write( &buffer );
+
+        buffer.close();
+
+        exif = QByteArray::fromRawData( "Exif\0\0", 6 ) + exif;
+    }
+
+    QDataStream stream( device );
+
+    stream.setByteOrder( QDataStream::BigEndian );
+
+    if( device->read( 2 ) != "\xFF\xD8" )    // Not a valid JPEG image.
+        return false;
+
+    quint16 segmentId;
+    quint16 segmentLength;
+
+    stream >> segmentId;
+    stream >> segmentLength;
+
+    if( segmentId == 0xFFE0 )
+    {
+        QByteArray jfif = device->read( segmentLength - 2 );
+
+        if( !jfif.startsWith( "JFIF" ) )
+            return false;
+
+        stream >> segmentId;
+        stream >> segmentLength;
+
+        if( segmentId == 0xFFE1 )
+        {
+            QByteArray oldExif = device->read( segmentLength - 2 );
+
+            if( !oldExif.startsWith( "Exif" ) )
+                return false;
+
+            int dSize = oldExif.size() - exif.size();
+
+            if( dSize > 0 )
+                exif += QByteArray( dSize, '\0' );
+
+            QByteArray remainder = device->readAll();
+
+            device->seek( 0 );
+
+            stream << quint16( 0xFFD8 ); // SOI
+            stream << quint16( 0xFFE0 ); // APP0
+            stream << quint16( jfif.size() + 2 );
+            device->write( jfif );
+            stream << quint16( 0xFFE1 ); //APP1
+            stream << quint16( exif.size() + 2 );
+            device->write( exif );
+            device->write( remainder );
+        }
+        else
+        {
+            QByteArray remainder = device->readAll();
+
+            device->seek( 0 );
+
+            stream << quint16( 0xFFD8 ); // SOI
+            stream << quint16( 0xFFE0 ); // APP0
+            stream << quint16( jfif.size() + 2 );
+            device->write( jfif );
+            stream << quint16( 0xFFE1 ); //APP1
+            stream << quint16( exif.size() + 2 );
+            device->write( exif );
+            stream << quint16( 0xFFE0 ); // APP0
+            stream << segmentId;
+            stream << segmentLength;
+            device->write( remainder );
+        }
+    }
+    else if( segmentId == 0xFFE1 )
+    {
+        QByteArray oldExif = device->read( segmentLength - 2 );
+
+        if( !oldExif.startsWith( "Exif" ) )
+            return false;
+
+        int dSize = oldExif.size() - exif.size();
+
+        if( dSize > 0 )
+            exif += QByteArray( dSize, '\0' );
+
+        QByteArray remainder = device->readAll();
+
+        device->seek( 0 );
+
+        stream << quint16( 0xFFD8 ); // SOI
+        stream << quint16( 0xFFE1 ); //APP1
+        stream << quint16( exif.size() + 2 );
+        device->write( exif );
+        device->write( remainder );
+    }
+    else
+    {
+        QByteArray remainder = device->readAll();
+
+        device->seek( 0 );
+
+        stream << quint16( 0xFFD8 ); // SOI
+        stream << quint16( 0xFFE1 ); //APP1
+        stream << quint16( exif.size() + 2 );
+        device->write( exif );
+        stream << segmentId;
+        stream << segmentLength;
+        device->write( remainder );
+    }
+
+    return true;
+}
+
+/*!
+    Returns the byte order of EXIF file.
+*/
+QSysInfo::Endian QExifImageHeader::byteOrder() const
+{
+    return d->byteOrder;
+}
+
+
+quint32 QExifImageHeader::sizeOf(const QExifValue &value) const
+{
+    switch (value.type()) {
+    case QExifValue::Byte:
+    case QExifValue::Undefined:
+        return value.count() > 4
+                ? 12 + value.count()
+                : 12;
+    case QExifValue::Ascii:
+        return value.count() > 4
+                ? 12 + value.count()
+                : 12;
+    case QExifValue::Short:
+        return value.count() > 2
+                ? 12 + value.count() * sizeof(quint16)
+                : 12;
+    case QExifValue::Long:
+    case QExifValue::SignedLong:
+        return value.count() > 1
+                ? 12 + value.count() * sizeof(quint32)
+                : 12;
+    case QExifValue::Rational:
+    case QExifValue::SignedRational:
+        return value.count() > 0
+                ? 12 + value.count() * sizeof(quint32) * 2
+                : 12;
+    default:
+        return 0;
+    }
+}
+
+template <typename T>
+quint32 QExifImageHeader::calculateSize(const QMap<T, QExifValue> &values) const
+{
+    quint32 size = sizeof(quint16);
+
+    foreach (const QExifValue &value, values)
+        size += sizeOf(value);
+
+    return size;
+}
+
+/*!
+    Returns the size of EXIF data in bytes.
+*/
+qint64 QExifImageHeader::size() const
+{
+    if (d->size == -1) {
+        d->size
+                = 2                                    // Byte Order
+                + 2                                    // Marker
+                + 4                                    // Image Ifd offset
+                + 12                                   // ExifIfdPointer Ifd
+                + 4                                    // Thumbnail Ifd offset
+                + calculateSize(d->imageIfdValues)     // Image headers and values.
+                + calculateSize(d->exifIfdValues);     // Exif headers and values.
+
+        if (!d->gpsIfdValues.isEmpty()) {
+            d->size
+                    += 12                              // GpsInfoIfdPointer Ifd
+                    +  calculateSize(d->gpsIfdValues); // Gps headers and values.
+        }
+
+        if (!d->thumbnailData.isEmpty()) {
+            d->size
+                    += 2                               // Thumbnail Ifd count
+                    +  12                              // Compression Ifd
+                    +  20                              // XResolution Ifd
+                    +  20                              // YResolution Ifd
+                    +  12                              // ResolutionUnit Ifd
+                    +  12                              // JpegInterchangeFormat Ifd
+                    +  12                              // JpegInterchangeFormatLength Ifd
+                    +  d->thumbnailData.size();        // Thumbnail data size.
+        }
+    }
+
+    return d->size;
+}
+
+/*!
+    Clears all image meta-data.
+*/
+void QExifImageHeader::clear()
+{
+    d->imageIfdValues.clear();
+    d->exifIfdValues.clear();
+    d->gpsIfdValues.clear();
+    d->thumbnailData.clear();
+
+    d->size = -1;
+}
+
+/*!
+    Returns a list of all image tags in an EXIF header.
+*/
+QList<QExifImageHeader::ImageTag> QExifImageHeader::imageTags() const
+{
+    return d->imageIfdValues.keys();
+}
+
+/*!
+    Returns a list of all extended EXIF tags in a header.
+*/
+QList<QExifImageHeader::ExifExtendedTag> QExifImageHeader::extendedTags() const
+{
+    return d->exifIfdValues.keys();
+}
+
+/*!
+    Returns a list of all GPS tags in an EXIF header.
+*/
+QList<QExifImageHeader::GpsTag> QExifImageHeader::gpsTags() const
+{
+    return d->gpsIfdValues.keys();
+}
+
+/*!
+    Returns true if an EXIf header contains a value for an image \a tag and false otherwise.
+*/
+bool QExifImageHeader::contains(ImageTag tag) const
+{
+    return d->imageIfdValues.contains(tag);
+}
+
+/*!
+    Returns true if a header contains a a value for an extended EXIF \a tag and false otherwise.
+*/
+bool QExifImageHeader::contains(ExifExtendedTag tag) const
+{
+    return d->exifIfdValues.contains(tag);
+}
+
+/*!
+    Returns true if an EXIf header contains a value for a GPS \a tag and false otherwise.
+*/
+bool QExifImageHeader::contains(GpsTag tag) const
+{
+    return d->gpsIfdValues.contains(tag);
+}
+
+/*!
+    Removes the value for an image \a tag.
+*/
+void QExifImageHeader::remove(ImageTag tag)
+{
+    d->imageIfdValues.remove(tag);
+
+    d->size = -1;
+}
+
+/*!
+    Removes the value for an extended EXIF \a tag.
+*/
+void QExifImageHeader::remove(ExifExtendedTag tag)
+{
+    d->exifIfdValues.remove(tag);
+
+    d->size = -1;
+}
+
+/*!
+    Removes the value for a GPS \a tag.
+*/
+void QExifImageHeader::remove(GpsTag tag)
+{
+    d->gpsIfdValues.remove(tag);
+
+    d->size = -1;
+}
+
+/*!
+    Returns the value for an image \a tag.
+*/
+QExifValue QExifImageHeader::value(ImageTag tag) const
+{
+    return d->imageIfdValues.value(tag);
+}
+
+/*!
+    Returns the value for an extended EXIF \a tag.
+*/
+QExifValue QExifImageHeader::value(ExifExtendedTag tag) const
+{
+    return d->exifIfdValues.value(tag);
+}
+
+/*!
+    Returns the value for a GPS tag.
+*/
+QExifValue QExifImageHeader::value(GpsTag tag) const
+{
+    return d->gpsIfdValues.value(tag);
+}
+
+/*!
+    Sets the \a value for an image \a tag.
+*/
+void QExifImageHeader::setValue(ImageTag tag, const QExifValue &value)
+{
+    d->imageIfdValues[tag] = value;
+
+    d->size = -1;
+}
+
+/*!
+    Sets the \a value for an extended EXIF \a tag.
+*/
+void QExifImageHeader::setValue(ExifExtendedTag tag, const QExifValue &value)
+{
+    d->exifIfdValues[tag] = value;
+
+    d->size = -1;
+}
+
+/*!
+    Sets the \a value for an GPS \a tag.
+*/
+void QExifImageHeader::setValue(GpsTag tag, const QExifValue &value)
+{
+    d->gpsIfdValues[tag] = value;
+
+    d->size = -1;
+}
+
+/*!
+    Returns the image thumbnail.
+*/
+QImage QExifImageHeader::thumbnail() const
+{
+    QImage image;
+
+    image.loadFromData(d->thumbnailData, "JPG");
+
+    if (!d->thumbnailOrientation.isNull()) {
+        switch (d->thumbnailOrientation.toShort()) {
+        case 1:
+            return image;
+        case 2:
+            return image.transformed(QTransform().rotate(180, Qt::YAxis));
+        case 3:
+            return image.transformed(QTransform().rotate(180, Qt::ZAxis));
+        case 4:
+            return image.transformed(QTransform().rotate(180, Qt::XAxis));
+        case 5:
+            return image.transformed(QTransform().rotate(180, Qt::YAxis).rotate(90, Qt::ZAxis));
+        case 6:
+            return image.transformed(QTransform().rotate(90, Qt::ZAxis));
+        case 7:
+            return image.transformed(QTransform().rotate(180, Qt::XAxis).rotate(90, Qt::ZAxis));
+        case 8:
+            return image.transformed(QTransform().rotate(270, Qt::ZAxis));
+        }
+    }
+
+    return image;
+}
+
+/*!
+    Sets the image \a thumbnail.
+*/
+void QExifImageHeader::setThumbnail( const QImage &thumbnail )
+{
+    if (!thumbnail.isNull()) {
+        QBuffer buffer;
+
+        if (buffer.open(QIODevice::WriteOnly) && thumbnail.save(&buffer, "JPG")) {
+            buffer.close();
+
+            d->thumbnailSize = thumbnail.size();
+            d->thumbnailData = buffer.data();
+            d->thumbnailOrientation = QExifValue();
+        }
+    } else {
+        d->thumbnailSize = QSize();
+        d->thumbnailData = QByteArray();
+    }
+
+    d->size = -1;
+}
+
+QByteArray QExifImageHeader::extractExif( QIODevice *device ) const
+{
+    QDataStream stream( device );
+
+    stream.setByteOrder( QDataStream::BigEndian );
+
+    if( device->read( 2 ) != "\xFF\xD8" )
+        return QByteArray();
+
+    while( device->read( 2 ) != "\xFF\xE1" )
+    {
+        if( device->atEnd() )
+            return QByteArray();
+
+        quint16 length;
+
+        stream >> length;
+
+        device->seek( device->pos() + length - 2 );
+    }
+
+    quint16 length;
+
+    stream >> length;
+
+    if( device->read( 4 ) != "Exif" )
+        return QByteArray();
+
+    device->read( 2 );
+
+    return device->read( length - 8 );
+}
+
+
+QList<ExifIfdHeader> QExifImageHeader::readIfdHeaders(QDataStream &stream) const
+{
+    QList<ExifIfdHeader> headers;
+
+    quint16 count;
+
+    stream >> count;
+
+    for (quint16 i = 0; i < count; i++) {
+        ExifIfdHeader header;
+
+        stream >> header;
+
+        headers.append(header);
+    }
+
+    return headers;
+}
+
+QExifValue QExifImageHeader::readIfdValue(QDataStream &stream, int startPos, const ExifIfdHeader &header) const
+{
+    switch (header.type) {
+    case QExifValue::Byte:
+        {
+            QVector<quint8> value( header.count );
+
+            if (header.count > 4) {
+                stream.device()->seek(startPos + header.offset);
+
+                for (quint32 i = 0; i < header.count; i++)
+                    stream >> value[i];
+            } else {
+                for( quint32 i = 0; i < header.count; i++ )
+                    value[ i ] = header.offsetBytes[ i ];
+
+            }
+            return QExifValue(value);
+        }
+    case QExifValue::Undefined:
+        if (header.count > 4) {
+            stream.device()->seek(startPos + header.offset);
+
+            return QExifValue(stream.device()->read(header.count));
+        } else {
+            return QExifValue(QByteArray::fromRawData(header.offsetAscii, header.count));
+        }
+    case QExifValue::Ascii:
+        if (header.count > 4) {
+            stream.device()->seek(startPos + header.offset);
+
+            QByteArray ascii = stream.device()->read(header.count);
+
+            return QExifValue(QString::fromLatin1(ascii.constData(), ascii.size() - 1));
+        } else {
+            return QExifValue(QString::fromLatin1(header.offsetAscii, header.count - 1));
+        }
+    case QExifValue::Short:
+        {
+            QVector<quint16> value(header.count);
+
+            if (header.count > 2) {
+                stream.device()->seek(startPos + header.offset);
+
+                for (quint32 i = 0; i < header.count; i++)
+                    stream >> value[i];
+            } else {
+                for (quint32 i = 0; i < header.count; i++)
+                    value[i] = header.offsetShorts[i];
+
+            }
+            return QExifValue(value);
+        }
+    case QExifValue::Long:
+        {
+            QVector<quint32> value(header.count);
+
+            if (header.count > 1) {
+                stream.device()->seek(startPos + header.offset);
+
+                for (quint32 i = 0; i < header.count; i++)
+                    stream >> value[i];
+            } else if(header.count == 1) {
+                value[0] = header.offset;
+            }
+            return QExifValue(value);
+        }
+    case QExifValue::SignedLong:
+        {
+            QVector<qint32> value(header.count);
+
+            if (header.count > 1) {
+                stream.device()->seek(startPos + header.offset);
+
+                for (quint32 i = 0; i < header.count; i++)
+                    stream >> value[i];
+            } else if (header.count == 1) {
+                value[0] = header.offset;
+            }
+            return QExifValue(value);
+        }
+        break;
+    case QExifValue::Rational:
+        {
+            QVector<QExifURational> value(header.count);
+
+            stream.device()->seek(startPos + header.offset);
+
+            for (quint32 i = 0; i < header.count; i++)
+                stream >> value[i];
+
+            return QExifValue(value);
+        }
+    case QExifValue::SignedRational:
+        {
+            QVector<QExifSRational> value(header.count);
+
+            stream.device()->seek(startPos + header.offset);
+
+            for(quint32 i = 0; i < header.count; i++)
+                stream >> value[i];
+
+            return QExifValue(value);
+        }
+    default:
+        qWarning() << "Invalid Ifd Type" << header.type;
+
+        return QExifValue();
+    }
+}
+
+template <typename T> QMap<T, QExifValue> QExifImageHeader::readIfdValues(
+        QDataStream &stream, int startPos, const QList<ExifIfdHeader> &headers) const
+{
+    QMap<T, QExifValue> values;
+
+    // This needs to be non-const so it works with gcc3
+    QList<ExifIfdHeader> headers_ = headers;
+    foreach (const ExifIfdHeader &header, headers_)
+        values[T(header.tag)] = readIfdValue(stream, startPos, header);
+
+    return values;
+}
+
+template <typename T>
+QMap<T, QExifValue> QExifImageHeader::readIfdValues(
+        QDataStream &stream, int startPos, const QExifValue &pointer) const
+{
+    if (pointer.type() == QExifValue::Long && pointer.count() == 1) {
+        stream.device()->seek(startPos + pointer.toLong());
+
+        QList<ExifIfdHeader> headers = readIfdHeaders(stream);
+
+        return readIfdValues<T>(stream, startPos, headers);
+    } else {
+        return QMap<T, QExifValue >();
+    }
+}
+
+
+/*!
+    Reads the contents of an EXIF header from an I/O \a device.
+    Returns true if the header was read and false otherwise.
+    \sa loadFromJpeg(), write()
+*/
+bool QExifImageHeader::read(QIODevice *device)
+{
+    clear();
+
+    int startPos = device->pos();
+
+    QDataStream stream(device);
+
+    QByteArray byteOrder = device->read(2);
+
+    if (byteOrder == "II") {
+        d->byteOrder = QSysInfo::LittleEndian;
+
+        stream.setByteOrder( QDataStream::LittleEndian );
+    } else if (byteOrder == "MM") {
+        d->byteOrder = QSysInfo::BigEndian;
+
+        stream.setByteOrder( QDataStream::BigEndian );
+    } else {
         return false;
     }
-    delete_union();
-    format_ = format;
-    new_union();
+
+    quint16 id;
+    quint32 offset;
+
+    stream >> id;
+    stream >> offset;
+
+    if (id != 0x002A)
+        return false;
+
+    device->seek(startPos + offset);
+
+    QList<ExifIfdHeader> headers = readIfdHeaders(stream);
+
+    stream >> offset;
+
+    d->imageIfdValues = readIfdValues<ImageTag>(stream, startPos, headers);
+
+    QExifValue exifIfdPointer = d->imageIfdValues.take(ImageTag(ExifIfdPointer));
+    QExifValue gpsIfdPointer = d->imageIfdValues.take(ImageTag(GpsInfoIfdPointer));
+
+    d->exifIfdValues = readIfdValues<ExifExtendedTag>(stream, startPos, exifIfdPointer);
+    d->gpsIfdValues = readIfdValues<GpsTag>(stream, startPos, gpsIfdPointer);
+
+    d->exifIfdValues.remove(ExifExtendedTag(InteroperabilityIfdPointer));
+
+    if (offset) {
+        device->seek(startPos + offset);
+
+        QMap<quint16, QExifValue> thumbnailIfdValues = readIfdValues<quint16>(
+                stream, startPos, readIfdHeaders( stream));
+
+        QExifValue jpegOffset = thumbnailIfdValues.value(JpegInterchangeFormat);
+        QExifValue jpegLength = thumbnailIfdValues.value(JpegInterchangeFormatLength);
+
+        if (jpegOffset.type() == QExifValue::Long && jpegOffset.count() == 1
+            && jpegLength.type() == QExifValue::Long && jpegLength.count() == 1)
+        {
+            device->seek(startPos + jpegOffset.toLong());
+
+            d->thumbnailData = device->read( jpegLength.toLong() );
+
+            d->thumbnailXResolution = thumbnailIfdValues.value(XResolution);
+            d->thumbnailYResolution = thumbnailIfdValues.value(YResolution);
+            d->thumbnailResolutionUnit = thumbnailIfdValues.value(ResolutionUnit);
+            d->thumbnailOrientation = thumbnailIfdValues.value(Orientation);
+        }
+    }
     return true;
-  }
-  unsigned data() const { return data_; }
-  void data(unsigned data) { data_ = data; }
-  unsigned length() const { return length_; }
-  void length(unsigned length) { length_ = length; }
-
-  // functions to access the data
-  //
-  // !! it's CALLER responsibility to check that format !!
-  // !! is correct before accessing it's field          !!
-  //
-  // - getters are use here to allow future addition
-  //   of checks if format is correct
-  byte_vector &val_byte() { return *val_byte_; }
-  ascii_vector &val_string() { return *val_string_; }
-  short_vector &val_short() { return *val_short_; }
-  long_vector &val_long() { return *val_long_; }
-  rational_vector &val_rational() { return *val_rational_; }
-
- private:
-  // Raw fields
-  unsigned short tag_;
-  unsigned short format_;
-  unsigned data_;
-  unsigned length_;
-
-  // Parsed fields
-  union {
-    byte_vector *val_byte_;
-    ascii_vector *val_string_;
-    short_vector *val_short_;
-    long_vector *val_long_;
-    rational_vector *val_rational_;
-  };
-
-  void delete_union() {
-    switch (format_) {
-      case 0x1:
-        delete val_byte_;
-        val_byte_ = nullptr;
-        break;
-      case 0x2:
-        delete val_string_;
-        val_string_ = nullptr;
-        break;
-      case 0x3:
-        delete val_short_;
-        val_short_ = nullptr;
-        break;
-      case 0x4:
-        delete val_long_;
-        val_long_ = nullptr;
-        break;
-      case 0x5:
-        delete val_rational_;
-        val_rational_ = nullptr;
-        break;
-      case 0xff:
-        break;
-      default:
-        // should not get here
-        // should I throw an exception or ...?
-        break;
-    }
-  }
-  void new_union() {
-    switch (format_) {
-      case 0x1:
-        val_byte_ = new byte_vector();
-        break;
-      case 0x2:
-        val_string_ = new ascii_vector();
-        break;
-      case 0x3:
-        val_short_ = new short_vector();
-        break;
-      case 0x4:
-        val_long_ = new long_vector();
-        break;
-      case 0x5:
-        val_rational_ = new rational_vector();
-        break;
-      case 0xff:
-        break;
-      default:
-        // should not get here
-        // should I throw an exception or ...?
-        break;
-    }
-  }
-};
-
-// Helper functions
-template <typename T, bool alignIntel>
-T parse(const unsigned char *buf);
-
-template <>
-uint8_t parse<uint8_t, false>(const unsigned char *buf) {
-  return *buf;
 }
 
-template <>
-uint8_t parse<uint8_t, true>(const unsigned char *buf) {
-  return *buf;
-}
+quint32 QExifImageHeader::writeExifHeader(QDataStream &stream, quint16 tag, const QExifValue &value, quint32 offset) const
+{
+    stream << tag;
+    stream << quint16(value.type());
+    stream << quint32(value.count());
 
-template <>
-uint16_t parse<uint16_t, false>(const unsigned char *buf) {
-  return (static_cast<uint16_t>(buf[0]) << 8) | buf[1];
-}
+    switch (value.type()) {
+    case QExifValue::Byte:
+        if (value.count() <= 4) {
+            foreach (quint8 byte, value.toByteVector())
+                stream << byte;
+            for (int j = value.count(); j < 4; j++)
+                stream << quint8(0);
+        } else {
+            stream << offset;
 
-template <>
-uint16_t parse<uint16_t, true>(const unsigned char *buf) {
-  return (static_cast<uint16_t>(buf[1]) << 8) | buf[0];
-}
+            offset += value.count();
+        }
+        break;
+    case QExifValue::Undefined:
+        if (value.count() <= 4) {
+            stream.device()->write(value.toByteArray());
 
-template <>
-uint32_t parse<uint32_t, false>(const unsigned char *buf) {
-  return (static_cast<uint32_t>(buf[0]) << 24) |
-         (static_cast<uint32_t>(buf[1]) << 16) |
-         (static_cast<uint32_t>(buf[2]) << 8) | buf[3];
-}
+            if ( value.count() < 4)
+                stream.writeRawData("\0\0\0\0", 4 -  value.count());
+        } else {
+            stream << offset;
 
-template <>
-uint32_t parse<uint32_t, true>(const unsigned char *buf) {
-  return (static_cast<uint32_t>(buf[3]) << 24) |
-         (static_cast<uint32_t>(buf[2]) << 16) |
-         (static_cast<uint32_t>(buf[1]) << 8) | buf[0];
-}
+            offset += value.count();
+        }
+        break;
+    case QExifValue::Ascii:
+        if (value.count() <= 4) {
+            QByteArray bytes = value.toByteArray();
 
-template <>
-Rational parse<Rational, true>(const unsigned char *buf) {
-  Rational r;
-  r.numerator = parse<uint32_t, true>(buf);
-  r.denominator = parse<uint32_t, true>(buf + 4);
-  return r;
-}
+            stream.writeRawData(bytes.constData(), value.count());
+            if (value.count() < 4)
+                stream.writeRawData("\0\0\0\0", 4 - value.count());
+        } else {
+            stream << offset;
 
-template <>
-Rational parse<Rational, false>(const unsigned char *buf) {
-  Rational r;
-  r.numerator = parse<uint32_t, false>(buf);
-  r.denominator = parse<uint32_t, false>(buf + 4);
-  return r;
-}
+            offset += value.count();
+        }
+        break;
+    case QExifValue::Short:
+        if (value.count() <= 2) {
+            foreach (quint16 shrt, value.toShortVector())
+                stream << shrt;
+            for (int j = value.count(); j < 2; j++)
+                stream << quint16(0);
+        } else {
+            stream << offset;
 
-/**
- * Try to read entry.length() values for this entry.
- *
- * Returns:
- *  true  - entry.length() values were read
- *  false - something went wrong, vec's content was not touched
- */
-template <typename T, bool alignIntel, typename C>
-bool extract_values(C &container, const unsigned char *buf, const unsigned base,
-                    const unsigned len, const IFEntry &entry) {
-  const unsigned char *data;
-  uint32_t reversed_data;
-  // if data fits into 4 bytes, they are stored directly in
-  // the data field in IFEntry
-  if (sizeof(T) * entry.length() <= 4) {
-    if (alignIntel) {
-      reversed_data = entry.data();
-    } else {
-      reversed_data = entry.data();
-      // this reversing works, but is ugly
-      unsigned char *rdata = reinterpret_cast<unsigned char *>(&reversed_data);
-      unsigned char tmp;
-      tmp = rdata[0];
-      rdata[0] = rdata[3];
-      rdata[3] = tmp;
-      tmp = rdata[1];
-      rdata[1] = rdata[2];
-      rdata[2] = tmp;
-    }
-    data = reinterpret_cast<const unsigned char *>(&(reversed_data));
-  } else {
-    data = buf + base + entry.data();
-    if (data + sizeof(T) * entry.length() > buf + len) {
-      return false;
-    }
-  }
-  container.resize(entry.length());
-  for (size_t i = 0; i < entry.length(); ++i) {
-    container[i] = parse<T, alignIntel>(data + sizeof(T) * i);
-  }
-  return true;
-}
+            offset += value.count() * sizeof(quint16);
+        }
+        break;
+    case QExifValue::Long:
+        if(value.count() == 0) {
+            stream << quint32(0);
+        } else if(value.count() == 1) {
+            stream << value.toLong();
+        } else {
+            stream << offset;
 
-template <bool alignIntel>
-void parseIFEntryHeader(const unsigned char *buf, unsigned short &tag,
-                        unsigned short &format, unsigned &length,
-                        unsigned &data) {
-  // Each directory entry is composed of:
-  // 2 bytes: tag number (data field)
-  // 2 bytes: data format
-  // 4 bytes: number of components
-  // 4 bytes: data value or offset to data value
-  tag = parse<uint16_t, alignIntel>(buf);
-  format = parse<uint16_t, alignIntel>(buf + 2);
-  length = parse<uint32_t, alignIntel>(buf + 4);
-  data = parse<uint32_t, alignIntel>(buf + 8);
-}
+            offset += value.count()  * sizeof(quint32);
+        }
+        break;
+    case QExifValue::SignedLong:
+        if (value.count() == 0) {
+            stream << quint32( 0 );
+        } else if (value.count() == 1) {
+            stream << value.toSignedLong();
+        } else {
+            stream << offset;
 
-template <bool alignIntel>
-void parseIFEntryHeader(const unsigned char *buf, IFEntry &result) {
-  unsigned short tag;
-  unsigned short format;
-  unsigned length;
-  unsigned data;
+            offset += value.count()  * sizeof(qint32);
+        }
+        break;
+    case QExifValue::Rational:
+        if(value.count() == 0) {
+            stream << quint32(0);
+        } else {
+            stream << offset;
 
-  parseIFEntryHeader<alignIntel>(buf, tag, format, length, data);
+            offset += value.count() * sizeof(quint32) * 2;
+        }
+        break;
+    case QExifValue::SignedRational:
+        if (value.count() == 0) {
+            stream << quint32(0);
+        } else {
+            stream << offset;
 
-  result.tag(tag);
-  result.format(format);
-  result.length(length);
-  result.data(data);
-}
-
-template <bool alignIntel>
-IFEntry parseIFEntry_temp(const unsigned char *buf, const unsigned offs,
-                          const unsigned base, const unsigned len) {
-  IFEntry result;
-
-  // check if there even is enough data for IFEntry in the buffer
-  if (buf + offs + 12 > buf + len) {
-    result.tag(0xFF);
-    return result;
-  }
-
-  parseIFEntryHeader<alignIntel>(buf + offs, result);
-
-  // Parse value in specified format
-  switch (result.format()) {
-    case 1:
-      if (!extract_values<uint8_t, alignIntel>(result.val_byte(), buf, base,
-                                               len, result)) {
-        result.tag(0xFF);
-      }
-      break;
-    case 2:
-      // string is basically sequence of uint8_t (well, according to EXIF even
-      // uint7_t, but
-      // we don't have that), so just read it as bytes
-      if (!extract_values<uint8_t, alignIntel>(result.val_string(), buf, base,
-                                               len, result)) {
-        result.tag(0xFF);
-      }
-      // and cut zero byte at the end, since we don't want that in the
-      // std::string
-      if (result.val_string()[result.val_string().length() - 1] == '\0') {
-        result.val_string().resize(result.val_string().length() - 1);
-      }
-      break;
-    case 3:
-      if (!extract_values<uint16_t, alignIntel>(result.val_short(), buf, base,
-                                                len, result)) {
-        result.tag(0xFF);
-      }
-      break;
-    case 4:
-      if (!extract_values<uint32_t, alignIntel>(result.val_long(), buf, base,
-                                                len, result)) {
-        result.tag(0xFF);
-      }
-      break;
-    case 5:
-      if (!extract_values<Rational, alignIntel>(result.val_rational(), buf,
-                                                base, len, result)) {
-        result.tag(0xFF);
-      }
-      break;
-    case 7:
-    case 9:
-    case 10:
-      break;
+            offset += value.count() * sizeof(qint32) * 2;
+        }
+        break;
     default:
-      result.tag(0xFF);
-  }
-  return result;
+        qWarning() << "Invalid Ifd Type" << value.type();
+        stream << quint32(0);
+    }
+
+    return offset;
 }
 
-// helper functions for convinience
-template <typename T>
-T parse_value(const unsigned char *buf, bool alignIntel) {
-  if (alignIntel) {
-    return parse<T, true>(buf);
-  } else {
-    return parse<T, false>(buf);
-  }
+void QExifImageHeader::writeExifValue(QDataStream &stream, const QExifValue &value) const
+{
+    switch (value.type()) {
+    case QExifValue::Byte:
+        if (value.count() > 4)
+            foreach (quint8 byte, value.toByteVector())
+                stream << byte;
+        break;
+    case QExifValue::Undefined:
+        if (value.count() > 4)
+            stream.device()->write(value.toByteArray());
+        break;
+    case QExifValue::Ascii:
+        if (value.count() > 4) {
+            QByteArray bytes = value.toByteArray();
+
+            stream.writeRawData(bytes.constData(), bytes.size() + 1);
+        }
+        break;
+    case QExifValue::Short:
+        if (value.count() > 2)
+            foreach(quint16 shrt, value.toShortVector())
+                stream << shrt;
+        break;
+    case QExifValue::Long:
+        if(value.count() > 1)
+            foreach (quint32 lng, value.toLongVector())
+                stream << lng;
+        break;
+    case QExifValue::SignedLong:
+        if (value.count() > 1)
+            foreach(qint32 lng, value.toSignedLongVector())
+                stream << lng;
+        break;
+    case QExifValue::Rational:
+        if (value.count() > 0)
+            foreach (QExifURational rational, value.toRationalVector())
+                stream << rational;
+        break;
+    case QExifValue::SignedRational:
+        if (value.count() > 0)
+            foreach (QExifSRational rational, value.toSignedRationalVector())
+                stream << rational;
+        break;
+    default:
+        qWarning() << "Invalid Ifd Type" << value.type();
+        break;
+    }
 }
 
-void parseIFEntryHeader(const unsigned char *buf, bool alignIntel,
-                        unsigned short &tag, unsigned short &format,
-                        unsigned &length, unsigned &data) {
-  if (alignIntel) {
-    parseIFEntryHeader<true>(buf, tag, format, length, data);
-  } else {
-    parseIFEntryHeader<false>(buf, tag, format, length, data);
-  }
+template <typename T> quint32 QExifImageHeader::writeExifHeaders(
+        QDataStream &stream, const QMap<T, QExifValue> &values, quint32 offset) const
+{
+    offset += values.count() * 12;
+
+    for (typename QMap<T, QExifValue>::const_iterator i = values.constBegin(); i != values.constEnd(); i++)
+        offset = writeExifHeader(stream, i.key(), i.value(), offset);
+
+    return offset;
 }
 
-IFEntry parseIFEntry(const unsigned char *buf, const unsigned offs,
-                     const bool alignIntel, const unsigned base,
-                     const unsigned len) {
-  if (alignIntel) {
-    return parseIFEntry_temp<true>(buf, offs, base, len);
-  } else {
-    return parseIFEntry_temp<false>(buf, offs, base, len);
-  }
-}
+template <typename T> void QExifImageHeader::writeExifValues(
+        QDataStream &stream, const QMap<T, QExifValue> &values) const
+{
+    for (typename QMap<T, QExifValue>::const_iterator i = values.constBegin(); i != values.constEnd(); i++)
+        writeExifValue(stream, i.value());
 }
 
-//
-// Locates the EXIF segment and parses it using parseFromEXIFSegment
-//
-int easyexif::EXIFInfo::parseFrom(const unsigned char *buf, unsigned len) {
-  // Sanity check: all JPEG files start with 0xFFD8.
-  if (!buf || len < 4) return PARSE_EXIF_ERROR_NO_JPEG;
-  if (buf[0] != 0xFF || buf[1] != 0xD8) return PARSE_EXIF_ERROR_NO_JPEG;
+/*!
+    Writes an EXIF header to an I/O \a device.
+    Returns the total number of bytes written.
+*/
+qint64 QExifImageHeader::write(QIODevice *device) const
+{
+#ifndef QT_NO_DEBUG
+    qint64 startPos = device->pos();
+#endif
 
-  // Sanity check: some cameras pad the JPEG image with some bytes at the end.
-  // Normally, we should be able to find the JPEG end marker 0xFFD9 at the end
-  // of the image buffer, but not always. As long as there are some bytes
-  // except 0xD9 at the end of the image buffer, keep decrementing len until
-  // an 0xFFD9 is found. If JPEG end marker 0xFFD9 is not found,
-  // then we can be reasonably sure that the buffer is not a JPEG.
-  while (len > 2) {
-    if (buf[len - 1] == 0xD9 && buf[len - 2] == 0xFF)
-      break;
-    len--;
-  }
-  if (len <= 2)
-    return PARSE_EXIF_ERROR_NO_JPEG;
+    QDataStream stream( device );
 
-  clear();
+    if (d->byteOrder == QSysInfo::LittleEndian) {
+        stream.setByteOrder( QDataStream::LittleEndian );
 
-  // Scan for EXIF header (bytes 0xFF 0xE1) and do a sanity check by
-  // looking for bytes "Exif\0\0". The marker length data is in Motorola
-  // byte order, which results in the 'false' parameter to parse16().
-  // The marker has to contain at least the TIFF header, otherwise the
-  // EXIF data is corrupt. So the minimum length specified here has to be:
-  //   2 bytes: section size
-  //   6 bytes: "Exif\0\0" string
-  //   2 bytes: TIFF header (either "II" or "MM" string)
-  //   2 bytes: TIFF magic (short 0x2a00 in Motorola byte order)
-  //   4 bytes: Offset to first IFD
-  // =========
-  //  16 bytes
-  unsigned offs = 0;  // current offset into buffer
-  for (offs = 0; offs < len - 1; offs++)
-    if (buf[offs] == 0xFF && buf[offs + 1] == 0xE1) break;
-  if (offs + 4 > len) return PARSE_EXIF_ERROR_NO_EXIF;
-  offs += 2;
-  unsigned short section_length = parse_value<uint16_t>(buf + offs, false);
-  if (offs + section_length > len || section_length < 16)
-    return PARSE_EXIF_ERROR_CORRUPT;
-  offs += 2;
+        device->write("II", 2);
+        device->write("\x2A\x00", 2);
+        device->write("\x08\x00\x00\x00", 4);
+    } else if (d->byteOrder == QSysInfo::BigEndian) {
+        stream.setByteOrder(QDataStream::BigEndian);
 
-  return parseFromEXIFSegment(buf + offs, len - offs);
-}
+        device->write("MM", 2);
+        device->write("\x00\x2A", 2);
+        device->write("\x00\x00\x00\x08", 4);
+    }
 
-int easyexif::EXIFInfo::parseFrom(const string &data) {
-  return parseFrom(
-      reinterpret_cast<const unsigned char *>(data.data()), static_cast<unsigned>(data.length()));
-}
+    quint16 count = d->imageIfdValues.count() + 1;
+    quint32 offset = 26;
 
-//
-// Main parsing function for an EXIF segment.
-//
-// PARAM: 'buf' start of the EXIF TIFF, which must be the bytes "Exif\0\0".
-// PARAM: 'len' length of buffer
-//
-int easyexif::EXIFInfo::parseFromEXIFSegment(const unsigned char *buf,
-                                             unsigned len) {
-  bool alignIntel = true;  // byte alignment (defined in EXIF header)
-  unsigned offs = 0;       // current offset into buffer
-  if (!buf || len < 6) return PARSE_EXIF_ERROR_NO_EXIF;
+    if (!d->gpsIfdValues.isEmpty()) {
+        count++;
+        offset += 12;
+    }
 
-  if (!std::equal(buf, buf + 6, "Exif\0\0")) return PARSE_EXIF_ERROR_NO_EXIF;
-  offs += 6;
+    stream << count;
 
-  // Now parsing the TIFF header. The first two bytes are either "II" or
-  // "MM" for Intel or Motorola byte alignment. Sanity check by parsing
-  // the unsigned short that follows, making sure it equals 0x2a. The
-  // last 4 bytes are an offset into the first IFD, which are added to
-  // the global offset counter. For this block, we expect the following
-  // minimum size:
-  //  2 bytes: 'II' or 'MM'
-  //  2 bytes: 0x002a
-  //  4 bytes: offset to first IDF
-  // -----------------------------
-  //  8 bytes
-  if (offs + 8 > len) return PARSE_EXIF_ERROR_CORRUPT;
-  unsigned tiff_header_start = offs;
-  if (buf[offs] == 'I' && buf[offs + 1] == 'I')
-    alignIntel = true;
-  else {
-    if (buf[offs] == 'M' && buf[offs + 1] == 'M')
-      alignIntel = false;
+    offset = writeExifHeaders(stream, d->imageIfdValues, offset);
+
+    quint32 exifIfdOffset = offset;
+
+    stream << quint16( ExifIfdPointer );
+    stream << quint16( QExifValue::Long );
+    stream << quint32( 1 );
+    stream << exifIfdOffset;
+    offset += calculateSize(d->exifIfdValues);
+
+    quint32 gpsIfdOffset = offset;
+
+    if (!d->gpsIfdValues.isEmpty()) {
+        stream << quint16(GpsInfoIfdPointer);
+        stream << quint16(QExifValue::Long);
+        stream << quint32(1);
+        stream << gpsIfdOffset;
+
+        d->imageIfdValues.insert(ImageTag(GpsInfoIfdPointer), QExifValue(offset));
+
+        offset += calculateSize(d->gpsIfdValues);
+    }
+
+    if (!d->thumbnailData.isEmpty())
+        stream << offset; // Write offset to thumbnail Ifd.
     else
-      return PARSE_EXIF_ERROR_UNKNOWN_BYTEALIGN;
-  }
-  this->ByteAlign = alignIntel;
-  offs += 2;
-  if (0x2a != parse_value<uint16_t>(buf + offs, alignIntel))
-    return PARSE_EXIF_ERROR_CORRUPT;
-  offs += 2;
-  unsigned first_ifd_offset = parse_value<uint32_t>(buf + offs, alignIntel);
-  offs += first_ifd_offset - 4;
-  if (offs >= len) return PARSE_EXIF_ERROR_CORRUPT;
+        stream << quint32(0);
 
-  // Now parsing the first Image File Directory (IFD0, for the main image).
-  // An IFD consists of a variable number of 12-byte directory entries. The
-  // first two bytes of the IFD section contain the number of directory
-  // entries in the section. The last 4 bytes of the IFD contain an offset
-  // to the next IFD, which means this IFD must contain exactly 6 + 12 * num
-  // bytes of data.
-  if (offs + 2 > len) return PARSE_EXIF_ERROR_CORRUPT;
-  int num_entries = parse_value<uint16_t>(buf + offs, alignIntel);
-  if (offs + 6 + 12 * num_entries > len) return PARSE_EXIF_ERROR_CORRUPT;
-  offs += 2;
-  unsigned exif_sub_ifd_offset = len;
-  unsigned gps_sub_ifd_offset = len;
-  while (--num_entries >= 0) {
-    IFEntry result =
-        parseIFEntry(buf, offs, alignIntel, tiff_header_start, len);
-    offs += 12;
-    switch (result.tag()) {
-      case 0x102:
-        // Bits per sample
-        if (result.format() == 3 && result.val_short().size())
-          this->BitsPerSample = result.val_short().front();
-        break;
+    writeExifValues( stream, d->imageIfdValues );
 
-      case 0x10E:
-        // Image description
-        if (result.format() == 2) this->ImageDescription = result.val_string();
-        break;
+#ifndef QT_NO_DEBUG
+    Q_ASSERT(startPos + exifIfdOffset == device->pos());
+#endif
 
-      case 0x10F:
-        // Digicam make
-        if (result.format() == 2) this->Make = result.val_string();
-        break;
+    stream << quint16(d->exifIfdValues.count());
 
-      case 0x110:
-        // Digicam model
-        if (result.format() == 2) this->Model = result.val_string();
-        break;
+    writeExifHeaders(stream, d->exifIfdValues, exifIfdOffset);
+    writeExifValues(stream, d->exifIfdValues);
 
-      case 0x112:
-        // Orientation of image
-        if (result.format() == 3 && result.val_short().size())
-          this->Orientation = result.val_short().front();
-        break;
+#ifndef QT_NO_DEBUG
+    Q_ASSERT(startPos + gpsIfdOffset == device->pos());
+#endif
 
-      case 0x131:
-        // Software used for image
-        if (result.format() == 2) this->Software = result.val_string();
-        break;
+    if (!d->gpsIfdValues.isEmpty()) {
+        stream << quint16(d->gpsIfdValues.count());
 
-      case 0x132:
-        // EXIF/TIFF date/time of image modification
-        if (result.format() == 2) this->DateTime = result.val_string();
-        break;
-
-      case 0x8298:
-        // Copyright information
-        if (result.format() == 2) this->Copyright = result.val_string();
-        break;
-
-      case 0x8825:
-        // GPS IFS offset
-        gps_sub_ifd_offset = tiff_header_start + result.data();
-        break;
-
-      case 0x8769:
-        // EXIF SubIFD offset
-        exif_sub_ifd_offset = tiff_header_start + result.data();
-        break;
+        writeExifHeaders(stream, d->gpsIfdValues, gpsIfdOffset);
+        writeExifValues(stream, d->gpsIfdValues);
     }
-  }
 
-  // Jump to the EXIF SubIFD if it exists and parse all the information
-  // there. Note that it's possible that the EXIF SubIFD doesn't exist.
-  // The EXIF SubIFD contains most of the interesting information that a
-  // typical user might want.
-  if (exif_sub_ifd_offset + 4 <= len) {
-    offs = exif_sub_ifd_offset;
-    int num_sub_entries = parse_value<uint16_t>(buf + offs, alignIntel);
-    if (offs + 6 + 12 * num_sub_entries > len) return PARSE_EXIF_ERROR_CORRUPT;
-    offs += 2;
-    while (--num_sub_entries >= 0) {
-      IFEntry result =
-          parseIFEntry(buf, offs, alignIntel, tiff_header_start, len);
-      switch (result.tag()) {
-        case 0x829a:
-          // Exposure time in seconds
-          if (result.format() == 5 && result.val_rational().size())
-            this->ExposureTime = result.val_rational().front();
-          break;
+#ifndef QT_NO_DEBUG
+    Q_ASSERT(startPos + offset == device->pos());
+#endif
 
-        case 0x829d:
-          // FNumber
-          if (result.format() == 5 && result.val_rational().size())
-            this->FNumber = result.val_rational().front();
-          break;
+    if (!d->thumbnailData.isEmpty()) {
+        offset += 86;
 
-      case 0x8822:
-        // Exposure Program
-        if (result.format() == 3 && result.val_short().size())
-          this->ExposureProgram = result.val_short().front();
-        break;
+        stream << quint16(7);
 
-        case 0x8827:
-          // ISO Speed Rating
-          if (result.format() == 3 && result.val_short().size())
-            this->ISOSpeedRatings = result.val_short().front();
-          break;
+        QExifValue xResolution = d->thumbnailXResolution.isNull()
+                ? QExifValue(QExifURational(72, 1))
+                : d->thumbnailXResolution;
 
-        case 0x9003:
-          // Original date and time
-          if (result.format() == 2)
-            this->DateTimeOriginal = result.val_string();
-          break;
+        QExifValue yResolution = d->thumbnailYResolution.isNull()
+                ? QExifValue(QExifURational(72, 1))
+                : d->thumbnailYResolution;
 
-        case 0x9004:
-          // Digitization date and time
-          if (result.format() == 2)
-            this->DateTimeDigitized = result.val_string();
-          break;
+        QExifValue resolutionUnit = d->thumbnailResolutionUnit.isNull()
+                ? QExifValue(quint16(2))
+                : d->thumbnailResolutionUnit;
 
-        case 0x9201:
-          // Shutter speed value
-          if (result.format() == 5 && result.val_rational().size())
-            this->ShutterSpeedValue = result.val_rational().front();
-          break;
+        QExifValue orientation = d->thumbnailOrientation.isNull()
+                ? QExifValue(quint16(0))
+                : d->thumbnailOrientation;
 
-        case 0x9204:
-          // Exposure bias value
-          if (result.format() == 5 && result.val_rational().size())
-            this->ExposureBiasValue = result.val_rational().front();
-          break;
+        writeExifHeader(stream, Compression, QExifValue(quint16(6)), offset);
 
-        case 0x9206:
-          // Subject distance
-          if (result.format() == 5 && result.val_rational().size())
-            this->SubjectDistance = result.val_rational().front();
-          break;
+        offset = writeExifHeader(stream, XResolution, xResolution, offset);
+        offset = writeExifHeader(stream, YResolution, yResolution, offset);
 
-        case 0x9209:
-          // Flash used
-          if (result.format() == 3 && result.val_short().size()) {
-            uint16_t data = result.val_short().front();
-            
-            this->Flash = data & 1;
-            this->FlashReturnedLight = (data & 6) >> 1;
-            this->FlashMode = (data & 24) >> 3;
-          }
-          break;
+        writeExifHeader(stream, ResolutionUnit, resolutionUnit, offset);
+        writeExifHeader(stream, Orientation, orientation, offset);
+        writeExifHeader(stream, JpegInterchangeFormat, QExifValue(offset), offset);
+        writeExifHeader(stream, JpegInterchangeFormatLength,
+                        QExifValue(quint32(d->thumbnailData.size())), offset);
 
-        case 0x920a:
-          // Focal length
-          if (result.format() == 5 && result.val_rational().size())
-            this->FocalLength = result.val_rational().front();
-          break;
+        writeExifValue(stream, xResolution);
+        writeExifValue(stream, yResolution);
 
-        case 0x9207:
-          // Metering mode
-          if (result.format() == 3 && result.val_short().size())
-            this->MeteringMode = result.val_short().front();
-          break;
+#ifndef QT_NO_DEBUG
+        Q_ASSERT(startPos + offset == device->pos());
+#endif
 
-        case 0x9291:
-          // Subsecond original time
-          if (result.format() == 2)
-            this->SubSecTimeOriginal = result.val_string();
-          break;
+        device->write(d->thumbnailData);
 
-        case 0xa002:
-          // EXIF Image width
-          if (result.format() == 4 && result.val_long().size())
-            this->ImageWidth = result.val_long().front();
-          if (result.format() == 3 && result.val_short().size())
-            this->ImageWidth = result.val_short().front();
-          break;
-
-        case 0xa003:
-          // EXIF Image height
-          if (result.format() == 4 && result.val_long().size())
-            this->ImageHeight = result.val_long().front();
-          if (result.format() == 3 && result.val_short().size())
-            this->ImageHeight = result.val_short().front();
-          break;
-
-        case 0xa20e:
-          // EXIF Focal plane X-resolution
-          if (result.format() == 5) {
-            this->LensInfo.FocalPlaneXResolution = result.val_rational()[0];
-          }
-          break;
-
-        case 0xa20f:
-          // EXIF Focal plane Y-resolution
-          if (result.format() == 5) {
-            this->LensInfo.FocalPlaneYResolution = result.val_rational()[0];
-          }
-          break;
-
-        case 0xa210:
-            // EXIF Focal plane resolution unit
-            if (result.format() == 3 && result.val_short().size()) {
-                this->LensInfo.FocalPlaneResolutionUnit = result.val_short().front();
-            }
-            break;
-
-        case 0xa405:
-          // Focal length in 35mm film
-          if (result.format() == 3 && result.val_short().size())
-            this->FocalLengthIn35mm = result.val_short().front();
-          break;
-
-        case 0xa432:
-          // Focal length and FStop.
-          if (result.format() == 5) {
-            int sz = static_cast<unsigned>(result.val_rational().size());
-            if (sz)
-              this->LensInfo.FocalLengthMin = result.val_rational()[0];
-            if (sz > 1)
-              this->LensInfo.FocalLengthMax = result.val_rational()[1];
-            if (sz > 2)
-              this->LensInfo.FStopMin = result.val_rational()[2];
-            if (sz > 3)
-              this->LensInfo.FStopMax = result.val_rational()[3];
-          }
-          break;
-
-        case 0xa433:
-          // Lens make.
-          if (result.format() == 2) {
-            this->LensInfo.Make = result.val_string();
-          }
-          break;
-
-        case 0xa434:
-          // Lens model.
-          if (result.format() == 2) {
-            this->LensInfo.Model = result.val_string();
-          }
-          break;
-      }
-      offs += 12;
+        offset += d->thumbnailData.size();
     }
-  }
 
-  // Jump to the GPS SubIFD if it exists and parse all the information
-  // there. Note that it's possible that the GPS SubIFD doesn't exist.
-  if (gps_sub_ifd_offset + 4 <= len) {
-    offs = gps_sub_ifd_offset;
-    int num_sub_entries = parse_value<uint16_t>(buf + offs, alignIntel);
-    if (offs + 6 + 12 * num_sub_entries > len) return PARSE_EXIF_ERROR_CORRUPT;
-    offs += 2;
-    while (--num_sub_entries >= 0) {
-      unsigned short tag, format;
-      unsigned length, data;
-      parseIFEntryHeader(buf + offs, alignIntel, tag, format, length, data);
-      switch (tag) {
-        case 1:
-          // GPS north or south
-          this->GeoLocation.LatComponents.direction = *(buf + offs + 8);
-          if (this->GeoLocation.LatComponents.direction == 0) {
-            this->GeoLocation.LatComponents.direction = '?';
-          }
-          if ('S' == this->GeoLocation.LatComponents.direction) {
-            this->GeoLocation.Latitude = -this->GeoLocation.Latitude;
-          }
-          break;
+#ifndef QT_NO_DEBUG
+    Q_ASSERT(startPos + offset == device->pos());
+#endif
 
-        case 2:
-          // GPS latitude
-          if ((format == 5 || format == 10) && length == 3) {
-            this->GeoLocation.LatComponents.degrees = parse_value<Rational>(
-                buf + data + tiff_header_start, alignIntel);
-            this->GeoLocation.LatComponents.minutes = parse_value<Rational>(
-                buf + data + tiff_header_start + 8, alignIntel);
-            this->GeoLocation.LatComponents.seconds = parse_value<Rational>(
-                buf + data + tiff_header_start + 16, alignIntel);
-            this->GeoLocation.Latitude =
-                this->GeoLocation.LatComponents.degrees +
-                this->GeoLocation.LatComponents.minutes / 60 +
-                this->GeoLocation.LatComponents.seconds / 3600;
-            if ('S' == this->GeoLocation.LatComponents.direction) {
-              this->GeoLocation.Latitude = -this->GeoLocation.Latitude;
-            }
-          }
-          break;
+    d->size = offset;
 
-        case 3:
-          // GPS east or west
-          this->GeoLocation.LonComponents.direction = *(buf + offs + 8);
-          if (this->GeoLocation.LonComponents.direction == 0) {
-            this->GeoLocation.LonComponents.direction = '?';
-          }
-          if ('W' == this->GeoLocation.LonComponents.direction) {
-            this->GeoLocation.Longitude = -this->GeoLocation.Longitude;
-          }
-          break;
-
-        case 4:
-          // GPS longitude
-          if ((format == 5 || format == 10) && length == 3) {
-            this->GeoLocation.LonComponents.degrees = parse_value<Rational>(
-                buf + data + tiff_header_start, alignIntel);
-            this->GeoLocation.LonComponents.minutes = parse_value<Rational>(
-                buf + data + tiff_header_start + 8, alignIntel);
-            this->GeoLocation.LonComponents.seconds = parse_value<Rational>(
-                buf + data + tiff_header_start + 16, alignIntel);
-            this->GeoLocation.Longitude =
-                this->GeoLocation.LonComponents.degrees +
-                this->GeoLocation.LonComponents.minutes / 60 +
-                this->GeoLocation.LonComponents.seconds / 3600;
-            if ('W' == this->GeoLocation.LonComponents.direction)
-              this->GeoLocation.Longitude = -this->GeoLocation.Longitude;
-          }
-          break;
-
-        case 5:
-          // GPS altitude reference (below or above sea level)
-          this->GeoLocation.AltitudeRef = *(buf + offs + 8);
-          if (1 == this->GeoLocation.AltitudeRef) {
-            this->GeoLocation.Altitude = -this->GeoLocation.Altitude;
-          }
-          break;
-
-        case 6:
-          // GPS altitude
-          if ((format == 5 || format == 10)) {
-            this->GeoLocation.Altitude = parse_value<Rational>(
-                buf + data + tiff_header_start, alignIntel);
-            if (1 == this->GeoLocation.AltitudeRef) {
-              this->GeoLocation.Altitude = -this->GeoLocation.Altitude;
-            }
-          }
-          break;
-
-        case 11:
-          // GPS degree of precision (DOP)
-          if ((format == 5 || format == 10)) {
-            this->GeoLocation.DOP = parse_value<Rational>(
-                buf + data + tiff_header_start, alignIntel);
-          }
-          break;
-      }
-      offs += 12;
-    }
-  }
-
-  return PARSE_EXIF_SUCCESS;
-}
-
-void easyexif::EXIFInfo::clear() {
-  // Strings
-  ImageDescription = "";
-  Make = "";
-  Model = "";
-  Software = "";
-  DateTime = "";
-  DateTimeOriginal = "";
-  DateTimeDigitized = "";
-  SubSecTimeOriginal = "";
-  Copyright = "";
-
-  // Shorts / unsigned / double
-  ByteAlign = 0;
-  Orientation = 0;
-
-  BitsPerSample = 0;
-  ExposureTime = 0;
-  FNumber = 0;
-  ExposureProgram = 0;
-  ISOSpeedRatings = 0;
-  ShutterSpeedValue = 0;
-  ExposureBiasValue = 0;
-  SubjectDistance = 0;
-  FocalLength = 0;
-  FocalLengthIn35mm = 0;
-  Flash = 0;
-  FlashReturnedLight = 0;
-  FlashMode = 0;
-  MeteringMode = 0;
-  ImageWidth = 0;
-  ImageHeight = 0;
-
-  // Geolocation
-  GeoLocation.Latitude = 0;
-  GeoLocation.Longitude = 0;
-  GeoLocation.Altitude = 0;
-  GeoLocation.AltitudeRef = 0;
-  GeoLocation.DOP = 0;
-  GeoLocation.LatComponents.degrees = 0;
-  GeoLocation.LatComponents.minutes = 0;
-  GeoLocation.LatComponents.seconds = 0;
-  GeoLocation.LatComponents.direction = '?';
-  GeoLocation.LonComponents.degrees = 0;
-  GeoLocation.LonComponents.minutes = 0;
-  GeoLocation.LonComponents.seconds = 0;
-  GeoLocation.LonComponents.direction = '?';
-
-  // LensInfo
-  LensInfo.FocalLengthMax = 0;
-  LensInfo.FocalLengthMin = 0;
-  LensInfo.FStopMax = 0;
-  LensInfo.FStopMin = 0;
-  LensInfo.FocalPlaneYResolution = 0;
-  LensInfo.FocalPlaneXResolution = 0;
-  LensInfo.FocalPlaneResolutionUnit = 0;
-  LensInfo.Make = "";
-  LensInfo.Model = "";
+    return offset;
 }

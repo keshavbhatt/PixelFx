@@ -1,6 +1,5 @@
 #include "imageloader.h"
-#include <QImageWriter>
-#include <QScreen>
+#include <QDebug>
 
 ImageLoader::ImageLoader(QObject *parent) : QObject(parent)
 {
@@ -9,6 +8,11 @@ ImageLoader::ImageLoader(QObject *parent) : QObject(parent)
             +QDir::separator()+QApplication::applicationName()+QDir::separator()+
             "scaled"+QDir::separator();
     d.mkpath(scaledLocation);
+
+    originalLocation = QStandardPaths::writableLocation(QStandardPaths::TempLocation)
+            +QDir::separator()+QApplication::applicationName()+QDir::separator()+
+            "original"+QDir::separator();
+    d.mkpath(originalLocation);
 
     filteredLocation = QStandardPaths::writableLocation(QStandardPaths::TempLocation)
             +QDir::separator()+QApplication::applicationName()+QDir::separator()+
@@ -20,6 +24,13 @@ ImageLoader::ImageLoader(QObject *parent) : QObject(parent)
                 QStandardPaths::writableLocation(QStandardPaths::PicturesLocation);
 }
 
+ImageLoader::~ImageLoader()
+{
+    QDir tempDir(QStandardPaths::writableLocation(QStandardPaths::TempLocation)
+            +QDir::separator()+QApplication::applicationName());
+    tempDir.removeRecursively();
+}
+
 void ImageLoader::openFile(QWidget *wid)
 {
     fileName.clear();
@@ -29,15 +40,27 @@ void ImageLoader::openFile(QWidget *wid)
     if(fileName.isEmpty() == false){
         QFileInfo fileInfo(fileName);
         settings.setValue("last_image_dir_path",fileInfo.absoluteDir().path());
+        defaultLocation = settings.value("last_image_dir_path").toString();
         //init image
         UUID = QUuid::createUuid().toString(QUuid::Id128);
+        writeOriginalFile();
         emit loadedImage( writeScaledFile() );
     }
 }
 
+void ImageLoader::writeOriginalFile()
+{
+    QFile file(fileName);
+    file.copy(originalLocation+QDir::separator()+getUUID()+"."+getOriginalExetension());
+}
+
 void ImageLoader::imageInfo()
 {
-
+    ImageInfoWidget* infoDialog = new ImageInfoWidget(nullptr);
+    infoDialog->setWindowFlags(Qt::Dialog | infoDialog->windowFlags());
+    infoDialog->setWindowModality(Qt::WindowModal);
+    infoDialog->fillMetaData(fileName);
+    infoDialog->show();
 }
 
 QImage ImageLoader::writeScaledFile()
@@ -57,9 +80,8 @@ QImage ImageLoader::writeScaledFile()
         if(image.size().height()>768)
         img = QImage(img.scaled( 1000 * dpr,768 * dpr,
                      Qt::KeepAspectRatio, Qt::SmoothTransformation));
-
         img.setDevicePixelRatio(dpr);
-        //img.save(getScaledPath());
+
         QImageWriter imgwritter;
         imgwritter.setFileName(getScaledPath());
         imgwritter.setCompression(0);
@@ -71,9 +93,20 @@ QImage ImageLoader::writeScaledFile()
     return scaledImage;
 }
 
+QString ImageLoader::getLocalOriginalPath()
+{
+    return originalLocation+QDir::separator()+getUUID()+getOriginalExetension();
+}
+
 QString ImageLoader::getOriginalPath()
 {
     return fileName;
+}
+
+QString ImageLoader::getOriginalExetension()
+{
+    QFileInfo info(getOriginalPath());
+    return info.suffix().isEmpty() ? "jpg" : info.suffix();
 }
 
 QString  ImageLoader::getScaledPath()

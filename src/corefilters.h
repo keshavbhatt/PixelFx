@@ -34,6 +34,7 @@ public slots:
     void reset();
     void updateScope(QImage image);
     void apply();
+
 private slots:
     void updateFilterChain();
     QString valueStr(QSlider *slider);
@@ -59,6 +60,12 @@ private slots:
     QString getBlur();
     void init_noiseSliders();
     QString getNoiseFilter();
+    QString getBrightness();
+    QString getContrast();
+    QString getSigmoidalContrast();
+    QString getSaturation();
+    QString getPixelate();
+    QString getHueShift();
 protected slots:
     bool eventFilter(QObject *watched, QEvent *event);
 

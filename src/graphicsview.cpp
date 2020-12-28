@@ -27,6 +27,7 @@ graphicsView::graphicsView(QWidget *parent) :
     //Ctrl+Plus and Ctrl+Minus will work, other keyboard with standard keys will work.
     m_pZoomInSc = new QShortcut( QKeySequence::ZoomIn, this, SLOT( shortCutZoomIn() ) );
     m_pZoomOutSc = new QShortcut( QKeySequence::ZoomOut, this, SLOT( shortCutZoomOut() ) );
+
 }
 
 
@@ -41,26 +42,13 @@ bool graphicsView::loadImage(QImage img)
         updateImageView(img); //pixItem will take maximum 300ms to init due to animation stuff
         scene->addItem(pixItem);
         if(fitToViewChecked){
-            fitInView(img.rect(),Qt::KeepAspectRatio);//so he set it to fit using img object
+            fitInView(img.rect(),Qt::KeepAspectRatio);//so we set it to fit using img object
         }
         emit itemAdded(); // signal to update toolbars
         return true;
     }else{
         return false;
     }
-}
-
-
-void graphicsView::crop()
-{
-    if(isSceneEmpty())
-        return;
-
-    // Refresh selection.
-    CropWidget* cropDialog = new CropWidget(this,pixItem->pixmap());
-    cropDialog->setWindowFlags(Qt::Dialog | cropDialog->windowFlags());
-    cropDialog->setWindowModality(Qt::WindowModal);
-    cropDialog->show();
 }
 
 
@@ -175,6 +163,15 @@ bool graphicsView::isSceneEmpty()
 }
 
 /**
+ * @brief graphicsView::getCurrentImage getter method to get _currentImage
+ * @return _currentImage with effects
+ */
+QPixmap graphicsView::getCurrentImage()
+{
+    return pixItem->pixmap();
+}
+
+/**
  *  @brief Rotate selected item by given angle.
  *  This function will try to rotate first item if given item is null
  */
@@ -229,9 +226,19 @@ void graphicsView::fitToView()
         //good for single Item in scene
         fitInView(pixItem,Qt::KeepAspectRatio);
 
-        //manual move item
-        //pixItem->setPos(sceneRect().center()-pixItem->pixmap().rect().center());
+//        //manual move item
+//        if(fitToViewChecked)
+//            //manual move item
+//            pixItem->setPos(sceneRect().center()-pixItem->pixmap().rect().center());
     }
+}
+
+void graphicsView::centerItem(QRect rect)
+{
+    if(isSceneEmpty())
+        return;
+     fitInView(rect,Qt::KeepAspectRatio);
+//     pixItem->setPos(sceneRect().center()-rect.center());
 }
 
 /**

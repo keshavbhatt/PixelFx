@@ -111,11 +111,11 @@ void CropWidget::onSaveCroppedImage()
 {
     const QPixmap* pixmap = ui->labelPreviewImage->pixmap();
     if (!pixmap) {
-        QMessageBox::information(this, "Error", "There is no cropped image to save.", QMessageBox::Ok);
+        QMessageBox::information(this, "Error", "There is no cropped image to load.", QMessageBox::Ok);
         return ;
     }
     //cropped image
-    //imgCropperLabel->getCroppedImage();
+    emit croppedImage(imgCropperLabel->getCroppedImage());
 }
 
 void CropWidget::onUpdatePreview()

@@ -14,6 +14,8 @@
 
 #include "graphicsview.h"
 #include "imageloader.h"
+#include "cropwidget.h"
+#include "savedialog.h"
 
 class Gift : public QObject
 {
@@ -34,10 +36,11 @@ public slots:
     void compare(bool compare);
     void loadImage(QImage image);
     void imageInfo();
+    void crop();
 private slots:
     void updateTempImage(const QByteArray &byte);
     void setProcessing(bool processing);
-    void applyFilterExportImage(const QString originalFilePath, const QString newFilePath);
+
 private:
     bool processing;
 
@@ -48,6 +51,7 @@ private:
     QImage modifiedImage;
 
     ImageLoader *imageLoader = nullptr;
+    SaveDialog * saveDialog = nullptr;
 };
 
 #endif // GIFT_H

@@ -47,18 +47,18 @@ void Gift::saveFile()
     QString defaultPath = settings.value("last_image_dir_path").isValid() ?
                 settings.value("last_image_dir_path").toString() :
                 QStandardPaths::writableLocation(QStandardPaths::PicturesLocation);
-    QString fileName = QFileDialog::getSaveFileName(view,
-         QObject::tr("Save Image"), defaultPath,
-         QObject::tr("Supported formats (*.png *.jpg *.jpeg);;PNG(*.png);;JPEG(*.jpeg)"));
-    if(fileName.isEmpty() == false){
-        applyFilterExportImage(imageLoader->getOriginalPath(),fileName);
-    }
+
+    QFileInfo fileinfo(imageLoader->getOriginalPath());
+    QString defaultFileBaseName = fileinfo.baseName();
+    saveDialog = new SaveDialog(nullptr,defaultPath ,defaultFileBaseName, this->imageLoader);
+    saveDialog->setWindowTitle(QApplication::applicationName()+" | "+tr("Save Image"));
+    saveDialog->setAttribute(Qt::WA_DeleteOnClose);
+    saveDialog->setWindowFlags(Qt::Dialog | saveDialog->windowFlags());
+    saveDialog->setWindowModality(Qt::WindowModal);
+    saveDialog->show();
 }
 
-void Gift::applyFilterExportImage(const QString originalFilePath,const QString newFilePath )
-{
-    qDebug()<<originalFilePath<<newFilePath;
-}
+
 
 void Gift::compare(bool compare)
 {
@@ -75,6 +75,9 @@ void Gift::compare(bool compare)
 void Gift::reset()
 {
     modifiedImage.detach();
+    // null the modified image so that compare won't load previously loaded image
+    modifiedImage =  QImage();
+
     giftProcess->close();
     setProcessing(false);
     emit resetCoreFilters();
@@ -86,15 +89,39 @@ bool Gift::isProcessing()
 }
 
 void Gift::applyFilter(QString filterChain)
-{
+{    
     setProcessing(true);
     QStringList args;
     args<<"-c"<<"./pixel "+filterChain+" \""+
           imageLoader->getScaledPath()+"\"";
     giftProcess->start("bash",args);
     #ifdef QT_DEBUG
-        //qDebug()<<giftProcess->arguments();
+        qDebug()<<giftProcess->arguments();
     #endif
+}
+
+
+void Gift::crop()
+{
+    if(this->view->isSceneEmpty())
+        return;
+
+    // Refresh selection.
+    CropWidget* cropDialog = new CropWidget(nullptr,this->view->getCurrentImage());
+    cropDialog->setWindowFlags(Qt::Dialog | cropDialog->windowFlags());
+    cropDialog->setWindowModality(Qt::WindowModal);
+    connect(cropDialog,&CropWidget::croppedImage,[=](QPixmap pixmap){
+       QByteArray bArray;
+       QBuffer buffer(&bArray);
+       buffer.open(QIODevice::WriteOnly);
+       pixmap.save(&buffer,"PNG");
+       updateTempImage(bArray);
+       this->view->centerItem(pixmap.rect());
+       buffer.close();
+       buffer.deleteLater();
+       cropDialog->close();
+    });
+    cropDialog->show();
 }
 
 void Gift::updateTempImage(const QByteArray &byte)

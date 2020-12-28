@@ -12,6 +12,8 @@ class CropWidget;
 class CropWidget : public QWidget
 {
     Q_OBJECT
+signals:
+    void croppedImage(QPixmap pix);
 
 public:
     explicit CropWidget(QWidget *parent = nullptr,QPixmap pixmap = QPixmap());
