@@ -43,10 +43,13 @@ SOURCES += \
         gift.cpp \
         graphicsview.cpp \
         graphicsviewcontrols.cpp \
+        imageinfowidget.cpp \
         imageloader.cpp \
         main.cpp \
         mainwindow.cpp \
         rungaurd.cpp \
+        savedialog.cpp \
+        widgets/elidedLabel/elidedlabel.cpp \
         widgets/scope/Histogram.cpp \
         widgets/scope/ScopesLabel.cpp \
         widgets/scope/VectorScope.cpp \
@@ -59,9 +62,12 @@ HEADERS += \
         gift.h \
         graphicsview.h \
         graphicsviewcontrols.h \
+        imageinfowidget.h \
         imageloader.h \
         mainwindow.h \
         rungaurd.h \
+        savedialog.h \
+        widgets/elidedLabel/elidedlabel.h \
         widgets/scope/Histogram.h \
         widgets/scope/ScopesLabel.h \
         widgets/scope/VectorScope.h \
@@ -71,7 +77,9 @@ FORMS += \
         corefilters.ui \
         cropwidget.ui \
         graphicsviewcontrols.ui \
-        mainwindow.ui
+        imageinfowidget.ui \
+        mainwindow.ui \
+        savedialog.ui
 
 # Default rules for deployment.
 isEmpty(PREFIX){
