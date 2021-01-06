@@ -26,10 +26,16 @@ ImageLoader::ImageLoader(QObject *parent) : QObject(parent)
 
 ImageLoader::~ImageLoader()
 {
+   qDebug()<<"Deleted tempLocations:"<<deleteTemporaryLocations();
+}
+
+bool ImageLoader::deleteTemporaryLocations()
+{
     QDir tempDir(QStandardPaths::writableLocation(QStandardPaths::TempLocation)
             +QDir::separator()+QApplication::applicationName());
-    tempDir.removeRecursively();
+    return tempDir.removeRecursively();
 }
+
 
 void ImageLoader::openFile(QWidget *wid)
 {
@@ -44,7 +50,8 @@ void ImageLoader::openFile(QWidget *wid)
         //init image
         UUID = QUuid::createUuid().toString(QUuid::Id128);
         writeOriginalFile();
-        emit loadedImage( writeScaledFile() );
+
+        loadImage(getOriginalPath());
     }
 }
 
@@ -63,12 +70,37 @@ void ImageLoader::imageInfo()
     infoDialog->show();
 }
 
-QImage ImageLoader::writeScaledFile()
+//load image in non gui thread
+void ImageLoader::loadImage(QString path)
+{
+    emit imageLoadStarted(); // show the loader
+    ImageReader reader;
+    QFuture<QImage> future = reader.read(path);
+    QFutureWatcher<QImage> *watcher = new QFutureWatcher<QImage>();
+    connect(watcher, &QFutureWatcher<QImage>::finished,
+            [future,this]() {
+        currentLoadedImage = future.result();
+        emit loadedImage( writeScaledFile(currentLoadedImage) );
+        emit imageLoaded(); // hide the loader
+    });
+    watcher->setFuture(future);
+}
+
+
+//returns currently loadedimage via loadImage func.
+QImage ImageLoader::getCurrentLoadedImage()
+{
+    if(currentLoadedImage.isNull()==false)
+        return currentLoadedImage;
+    else
+        return QImage();
+}
+
+QImage ImageLoader::writeScaledFile(QImage img)
 {
     scaledFile.setFileName(getScaledPath());
     scaledFile.open(QIODevice::ReadWrite | QIODevice::Truncate);
 
-    QImage img(getOriginalPath());
     if(img.isNull() == false){
         QScreen *scr = QApplication::primaryScreen();
         qreal dpr;
@@ -86,7 +118,7 @@ QImage ImageLoader::writeScaledFile()
         imgwritter.setFileName(getScaledPath());
         imgwritter.setCompression(0);
         imgwritter.setQuality(100);
-        imgwritter.setFormat("JPEG");
+        imgwritter.setFormat("PNG");
         imgwritter.write(img);
     }
     QImage scaledImage(getScaledPath());
@@ -95,9 +127,10 @@ QImage ImageLoader::writeScaledFile()
 
 QString ImageLoader::getLocalOriginalPath()
 {
-    return originalLocation+QDir::separator()+getUUID()+getOriginalExetension();
+    return originalLocation+QDir::separator()+getUUID()+"."+getOriginalExetension();
 }
 
+// the real file name.
 QString ImageLoader::getOriginalPath()
 {
     return fileName;
@@ -106,17 +139,17 @@ QString ImageLoader::getOriginalPath()
 QString ImageLoader::getOriginalExetension()
 {
     QFileInfo info(getOriginalPath());
-    return info.suffix().isEmpty() ? "jpg" : info.suffix();
+    return info.suffix().isEmpty() ? "png" : info.suffix();
 }
 
 QString  ImageLoader::getScaledPath()
 {
-    return scaledLocation+QDir::separator()+getUUID()+".jpeg";
+    return scaledLocation+QDir::separator()+getUUID()+".png";
 }
 
 QString  ImageLoader::getFilteredPath()
 {
-    return filteredLocation+QDir::separator()+getUUID()+".jpeg";
+    return filteredLocation+QDir::separator()+getUUID()+".png";
 }
 
 QString ImageLoader::getUUID()

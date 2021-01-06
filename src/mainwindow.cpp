@@ -35,6 +35,10 @@ MainWindow::MainWindow(QWidget *parent) :
         coreFiltersWidget->reset();
     });
 
+//    connect(gift,&Gift::croppedImage,[=](){
+//       coreFiltersWidget->apply();
+//    });
+
     graphicsViewControlsWidget = new graphicsViewControls(this,ui->view);
     ui->bottomHLayout->addWidget(graphicsViewControlsWidget);
 
@@ -281,6 +285,7 @@ void MainWindow::aboutApp()
 
 MainWindow::~MainWindow()
 {
+    delete this->gift;
     delete ui;
 }
 

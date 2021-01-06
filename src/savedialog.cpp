@@ -36,12 +36,6 @@ void SaveDialog::on_changeLocation_clicked()
     }
 }
 
-void SaveDialog::applyFilterExportImage(const QString originalFilePath,const QString newFilePath )
-{
-    qDebug()<<originalFilePath<<newFilePath;
-}
-
-
 void SaveDialog::init_Formats()
 {
     QList<QByteArray> formats       = writer.supportedImageFormats();
@@ -129,4 +123,9 @@ void SaveDialog::on_png_compression_slider_valueChanged(int value)
 void SaveDialog::on_jpeg_quality_slider_valueChanged(int value)
 {
     ui->jpeg_quality_label->setText(QString::number(value));
+}
+
+void SaveDialog::on_save_button_clicked()
+{
+    emit saveImage();
 }

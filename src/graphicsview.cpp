@@ -1,4 +1,5 @@
 #include "graphicsview.h"
+#include "graphicsview.h"
 
 #include <QTimer>
 
@@ -28,6 +29,16 @@ graphicsView::graphicsView(QWidget *parent) :
     m_pZoomInSc = new QShortcut( QKeySequence::ZoomIn, this, SLOT( shortCutZoomIn() ) );
     m_pZoomOutSc = new QShortcut( QKeySequence::ZoomOut, this, SLOT( shortCutZoomOut() ) );
 
+    _loader = new WaitingSpinnerWidget(this,true,true);
+    _loader->setRoundness(70.0);
+    _loader->setMinimumTrailOpacity(15.0);
+    _loader->setTrailFadePercentage(70.0);
+    _loader->setNumberOfLines(10);
+    _loader->setLineLength(8);
+    _loader->setLineWidth(2);
+    _loader->setInnerRadius(2);
+    _loader->setRevolutionsPerSecond(3);
+    _loader->setColor(QColor("#1e90ff"));
 }
 
 
@@ -259,4 +270,14 @@ void graphicsView::resizeEvent(QResizeEvent *event)
     if( !isSceneEmpty() && fitToViewChecked )
         fitToView();
     QGraphicsView::resizeEvent(event);
+}
+
+void graphicsView::showLoader()
+{
+    _loader->start();
+}
+
+void graphicsView::hideLoader()
+{
+    _loader->stop();
 }

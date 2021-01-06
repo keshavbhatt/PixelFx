@@ -27,6 +27,7 @@ public:
 signals:
     void resetCoreFilters();
     void stateChanged(bool processing);
+    void croppedImage();
 public slots:
     void openFile();
     void applyFilter(QString filterChain);
@@ -38,15 +39,19 @@ public slots:
     void imageInfo();
     void crop();
 private slots:
-    void updateTempImage(const QByteArray &byte);
+    void updateTempImage(const QByteArray &byte, bool saveFiltered = false);
     void setProcessing(bool processing);
 
+    void show_cropDialog(QPixmap localOriginlImage);
+    void instantApplyFilter();
 private:
-    bool processing;
+    bool processing = false;
+    QString currentFilterChain;
 
     graphicsView *view = nullptr;
     QSettings settings;
     QProcess *giftProcess;
+    QProcess *instantGiftProcess;
     QImage scaledImage;
     QImage modifiedImage;
 

@@ -13,6 +13,9 @@ class SaveDialog : public QWidget
 {
     Q_OBJECT
 
+signals:
+    void saveImage();
+
 public:
     explicit SaveDialog(QWidget *parent = nullptr, QString defaultPath = "",
                         QString defaultFileBaseName = "",
@@ -21,7 +24,6 @@ public:
 
 private slots:
     void on_changeLocation_clicked();
-    void applyFilterExportImage(const QString originalFilePath, const QString newFilePath);
     void on_defaultPath_textChanged(const QString &arg1);
 
 
@@ -34,6 +36,8 @@ private slots:
     void on_png_compression_slider_valueChanged(int value);
 
     void on_jpeg_quality_slider_valueChanged(int value);
+
+    void on_save_button_clicked();
 
 private:
     Ui::SaveDialog *ui;

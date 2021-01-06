@@ -17,6 +17,7 @@
 #include <QPropertyAnimation>
 #include <QVariantAnimation>
 
+#include "widgets/waitingSpinner/waitingspinnerwidget.h"
 
 class graphicsView : public QGraphicsView
 {
@@ -38,6 +39,8 @@ public slots:
     void setFitToView(bool fitToView);
     QPixmap getCurrentImage();
     void centerItem(QRect rect);
+    void showLoader();
+    void hideLoader();
 public:
     bool fitToViewChecked = true;
 protected slots:
@@ -53,6 +56,8 @@ private:
     QShortcut *m_pZoomInSc;
     QShortcut *m_pZoomOutSc;
     QVariantAnimation *animation;
+
+    WaitingSpinnerWidget *_loader = nullptr;
 
 
 };

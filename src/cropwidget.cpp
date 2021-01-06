@@ -20,11 +20,10 @@ CropWidget::CropWidget(QWidget *parent, QPixmap pixmap) :
             widget->setStyleSheet("background-color:transparent;");
         }
     }
-
     //load image
     if (pixmap.isNull()) {
         QMessageBox::critical(this, "Error", "Image loading failed", QMessageBox::Ok);
-        return;
+        this->close();
     }else{
         imgCropperLabel->setOriginalImage(pixmap);
         imgCropperLabel->update();

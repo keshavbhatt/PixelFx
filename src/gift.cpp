@@ -4,8 +4,15 @@ Gift::Gift(graphicsView *view)
 {
     this->view = view;
     imageLoader = new ImageLoader(this);
+    connect(imageLoader,&ImageLoader::imageLoadStarted,[=](){
+       this->view->showLoader();
+    });
+    connect(imageLoader,&ImageLoader::imageLoaded,[=](){
+       this->view->hideLoader();
+    });
     connect(imageLoader,SIGNAL(loadedImage(QImage)),this,SLOT(loadImage(QImage)));
 
+    //real giftProcess
     giftProcess = new QProcess(this);
     giftProcess->setWorkingDirectory(qApp->applicationDirPath());
     connect(giftProcess, static_cast<void (QProcess::*)
@@ -15,6 +22,24 @@ Gift::Gift(graphicsView *view)
             qDebug()<<"PIXEL PROCESS FINISHED"<<exitCode<<exitStatus;
             if(exitCode == 0){
                 updateTempImage(giftProcess->readAll());
+            }
+            setProcessing(false);
+    });
+
+    //instant giftProcess
+    instantGiftProcess = new QProcess(this);
+    instantGiftProcess->setWorkingDirectory(qApp->applicationDirPath());
+    connect(instantGiftProcess, static_cast<void (QProcess::*)
+                (int,QProcess::ExitStatus)>(&QProcess::finished),
+                [this](int exitCode,QProcess::ExitStatus exitStatus)
+        {
+            qDebug()<<"PIXEL PROCESS FINISHED"<<exitCode<<exitStatus;
+            if(exitCode == 0){
+                auto byte = instantGiftProcess->readAll();
+                QPixmap pix;
+                pix.loadFromData(byte);
+                modifiedImage = pix.toImage();
+                this->view->updateImageView(modifiedImage);
             }
             setProcessing(false);
     });
@@ -58,8 +83,6 @@ void Gift::saveFile()
     saveDialog->show();
 }
 
-
-
 void Gift::compare(bool compare)
 {
     if(compare){
@@ -75,9 +98,13 @@ void Gift::compare(bool compare)
 void Gift::reset()
 {
     modifiedImage.detach();
+
+    currentFilterChain = "";
+
     // null the modified image so that compare won't load previously loaded image
     modifiedImage =  QImage();
 
+    instantGiftProcess->close();
     giftProcess->close();
     setProcessing(false);
     emit resetCoreFilters();
@@ -95,8 +122,21 @@ void Gift::applyFilter(QString filterChain)
     args<<"-c"<<"./pixel "+filterChain+" \""+
           imageLoader->getScaledPath()+"\"";
     giftProcess->start("bash",args);
+    currentFilterChain = filterChain;
     #ifdef QT_DEBUG
         qDebug()<<giftProcess->arguments();
+    #endif
+}
+
+void Gift::instantApplyFilter()
+{
+    setProcessing(true);
+    QStringList args;
+    args<<"-c"<<"./pixel "+currentFilterChain+" \""+
+          imageLoader->getScaledPath()+"\"";
+    instantGiftProcess->start("bash",args);
+    #ifdef QT_DEBUG
+        qDebug()<<instantGiftProcess->arguments();
     #endif
 }
 
@@ -104,10 +144,22 @@ void Gift::applyFilter(QString filterChain)
 void Gift::crop()
 {
     if(this->view->isSceneEmpty())
-        return;
+        return;    
+    this->view->showLoader();
+    ImageReader reader;
+    QFuture<QImage> future = reader.read(this->imageLoader->getLocalOriginalPath());
+    QFutureWatcher<QImage> *watcher = new QFutureWatcher<QImage>();
+    connect(watcher, &QFutureWatcher<QImage>::finished,
+            [future,this]() {
+        show_cropDialog(QPixmap::fromImage(future.result()));
+        this->view->hideLoader();
+    });
+    watcher->setFuture(future);
+}
 
-    // Refresh selection.
-    CropWidget* cropDialog = new CropWidget(nullptr,this->view->getCurrentImage());
+void Gift::show_cropDialog( QPixmap localOriginlImage)
+{
+    CropWidget* cropDialog = new CropWidget(nullptr,localOriginlImage);
     cropDialog->setWindowFlags(Qt::Dialog | cropDialog->windowFlags());
     cropDialog->setWindowModality(Qt::WindowModal);
     connect(cropDialog,&CropWidget::croppedImage,[=](QPixmap pixmap){
@@ -115,7 +167,7 @@ void Gift::crop()
        QBuffer buffer(&bArray);
        buffer.open(QIODevice::WriteOnly);
        pixmap.save(&buffer,"PNG");
-       updateTempImage(bArray);
+       updateTempImage(bArray,true);
        this->view->centerItem(pixmap.rect());
        buffer.close();
        buffer.deleteLater();
@@ -124,10 +176,22 @@ void Gift::crop()
     cropDialog->show();
 }
 
-void Gift::updateTempImage(const QByteArray &byte)
+void Gift::updateTempImage(const QByteArray &byte, bool saveFiltered)
 {
-    modifiedImage.loadFromData(byte);
-    view->updateImageView(modifiedImage);
+
+    if(saveFiltered) //bytearray is passed from crop dialog so we need to change the localOriginal
+    {
+        QPixmap pix;
+        pix.loadFromData(byte);
+        pix.save(imageLoader->getLocalOriginalPath());
+        // write the original cropped image
+        modifiedImage = imageLoader->writeScaledFile(pix.toImage());
+        //apply filter and update view here
+        instantApplyFilter();
+    }else{
+        modifiedImage.loadFromData(byte);
+        view->updateImageView(modifiedImage);
+    }
 }
 
 void Gift::setProcessing(bool processing)
@@ -138,5 +202,5 @@ void Gift::setProcessing(bool processing)
 
 Gift::~Gift()
 {
-
+    imageLoader->deleteLater();
 }

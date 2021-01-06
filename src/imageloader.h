@@ -14,6 +14,8 @@
 #include <QApplication>
 #include <QImageWriter>
 #include <QScreen>
+#include <QFuture>
+#include <QtConcurrent>
 
 #include "imageinfowidget.h"
 
@@ -26,6 +28,8 @@ public:
 
 signals:
     void loadedImage(QImage img);
+    void imageLoadStarted();
+    void imageLoaded();
 
 public slots:
     QString getOriginalPath();
@@ -36,15 +40,46 @@ public slots:
     void imageInfo();
     QString getOriginalExetension();
     QString getLocalOriginalPath();
+    bool deleteTemporaryLocations();
+    QImage getCurrentLoadedImage();
+    QImage writeScaledFile(QImage img);
 private slots:
-    QImage writeScaledFile();
     void writeOriginalFile();
+    void loadImage(QString path);
 private:
     QString fileName, UUID;
     QString defaultLocation;
     QString scaledLocation,filteredLocation,originalLocation;
     QFile tempFile,scaledFile;
     QSettings settings;
+    QImage currentLoadedImage;
 };
 
+//The image reader class for asyncImageRead
+class ImageReader : public QObject {
+public:
+    QFuture<QImage> read(const QString &fileName)
+    {
+        auto readImageWorker = [](const QString &fileName) {
+            QImage image;
+            image.load(fileName);
+            return image;
+        };
+        return QtConcurrent::run(readImageWorker, fileName);
+    }
+};
+
+//The image writer class for asyncImageWrite
+class ImageWriter : public QObject {
+public:
+    QFuture<bool> write(const QString &fileName, QImage image)
+    {
+        auto writeImageWorker = [](const QString &fileName) {
+            QImage image;
+            bool saved = image.save(fileName);
+            return saved;
+        };
+        return QtConcurrent::run(writeImageWorker, fileName);
+    }
+};
 #endif // IMAGELOADER_H
