@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT       += core gui xml network
+QT       += core gui xml network concurrent
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -53,7 +53,8 @@ SOURCES += \
         widgets/scope/Histogram.cpp \
         widgets/scope/ScopesLabel.cpp \
         widgets/scope/VectorScope.cpp \
-        widgets/scope/WaveFormMonitor.cpp
+        widgets/scope/WaveFormMonitor.cpp \
+        widgets/waitingSpinner/waitingspinnerwidget.cpp
 
 HEADERS += \
         corefilters.h \
@@ -71,7 +72,8 @@ HEADERS += \
         widgets/scope/Histogram.h \
         widgets/scope/ScopesLabel.h \
         widgets/scope/VectorScope.h \
-        widgets/scope/WaveFormMonitor.h
+        widgets/scope/WaveFormMonitor.h \
+        widgets/waitingSpinner/waitingspinnerwidget.h
 
 FORMS += \
         corefilters.ui \
