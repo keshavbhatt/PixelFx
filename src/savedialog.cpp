@@ -43,9 +43,17 @@ SaveDialog::~SaveDialog()
 
 void SaveDialog::on_changeLocation_clicked()
 {
-    QString location = QFileDialog::getExistingDirectory(this,
-         QObject::tr("Destination directory"), defaultPath);
 
+    bool useNativeDialog = settings.value("useNativeFileDialog",true).toBool();
+    QString location;
+    if(useNativeDialog){
+        location = QFileDialog::getExistingDirectory(this,
+             QObject::tr("Destination directory"), defaultPath);
+    }else{
+        location = QFileDialog::getExistingDirectory(this,
+             QObject::tr("Destination directory"), defaultPath,
+                         QFileDialog::DontUseNativeDialog);
+    }
     if(location.isEmpty() == false){
         ui->defaultPath->setText(location);
     }
@@ -66,7 +74,12 @@ void SaveDialog::init_Formats()
             supportedFormats.append(val);
     }
 
-    ui->formats_comboBox->addItems(supportedFormats);
+    ui->formats_comboBox->setIconSize(QSize(18,18));
+    //ui->formats_comboBox->addItems(supportedFormats);
+    //add items with icons
+    foreach (QString formatStr,supportedFormats) {
+        ui->formats_comboBox->addItem(QIcon(":/icons/image-2-line.png"),formatStr);
+    }
 
     //default to original image extension
     if(supportedFormats.contains(defaultExetension))

@@ -4,6 +4,7 @@
 #include <QWidget>
 #include "imageloader.h"
 #include <QImageWriter>
+#include <QSettings>
 #include "widgets/waitingSpinner/waitingspinnerwidget.h"
 
 namespace Ui {
@@ -49,6 +50,7 @@ private:
     QStringList supportedFormats;
     QImage targetImage;
     WaitingSpinnerWidget *_loader = nullptr;
+    QSettings settings;
 };
 
 //The image writer class for asyncImageWrite
