@@ -1,0 +1,67 @@
+name: pixelfx
+version: '1.0'
+summary: Quick Image retouching application for Linux Desktop
+description: |
+  Little powerful utility that let you touch up and enhance images quickly with various filters and image proccessing operations. 
+grade: stable
+confinement: strict
+icon: snap/gui/icon.png
+base: core18
+
+architectures:
+  - build-on: amd64
+    run-on: amd64
+
+apps:
+  pixelfx:
+    command: desktop-launch pixelfx
+    environment:
+       DISABLE_WAYLAND: 1
+    desktop: usr/share/applications/pixelfx.desktop
+    plugs:
+        - home
+        - unity7
+        - network
+        - opengl
+        - x11
+        - desktop
+        - gsettings
+        - wayland
+        - desktop-legacy
+        - mount-observe
+
+plugs:
+  gsettings:
+  gtk-3-themes:
+    interface: content
+    target: $SNAP/data-dir/themes
+    default-provider: gtk-common-themes
+  icon-themes:
+    interface: content
+    target: $SNAP/data-dir/icons
+    default-provider: gtk-common-themes
+  sound-themes:
+    interface: content
+    target: $SNAP/data-dir/sounds
+    default-provider: gtk-common-themes
+  qt513:
+    interface: content
+    target: $SNAP/qt513
+    default-provider: qt513
+
+parts:
+  pixel:
+    plugin: go
+    go-importpath: pixel_src/pixel
+    source: .
+    source-type: local
+    build-packages:
+      - gcc
+  snap-launcher:
+     plugin: dump
+     source: snap_launcher/
+     override-build: |
+            snapcraftctl build
+            sed -i 's|Icon=.*|Icon=${SNAP}/meta/gui/icon.png|g' ${SNAPCRAFT_PART_SRC}/pixelfx.desktop
+            cp -rf ${SNAPCRAFT_PART_SRC}/pixelfx.desktop ${SNAPCRAFT_PART_INSTALL}/usr/share/applications/pixelfx.desktop
+     after: [pixel]
