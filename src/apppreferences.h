@@ -17,9 +17,11 @@ public:
     explicit AppPreferences(QWidget *parent = nullptr);
     ~AppPreferences();
 
+public slots:
+    void load_settings();
 private slots:
     void animateWidget(QFrame *containerFrame, bool checked);
-    void on_checkBox_toggled(bool checked);
+    void on_useNativeFileDialog_toggled(bool checked);
 
 private:
     Ui::AppPreferences *ui;

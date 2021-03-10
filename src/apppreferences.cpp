@@ -29,6 +29,15 @@ AppPreferences::AppPreferences(QWidget *parent) :
             });
         }
     }
+
+    //load settings
+    load_settings();
+}
+
+void AppPreferences::load_settings()
+{
+    //use native fileDialog
+    ui->useNativeFileDialog->setChecked(settings.value("useNativeFileDialog",true).toBool());
 }
 
 void AppPreferences::animateWidget(QFrame *containerFrame,bool checked)
@@ -62,7 +71,7 @@ AppPreferences::~AppPreferences()
     delete ui;
 }
 
-void AppPreferences::on_checkBox_toggled(bool checked)
+void AppPreferences::on_useNativeFileDialog_toggled(bool checked)
 {
     settings.setValue("useNativeFileDialog",checked);
 }

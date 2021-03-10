@@ -37,7 +37,7 @@ padding: 8px 0px 8px 8px;</string>
          <string/>
         </property>
         <property name="pixmap">
-         <pixmap resource="icons.qrc">:/icons/app/icon-64.png</pixmap>
+         <pixmap resource="icons.qrc">:/icons/setting-line.png</pixmap>
         </property>
        </widget>
       </item>
@@ -85,7 +85,7 @@ background:transparent;</string>
         </property>
         <layout class="QVBoxLayout" name="verticalLayout_3">
          <item>
-          <widget class="QCheckBox" name="checkBox">
+          <widget class="QCheckBox" name="useNativeFileDialog">
            <property name="text">
             <string>Use Native File Dialog to Open/Save files</string>
            </property>
