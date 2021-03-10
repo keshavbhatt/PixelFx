@@ -41,7 +41,6 @@ public slots:
     QString getOriginalExetension();
     QString getLocalOriginalPath();
     bool deleteTemporaryLocations();
-    QImage getCurrentLoadedImage();
     QImage writeScaledFile(QImage img);
 private slots:
     void writeOriginalFile();
@@ -50,7 +49,7 @@ private:
     QString fileName, UUID;
     QString defaultLocation;
     QString scaledLocation,filteredLocation,originalLocation;
-    QFile tempFile,scaledFile;
+    QFile tempFile;
     QSettings settings;
     QImage currentLoadedImage;
 };
@@ -66,20 +65,6 @@ public:
             return image;
         };
         return QtConcurrent::run(readImageWorker, fileName);
-    }
-};
-
-//The image writer class for asyncImageWrite
-class ImageWriter : public QObject {
-public:
-    QFuture<bool> write(const QString &fileName, QImage image)
-    {
-        auto writeImageWorker = [](const QString &fileName) {
-            QImage image;
-            bool saved = image.save(fileName);
-            return saved;
-        };
-        return QtConcurrent::run(writeImageWorker, fileName);
     }
 };
 #endif // IMAGELOADER_H

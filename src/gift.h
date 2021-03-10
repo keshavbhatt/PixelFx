@@ -33,17 +33,18 @@ public slots:
     void applyFilter(QString filterChain);
     void reset();
     bool isProcessing();
-    void saveFile();
     void compare(bool compare);
     void loadImage(QImage image);
     void imageInfo();
     void crop();
+    void prepareImageForSaving();
 private slots:
+    void saveFile(const QImage &img);
     void updateTempImage(const QByteArray &byte, bool saveFiltered = false);
     void setProcessing(bool processing);
 
     void show_cropDialog(QPixmap localOriginlImage);
-    void instantApplyFilter();
+    void cropAndApplyFilter();
 private:
     bool processing = false;
     QString currentFilterChain;
@@ -51,7 +52,7 @@ private:
     graphicsView *view = nullptr;
     QSettings settings;
     QProcess *giftProcess;
-    QProcess *instantGiftProcess;
+    QProcess *giftCropProcess;
     QImage scaledImage;
     QImage modifiedImage;
 

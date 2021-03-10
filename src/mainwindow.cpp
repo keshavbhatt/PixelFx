@@ -19,6 +19,7 @@ MainWindow::MainWindow(QWidget *parent) :
         restoreGeometry(settings.value("mainwindow_geometry").toByteArray());
     }else{
         //this->resize(ui->mainToolBar->sizeHint().width(),500);
+        this->setWindowState(Qt::WindowMaximized);
     }
     if(settings.value("mainwindow_windowState").isValid()){
         restoreState(settings.value("mainwindow_windowState").toByteArray());
@@ -85,7 +86,7 @@ void MainWindow::init_toolbar()
     ui->mainToolBar->addAction(QIcon(":/icons/folder-open-line.png"),tr("Open"),this->gift,SLOT(openFile()));
     ui->mainToolBar->actions().last()->setShortcut(QKeySequence::Open);
 
-    ui->mainToolBar->addAction(QIcon(":/icons/save-line.png"),tr("Save"),this->gift,SLOT(saveFile()));
+    ui->mainToolBar->addAction(QIcon(":/icons/save-line.png"),tr("Save"),this->gift,SLOT(prepareImageForSaving()));
     saveAction = ui->mainToolBar->actions().last();
     ui->mainToolBar->actions().last()->setShortcut(QKeySequence::Save);
 
@@ -125,7 +126,8 @@ void MainWindow::init_toolbar()
     hSpacer->setSizePolicy(QSizePolicy::Expanding,QSizePolicy::Preferred);
     ui->mainToolBar->addWidget(hSpacer);
 
-    ui->mainToolBar->addAction(QIcon(":/icons/setting-line.png"),tr("Preferences"),this,SLOT(aboutApp()));
+    ui->mainToolBar->addAction(QIcon(":/icons/setting-line.png"),tr("Preferences"),this,SLOT(appPreferences()));
+
     ui->mainToolBar->addAction(QIcon(":/icons/app/icon-64.png"),tr("About"),this,SLOT(aboutApp()));
 
     updateToolBar(!ui->view->isSceneEmpty());
@@ -237,6 +239,19 @@ void MainWindow::closeEvent(QCloseEvent *event)
     settings.setValue("mainwindow_geometry",saveGeometry());
     settings.setValue("mainwindow_windowState", saveState());
     QWidget::closeEvent(event);
+}
+
+void MainWindow::appPreferences()
+{
+    if(appPreferencesWidget == nullptr){
+        appPreferencesWidget = new AppPreferences(this);
+        appPreferencesWidget->setWindowTitle(QApplication::applicationName()+" | "+tr("Settings"));
+        appPreferencesWidget->setWindowModality(Qt::WindowModal);
+        appPreferencesWidget->setWindowFlags(appPreferencesWidget->windowFlags() | Qt::Dialog);
+        appPreferencesWidget->adjustSize();
+    }
+    appPreferencesWidget->show();
+
 }
 
 void MainWindow::aboutApp()

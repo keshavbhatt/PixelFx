@@ -3,7 +3,7 @@
 #include <QFileDialog>
 #include <QTimer>
 
-SaveDialog::SaveDialog(QWidget *parent, QString defaultPath, QString defaultFileBaseName, ImageLoader *imageLoader) :
+SaveDialog::SaveDialog(QWidget *parent, QImage img,  QString defaultPath, QString defaultFileBaseName, ImageLoader *imageLoader) :
     QWidget(parent),
     ui(new Ui::SaveDialog)
 {
@@ -17,12 +17,27 @@ SaveDialog::SaveDialog(QWidget *parent, QString defaultPath, QString defaultFile
     ui->defaultFileBaseName->setText(this->defaultFileBaseName);
     ui->defaultPath->setText(this->defaultPath);
 
+    this->targetImage = img;
+
+    _loader = new WaitingSpinnerWidget(this,true,true);
+    _loader->setRoundness(70.0);
+    _loader->setMinimumTrailOpacity(15.0);
+    _loader->setTrailFadePercentage(70.0);
+    _loader->setNumberOfLines(10);
+    _loader->setLineLength(8);
+    _loader->setLineWidth(2);
+    _loader->setInnerRadius(2);
+    _loader->setRevolutionsPerSecond(3);
+    _loader->setColor(QColor("#1e90ff"));
+
+
     init_Formats();
     this->resize(this->sizeHint().width(),this->minimumHeight());
 }
 
 SaveDialog::~SaveDialog()
 {
+    _loader->deleteLater();
     delete ui;
 }
 
@@ -64,7 +79,7 @@ void SaveDialog::init_Formats()
     ui->jpeg_quality_slider->setValue(100);
 
     //PNG
-    ui->png_compression_slider->setRange(0,10);
+    ui->png_compression_slider->setRange(0,100);
     ui->png_compression_slider->setValue(10);
 
     //TIFF
@@ -127,5 +142,27 @@ void SaveDialog::on_jpeg_quality_slider_valueChanged(int value)
 
 void SaveDialog::on_save_button_clicked()
 {
-    emit saveImage();
+    qDebug()<<"write started";
+    _loader->start();
+    ImageWriter writer;
+    QString ext = ui->image_extension_label->text();
+    QString targetFileName = ui->defaultPath->text()+QDir::separator()+ui->defaultFileBaseName->text()+ext;
+    QString comment = ui->jpeg_comment_textEdit->toPlainText().trimmed();
+    const int jpeg_qual   = ui->jpeg_quality_slider->value();
+    const int png_qual    = ui->png_compression_slider->value();
+    const bool tiff_comp  = ui->tiff_lzw_compression_rb->isChecked() ? 1 : 0;
+    writer.jpeg_qual = jpeg_qual;
+    writer.png_qual  = png_qual;
+    writer.tiff_comp = tiff_comp;
+
+    QFuture<bool> future = writer.write(targetFileName,targetImage,QString(ext).remove("."),comment);
+    QFutureWatcher<bool> *watcher = new QFutureWatcher<bool>();
+    connect(watcher, &QFutureWatcher<bool>::finished,
+            [future,this,watcher]() {
+        qDebug()<<"write ended";
+        _loader->stop();
+        //qDebug()<<future.result();
+        watcher->deleteLater();
+    });
+    watcher->setFuture(future);
 }

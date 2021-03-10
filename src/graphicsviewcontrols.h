@@ -39,8 +39,6 @@ private slots:
 
     void on_rotateClockwise_clicked();
 
-    void on_rotateAntiClockwise_clicked();
-
     void on_fit_toggled(bool checked);
 
 private:

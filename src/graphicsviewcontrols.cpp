@@ -9,6 +9,7 @@ ui(new Ui::graphicsViewControls)
     ui->setupUi(this);
     this->graphicsViewWidget = graphicsViewWidget;
     connect(this->graphicsViewWidget,&graphicsView::itemAdded,[=](){
+        this->rotationAngle = 0;
         if(this->graphicsViewWidget->fitToViewChecked){
             ui->fit->blockSignals(true);
             ui->fit->setChecked(true);
@@ -65,23 +66,15 @@ void graphicsViewControls::on_flipVertically_toggled(bool checked)
 
 void graphicsViewControls::on_rotateClockwise_clicked()
 {
-  this->graphicsViewWidget->rotateItem(nullptr,90);
-//    if(rotationAngle >= 0 && rotationAngle <= 360 )
-//        rotationAngle = rotationAngle + 90;
-//    else
-//        rotationAngle = 0;
-//    setFilter();
+//  this->graphicsViewWidget->rotateItem(nullptr,90);
+    if(rotationAngle >= 0 && rotationAngle <= 360 )
+        rotationAngle = ( 360 - rotationAngle )- 90;
+    else
+        rotationAngle = 0;
+    setFilter();
 }
 
-void graphicsViewControls::on_rotateAntiClockwise_clicked()
-{
-  this->graphicsViewWidget->rotateItem(nullptr,-90);
-//    if(rotationAngle >= 0 && rotationAngle <= 360 )
-//        rotationAngle = ( 360 - rotationAngle )- 90;
-//    else
-//        rotationAngle = 0;
-//    setFilter();
-}
+
 
 void graphicsViewControls::uncheckFitToView()
 {

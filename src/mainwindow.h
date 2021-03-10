@@ -21,6 +21,7 @@
 #include "gift.h"
 #include "corefilters.h"
 #include "graphicsviewcontrols.h"
+#include "apppreferences.h"
 
 namespace Ui {
 class MainWindow;
@@ -47,6 +48,7 @@ private:
     QAction *cropAction;
     QAction *saveAction;
     QAction *undoAction, *redoAction;
+    AppPreferences *appPreferencesWidget = nullptr;
 
 private slots:
     void setStyle(QString fname);
@@ -57,6 +59,7 @@ private slots:
     void updateDockWidgetStyle(const Qt::DockWidgetArea &area);
     void updateToolBar(bool hasImage);
 
+    void appPreferences();
 };
 
 #endif // MAINWINDOW_H

@@ -45,7 +45,7 @@ void ImageLoader::openFile(QWidget *wid)
          QObject::tr("Image Files (*.png *.jpg *.jpeg *.bmp *.tiff *.webp *.wbmp *mng)"));
     if(fileName.isEmpty() == false){
         QFileInfo fileInfo(fileName);
-        settings.setValue("last_image_dir_path",fileInfo.absoluteDir().path());
+        settings.setValue("last_image_dir_path",fileInfo.dir().path());
         defaultLocation = settings.value("last_image_dir_path").toString();
         //init image
         UUID = QUuid::createUuid().toString(QUuid::Id128);
@@ -66,6 +66,7 @@ void ImageLoader::imageInfo()
     ImageInfoWidget* infoDialog = new ImageInfoWidget(nullptr);
     infoDialog->setWindowFlags(Qt::Dialog | infoDialog->windowFlags());
     infoDialog->setWindowModality(Qt::WindowModal);
+    infoDialog->setAttribute(Qt::WA_DeleteOnClose);
     infoDialog->fillMetaData(fileName);
     infoDialog->show();
 }
@@ -78,29 +79,16 @@ void ImageLoader::loadImage(QString path)
     QFuture<QImage> future = reader.read(path);
     QFutureWatcher<QImage> *watcher = new QFutureWatcher<QImage>();
     connect(watcher, &QFutureWatcher<QImage>::finished,
-            [future,this]() {
-        currentLoadedImage = future.result();
-        emit loadedImage( writeScaledFile(currentLoadedImage) );
+            [future,this,watcher]() {
+        emit loadedImage( writeScaledFile(future.result()) );
         emit imageLoaded(); // hide the loader
+        watcher->deleteLater();
     });
     watcher->setFuture(future);
 }
 
-
-//returns currently loadedimage via loadImage func.
-QImage ImageLoader::getCurrentLoadedImage()
-{
-    if(currentLoadedImage.isNull()==false)
-        return currentLoadedImage;
-    else
-        return QImage();
-}
-
 QImage ImageLoader::writeScaledFile(QImage img)
 {
-    scaledFile.setFileName(getScaledPath());
-    scaledFile.open(QIODevice::ReadWrite | QIODevice::Truncate);
-
     if(img.isNull() == false){
         QScreen *scr = QApplication::primaryScreen();
         qreal dpr;

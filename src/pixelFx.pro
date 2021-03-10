@@ -20,7 +20,7 @@ include(lib/color_widgets.pri)
 include(lib/ImageCropper/ImageCropper.pri)
 include(lib/EasyExif/EasyExif.pri)
 
-TARGET = pixelFx
+TARGET = pixelfx
 TEMPLATE = app
 
 # The following define makes your compiler emit warnings if you use
@@ -37,6 +37,7 @@ DEFINES += QT_DEPRECATED_WARNINGS
 CONFIG += c++11
 
 SOURCES += \
+        apppreferences.cpp \
         corefilters.cpp \
         coreslider.cpp \
         cropwidget.cpp \
@@ -57,6 +58,7 @@ SOURCES += \
         widgets/waitingSpinner/waitingspinnerwidget.cpp
 
 HEADERS += \
+        apppreferences.h \
         corefilters.h \
         coreslider.h \
         cropwidget.h \
@@ -76,6 +78,7 @@ HEADERS += \
         widgets/waitingSpinner/waitingspinnerwidget.h
 
 FORMS += \
+        apppreferences.ui \
         corefilters.ui \
         cropwidget.ui \
         graphicsviewcontrols.ui \
