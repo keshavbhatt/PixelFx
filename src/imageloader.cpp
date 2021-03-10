@@ -40,9 +40,20 @@ bool ImageLoader::deleteTemporaryLocations()
 void ImageLoader::openFile(QWidget *wid)
 {
     fileName.clear();
-    fileName = QFileDialog::getOpenFileName(wid,
-         QObject::tr("Open Image"), defaultLocation,
-         QObject::tr("Image Files (*.png *.jpg *.jpeg *.bmp *.tiff *.webp *.wbmp *mng)"));
+    bool useNativeDialog = settings.value("useNativeFileDialog",true).toBool();
+    if(useNativeDialog){
+        fileName = QFileDialog::getOpenFileName(wid,
+             QObject::tr("Open Image"), defaultLocation,
+             QObject::tr("Image Files (*.png *.jpg *.jpeg *.bmp *.tiff *.webp *.wbmp *mng)"));
+
+    }else{
+        fileName = QFileDialog::getOpenFileName(wid,
+             QObject::tr("Open Image"), defaultLocation,
+             QObject::tr("Image Files (*.png *.jpg *.jpeg *.bmp *.tiff *.webp *.wbmp *mng)"),nullptr,
+                                                QFileDialog::DontUseNativeDialog);
+
+    }
+
     if(fileName.isEmpty() == false){
         QFileInfo fileInfo(fileName);
         settings.setValue("last_image_dir_path",fileInfo.dir().path());
@@ -57,8 +68,20 @@ void ImageLoader::openFile(QWidget *wid)
 
 void ImageLoader::writeOriginalFile()
 {
-    QFile file(fileName);
-    file.copy(originalLocation+QDir::separator()+getUUID()+"."+getOriginalExetension());
+    if(QString::compare("png",getOriginalExetension(),Qt::CaseInsensitive) == 0){
+        QFile file(fileName);
+        file.copy(originalLocation+QDir::separator()+getUUID()+"."+getOriginalExetension());
+    }else{
+        //we saving all local originals in PNG formats to prevent non transparent bg for jpg src imgs cropped to circle or ellipse shaped png's
+        QImage image(getOriginalPath());
+        //image.save(originalLocation+QDir::separator()+getUUID()+".png","PNG",-1); //this method seems slower
+
+        QImageWriter imgwritter;
+        imgwritter.setFileName(originalLocation+QDir::separator()+getUUID()+".png");
+        //imgwritter.setQuality(10);
+        imgwritter.setFormat("PNG");
+        imgwritter.write(image);
+    }
 }
 
 void ImageLoader::imageInfo()
@@ -104,8 +127,8 @@ QImage ImageLoader::writeScaledFile(QImage img)
 
         QImageWriter imgwritter;
         imgwritter.setFileName(getScaledPath());
-        imgwritter.setCompression(0);
-        imgwritter.setQuality(100);
+        //imgwritter.setCompression(0);
+        //imgwritter.setQuality(100);
         imgwritter.setFormat("PNG");
         imgwritter.write(img);
     }
@@ -115,7 +138,9 @@ QImage ImageLoader::writeScaledFile(QImage img)
 
 QString ImageLoader::getLocalOriginalPath()
 {
-    return originalLocation+QDir::separator()+getUUID()+"."+getOriginalExetension();
+   // return originalLocation+QDir::separator()+getUUID()+"."+getOriginalExetension();
+   //we saving all local originals in PNG formats to prevent non transparent bg for jpg src imgs cropped to circle or ellipse shaped png's
+    return originalLocation+QDir::separator()+getUUID()+".png";
 }
 
 // the real file name.
