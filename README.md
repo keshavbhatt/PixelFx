@@ -75,6 +75,6 @@ NOTE: The app is still in development phase and there are features that do not w
 
 
 # Screenshot
-![PixelFx Application for Linux Desktop](https://github.com/keshavbhatt/pixelfx/blob/master/screenshots/1.jpg?raw=true)
-![PixelFx Application for Linux Desktop](https://github.com/keshavbhatt/pixelfx/blob/master/screenshots/2.jpg?raw=true)
-![PixelFx Application for Linux Desktop](https://github.com/keshavbhatt/pixelfx/blob/master/screenshots/3.jpg?raw=true)
+![PixelFx Application for Linux Desktop](https://github.com/keshavbhatt/pixelfx/blob/main/screenshots/1.jpg?raw=true)
+![PixelFx Application for Linux Desktop](https://github.com/keshavbhatt/pixelfx/blob/main/screenshots/2.jpg?raw=true)
+![PixelFx Application for Linux Desktop](https://github.com/keshavbhatt/pixelfx/blob/main/screenshots/3.jpg?raw=true)
