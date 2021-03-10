@@ -180,6 +180,7 @@ void Gift::crop()
         return;    
     this->view->showLoader();
     ImageReader reader;
+    qDebug()<<"CROPPER"<<this->imageLoader->getLocalOriginalPath();
     QFuture<QImage> future = reader.read(this->imageLoader->getLocalOriginalPath());
     QFutureWatcher<QImage> *watcher = new QFutureWatcher<QImage>();
     connect(watcher, &QFutureWatcher<QImage>::finished,
