@@ -69,6 +69,11 @@ parts:
      source: https://github.com/keshavbhatt/pixel.git
      build-packages:
        - gcc
+     after: [build-src]
+     override-prime: |
+           snapcraftctl prime
+
+           ln -s  $SNAPCRAFT_PART_INSTALL/bin/pixel $SNAPCRAFT_PART_INSTALL/usr/bin/pixel
 
    build-src:
      plugin: nil
