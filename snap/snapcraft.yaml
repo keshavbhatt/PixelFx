@@ -73,7 +73,11 @@ parts:
      override-prime: |
            snapcraftctl prime
 
-           ln -s  $SNAPCRAFT_PART_INSTALL/bin/pixel $SNAPCRAFT_PART_INSTALL/usr/bin/pixel
+           set -eux
+
+           mkdir -p ${SNAPCRAFT_PRIME}/usr/bin/
+
+           mv ${SNAPCRAFT_PRIME}/bin/pixel ${SNAPCRAFT_PRIME}/usr/bin/
 
    build-src:
      plugin: nil
@@ -81,6 +85,8 @@ parts:
      source-subdir: src/
      override-build: |
             snapcraftctl build
+
+            set -eux
 
             apt install -y build-essential qt515base qt515tools  qt515xmlpatterns libgl1-mesa-dev
 
