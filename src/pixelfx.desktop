@@ -1,0 +1,13 @@
+[Desktop Entry]
+Version=1.0
+GenericName=Quick Image Retouching
+Name[en_US]=PixelFx
+Comment=Quickly retouch your images with various filters
+Name=PixelFx
+Type=Application
+Icon=pixelfx
+Keywords=image;filter;edit;retouch
+Exec=pixelfx %F
+Categories=Graphics;Photography;Qt;
+Terminal=false
+StartupNotify=false
