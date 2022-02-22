@@ -66,8 +66,7 @@ plugs:
 parts:
    pixel:
      plugin: go
-     go-importpath: pixel_src/pixel
-     source: https://github.com/keshavbhatt/PixelFx.git
+     source: https://github.com/keshavbhatt/pixel.git
      build-packages:
        - gcc
 
