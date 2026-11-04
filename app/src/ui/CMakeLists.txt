@@ -1,0 +1,22 @@
+# ui: widgets. Tokens come from DOCS/DESIGN.md section 1; screens follow the approved mocks.
+qt_add_library(pixelfx_ui STATIC
+    canvas.cpp
+    canvas.h
+    icons.cpp
+    icons.h
+    main_window.cpp
+    main_window.h
+    style.cpp
+    style.h
+    welcome_page.cpp
+    welcome_page.h
+)
+pixelfx_set_warnings(pixelfx_ui)
+target_link_libraries(pixelfx_ui PUBLIC pixelfx_services Qt6::Widgets Qt6::Svg)
+
+set(_pixelfx_resources "${CMAKE_CURRENT_SOURCE_DIR}/../resources")
+file(GLOB _pixelfx_ui_glyphs "${_pixelfx_resources}/icons/ui/*.svg")
+qt_add_resources(pixelfx_ui "pixelfx_icons"
+    PREFIX "/"
+    BASE "${_pixelfx_resources}"
+    FILES ${_pixelfx_ui_glyphs} "${_pixelfx_resources}/icons/pixelfx.png")

@@ -1,0 +1,34 @@
+find_package(Qt6 ${PIXELFX_QT_MIN_VERSION} REQUIRED COMPONENTS Test)
+
+function(pixelfx_add_test name source link_target)
+    qt_add_executable(${name} ${source})
+    pixelfx_set_warnings(${name})
+    target_link_libraries(${name} PRIVATE ${link_target} Qt6::Test)
+    add_test(NAME ${name} COMMAND ${name})
+    set_tests_properties(${name} PROPERTIES ENVIRONMENT "${PIXELFX_TEST_ENV}")
+    if(ARGC GREATER 3 AND ARGV3 STREQUAL "GUI")
+        set_tests_properties(${name} PROPERTIES LABELS "gui" TIMEOUT 120)
+    else()
+        set_tests_properties(${name} PROPERTIES LABELS "unit" TIMEOUT 60)
+    endif()
+endfunction()
+
+# core
+pixelfx_add_test(tst_settings        tst_settings.cpp        pixelfx_core)
+pixelfx_add_test(tst_log_sink        tst_log_sink.cpp        pixelfx_core)
+pixelfx_add_test(tst_changelog       tst_changelog.cpp       pixelfx_core)
+target_compile_definitions(tst_changelog PRIVATE
+    PIXELFX_CHANGELOG_PATH="${PROJECT_SOURCE_DIR}/CHANGELOG.md"
+    PIXELFX_VERSION="${PROJECT_VERSION}")
+# services
+pixelfx_add_test(tst_qt_image_bridge tst_qt_image_bridge.cpp pixelfx_services)
+pixelfx_add_test(tst_document        tst_document.cpp        pixelfx_services GUI)
+# app and ui
+pixelfx_add_test(tst_cli_options     tst_cli_options.cpp     pixelfx_app)
+pixelfx_add_test(tst_single_instance tst_single_instance.cpp pixelfx_app)
+pixelfx_add_test(tst_smoke           tst_smoke.cpp           pixelfx_ui GUI)
+pixelfx_add_test(tst_instance        tst_instance.cpp        Qt6::Core GUI)
+target_compile_definitions(tst_instance PRIVATE
+    PIXELFX_BINARY="$<TARGET_FILE:pixelfx>"
+    PIXELFX_TEST_PHOTO="${PROJECT_SOURCE_DIR}/libs/pixelfx-core/tests/golden/exposure.png")
+add_dependencies(tst_instance pixelfx)
