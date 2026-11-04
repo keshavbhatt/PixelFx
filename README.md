@@ -7,8 +7,9 @@ apply them to hundreds of photos at once. Nothing ever overwrites the original.
 **Status: being rewritten from scratch, not released yet.** PixelFx 2 is in development in this
 repository. Development builds already open JPEG, PNG, TIFF, WebP, HEIC, AVIF, JPEG XL and
 camera RAW photos; edit light, colour, curves, the colour mixer, detail, dehaze and effects
-live; crop, straighten and fix perspective; save presets (and bring Lightroom presets along);
-and export one photo, a selection, or a whole folder with Batch. PixelFx 1 is on the
+live; crop, straighten and fix perspective; apply one-click looks or make your own from steps
+and .cube LUTs; save presets (and bring Lightroom presets along); and export one photo, a
+selection, or a whole folder with Batch, with a watermark if you like. PixelFx 1 is on the
 [`legacy-v1`](https://github.com/keshavbhatt/PixelFx/tree/legacy-v1) branch.
 
 ## What is here

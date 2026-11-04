@@ -8,8 +8,8 @@
 | M1 Library core | done (2026-11-04), performance carried into M3 |
 | M2 App skeleton | done locally (2026-11-04); Windows and macOS CI written, first run after the next push |
 | M3 Editor | wip (live editing, undo, before and after started 2026-11-05) |
-| M4 Looks and presets | todo |
-| M5 Batch | todo |
+| M4 Looks and presets | wip (presets, Lightroom import, looks, the look editor, LUTs: 2026-11-05) |
+| M5 Batch | wip (Batch page, runner, recipes, watermark: 2026-11-05) |
 | M6 Polish and text | todo |
 | M7 Packaging and release | todo |
 
@@ -21,6 +21,34 @@
 | `heal.html`, `watermark.html`, `export-sizes.html` | 2026-11-04 (`mocks/reviews/`) | approved 2026-11-04 |
 | every other mock in `mocks/index.html` | written review still owed | approved 2026-11-04 |
 | `batch-compress.html` | 2026-11-04 (`mocks/reviews/batch-compress.md`) | approved 2026-11-04 |
+| `editor-grading.html` | 2026-11-05 (`mocks/reviews/editor-grading.md`) | waiting |
+
+## Waiting for the owner (2026-11-05)
+
+Decisions the work stopped at; everything else went ahead within the approved mocks.
+
+1. `mocks/editor-grading.html`: approve the colour grading panel (a midtones wheel, and whether
+   grading is a group of its own). Grading works in the library and in looks; the panel waits.
+2. Batch format version 2 (`.pfxbatch`): carry the watermark, size presets and user looks
+   embedded. Today a saved batch recipe keeps neither the watermark nor a size preset, and refers
+   to a user's look by id only.
+3. Built-in looks (13) and presets (4): the values are drafts by eye; tune or replace them.
+4. Kelvin white balance presets (Daylight, Cloudy, Shade, Tungsten in the mock) are left out:
+   the engine's white balance is relative; keep them out or add absolute Kelvin.
+5. The theme applies at the next start (icons are tinted when made). Accept, or ask for a live
+   switch.
+6. macOS CI skips one curve-editor test (a crash only on the runner, clean under ASan locally).
+7. Spot heal needs a `spots` key in recipes (presets.md, a version bump of recipes).
+8. Real Lightroom `.xmp` exports should be tried on the importer (only hand-made ones so far).
+9. Batch writes beside each original into a folder named "PixelFx": keep the name?
+10. Zoom has no FEATURES row; add one (it is built).
+11. Small departures from approved mocks, until their parts exist: no Favorites chip; the look
+    editor previews on This photo and a colour ramp (no Portrait or Landscape test photos are
+    shipped); the main menu leaves out Save edit with the file, What's new, Online guide and
+    About (no mocks for the last three); Copy to clipboard has no shortcut (the mock's
+    Ctrl+Shift+C is Copy settings).
+12. Still to plan: monitor profile, GPU preview, sidecars next to the photo, the batch-end
+    notification (needs Qt D-Bus on Linux, a dependency decision).
 
 ## Sessions (newest first)
 
