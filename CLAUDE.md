@@ -19,13 +19,20 @@ business notes and is never committed.
 ## Build and test
 
 ```sh
+# The app and the library against the KDE snap SDK, run against the kf6-core24 runtime
+# (needs the kde-qt6-core24-sdk, kf6-core24, core24 and cmake snaps, and uv for meson; ADR-008)
+PIXELFX_CMAKE_ARGS="-DPIXELFX_WERROR=ON" scripts/dev-build.sh --tests
+scripts/dev-run.sh -- photo.jpg
+QT_QPA_PLATFORM=offscreen PIXELFX_DEBUG_OPEN=photo.jpg PIXELFX_DEBUG_GRAB=shot.png scripts/dev-run.sh
+
+# The library alone, on the host's libraries
 make test      # builds libpixelfx with -Werror and runs its tests (build/lib)
 make lint      # clang-format check and clang-tidy
 make golden    # regenerate golden images on purpose, then review them
-build/lib/pfx apply --preset libs/pixelfx-core/examples/moody.pfxpreset -o /tmp/out photo.jpg
 ```
 
-The app (M2) will add `scripts/dev-build.sh` and `scripts/dev-run.sh` against the KDE snap SDK.
+Debug hooks are listed at the top of `app/src/main.cpp`. For manual runs, point
+`XDG_CONFIG_HOME`, `XDG_DATA_HOME` and `XDG_CACHE_HOME` at a scratch folder or use `--profile`.
 
 ## Standing rules
 

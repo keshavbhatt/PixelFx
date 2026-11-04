@@ -188,3 +188,29 @@ checks its SHA-256. The app keeps Qt Test.
 
 **Consequences.** A first configure without the system packages needs the network once. Swapping
 the JSON library later touches only `src/recipe/document.cpp`.
+
+## ADR-008: dev builds get libvips from the SDK, and keep the host C++ runtime (2026-11-04)
+
+**Context.** The kit builds against the `kde-qt6-core24-sdk` snap and runs against the
+`kf6-core24` runtime so that what compiles here is what ships (ADR-000). libvips is in neither
+snap. Taking it from the host would mix Arch's glib and codecs with Ubuntu's at run time. The
+SDK has every library libvips needs, but some of its development links (`libglib-2.0.so`,
+`libz.so`, `libpng16.so`, `libexpat.so`) point into the runtime snap or the core24 base and
+dangle off-snap, and its `lcms2.pc` names two plugin libraries the SDK does not contain. The
+kit's runtime farm also put core24's libstdc++ (GCC 14) ahead of the host's, which code from the
+host's GCC 16 cannot run with.
+
+**Decision.** `scripts/build-deps.sh` builds the pinned libvips (8.18.7, SHA-256 checked) with
+meson against an overlay of the SDK: the dangling links resolved into the runtime snap first,
+then core24; the phantom lcms2 plugins dropped; the SDK's bare include directory moved after the
+host's libc headers. It enables only the formats the app needs. `dev-build.sh` calls it and builds
+the app and the library against the same overlay; `dev-run.sh` runs with libvips from
+`build/deps/prefix` and the runtime snap. The runtime farm now excludes libstdc++ and libgcc_s
+with the glibc family: the host compiler's runtime stays authoritative.
+
+**Consequences.** Dev builds and tests use the snap's glib, libjpeg, libpng, libtiff, libwebp,
+lcms2 and libexif. HEIF, JPEG XL and RAW have no development files in the SDK; they arrive with
+M3 as snap parts and the same overlay. The snap itself builds libvips as a part from the same
+pinned source on core24 (M7). CI on Ubuntu, Windows (vcpkg) and macOS (Homebrew) uses each
+platform's own libvips (PLAN D19).
+

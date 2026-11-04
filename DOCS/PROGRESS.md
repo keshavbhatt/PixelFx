@@ -6,7 +6,7 @@
 |---|---|
 | M0 Analysis and contract | done |
 | M1 Library core | done (2026-11-04), performance carried into M3 |
-| M2 App skeleton | todo |
+| M2 App skeleton | done locally (2026-11-04); Windows and macOS CI written, first run after the next push |
 | M3 Editor | todo |
 | M4 Looks and presets | todo |
 | M5 Batch | todo |
@@ -23,6 +23,29 @@
 | `batch-compress.html` | 2026-11-04 (`mocks/reviews/batch-compress.md`) | approved 2026-11-04 |
 
 ## Sessions (newest first)
+
+### 2026-11-04 (M2)
+
+- The app skeleton in `app/`: layered static libraries (core, services, ui, app), the root
+  `CMakeLists.txt` building the library and the app together, Qt 6.11 hygiene definitions.
+  From the kit: single instance, log sink, changelog reader, icons helper, CMake helpers, test
+  helper, dev scripts. Written for PixelFx: settings facade with the one-time PixelFx 1 folder
+  migration, command line (files, `--profile`, `--quit`, log file), `Application`, `Document`
+  (open and render on a worker, newest request wins), the image bridge, design tokens and style,
+  the canvas, the welcome page (from the approved `welcome.html`; Open folder, Batch edit and
+  Recent come with their features), the main window header (from `editor.html`), drag and drop,
+  debug hooks. libpixelfx gained `toSrgb8` for display.
+- ADR-008: `scripts/build-deps.sh` builds libvips 8.18.7 against the KDE snap SDK, so dev builds
+  and tests run on the snap's libraries; the runtime farm keeps the host's libstdc++.
+- Verified: builds with `-Werror` against the SDK; 10 test suites pass under the snap runtime
+  (the library's 34 cases, settings, CLI, single instance, log sink, changelog guard, image
+  bridge, document, smoke, and an end-to-end test of the real binary: a second launch hands over
+  its photo, `--quit` ends the first). Headless grabs of the welcome page and an opened photo.
+- Found and fixed: the fit view used the preview size as the 100% limit; file sizes now in
+  decimal units as the mocks show. A manual check of `--quit` was unreliable (it matched the
+  wrong process); the end-to-end test replaced it.
+- CI (`.github/workflows/ci.yml`, `vcpkg.json`): Linux with warnings as errors, Windows with MSVC
+  and vcpkg, macOS with Homebrew. Not run yet; it runs on the next push.
 
 ### 2026-11-04 (publishing)
 

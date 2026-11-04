@@ -16,12 +16,24 @@ is on the [`legacy-v1`](https://github.com/keshavbhatt/PixelFx/tree/legacy-v1) b
 | `DOCS/` | Plan, feature list, design decisions, file formats, coding standards, progress |
 | `DOCS/mocks/` | The screens as HTML mocks: open `DOCS/mocks/index.html` in a browser |
 
-## Build the library
+## Build
+
+On Linux, against the KDE snap SDK the released snap uses (needs the `kde-qt6-core24-sdk`,
+`kf6-core24`, `core24` and `cmake` snaps, and `uv` for meson):
 
 ```sh
-make test   # needs CMake, a C++20 compiler, libvips 8.15+ and LittleCMS 2
-build/lib/pfx apply --preset libs/pixelfx-core/examples/moody.pfxpreset -o out/ photo.jpg
+scripts/dev-build.sh --tests
+scripts/dev-run.sh -- photo.jpg
 ```
+
+Anywhere with Qt 6.11, libvips 8.15+ and LittleCMS 2 (as CI does on Linux, Windows and macOS):
+
+```sh
+cmake -S . -B build -G Ninja && cmake --build build && ctest --test-dir build
+```
+
+The library alone: `make test`, then
+`build/lib/pfx apply --preset libs/pixelfx-core/examples/moody.pfxpreset -o out/ photo.jpg`.
 
 ## Licence
 

@@ -25,11 +25,11 @@ look; a **batch recipe** is a preset plus resize and save options.
 |---|---|---|---|---|
 | S1 | One main window: header bar, mode rail (Edit, Crop, Batch), side panels, filmstrip | toolbar + dock | KEEP | todo |
 | S2 | Persist window geometry and state, panel widths, last mode | geometry only | KEEP | todo |
-| S3 | Single instance; a second launch forwards its files to the running window | refuses with a dialog | KEEP | todo |
-| S4 | Open files from the command line and the desktop file (`%F`), MIME types declared | argv ignored | KEEP | todo |
-| S5 | Drag and drop of files and folders anywhere in the window; paste an image from the clipboard | none | KEEP | todo |
+| S3 | Single instance; a second launch forwards its files to the running window | refuses with a dialog | KEEP | done (`SingleInstance`, `Application`; end-to-end `tst_instance`) |
+| S4 | Open files from the command line and the desktop file (`%F`), MIME types declared | argv ignored | KEEP | wip: command line done (`CliOptions`); desktop file and MIME types with packaging (M7) |
+| S5 | Drag and drop of files and folders anywhere in the window; paste an image from the clipboard | none | KEEP | wip: dropping files done (`MainWindow`); folders and paste in M3 |
 | S6 | Native notifications through the portal or freedesktop (batch finished) | none | KEEP | todo |
-| S7 | Crash handler, log file, diagnostics copy, Report a bug sheet | none | KEEP | todo |
+| S7 | Crash handler, log file, diagnostics copy, Report a bug sheet | none | KEEP | wip: log file done (`LogSink`); the rest M6 |
 | S8 | What's new once per version from the bundled changelog, Version picker, link in About; Online guide | none | KEEP | todo |
 | S9 | Keyboard shortcuts sheet (F1, Ctrl+/); every action shows its shortcut in its tooltip | 3 shortcuts | KEEP | todo |
 | S10 | Theme: System, Dark (default), Light; neutral grey chrome | dark only | KEEP | todo |
@@ -42,12 +42,12 @@ look; a **batch recipe** is a preset plus resize and save options.
 
 | # | Feature | v1 | Decision | Status / class |
 |---|---|---|---|---|
-| O1 | Open images (many at once), Open folder (with subfolders), Recent list | one file | KEEP | todo |
+| O1 | Open images (many at once), Open folder (with subfolders), Recent list | one file | KEEP | wip: Open images (first photo shown) and the recent list in settings done; filmstrip, Open folder, Recent on the welcome page in M3 |
 | O2 | Formats in: JPEG, PNG, WebP, TIFF (8/16/32 bit), BMP, GIF (first frame), AVIF, HEIC/HEIF, JPEG XL | png, jpg, bmp, tiff, webp (broken in snap) | KEEP | todo |
 | O3 | Camera RAW (DNG and the common makes) with a sensible default rendering | none | KEEP (LibRaw, PLAN D15) | todo |
 | O4 | EXIF orientation applied on open | ignored | KEEP | todo |
 | O5 | Embedded ICC profile honoured; working space is linear and wide gamut | dropped | KEEP | todo |
-| O6 | Decoding off the GUI thread, a fast embedded or downscaled preview first, full quality after | GUI thread, decoded twice | KEEP | todo |
+| O6 | Decoding off the GUI thread, a fast embedded or downscaled preview first, full quality after | GUI thread, decoded twice | KEEP | wip: off the GUI thread at screen size done (`Document`); progressive refinement in M3 |
 | O7 | Image information: size, format, bit depth, colour profile, camera, lens, exposure, date, GPS (behind a click) | Info dialog | KEEP (panel, not a dialog) | todo |
 | O8 | Temp PNG copies of every opened file | yes | DROP | |
 
