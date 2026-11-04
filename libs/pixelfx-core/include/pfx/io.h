@@ -1,0 +1,59 @@
+// SPDX-License-Identifier: Apache-2.0
+#pragma once
+
+#include "pfx/image.h"
+#include "pfx/result.h"
+
+#include <cstdint>
+#include <filesystem>
+#include <string>
+#include <vector>
+
+namespace pfx {
+
+struct Metadata
+{
+    std::vector<std::uint8_t> exif;
+    std::vector<std::uint8_t> xmp;
+    std::vector<std::uint8_t> iptc;
+};
+
+struct ImageInfo
+{
+    int width = 0; // after orientation
+    int height = 0;
+    std::string format; // loader name, for example "jpeg", "png"
+    int bitsPerSample = 8;
+    bool hasAlpha = false;
+    bool hasProfile = false;
+};
+
+struct LoadedImage
+{
+    Image image; // working space
+    ImageInfo info;
+    Metadata metadata;
+};
+
+struct LoadOptions
+{
+    int maxLongEdge = 0; // 0: full size; otherwise downscaled on load (previews, thumbnails)
+};
+
+struct SaveOptions
+{
+    int quality = 90;      // JPEG, WebP, AVIF, HEIC, JPEG XL
+    int bitsPerSample = 8; // 8 or 16 where the format allows
+    bool keepMetadata = true;
+};
+
+// Decodes any format libvips reads, applies the orientation tag, converts through the
+// embedded ICC profile (sRGB when there is none) into the working space.
+[[nodiscard]] Result<LoadedImage> load(const std::filesystem::path& path, const LoadOptions& options = {});
+[[nodiscard]] Result<ImageInfo> probe(const std::filesystem::path& path);
+
+// Converts to sRGB, embeds the sRGB profile, writes the format the extension names.
+[[nodiscard]] Status save(const Image& image, const std::filesystem::path& path,
+                          const SaveOptions& options = {}, const Metadata* metadata = nullptr);
+
+} // namespace pfx

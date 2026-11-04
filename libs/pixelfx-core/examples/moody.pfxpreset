@@ -1,0 +1,15 @@
+{
+  "format": "pixelfx",
+  "kind": "preset",
+  "version": 1,
+  "name": "Moody (example)",
+  "workingSpace": "rec2020-linear",
+  "body": {
+    "settings": {
+      "light": { "exposure": -0.2, "contrast": 30, "highlights": -40, "shadows": 25, "blacks": -10 },
+      "color": { "wb": { "temperature": 12 }, "vibrance": 15, "saturation": -10 },
+      "curves": { "rgb": [[0, 0.04], [0.3, 0.24], [0.7, 0.76], [1, 0.97]] },
+      "detail": { "clarity": 20, "sharpen": { "amount": 40 } }
+    }
+  }
+}

@@ -1,0 +1,120 @@
+// SPDX-License-Identifier: Apache-2.0
+#include "fixtures.h"
+#include "pfx/document.h"
+
+#include <doctest/doctest.h>
+#include <string>
+
+namespace {
+
+// The example of DOCS/presets.md sections 1 and 2 (look, grading, effects and geometry are
+// groups of later milestones and must survive as unknown keys).
+const char* const kPresetExample = R"json({
+  "format": "pixelfx", "kind": "preset", "version": 1,
+  "id": "7b0f2c7e-3c1a-4d0e-9a51-2f5a2b0c9e11", "name": "Moody landscape", "group": "My presets",
+  "created": "2026-11-04T18:20:00Z", "modified": "2026-11-04T18:20:00Z",
+  "generator": "PixelFx 2.0.0 (libpixelfx 1.0.0)", "workingSpace": "rec2020-linear",
+  "futureField": {"anything": [1, 2, 3]},
+  "body": {
+    "settings": {
+      "light":   { "exposure": 0.35, "contrast": 18, "highlights": -35, "shadows": 28, "whites": 6, "blacks": -10 },
+      "color":   { "wb": { "mode": "relative", "temperature": 14, "tint": 0 }, "vibrance": 22, "saturation": 0 },
+      "curves":  { "rgb": [[0,0],[0.28,0.2],[0.72,0.76],[1,1]], "r": null, "g": null, "b": null },
+      "detail":  { "clarity": 15, "sharpen": { "amount": 30, "radius": 0.0004, "masking": 0 }, "denoise": { "luminance": 0, "color": 25 } },
+      "effects": { "vignette": { "amount": -22, "midpoint": 50, "roundness": 0 } }
+    },
+    "history": []
+  }
+})json";
+
+} // namespace
+
+TEST_CASE("the presets.md example parses into dotted settings")
+{
+    pfx::ParseReport report;
+    const auto doc = pfx::parseDocument(kPresetExample, &report);
+    REQUIRE(doc.ok());
+    const pfx::Settings& s = doc.value().settings;
+    CHECK(doc.value().kind == pfx::DocumentKind::Preset);
+    CHECK(doc.value().name == "Moody landscape");
+    CHECK(s.number("light.exposure", 0) == doctest::Approx(0.35));
+    CHECK(s.number("color.wb.temperature", 0) == doctest::Approx(14));
+    CHECK(s.text("color.wb.mode", "") == "relative");
+    CHECK(s.number("detail.sharpen.amount", 0) == doctest::Approx(30));
+    CHECK(s.curve("curves.rgb").size() == 4);
+    CHECK_FALSE(s.contains("curves.r"));          // null means not set
+    CHECK(s.contains("effects.vignette.amount")); // unknown to this version, kept
+    CHECK(s.groups() == std::vector<std::string>{"color", "curves", "detail", "effects", "light"});
+}
+
+TEST_CASE("a document survives a round trip, unknown keys included")
+{
+    const auto first = pfx::parseDocument(kPresetExample);
+    REQUIRE(first.ok());
+    const std::string text = pfx::serializeDocument(first.value());
+    const auto second = pfx::parseDocument(text);
+    REQUIRE(second.ok());
+    CHECK(second.value().settings == first.value().settings);
+    CHECK(second.value().name == first.value().name);
+    CHECK(text.find("futureField") != std::string::npos);
+    CHECK(text.find("\"history\"") != std::string::npos);
+    CHECK(pfx::serializeDocument(second.value()) == text);
+}
+
+TEST_CASE("out-of-range and malformed values are clamped or dropped, and reported")
+{
+    const char* json = R"({"format":"pixelfx","kind":"preset","version":1,"body":{"settings":{
+        "light":{"exposure":9,"contrast":"high"},
+        "curves":{"rgb":[[0.5,0.5],[0.2,0.9]]}}}})";
+    pfx::ParseReport report;
+    const auto doc = pfx::parseDocument(json, &report);
+    REQUIRE(doc.ok());
+    CHECK(doc.value().settings.number("light.exposure", 0) == doctest::Approx(5.0));
+    CHECK_FALSE(doc.value().settings.contains("light.contrast"));
+    CHECK_FALSE(doc.value().settings.contains("curves.rgb"));
+    CHECK(report.warnings.size() == 3);
+}
+
+TEST_CASE("documents from a newer PixelFx, other formats and broken JSON are refused with a reason")
+{
+    const auto newer = pfx::parseDocument(R"({"format":"pixelfx","kind":"preset","version":99})");
+    REQUIRE_FALSE(newer.ok());
+    CHECK(newer.error().code == pfx::ErrorCode::NewerVersion);
+    CHECK_FALSE(pfx::parseDocument(R"({"format":"other","kind":"preset","version":1})").ok());
+    CHECK_FALSE(pfx::parseDocument("{not json").ok());
+    CHECK_FALSE(pfx::parseDocument(R"({"format":"pixelfx","kind":"teapot","version":1})").ok());
+    const auto look = pfx::parseDocument(R"({"format":"pixelfx","kind":"look","version":1})");
+    REQUIRE_FALSE(look.ok());
+    CHECK(look.error().code == pfx::ErrorCode::Unsupported);
+}
+
+TEST_CASE("presets keep only the ticked groups and overlay onto a photo's settings")
+{
+    pfx::Settings photo;
+    photo.set("light.exposure", 1.0);
+    photo.set("color.vibrance", 10.0);
+    pfx::Settings edit;
+    edit.set("light.exposure", -0.5);
+    edit.set("light.contrast", 20.0);
+    edit.set("color.vibrance", 50.0);
+    const pfx::Settings preset = edit.onlyGroups({"light"});
+    CHECK_FALSE(preset.contains("color.vibrance"));
+    const pfx::Settings applied = photo.overlaidWith(preset);
+    CHECK(applied.number("light.exposure", 0) == doctest::Approx(-0.5));
+    CHECK(applied.number("light.contrast", 0) == doctest::Approx(20));
+    CHECK(applied.number("color.vibrance", 0) == doctest::Approx(10));
+}
+
+TEST_CASE("documents save to and load from files")
+{
+    const fixtures::TempDir dir;
+    pfx::Document doc;
+    doc.name = "Test";
+    doc.settings.set("light.exposure", 0.25);
+    const auto path = dir.path() / "test.pfxpreset";
+    REQUIRE(pfx::saveDocument(doc, path).ok());
+    const auto loaded = pfx::loadDocument(path);
+    REQUIRE(loaded.ok());
+    CHECK(loaded.value().settings == doc.settings);
+    CHECK(pfx::loadDocument(dir.path() / "missing.pfx").error().code == pfx::ErrorCode::NotFound);
+}
