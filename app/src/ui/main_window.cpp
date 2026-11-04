@@ -400,6 +400,25 @@ void MainWindow::buildHeader()
     header->addWidget(menuButton);
 }
 
+void MainWindow::buildBatch()
+{
+    BatchPage::setPhotoTest(&MainWindow::isSupported);
+    m_batch = new BatchPage(m_settings.exportOptions(), this);
+    connect(m_batch, &BatchPage::outputChanged, this,
+            [this](const core::ExportOptions& output) { m_settings.setExportOptions(output); });
+    // The window title shows a running batch, so it can be followed from the task bar.
+    connect(&m_batch->runner(), &services::BatchRunner::progress, this,
+            [this](int done, int total) { setWindowTitle(tr("Batch %1 of %2").arg(done).arg(total)); });
+    connect(&m_batch->runner(), &services::BatchRunner::finished, this, [this](int saved, int failed) {
+        setWindowTitle(m_document.isOpen() ? QFileInfo(m_document.info().path).fileName() : QString());
+        if (!isBatching()) {
+            showToast(failed > 0 ? tr("Batch done: %1 saved, %2 not saved").arg(saved).arg(failed)
+                                 : tr("Batch done: %n saved", nullptr, saved));
+        }
+    });
+    m_stack->addWidget(m_batch);
+}
+
 void MainWindow::setupUi()
 {
     buildHeader();
@@ -424,21 +443,7 @@ void MainWindow::setupUi()
     m_stack = new QStackedWidget(this);
     m_stack->addWidget(m_welcome);
     m_stack->addWidget(m_canvasPage);
-    BatchPage::setPhotoTest(&MainWindow::isSupported);
-    m_batch = new BatchPage(m_settings.exportOptions(), this);
-    connect(m_batch, &BatchPage::outputChanged, this,
-            [this](const core::ExportOptions& output) { m_settings.setExportOptions(output); });
-    m_stack->addWidget(m_batch);
-    // The window title shows a running batch, so it can be followed from the task bar.
-    connect(&m_batch->runner(), &services::BatchRunner::progress, this,
-            [this](int done, int total) { setWindowTitle(tr("Batch %1 of %2").arg(done).arg(total)); });
-    connect(&m_batch->runner(), &services::BatchRunner::finished, this, [this](int saved, int failed) {
-        setWindowTitle(m_document.isOpen() ? QFileInfo(m_document.info().path).fileName() : QString());
-        if (!isBatching()) {
-            showToast(failed > 0 ? tr("Batch done: %1 saved, %2 not saved").arg(saved).arg(failed)
-                                 : tr("Batch done: %n saved", nullptr, saved));
-        }
-    });
+    buildBatch();
 
     m_adjust = new AdjustPanel(this);
     m_cropPanel = new CropPanel(this);
