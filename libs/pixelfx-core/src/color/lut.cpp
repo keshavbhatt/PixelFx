@@ -6,7 +6,6 @@
 #include "pfx/color.h"
 
 #include <algorithm>
-#include <charconv>
 #include <cmath>
 #include <fstream>
 #include <optional>
@@ -35,6 +34,59 @@ std::string_view trim(std::string_view s)
     return s;
 }
 
+// The exponent after an "e": an optional sign and digits. The characters used, or 0.
+std::size_t parseExponent(std::string_view s, int& out)
+{
+    std::size_t j = 0;
+    const bool down = j < s.size() && s[j] == '-';
+    if (j < s.size() && (s[j] == '-' || s[j] == '+')) {
+        ++j;
+    }
+    const std::size_t start = j;
+    int exponent = 0;
+    for (; j < s.size() && s[j] >= '0' && s[j] <= '9'; ++j) {
+        exponent = std::min(1000, (exponent * 10) + (s[j] - '0'));
+    }
+    out = down ? -exponent : exponent;
+    return j == start ? 0 : j;
+}
+
+// One decimal number at the start of `s` ("-0.5", "1e-3", ".25"), whatever the locale: Apple's
+// standard library has no floating-point from_chars. The characters used, or 0 if none.
+std::size_t parseNumber(std::string_view s, double& out)
+{
+    std::size_t i = 0;
+    const bool negative = i < s.size() && s[i] == '-';
+    if (i < s.size() && (s[i] == '-' || s[i] == '+')) {
+        ++i;
+    }
+    double value = 0.0;
+    int digits = 0;
+    for (; i < s.size() && s[i] >= '0' && s[i] <= '9'; ++i, ++digits) {
+        value = (value * 10.0) + (s[i] - '0');
+    }
+    if (i < s.size() && s[i] == '.') {
+        double scale = 0.1;
+        for (++i; i < s.size() && s[i] >= '0' && s[i] <= '9'; ++i, ++digits, scale /= 10.0) {
+            value += (s[i] - '0') * scale;
+        }
+    }
+    if (digits == 0) {
+        return 0;
+    }
+    if (i < s.size() && (s[i] == 'e' || s[i] == 'E')) {
+        int exponent = 0;
+        const std::size_t used = parseExponent(s.substr(i + 1), exponent);
+        if (used == 0) {
+            return 0;
+        }
+        value *= std::pow(10.0, exponent);
+        i += 1 + used;
+    }
+    out = negative ? -value : value;
+    return i;
+}
+
 // Up to `count` numbers separated by spaces or tabs; false if there are more or one is bad.
 bool readNumbers(std::string_view s, float* out, int count)
 {
@@ -47,15 +99,14 @@ bool readNumbers(std::string_view s, float* out, int count)
         if (n == count) {
             return false;
         }
-        const char* end = s.data() + s.size();
-        float value = 0.0F;
-        const auto [ptr, ec] = std::from_chars(
-            s.data(), end, value); // NOLINT(bugprone-suspicious-stringview-data-usage): bounded by end
-        if (ec != std::errc() || !std::isfinite(value)) {
+        double value = 0.0;
+        const std::size_t used = parseNumber(s, value);
+        const bool separated = used == s.size() || s[used] == ' ' || s[used] == '\t';
+        if (used == 0 || !separated || !std::isfinite(value) || std::abs(value) > 1e30) {
             return false;
         }
-        out[n++] = value; // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic)
-        s.remove_prefix(static_cast<std::size_t>(ptr - s.data()));
+        out[n++] = static_cast<float>(value); // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+        s.remove_prefix(used);
     }
 }
 
