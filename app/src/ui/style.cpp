@@ -39,6 +39,8 @@ const QString kSheet = uR"(
         #adjustPanel { background: {{panel}}; border-left: 1px solid {{border}}; }
         #cropPanel { background: {{panel}}; border-left: 1px solid {{border}}; }
         #section { color: {{muted}}; font-size: 11px; font-weight: 700; }
+        QToolButton#swatch { border: 2px solid transparent; border-radius: 12px; }
+        QToolButton#swatch:checked { border-color: {{text}}; }
         QPushButton#chip { border: 1px solid {{border}}; border-radius: 12px; padding: 3px 10px; font-size: 12px; color: {{muted}}; background: transparent; }
         QPushButton#chip:hover { background: {{hover}}; color: {{text}}; }
         QPushButton#chip:checked { background: {{accentSoft}}; color: {{accent}}; border-color: transparent; }

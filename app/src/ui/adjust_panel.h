@@ -38,6 +38,11 @@ public:
     [[nodiscard]] CurveEditor* curveEditor() const { return m_curve; }
     /// Shows the curve of `key` (curves.rgb, curves.r, curves.g, curves.b) in the editor.
     void showCurve(const QString& key);
+    /// Shows the colour mixer slider of `mode` (0 hue, 1 saturation, 2 luminance) and `band`
+    /// (0 red to 7 magenta).
+    void showMixer(int mode, int band);
+    /// The colour mixer slider on show.
+    [[nodiscard]] AdjustSlider* mixerSlider() const;
     void setHistogram(const core::Histogram& histogram);
     /// Clears every setting (Ctrl+R) and reports it as one step.
     void resetAll();
@@ -54,6 +59,8 @@ private:
     void resetGroup(AdjustGroup* group);
     void refreshGroups();
     void buildCurvesGroup(QWidget* content, QVBoxLayout* groups);
+    void buildMixerGroup(QWidget* content, QVBoxLayout* groups);
+    void showMixerSlider();
     void curveEdited(const pfx::Curve& curve);
 
     pfx::Settings m_settings;
@@ -64,6 +71,9 @@ private:
     QString m_curveKey = QStringLiteral("curves.rgb");
     std::vector<AdjustGroup*> m_groups;
     std::vector<AdjustSlider*> m_sliders;
+    std::vector<AdjustSlider*> m_mixerSliders;
+    QButtonGroup* m_mixerModes = nullptr;
+    QButtonGroup* m_mixerBands = nullptr;
 };
 
 /// One labelled slider for one numeric setting. Values are in the registry's units.

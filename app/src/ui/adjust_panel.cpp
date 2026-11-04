@@ -17,6 +17,7 @@
 #include <QToolButton>
 #include <QVBoxLayout>
 
+#include <array>
 #include <cmath>
 #include <pfx/registry.h>
 #include <string_view>
@@ -150,6 +151,7 @@ public:
     }
     [[nodiscard]] const std::vector<AdjustSlider*>& sliders() const { return m_sliders; }
     [[nodiscard]] QToolButton* resetButton() const { return m_reset; }
+    void setExpanded(bool open) { m_toggle->setChecked(open); }
     [[nodiscard]] const QString& name() const { return m_name; }
     void setChanged(bool changed)
     {
@@ -345,7 +347,8 @@ AdjustPanel::AdjustPanel(QWidget* parent)
         groups->addWidget(group);
         m_groups.push_back(group);
         if (std::string_view(g.name) == "Color") {
-            buildCurvesGroup(content, groups); // mock order: Light, Color, Curves, Detail
+            buildMixerGroup(content, groups); // mock order: Light, Color, Color mixer, Curves, Detail
+            buildCurvesGroup(content, groups);
         }
     }
     groups->addStretch();
@@ -395,6 +398,122 @@ const std::vector<QString>& curveKeys()
 }
 
 } // namespace
+
+namespace {
+
+struct MixerBand
+{
+    const char* key;
+    const char* label; // plural, as in "Yellows hue"
+    QColor swatch;     // mock editor.html .swatches
+};
+
+constexpr std::array<const char*, 3> kMixerModes = {"hue", "saturation", "luminance"};
+
+const std::vector<MixerBand>& mixerBands()
+{
+    static const std::vector<MixerBand> bands = {
+        {"red", QT_TRANSLATE_NOOP("AdjustPanel", "Reds"), QColor(0xE0, 0x4F, 0x4F)},
+        {"orange", QT_TRANSLATE_NOOP("AdjustPanel", "Oranges"), QColor(0xE8, 0x90, 0x4A)},
+        {"yellow", QT_TRANSLATE_NOOP("AdjustPanel", "Yellows"), QColor(0xE0, 0xC0, 0x4F)},
+        {"green", QT_TRANSLATE_NOOP("AdjustPanel", "Greens"), QColor(0x4F, 0xC0, 0x60)},
+        {"aqua", QT_TRANSLATE_NOOP("AdjustPanel", "Aquas"), QColor(0x4F, 0xC0, 0xC0)},
+        {"blue", QT_TRANSLATE_NOOP("AdjustPanel", "Blues"), QColor(0x4F, 0x80, 0xE0)},
+        {"purple", QT_TRANSLATE_NOOP("AdjustPanel", "Purples"), QColor(0xA0, 0x4F, 0xE0)},
+        {"magenta", QT_TRANSLATE_NOOP("AdjustPanel", "Magentas"), QColor(0xE0, 0x4F, 0xB0)},
+    };
+    return bands;
+}
+
+} // namespace
+
+void AdjustPanel::buildMixerGroup(QWidget* content, QVBoxLayout* groups)
+{
+    auto* group = new AdjustGroup(tr("Color mixer"), u"palette"_s, content);
+    group->setExpanded(false); // mock: closed until needed
+    auto* modes = new QWidget(group);
+    auto* modeRow = new QHBoxLayout(modes);
+    modeRow->setContentsMargins(0, 4, 0, 8);
+    modeRow->setSpacing(0);
+    m_mixerModes = new QButtonGroup(this);
+    const QStringList modeNames = {tr("Hue"), tr("Saturation"), tr("Luminance")};
+    for (int i = 0; i < modeNames.size(); ++i) {
+        auto* b = new QPushButton(modeNames.at(i), modes);
+        b->setObjectName(u"segment"_s);
+        b->setCheckable(true);
+        b->setChecked(i == 0);
+        m_mixerModes->addButton(b, i);
+        modeRow->addWidget(b, 1);
+    }
+    auto* swatches = new QWidget(group);
+    auto* swatchRow = new QHBoxLayout(swatches);
+    swatchRow->setContentsMargins(0, 0, 0, 6);
+    swatchRow->setSpacing(6);
+    m_mixerBands = new QButtonGroup(this);
+    const std::vector<MixerBand>& bands = mixerBands();
+    for (std::size_t i = 0; i < bands.size(); ++i) {
+        auto* s = new QToolButton(swatches);
+        s->setObjectName(u"swatch"_s);
+        s->setCheckable(true);
+        s->setChecked(i == 0);
+        s->setFixedSize(24, 24);
+        s->setStyleSheet(u"QToolButton#swatch { background: %1; }"_s.arg(bands.at(i).swatch.name()));
+        s->setToolTip(tr(bands.at(i).label));
+        s->setAccessibleName(tr(bands.at(i).label));
+        m_mixerBands->addButton(s, static_cast<int>(i));
+        swatchRow->addWidget(s);
+    }
+    swatchRow->addStretch();
+    group->addContent(modes);
+    group->addContent(swatches);
+    for (std::size_t m = 0; m < kMixerModes.size(); ++m) {
+        for (const MixerBand& band : bands) {
+            const QString key =
+                u"mixer.%1.%2"_s.arg(QLatin1StringView(kMixerModes.at(m)), QLatin1StringView(band.key));
+            //: A colour band and what changes in it, for example "Yellows hue".
+            const QString label =
+                tr("%1 %2").arg(tr(band.label), modeNames.at(static_cast<qsizetype>(m)).toLower());
+            auto* s = new AdjustSlider(key, label, group);
+            group->addSlider(s);
+            m_sliders.push_back(s);
+            m_mixerSliders.push_back(s);
+            connect(s, &AdjustSlider::moved, this, [this, s](double v) { setValue(s->key(), v, false); });
+            connect(s, &AdjustSlider::released, this, [this, s](double v) { setValue(s->key(), v, true); });
+        }
+    }
+    connect(m_mixerModes, &QButtonGroup::idClicked, this, &AdjustPanel::showMixerSlider);
+    connect(m_mixerBands, &QButtonGroup::idClicked, this, &AdjustPanel::showMixerSlider);
+    connect(group->resetButton(), &QToolButton::clicked, this, [this, group] { resetGroup(group); });
+    groups->addWidget(group);
+    m_groups.push_back(group);
+    showMixerSlider();
+}
+
+void AdjustPanel::showMixerSlider()
+{
+    const std::size_t shown = (static_cast<std::size_t>(m_mixerModes->checkedId()) * mixerBands().size()) +
+                              static_cast<std::size_t>(m_mixerBands->checkedId());
+    for (std::size_t i = 0; i < m_mixerSliders.size(); ++i) {
+        m_mixerSliders.at(i)->setVisible(i == shown);
+    }
+}
+
+AdjustSlider* AdjustPanel::mixerSlider() const
+{
+    for (AdjustSlider* s : m_mixerSliders) {
+        if (!s->isHidden()) {
+            return s;
+        }
+    }
+    return nullptr;
+}
+
+void AdjustPanel::showMixer(int mode, int band)
+{
+    m_mixerModes->button(mode)->setChecked(true);
+    m_mixerBands->button(band)->setChecked(true);
+    showMixerSlider();
+}
 
 void AdjustPanel::buildCurvesGroup(QWidget* content, QVBoxLayout* groups)
 {

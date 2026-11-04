@@ -103,6 +103,27 @@ private Q_SLOTS:
         QCOMPARE(panel.curveEditor()->curve().size(), std::size_t{3});
     }
 
+    void colorMixerShowsOneBandAtATime()
+    {
+        AdjustPanel panel;
+        QCOMPARE(panel.mixerSlider()->key(), u"mixer.hue.red"_s);
+        panel.showMixer(0, 2);
+        pixelfx::ui::AdjustSlider* yellows = panel.mixerSlider();
+        QCOMPARE(yellows->key(), u"mixer.hue.yellow"_s);
+        QCOMPARE(yellows->label(), u"Yellows hue"_s);
+        panel.showMixer(1, 3);
+        QCOMPARE(panel.mixerSlider()->key(), u"mixer.saturation.green"_s);
+        QSignalSpy finished(&panel, &AdjustPanel::editFinished);
+        panel.mixerSlider()->findChild<QSlider*>()->setValue(-30); // a keyboard step: complete at once
+        QCOMPARE(panel.settings().number("mixer.saturation.green", 0), -30.0);
+        QCOMPARE(finished.last().first().toString(), u"Greens saturation -30"_s);
+        // A setting from elsewhere shows on its slider even when another band is on show.
+        pfx::Settings s;
+        s.set("mixer.luminance.blue", 40.0);
+        panel.setSettings(s);
+        QCOMPARE(panel.slider(u"mixer.luminance.blue"_s)->value(), 40.0);
+    }
+
     void setSettingsDoesNotEmit()
     {
         AdjustPanel panel;
