@@ -7,6 +7,7 @@
 #include "ui/canvas.h"
 #include "ui/crop_panel.h"
 #include "ui/export_sheet.h"
+#include "ui/filmstrip.h"
 #include "ui/icons.h"
 #include "ui/preset_save_sheet.h"
 #include "ui/presets_panel.h"
@@ -45,6 +46,7 @@
 #include <QUrl>
 #include <QVBoxLayout>
 
+#include <functional>
 #include <pfx/auto.h>
 #include <pfx/io.h>
 
@@ -144,6 +146,7 @@ MainWindow::MainWindow(core::Settings& settings, QWidget* parent)
 
     applyGeneralSettings();
     connectPresets();
+    connectFilmstrip();
     connectDocument();
     connectCrop();
     connectZoom();
@@ -591,6 +594,9 @@ QWidget* MainWindow::buildCanvasPage()
     column->setSpacing(0);
     column->addWidget(m_canvas, 1);
     column->addWidget(m_cropStrip);
+    m_strip = new Filmstrip(page);
+    m_strip->hide();
+    column->addWidget(m_strip);
     return page;
 }
 
@@ -612,7 +618,8 @@ void MainWindow::pasteSettings()
         showToast(tr("Nothing to paste: copy a photo's settings first."));
         return;
     }
-    m_document.apply(core::pasted(m_document.settings(), *copied), tr("Paste settings"));
+    applyToSelection([settings = *copied](const pfx::Settings& s) { return core::pasted(s, settings); },
+                     tr("Paste settings"));
 }
 
 void MainWindow::pasteImage()
@@ -824,7 +831,8 @@ void MainWindow::applyPreset(const core::PresetEntry& entry)
         m_document.autoAdjust();
         return;
     }
-    m_document.apply(core::applyPreset(m_document.settings(), entry.settings),
+    const pfx::Settings preset = entry.settings;
+    applyToSelection([preset](const pfx::Settings& s) { return core::applyPreset(s, preset); },
                      tr("Preset %1").arg(entry.name));
 }
 
@@ -958,6 +966,7 @@ void MainWindow::enterCrop()
     m_panels->setCurrentWidget(m_cropPanel);
     m_presets->hide(); // mock crop.html: no left panel while cropping
     m_cropStrip->show();
+    m_strip->hide();
     updateCropStrip();
     for (QAction* a : std::as_const(m_cropActions)) {
         a->setEnabled(true);
@@ -985,6 +994,7 @@ void MainWindow::leaveCrop(bool apply)
     m_panels->setCurrentWidget(m_adjust);
     m_presets->show();
     m_cropStrip->hide();
+    m_strip->show();
     m_compare->setEnabled(true);
     updateHistoryButtons();
     m_editMode->setChecked(true);
@@ -1003,15 +1013,116 @@ bool MainWindow::isSupported(const QString& path)
 
 void MainWindow::openFiles(const QStringList& files)
 {
+    QStringList photos;
     for (const QString& file : files) {
         if (isSupported(file)) {
-            m_document.open(file, previewLongEdge());
-            return;
+            photos << QFileInfo(file).absoluteFilePath();
         }
     }
-    if (!files.isEmpty()) {
-        showFailed(files.first(), tr("PixelFx does not open this kind of file yet."));
+    if (photos.isEmpty()) {
+        if (!files.isEmpty()) {
+            showFailed(files.first(), tr("PixelFx does not open this kind of file yet."));
+        }
+        return;
     }
+    // Several photos replace the strip; one joins it (or is switched to when already there).
+    QStringList strip = m_strip->files();
+    int target = 0;
+    if (photos.size() > 1) {
+        strip = photos;
+    } else if (const auto at = strip.indexOf(photos.first()); at >= 0) {
+        target = static_cast<int>(at);
+    } else {
+        strip << photos.first();
+        target = static_cast<int>(strip.size()) - 1;
+    }
+    if (strip != m_strip->files()) {
+        m_strip->setFiles(strip);
+        for (const QString& path : strip) {
+            m_stripThumbnails->request(path, 2 * FilmTile::kWidth,
+                                       m_settings.rememberEdits() ? core::SidecarStore::defaultFolder()
+                                                                  : QString());
+        }
+    }
+    showPhoto(target);
+}
+
+void MainWindow::showPhoto(int index)
+{
+    if (index < 0 || index >= m_strip->files().size() || isCropping()) {
+        return;
+    }
+    m_strip->setCurrent(index);
+    if (m_document.info().path != m_strip->files().at(index)) {
+        m_document.open(m_strip->files().at(index), previewLongEdge());
+    }
+}
+
+void MainWindow::connectFilmstrip()
+{
+    m_stripThumbnails = new services::Thumbnailer(this);
+    connect(m_stripThumbnails, &services::Thumbnailer::ready, this, [this](const services::Thumbnail& t) {
+        m_strip->setThumbnail(t.path, t.image, t.edited.isValid());
+    });
+    connect(m_strip, &Filmstrip::currentRequested, this, &MainWindow::showPhoto);
+    connect(m_strip, &Filmstrip::addRequested, this, &MainWindow::chooseFiles);
+    connect(m_strip, &Filmstrip::selectionChanged, m_presets, &PresetsPanel::setTargetCount);
+    // The current photo's tile follows its edits, from the preview (no decoding).
+    auto* tileTimer = new QTimer(this);
+    tileTimer->setSingleShot(true);
+    tileTimer->setInterval(400);
+    connect(tileTimer, &QTimer::timeout, this, [this] {
+        if (m_document.isOpen() && !m_document.isCropEditing()) {
+            m_strip->setThumbnail(m_document.info().path,
+                                  m_document.preview().scaled(4 * FilmTile::kWidth, 4 * FilmTile::kHeight,
+                                                              Qt::KeepAspectRatio, Qt::SmoothTransformation),
+                                  !m_document.settings().isEmpty());
+        }
+    });
+    connect(&m_document, &services::Document::previewReady, tileTimer, qOverload<>(&QTimer::start));
+    const auto key = [this](const QKeySequence& seq, auto slot) {
+        auto* a = new QAction(this);
+        a->setShortcut(seq);
+        connect(a, &QAction::triggered, this, slot);
+        addAction(a);
+    };
+    // Left and Right step through the strip in keyPressEvent, so a focused slider keeps its arrows.
+    key(QKeySequence::SelectAll, [this] { m_strip->selectAll(); });
+}
+
+void MainWindow::applyToSelection(const std::function<pfx::Settings(const pfx::Settings&)>& change,
+                                  const QString& label)
+{
+    // The current photo through its Document (one history step); the others through their
+    // remembered edits, which is what they open with (apply-to-selected.html: nothing is written
+    // to the photos themselves).
+    m_document.apply(change(m_document.settings()), label);
+    const QList<int> selected = m_strip->selection();
+    if (selected.size() < 2) {
+        return;
+    }
+    if (!m_settings.rememberEdits()) {
+        showToast(tr("Applied to this photo only: turn on Remember edits in Settings to edit several."));
+        return;
+    }
+    const core::SidecarStore store(core::SidecarStore::defaultFolder());
+    int done = 0;
+    for (const int index : selected) {
+        const QString path = m_strip->files().at(index);
+        if (path == m_document.info().path) {
+            continue;
+        }
+        const QString fingerprint = core::fileFingerprint(path);
+        if (fingerprint.isEmpty()) {
+            continue;
+        }
+        const pfx::Settings before = store.read(fingerprint).value_or(pfx::Settings{});
+        if (store.write(path, fingerprint, change(before))) {
+            ++done;
+            m_stripThumbnails->request(path, 2 * FilmTile::kWidth, store.folder());
+        }
+    }
+    showToast(tr("%1 applied to %n photo(s)", nullptr, done + 1).arg(label));
 }
 
 void MainWindow::chooseFiles()
@@ -1040,6 +1151,7 @@ void MainWindow::showOpened(const services::DocumentInfo& info)
     m_panels->show();
     m_rail->show();
     m_presets->setVisible(!isCropping());
+    m_strip->setVisible(!isCropping());
     m_original->setEnabled(true);
     m_compare->setEnabled(true);
     m_export->setEnabled(true);
@@ -1096,6 +1208,11 @@ void MainWindow::keyPressEvent(QKeyEvent* event)
 {
     if (event->key() == Qt::Key_Space && !event->isAutoRepeat() && !isCropping()) {
         showOriginal(true);
+        return;
+    }
+    if ((event->key() == Qt::Key_Left || event->key() == Qt::Key_Right) &&
+        event->modifiers() == Qt::NoModifier && m_document.isOpen() && !isCropping()) {
+        showPhoto(m_strip->current() + (event->key() == Qt::Key_Right ? 1 : -1));
         return;
     }
     QMainWindow::keyPressEvent(event);

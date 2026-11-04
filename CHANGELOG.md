@@ -17,6 +17,9 @@ PixelFx 2 is rebuilt from scratch: a new editor, a new image engine, and a new l
   straighten with the dial, the slider or a drawn level line, fix leaning buildings with the
   perspective sliders, turn and flip. The crop stays editable later.
 - White balance: As shot, Auto, or click something grey with the picker (W).
+- Open many photos at once: they line up in a strip under the photo; Left and Right step
+  through them, Ctrl or Shift click (or Ctrl+A) selects several, and a preset or pasted settings
+  then go to all of them.
 - Presets: save the whole edit or only parts of it, apply with one click, preview by hovering,
   stack a colour preset on a light one; import and export them as files to share. A few built-in
   presets, Auto enhance among them, to start from.

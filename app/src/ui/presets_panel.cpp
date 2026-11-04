@@ -30,6 +30,7 @@ constexpr int kThumbHeight = 30;
 PresetsPanel::PresetsPanel(QWidget* parent)
     : QWidget(parent)
     , m_search(new QLineEdit(this))
+    , m_target(new QLabel(this))
     , m_listBox(new QWidget(this))
     , m_list(new QVBoxLayout(m_listBox))
 {
@@ -40,10 +41,13 @@ PresetsPanel::PresetsPanel(QWidget* parent)
     // Tabs: Presets only until looks exist (mock: Looks, Presets).
     auto* tab = new QLabel(tr("Presets"), this);
     tab->setObjectName(u"panelTab"_s);
+    m_target->setObjectName(u"accentText"_s);
+    m_target->hide();
     auto* tabs = new QHBoxLayout;
     tabs->setContentsMargins(10, 8, 10, 0);
     tabs->addWidget(tab);
     tabs->addStretch();
+    tabs->addWidget(m_target);
     auto* tabLine = new QWidget(this);
     tabLine->setObjectName(u"panelTabLine"_s);
     tabLine->setAttribute(Qt::WA_StyledBackground);
@@ -104,6 +108,12 @@ QHBoxLayout* PresetsPanel::buildHead()
 }
 
 PresetsPanel::~PresetsPanel() = default;
+
+void PresetsPanel::setTargetCount(int count)
+{
+    m_target->setText(tr("Applies to %n photos", nullptr, count));
+    m_target->setVisible(count > 1);
+}
 
 void PresetsPanel::setEntries(std::vector<core::PresetEntry> entries)
 {

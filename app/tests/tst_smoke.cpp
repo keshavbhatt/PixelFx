@@ -1,7 +1,9 @@
 #include "core/settings/settings.h"
+#include "core/sidecar_store.h"
 #include "ui/adjust_panel.h"
 #include "ui/canvas.h"
 #include "ui/crop_panel.h"
+#include "ui/filmstrip.h"
 #include "ui/main_window.h"
 #include "ui/presets_panel.h"
 #include "ui/straighten_dial.h"
@@ -177,6 +179,47 @@ private Q_SLOTS:
         QCOMPARE(window.document().info().size, QSize(64, 48));
         QVERIFY(QFileInfo(window.document().info().path).fileName().startsWith(u"pasted-"_s));
         QFile::remove(window.document().info().path);
+    }
+
+    void severalPhotosShareThePresetThroughTheStrip()
+    {
+        QStandardPaths::setTestModeEnabled(true);
+        pixelfx::ui::applyStyle(*qApp);
+        QTemporaryDir dir;
+        pixelfx::core::Settings settings(dir.filePath(u"s.ini"_s));
+        pixelfx::ui::MainWindow window(settings);
+        window.show();
+        QVERIFY(QTest::qWaitForWindowExposed(&window));
+        QStringList files;
+        for (int i = 0; i < 2; ++i) {
+            pfx::Image img(64, 48);
+            img.fill(0.2F + (0.2F * static_cast<float>(i)), 0.3F, 0.4F); // different pixels, fingerprints
+            files << dir.filePath(u"p%1.png"_s.arg(i));
+            QVERIFY(pfx::save(img, files.last().toStdString()).ok());
+        }
+        QSignalSpy opened(&window.document(), &pixelfx::services::Document::opened);
+        window.openFiles(files);
+        QVERIFY(opened.wait(10000));
+        QCOMPARE(window.filmstrip()->files().size(), 2);
+        QCOMPARE(window.document().info().path, files.at(0));
+        QTest::keyClick(&window, Qt::Key_Right);
+        QVERIFY(opened.wait(10000));
+        QCOMPARE(window.document().info().path, files.at(1));
+
+        window.filmstrip()->selectAll();
+        pfx::Settings preset;
+        preset.set("light.exposure", 0.8);
+        pixelfx::core::PresetEntry entry;
+        entry.name = u"Bright"_s;
+        entry.settings = preset;
+        Q_EMIT window.presetsPanel()->applyRequested(entry);
+        QCOMPARE(window.document().settings().number("light.exposure", 0), 0.8);
+        // The other photo got it through its remembered edits.
+        const pixelfx::core::SidecarStore store(pixelfx::core::SidecarStore::defaultFolder());
+        const auto other = store.read(pixelfx::core::fileFingerprint(files.at(0)));
+        QVERIFY(other.has_value());
+        QCOMPARE(other->number("light.exposure", 0), 0.8);
+        QVERIFY(QFile::remove(store.pathFor(pixelfx::core::fileFingerprint(files.at(0)))));
     }
 
     void supportedExtensions()

@@ -125,8 +125,8 @@ preview and export use resolution-independent parameters so they match (v1 defec
 
 | # | Feature | v1 | Decision | Status / class |
 |---|---|---|---|---|
-| M1 | Filmstrip of every open photo; Ctrl and Shift selection; Ctrl+A | none | KEEP | todo |
-| M2 | With a selection, applying a look or preset, pasting settings, and Export act on all selected | none | KEEP | todo |
+| M1 | Filmstrip of every open photo; Ctrl and Shift selection; Ctrl+A | none | KEEP | done: filmstrip of every open photo with pictures of their edits, Left and Right, Ctrl and Shift click, Ctrl+A (`Filmstrip`) |
+| M2 | With a selection, applying a look or preset, pasting settings, and Export act on all selected | none | KEEP | wip: presets and pasted settings act on the whole selection (through each photo's remembered edits); Export N photos and choosing the groups to paste todo |
 | M3 | Batch page: add files and folders, recipe (looks and presets stacked, or settings from a photo), optional Auto first, resize, format, folder, name tokens | none | KEEP | todo |
 | M4 | Batch runs on all cores in the background with a memory cap; pause, stop, per-file status and reason, retry failed, notification | none | KEEP | todo |
 | M5 | Save and reuse batch recipes (`.pfxbatch`) | none | KEEP | todo |

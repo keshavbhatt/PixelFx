@@ -131,6 +131,17 @@
 - CI: Windows ran the full suite for the first time: two library tests assumed loaders the
   vcpkg libvips lacks (GIF, PPM); fixed in the tests. macOS: the curve test now double-clicks
   where the point is drawn.
+- Lightroom and Camera Raw presets: `pfx::importXmpPreset` maps the crs: settings PixelFx has
+  (the table of presets.md section 6) and lists the others; the Presets panel imports `.xmp` as
+  "Lightroom: name" and says what was left out. Tried on hand-made presets only: real exports
+  from Lightroom are worth a try.
+- Filmstrip from the strip of `editor.html` and `apply-to-selected.html`: many photos open at
+  once, pictures of their edits with the edited badge, the + tile, "1 of 4" or "N selected ·
+  Select all · Clear", Left and Right (in the window's key handling so a focused slider keeps its
+  arrows), Ctrl and Shift click, Ctrl+A. With a selection, presets and pasted settings go to every
+  selected photo: the current one as a history step, the others through their remembered edits
+  (needs Remember edits on), and the Presets panel says "Applies to N photos". Not yet: Paste
+  asking which groups, Export N photos.
 - 2026-11-05: dev libvips reads HEIC, AVIF, JPEG XL and camera RAW (ADR-008 update):
   `build-deps.sh` builds libheif 1.23.7 (libde265 1.1.3, dav1d 1.5.4), libjxl 0.12.0 (highway
   1.4.0) and LibRaw 0.22.3 against the SDK overlay, about 2.5 minutes from scratch on 14 cores;

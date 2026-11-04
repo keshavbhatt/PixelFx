@@ -10,6 +10,8 @@ qt_add_library(pixelfx_ui STATIC
     curve_editor.cpp
     curve_editor.h
     export_sheet.cpp
+    filmstrip.cpp
+    filmstrip.h
     export_sheet.h
     histogram_view.cpp
     histogram_view.h

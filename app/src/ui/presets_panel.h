@@ -6,6 +6,7 @@
 #include <QWidget>
 
 class QHBoxLayout;
+class QLabel;
 class QLineEdit;
 class QVBoxLayout;
 
@@ -32,6 +33,8 @@ public:
     /// A small picture of the photo with the preset at `index` of entries() applied.
     void setThumbnail(std::size_t index, const QImage& image);
     [[nodiscard]] QList<PresetRow*> rows() const;
+    /// With several photos selected the panel says where a click goes ("Applies to 4 photos").
+    void setTargetCount(int count);
 
 Q_SIGNALS:
     void applyRequested(const pixelfx::core::PresetEntry& entry);
@@ -53,6 +56,7 @@ private:
     std::vector<core::PresetEntry> m_entries;
     std::vector<QImage> m_thumbnails;
     QLineEdit* m_search = nullptr;
+    QLabel* m_target = nullptr;
     QWidget* m_listBox = nullptr;
     QVBoxLayout* m_list = nullptr;
 };

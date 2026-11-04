@@ -56,6 +56,9 @@ const QString kSheet = uR"(
         #panelTabLine { background: {{border}}; }
         #presetName { font-weight: 500; }
         #presetSummary { color: {{muted}}; font-size: 11px; }
+        QToolButton#stripAdd { border: 1.5px dashed {{faint}}; border-radius: 6px; background: transparent; }
+        QToolButton#stripAdd:hover { background: {{hover}}; }
+        #accentText { color: {{accent}}; font-size: 12px; }
         #zoomBar { background: {{elevated}}; border: 1px solid {{border}}; border-radius: 10px; }
         #zoomDivider { background: {{border}}; }
         #zoomLevel { font-size: 12px; }

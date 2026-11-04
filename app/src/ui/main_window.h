@@ -7,6 +7,7 @@
 
 #include <QMainWindow>
 
+#include <functional>
 #include <pfx/settings.h>
 
 class QLabel;
@@ -24,6 +25,7 @@ namespace pixelfx::ui {
 class AdjustPanel;
 class Canvas;
 class CropPanel;
+class Filmstrip;
 class PresetsPanel;
 class WelcomePage;
 
@@ -41,6 +43,9 @@ public:
     /// Opens the first supported file of `files` (the filmstrip for many arrives with M3).
     void openFiles(const QStringList& files);
     void chooseFiles();
+    /// Switches to photo `index` of the filmstrip.
+    void showPhoto(int index);
+    [[nodiscard]] Filmstrip* filmstrip() const { return m_strip; }
     /// Opens the Export sheet for the open photo and writes it.
     void exportPhoto();
     [[nodiscard]] services::Exporter& exporter() { return m_exporter; }
@@ -103,6 +108,11 @@ private:
     void connectWhiteBalance();
     void applyGeneralSettings();
     void connectPresets();
+    void connectFilmstrip();
+    /// `change` on the current photo as one step, and on every other selected photo's
+    /// remembered edits.
+    void applyToSelection(const std::function<pfx::Settings(const pfx::Settings&)>& change,
+                          const QString& label);
     void connectPresetActions();
     void requestPresetThumbnails();
     void applyPreset(const core::PresetEntry& entry);
@@ -125,6 +135,8 @@ private:
     AdjustPanel* m_adjust = nullptr;
     CropPanel* m_cropPanel = nullptr;
     PresetsPanel* m_presets = nullptr;
+    Filmstrip* m_strip = nullptr;
+    services::Thumbnailer* m_stripThumbnails = nullptr;
     core::PresetLibrary m_library{core::PresetLibrary::defaultFolder()};
     services::Thumbnailer* m_presetThumbnails = nullptr;
     QTimer* m_thumbnailTimer = nullptr;
