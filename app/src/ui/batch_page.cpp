@@ -608,6 +608,7 @@ void BatchPage::rebuildRows()
                            ? tr("Process")
                            : tr("Process %n photos", nullptr, static_cast<int>(m_files.size())));
     m_process->setEnabled(!m_files.isEmpty());
+    m_watermark->setBatchPhotos(m_files.mid(0, 50)); // the sheet's "Preview on: Batch photos"
     schedulePreview();
 }
 

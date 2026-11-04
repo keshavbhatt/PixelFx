@@ -11,6 +11,8 @@
 #include <QTemporaryDir>
 #include <QTest>
 
+#include <pfx/io.h>
+
 using namespace Qt::StringLiterals;
 using pixelfx::core::ExportOptions;
 using pixelfx::ui::ExportSheet;
@@ -76,6 +78,34 @@ private Q_SLOTS:
         QVERIFY(!copy->isHidden());
         sheet.setPhotoCount(3);
         QVERIFY(copy->isHidden());
+    }
+
+    void watermarkPreviewsOnTheBatchPhotos()
+    {
+        QTemporaryDir dir;
+        pfx::Image tall(200, 400);
+        tall.fill(0.5F, 0.5F, 0.5F);
+        const QString path = dir.filePath(u"tall.png"_s);
+        QVERIFY(pfx::save(tall, path.toStdString()).ok());
+        QImage wide(300, 200, QImage::Format_RGB32);
+        wide.fill(Qt::darkGray);
+        pixelfx::ui::WatermarkSheet sheet(wide, {}, dir.filePath(u"marks"_s));
+        QPushButton* batch = nullptr;
+        for (auto* b : sheet.findChildren<QPushButton*>()) {
+            if (b->text() == u"Batch photos"_s) {
+                batch = b;
+            }
+        }
+        QVERIFY(batch);
+        QVERIFY(batch->isHidden()); // no batch, no button
+        sheet.setBatchPhotos({path});
+        QVERIFY(!batch->isHidden());
+        sheet.show();
+        QVERIFY(QTest::qWaitForWindowExposed(&sheet));
+        QVERIFY(sheet.preview()->composed().width() > sheet.preview()->composed().height());
+        batch->click();
+        QTRY_VERIFY(sheet.preview()->composed().width() <
+                    sheet.preview()->composed().height()); // the tall one
     }
 
     void locationIsOffByDefaultAndFollowsMetadata()

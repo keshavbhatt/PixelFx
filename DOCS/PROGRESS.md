@@ -181,8 +181,9 @@
   `.pfxwatermark` files (presets.md section 7, new) with the logo copied beside them. The sheet
   opens from a Watermark row in Export and in Batch (section 3, as `batch.html`); Batch no longer
   inherits Export's choice unseen. A watermark file that went missing fails the export instead
-  of leaving the mark off. Not yet: Preview on the batch's photos, keeping the watermark in a
-  `.pfxbatch` (needs batch format version 2, an owner decision). 27 app suites and 90 library
+  of leaving the mark off. Preview on: This photo, Portrait, Square, and Batch photos when opened
+  from Batch (each click decodes the next photo of the batch at preview size on a worker). Not
+  yet: keeping the watermark in a `.pfxbatch` (needs batch format version 2, an owner decision). 27 app suites and 90 library
   tests pass.
 - The exposure line of `editor.html` under the histogram ("ISO 400 · f/2.8 · 1/250 s · 35 mm",
   `core::exposureLine`), the camera and lens as its tooltip; checked on a scratch JPEG with a

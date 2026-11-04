@@ -1,5 +1,6 @@
 #include "ui/watermark_sheet.h"
 
+#include "services/qt_image_bridge.h"
 #include "ui/icons.h"
 #include "ui/style.h"
 
@@ -10,6 +11,7 @@
 #include <QFileDialog>
 #include <QFileInfo>
 #include <QFontComboBox>
+#include <QFutureWatcher>
 #include <QGridLayout>
 #include <QHBoxLayout>
 #include <QInputDialog>
@@ -22,9 +24,11 @@
 #include <QStackedWidget>
 #include <QToolButton>
 #include <QVBoxLayout>
+#include <QtConcurrent/QtConcurrentRun>
 
 #include <algorithm>
 #include <cmath>
+#include <pfx/io.h>
 
 using namespace Qt::StringLiterals;
 
@@ -162,6 +166,7 @@ WatermarkSheet::WatermarkSheet(const QImage& photo, const QString& current, cons
                                QWidget* parent)
     : QDialog(parent)
     , m_library(folder)
+    , m_photo(photo)
 {
     setWindowTitle(tr("Watermark"));
     setModal(true);
@@ -517,8 +522,9 @@ QWidget* WatermarkSheet::buildPreview()
     barLayout->setSpacing(0);
     barLayout->addWidget(on);
     barLayout->addSpacing(6);
-    const std::array<QString, 3> shapeNames = {tr("This photo"), tr("Portrait"), tr("Square")};
-    for (int i = 0; i < 3; ++i) {
+    const std::array<QString, 4> shapeNames = {tr("This photo"), tr("Portrait"), tr("Square"),
+                                               tr("Batch photos")};
+    for (int i = 0; i < 4; ++i) {
         auto* b = new QPushButton(shapeNames.at(static_cast<std::size_t>(i)), bar);
         b->setObjectName(u"segment"_s);
         b->setCheckable(true);
@@ -526,8 +532,17 @@ QWidget* WatermarkSheet::buildPreview()
         shapes->addButton(b, i);
         barLayout->addWidget(b);
     }
-    connect(shapes, &QButtonGroup::idClicked, this,
-            [this](int id) { m_preview->setShape(static_cast<WatermarkPreview::Shape>(id)); });
+    m_batchButton = qobject_cast<QPushButton*>(shapes->button(3));
+    m_batchButton->setToolTip(tr("Each click shows the next photo of the batch"));
+    m_batchButton->hide(); // until there are batch photos
+    connect(shapes, &QButtonGroup::idClicked, this, [this](int id) {
+        if (id == 3) {
+            showNextBatchPhoto();
+            return;
+        }
+        m_preview->setPhoto(m_photo);
+        m_preview->setShape(static_cast<WatermarkPreview::Shape>(id));
+    });
     barLayout->addStretch();
     auto* drag = new QLabel(tr("Drag the mark to place it freely"), bar);
     drag->setObjectName(u"faint"_s);
@@ -538,6 +553,37 @@ QWidget* WatermarkSheet::buildPreview()
     column->addWidget(m_preview, 1);
     column->addWidget(bar);
     return side;
+}
+
+void WatermarkSheet::setBatchPhotos(const QStringList& paths)
+{
+    m_batchPhotos = paths;
+    m_batchButton->setVisible(!paths.isEmpty());
+}
+
+void WatermarkSheet::showNextBatchPhoto()
+{
+    if (m_batchPhotos.isEmpty()) {
+        return;
+    }
+    m_batchIndex = (m_batchIndex + 1) % static_cast<int>(m_batchPhotos.size());
+    const QString path = m_batchPhotos.at(m_batchIndex);
+    // Decoded at preview size on a worker; the newest click wins.
+    auto* watcher = new QFutureWatcher<QImage>(this);
+    connect(watcher, &QFutureWatcher<QImage>::finished, this, [this, watcher, index = m_batchIndex] {
+        const QImage image = watcher->result();
+        watcher->deleteLater();
+        if (index == m_batchIndex && !image.isNull() && m_batchButton->isChecked()) {
+            m_preview->setShape(WatermarkPreview::Shape::Photo);
+            m_preview->setPhoto(image);
+        }
+    });
+    watcher->setFuture(QtConcurrent::run([path] {
+        const auto loaded = pfx::load(QFileInfo(path).absoluteFilePath().toStdString(), {1200});
+        const auto pixels =
+            loaded ? pfx::toSrgb8(loaded.value().image) : pfx::Result<pfx::Rgba8Image>(pfx::Error{});
+        return pixels ? services::toQImage(pixels.value()) : QImage();
+    }));
 }
 
 void WatermarkSheet::refreshList(const QString& select)
@@ -721,6 +767,7 @@ void WatermarkPicker::refresh(const QString& select)
 void WatermarkPicker::edit(const QString& file)
 {
     WatermarkSheet sheet(m_preview, file, m_folder, this);
+    sheet.setBatchPhotos(m_batchPhotos);
     if (sheet.exec() == QDialog::Accepted) {
         refresh(sheet.chosenPath());
         Q_EMIT changed();

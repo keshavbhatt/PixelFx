@@ -4,6 +4,7 @@
 
 #include <QDialog>
 #include <QImage>
+#include <QStringList>
 #include <QWidget>
 
 class QButtonGroup;
@@ -84,6 +85,8 @@ public:
     [[nodiscard]] WatermarkPreview* preview() const { return m_preview; }
     /// Saves under the watermark's name and closes (Use watermark).
     bool useWatermark();
+    /// Photos of the batch for "Preview on: Batch photos" (watermark.html); none hides it.
+    void setBatchPhotos(const QStringList& paths);
 
 private:
     QLayout* buildHeader();
@@ -98,6 +101,7 @@ private:
     void load(const core::Watermark& w, const QString& path);
     void sync();
     void saveAs();
+    void showNextBatchPhoto();
 
     core::WatermarkLibrary m_library;
     core::Watermark m_mark;
@@ -120,6 +124,10 @@ private:
     QWidget* m_angleRow = nullptr;
     QSlider* m_angle = nullptr;
     WatermarkPreview* m_preview = nullptr;
+    QImage m_photo;
+    QStringList m_batchPhotos;
+    int m_batchIndex = -1;
+    QPushButton* m_batchButton = nullptr;
 };
 
 /// The Watermark row of Export and Batch: None, the saved watermarks, New watermark..., and
@@ -138,6 +146,8 @@ public:
     void setFolder(const QString& folder);
     /// What the watermark sheet previews on.
     void setPreview(const QImage& preview) { m_preview = preview; }
+    /// The batch's photos, for the sheet's "Preview on: Batch photos".
+    void setBatchPhotos(const QStringList& paths) { m_batchPhotos = paths; }
     /// The chosen watermark's file, empty for None.
     [[nodiscard]] QString path() const;
     [[nodiscard]] QStringList names() const;
@@ -154,6 +164,7 @@ private:
     QString m_folder;
     QString m_remembered;
     QImage m_preview;
+    QStringList m_batchPhotos;
     int m_last = 0;
 };
 
