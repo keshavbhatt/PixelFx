@@ -66,7 +66,9 @@ void WelcomePage::buildDropZone()
     open->setObjectName(u"primary"_s);
     open->setToolTip(tr("Open images (Ctrl+O)"));
     connect(open, &QPushButton::clicked, this, &WelcomePage::openRequested);
-    auto* formats = new QLabel(formatsText(pfx::readableExtensions()), m_dropZone);
+    auto* formats = new QLabel(formatsText(pfx::readableExtensions()) + u' ' +
+                                   tr("Paste from the clipboard with Ctrl+V."),
+                               m_dropZone);
     formats->setObjectName(u"faint"_s);
     formats->setAlignment(Qt::AlignCenter);
     formats->setWordWrap(true);

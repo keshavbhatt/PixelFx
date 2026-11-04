@@ -58,6 +58,8 @@ public:
     /// Copies the photo's settings (crop excepted) to the clipboard; pastes them as one step.
     void copySettings();
     void pasteSettings();
+    /// Opens the picture on the clipboard, if there is one (Ctrl+V).
+    void pasteImage();
 
     /// Whether `path` has an extension PixelFx opens.
     [[nodiscard]] static bool isSupported(const QString& path);

@@ -7,6 +7,9 @@
 #include "ui/style.h"
 
 #include <QApplication>
+#include <QClipboard>
+#include <QFile>
+#include <QFileInfo>
 #include <QSignalSpy>
 #include <QStandardPaths>
 #include <QTemporaryDir>
@@ -122,6 +125,26 @@ private Q_SLOTS:
         QVERIFY(window.adjustPanel()->settings().contains("geometry.crop.w"));
         QTRY_COMPARE_WITH_TIMEOUT(window.canvas()->image().size(), QSize(200, 200), 10000);
         window.close();
+    }
+
+    void pastingAPictureOpensIt()
+    {
+        QStandardPaths::setTestModeEnabled(true);
+        pixelfx::ui::applyStyle(*qApp);
+        QTemporaryDir dir;
+        pixelfx::core::Settings settings(dir.filePath(u"s.ini"_s));
+        pixelfx::ui::MainWindow window(settings);
+        window.show();
+        QVERIFY(QTest::qWaitForWindowExposed(&window));
+        QImage picture(64, 48, QImage::Format_RGB32);
+        picture.fill(QColor(200, 120, 40));
+        QGuiApplication::clipboard()->setImage(picture);
+        QSignalSpy opened(&window.document(), &pixelfx::services::Document::opened);
+        QTest::keyClick(&window, Qt::Key_V, Qt::ControlModifier);
+        QVERIFY(opened.wait(10000));
+        QCOMPARE(window.document().info().size, QSize(64, 48));
+        QVERIFY(QFileInfo(window.document().info().path).fileName().startsWith(u"pasted-"_s));
+        QFile::remove(window.document().info().path);
     }
 
     void supportedExtensions()

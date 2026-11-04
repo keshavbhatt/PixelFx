@@ -16,6 +16,8 @@
 #include <QClipboard>
 #include <QCloseEvent>
 #include <QConicalGradient>
+#include <QDateTime>
+#include <QDir>
 #include <QDragEnterEvent>
 #include <QFileDialog>
 #include <QFileInfo>
@@ -30,6 +32,7 @@
 #include <QPushButton>
 #include <QScreen>
 #include <QStackedWidget>
+#include <QStandardPaths>
 #include <QTimer>
 #include <QToolButton>
 #include <QVBoxLayout>
@@ -585,6 +588,25 @@ void MainWindow::pasteSettings()
     m_document.apply(core::pasted(m_document.settings(), *copied), tr("Paste settings"));
 }
 
+void MainWindow::pasteImage()
+{
+    // A picture on the clipboard (a screenshot, an image copied in a browser) opens like a file:
+    // saved once as PNG in the app's cache, so edits are remembered and Export works as usual.
+    const QImage image = QGuiApplication::clipboard()->image();
+    if (image.isNull()) {
+        return;
+    }
+    const QString folder = QStandardPaths::writableLocation(QStandardPaths::CacheLocation) + u"/pasted"_s;
+    QDir().mkpath(folder);
+    const QString path =
+        folder + u"/pasted-%1.png"_s.arg(QDateTime::currentDateTime().toString(u"yyyyMMdd-HHmmss"_s));
+    if (!image.save(path, "PNG")) {
+        showToast(tr("Could not keep the pasted picture: the cache folder is not writable."));
+        return;
+    }
+    openFiles({path});
+}
+
 void MainWindow::connectClipboard()
 {
     const auto refresh = [this] {
@@ -601,7 +623,10 @@ void MainWindow::connectClipboard()
     auto* paste = new QAction(tr("Paste settings"), this);
     paste->setShortcut(QKeySequence(u"Ctrl+Shift+V"_s));
     connect(paste, &QAction::triggered, this, &MainWindow::pasteSettings);
-    addActions({copy, paste});
+    auto* pasteImageAction = new QAction(tr("Paste image"), this);
+    pasteImageAction->setShortcut(QKeySequence::Paste);
+    connect(pasteImageAction, &QAction::triggered, this, &MainWindow::pasteImage);
+    addActions({copy, paste, pasteImageAction});
 }
 
 void MainWindow::connectWhiteBalance()

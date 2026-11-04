@@ -27,7 +27,7 @@ look; a **batch recipe** is a preset plus resize and save options.
 | S2 | Persist window geometry and state, panel widths, last mode | geometry only | KEEP | todo |
 | S3 | Single instance; a second launch forwards its files to the running window | refuses with a dialog | KEEP | done (`SingleInstance`, `Application`; end-to-end `tst_instance`) |
 | S4 | Open files from the command line and the desktop file (`%F`), MIME types declared | argv ignored | KEEP | wip: command line done (`CliOptions`); desktop file and MIME types with packaging (M7) |
-| S5 | Drag and drop of files and folders anywhere in the window; paste an image from the clipboard | none | KEEP | wip: dropping files done (`MainWindow`); folders and paste in M3 |
+| S5 | Drag and drop of files and folders anywhere in the window; paste an image from the clipboard | none | KEEP | wip: dropping files and pasting an image (Ctrl+V, kept as PNG in the cache) done; folders with the filmstrip and Batch |
 | S6 | Native notifications through the portal or freedesktop (batch finished) | none | KEEP | todo |
 | S7 | Crash handler, log file, diagnostics copy, Report a bug sheet | none | KEEP | wip: log file done (`LogSink`); the rest M6 |
 | S8 | What's new once per version from the bundled changelog, Version picker, link in About; Online guide | none | KEEP | todo |
