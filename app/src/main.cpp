@@ -17,6 +17,8 @@
 #include "app/application.h"
 #include "core/log_sink.h"
 #include "core/settings/settings.h"
+#include "core/sidecar_store.h"
+#include "services/batch_runner.h"
 #include "ui/batch_page.h"
 #include "ui/canvas.h"
 #include "ui/crop_panel.h"
@@ -30,6 +32,7 @@
 #include <QFileInfo>
 #include <QGuiApplication>
 #include <QStyleHints>
+#include <QTextStream>
 #include <QTimer>
 
 #include <pfx/document.h>
@@ -170,6 +173,57 @@ void applyDebugHooks(pixelfx::ui::MainWindow& window, QStringList& files)
     applyGrabHook(window, files);
 }
 
+// pixelfx --batch recipe.pfxbatch files...: the recipe on every file, no window; a line per
+// photo, and exit code 1 when one was not saved (Batch page notes, FEATURES M6).
+int runBatch(pixelfx::app::Application& app)
+{
+    QTextStream out(stdout);
+    QTextStream err(stderr);
+    const auto doc = pfx::loadDocument(app.cliOptions().batch.toStdString());
+    if (!doc || doc.value().kind != pfx::DocumentKind::Batch) {
+        err << "pixelfx: "
+            << (doc ? u"this is not a batch recipe"_s : QString::fromStdString(doc.error().message)) << '\n';
+        return 2;
+    }
+    QStringList files;
+    for (const QString& file : app.cliOptions().files) {
+        if (pixelfx::ui::MainWindow::isSupported(file)) {
+            files << file;
+        } else {
+            err << "pixelfx: skipped " << file << ": not a photo PixelFx reads\n";
+        }
+    }
+    if (files.isEmpty()) {
+        err << "pixelfx: no photos to process\n";
+        return 2;
+    }
+    pixelfx::services::BatchRecipe recipe = pixelfx::services::recipeFromBody(
+        doc.value().batch,
+        app.settings().rememberEdits() ? pixelfx::core::SidecarStore::defaultFolder() : QString());
+    if (recipe.output.folder.isEmpty()) {
+        recipe.output.folder = app.settings().exportOptions().folder;
+    }
+    pixelfx::services::BatchRunner runner;
+    QObject::connect(&runner, &pixelfx::services::BatchRunner::photoChanged, &runner, [&](int i) {
+        using S = pixelfx::services::BatchRunner::State;
+        if (runner.state(i) == S::Saved) {
+            out << files.at(i) << " -> " << runner.target(i) << '\n';
+        } else if (runner.state(i) == S::Failed || runner.state(i) == S::Skipped) {
+            out << files.at(i) << ": not saved. " << runner.reason(i) << '\n';
+        }
+        out.flush();
+    });
+    int code = 0;
+    QObject::connect(&runner, &pixelfx::services::BatchRunner::finished, &runner, [&](int saved, int failed) {
+        out << saved << " saved, " << failed << " not saved\n";
+        code = failed > 0 ? 1 : 0;
+        QCoreApplication::quit();
+    });
+    runner.start(files, recipe);
+    QApplication::exec();
+    return code;
+}
+
 } // namespace
 
 int main(int argc, char** argv)
@@ -178,6 +232,14 @@ int main(int argc, char** argv)
     pixelfx::app::Application app(argc, argv);
     if (app.shouldExit()) {
         return app.exitCode();
+    }
+    if (!app.cliOptions().batch.isEmpty()) {
+        try {
+            return runBatch(app);
+        } catch (const std::exception& e) {
+            QTextStream(stderr) << "pixelfx: the batch stopped: " << e.what() << '\n';
+            return 2;
+        }
     }
     // The theme is chosen before any window exists: icons are tinted when they are made.
     const auto theme = app.settings().theme();

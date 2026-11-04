@@ -10,11 +10,91 @@
 #include <QtConcurrent/QtConcurrentRun>
 
 #include <algorithm>
+#include <array>
 #include <pfx/auto.h>
 
 using namespace Qt::StringLiterals;
 
 namespace pixelfx::services {
+
+namespace {
+
+// The file's format names and the export options' extensions.
+constexpr std::array<std::pair<const char*, const char*>, 7> kFormats = {{{"jpeg", "jpg"},
+                                                                          {"png", "png"},
+                                                                          {"tiff", "tif"},
+                                                                          {"webp", "webp"},
+                                                                          {"avif", "avif"},
+                                                                          {"heic", "heic"},
+                                                                          {"jxl", "jxl"}}};
+
+} // namespace
+
+BatchRecipe recipeFromBody(const pfx::BatchBody& body, const QString& sidecarFolder)
+{
+    BatchRecipe r;
+    for (const pfx::BatchStep& step : body.stack) {
+        r.presets.push_back(step.settings);
+    }
+    r.autoFirst = body.autoFirst;
+    r.keepEdits = body.keepExistingEdits;
+    r.sidecarFolder = sidecarFolder;
+    r.output.longEdge = body.longEdge;
+    for (const auto& [name, ext] : kFormats) {
+        if (body.format == name) {
+            r.output.extension = QString::fromLatin1(ext);
+        }
+    }
+    r.output.quality = body.quality;
+    r.output.keepMetadata = body.keepCamera;
+    r.output.keepLocation = body.keepLocation;
+    r.output.folder = QString::fromStdString(body.folder);
+    r.output.nameTemplate = QString::fromStdString(body.name);
+    r.output.ifExists = core::ExportOptions::IfExists::AddNumber;
+    if (body.ifExists == "overwrite") {
+        r.output.ifExists = core::ExportOptions::IfExists::Overwrite;
+    } else if (body.ifExists == "skip") {
+        r.output.ifExists = core::ExportOptions::IfExists::Skip;
+    }
+    r.besideOriginals = body.beside;
+    return r;
+}
+
+pfx::BatchBody bodyFromRecipe(const BatchRecipe& recipe, const QStringList& names)
+{
+    pfx::BatchBody body;
+    for (std::size_t i = 0; i < recipe.presets.size(); ++i) {
+        const auto at = static_cast<qsizetype>(i);
+        body.stack.push_back(
+            {at < names.size() ? names.at(at).toStdString() : std::string(), recipe.presets[i]});
+    }
+    body.autoFirst = recipe.autoFirst;
+    body.keepExistingEdits = recipe.keepEdits;
+    body.longEdge = recipe.output.longEdge;
+    for (const auto& [name, ext] : kFormats) {
+        if (recipe.output.extension == QLatin1StringView(ext)) {
+            body.format = name;
+        }
+    }
+    body.quality = recipe.output.quality;
+    body.keepCamera = recipe.output.keepMetadata;
+    body.keepLocation = recipe.output.keepLocation;
+    body.folder = recipe.output.folder.toStdString();
+    body.name = recipe.output.nameTemplate.toStdString();
+    switch (recipe.output.ifExists) {
+    case core::ExportOptions::IfExists::Overwrite:
+        body.ifExists = "overwrite";
+        break;
+    case core::ExportOptions::IfExists::Skip:
+        body.ifExists = "skip";
+        break;
+    case core::ExportOptions::IfExists::AddNumber:
+        body.ifExists = "number";
+        break;
+    }
+    body.beside = recipe.besideOriginals;
+    return body;
+}
 
 BatchRunner::BatchRunner(QObject* parent)
     : QObject(parent)

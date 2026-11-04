@@ -17,6 +17,8 @@ struct CliOptions
     bool quit = false; ///< ask a running PixelFx to quit
     bool noLogFile = false;
     std::optional<QString> logFile;
+    /// Run this batch recipe (.pfxbatch) on `files` without a window, then exit.
+    QString batch;
 };
 
 struct CliParseResult

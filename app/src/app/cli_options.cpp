@@ -19,7 +19,9 @@ CliParseResult parseCliOptions(const QStringList& arguments, const QString& work
     const QCommandLineOption quit(u"quit"_s, u"Ask a running PixelFx to quit."_s);
     const QCommandLineOption logFile(u"log-file"_s, u"Write the log to this file."_s, u"path"_s);
     const QCommandLineOption noLogFile(u"no-log-file"_s, u"Do not write a log file."_s);
-    parser.addOptions({profile, quit, logFile, noLogFile});
+    const QCommandLineOption batch(
+        u"batch"_s, u"Run a batch recipe (.pfxbatch) on the files, without a window."_s, u"recipe"_s);
+    parser.addOptions({profile, quit, logFile, noLogFile, batch});
     parser.addPositionalArgument(u"files"_s, u"Photos to open."_s, u"[files...]"_s);
 
     CliParseResult result;
@@ -37,6 +39,9 @@ CliParseResult parseCliOptions(const QStringList& arguments, const QString& work
         return result;
     }
     o.quit = parser.isSet(quit);
+    if (parser.isSet(batch)) {
+        o.batch = QDir::cleanPath(QDir(workingDirectory).absoluteFilePath(parser.value(batch)));
+    }
     o.noLogFile = parser.isSet(noLogFile);
     if (parser.isSet(logFile)) {
         o.logFile = parser.value(logFile);

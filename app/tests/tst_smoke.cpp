@@ -253,6 +253,11 @@ private Q_SLOTS:
         QVERIFY(window.isBatching());
         window.batchPage()->addPaths({dir.path()}); // an empty folder adds nothing
         QVERIFY(window.batchPage()->files().isEmpty());
+        // The page as a batch recipe, and back.
+        const QString recipe = dir.filePath(u"job.pfxbatch"_s);
+        QVERIFY(window.batchPage()->saveRecipe(recipe));
+        QVERIFY(window.batchPage()->loadRecipe(recipe).isEmpty());
+        QVERIFY(!window.batchPage()->loadRecipe(dir.filePath(u"s.ini"_s)).isEmpty());
         QTest::keyClick(&window, Qt::Key_E);
         QVERIFY(!window.isBatching());
     }

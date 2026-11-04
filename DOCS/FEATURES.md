@@ -129,8 +129,8 @@ preview and export use resolution-independent parameters so they match (v1 defec
 | M2 | With a selection, applying a look or preset, pasting settings, and Export act on all selected | none | KEEP | done: presets, pasted settings (asking which parts) and Export ("Export N photos", each with its own settings) act on the selection |
 | M3 | Batch page: add files and folders, recipe (looks and presets stacked, or settings from a photo), optional Auto first, resize, format, folder, name tokens | none | KEEP | wip: Batch page from `batch.html` (photos and folders, two stacked presets, Auto first, keep edits, resize, format, folder or beside the originals, Process); before and after preview, watermark and saved batch recipes todo |
 | M4 | Batch runs on all cores in the background with a memory cap; pause, stop, per-file status and reason, retry failed, notification | none | KEEP | wip: background runner, two photos at a time (memory), Pause, Stop, per-photo status and reason, Retry failed, Show in folder; notification todo |
-| M5 | Save and reuse batch recipes (`.pfxbatch`) | none | KEEP | todo |
-| M6 | Command line batch: `pixelfx --batch recipe.pfxbatch files...` and the library's own `pfx` CLI | none | KEEP | todo |
+| M5 | Save and reuse batch recipes (`.pfxbatch`) | none | KEEP | done: Save as batch recipe and Open recipe on the Batch page (`.pfxbatch`, presets embedded) |
+| M6 | Command line batch: `pixelfx --batch recipe.pfxbatch files...` and the library's own `pfx` CLI | none | KEEP | done: `pixelfx --batch recipe.pfxbatch files...` without a window, a line per photo, exit code 1 when one failed; `pfx apply` for the library |
 | M7 | Watch folder (process new files automatically) | none | LATER | |
 | M8 | Convert and resize only: a Batch recipe with no edits, for jobs like HEIC to JPG or "shrink 300 photos for email"; one click from the welcome page | none | KEEP | todo |
 | M9 | Rename in batch with tokens and a live preview of the first names | none | KEEP | todo |

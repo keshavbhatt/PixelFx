@@ -51,6 +51,11 @@ Application::Application(int& argc, char** argv)
     }
     setupLogging();
 
+    if (!m_cli.batch.isEmpty()) {
+        // A command line batch runs on its own, next to any open PixelFx (main runs it).
+        m_settings = std::make_unique<core::Settings>();
+        return;
+    }
     m_instance = std::make_unique<SingleInstance>(instanceKeyFor(m_cli.profile), this);
     if (!m_instance->isPrimary()) {
         m_exitCode = forwardToPrimary() ? 0 : 1;

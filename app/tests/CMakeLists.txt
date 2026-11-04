@@ -43,7 +43,7 @@ pixelfx_add_test(tst_settings_sheet  tst_settings_sheet.cpp  pixelfx_ui GUI)
 pixelfx_add_test(tst_presets_panel   tst_presets_panel.cpp   pixelfx_ui GUI)
 pixelfx_add_test(tst_filmstrip      tst_filmstrip.cpp       pixelfx_ui GUI)
 pixelfx_add_test(tst_smoke           tst_smoke.cpp           pixelfx_ui GUI)
-pixelfx_add_test(tst_instance        tst_instance.cpp        Qt6::Core GUI)
+pixelfx_add_test(tst_instance        tst_instance.cpp        pixelfx_core GUI)
 target_compile_definitions(tst_instance PRIVATE
     PIXELFX_BINARY="$<TARGET_FILE:pixelfx>"
     PIXELFX_TEST_PHOTO="${PROJECT_SOURCE_DIR}/libs/pixelfx-core/tests/golden/exposure.png")

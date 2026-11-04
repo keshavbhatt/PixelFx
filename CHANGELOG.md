@@ -22,7 +22,8 @@ PixelFx 2 is rebuilt from scratch: a new editor, a new image engine, and a new l
   Export then go to all of them.
 - Batch (B): add photos or whole folders, pick a preset (and a second on top), Auto enhance if
   you like, a size and a format, and process them all in the background; each photo says whether
-  it was saved, and why not when it was not.
+  it was saved, and why not when it was not. Save the page as a batch recipe to run it again, here
+  or from the command line: `pixelfx --batch recipe.pfxbatch photos...`.
 - Presets: save the whole edit or only parts of it, apply with one click, preview by hovering,
   stack a colour preset on a light one; import and export them as files to share. A few built-in
   presets, Auto enhance among them, to start from.

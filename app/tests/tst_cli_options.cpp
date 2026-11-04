@@ -56,6 +56,15 @@ private Q_SLOTS:
         QCOMPARE(cmds.at(0).value(u"files"_s).toArray().first().toString(), u"/a.jpg"_s);
         QCOMPARE(cmds.at(1).value(u"cmd"_s).toString(), u"quit"_s);
     }
+
+    void batchRecipe()
+    {
+        const auto r =
+            parseCliOptions({u"pixelfx"_s, u"--batch"_s, u"web.pfxbatch"_s, u"a.jpg"_s}, u"/work"_s);
+        QVERIFY(r.ok());
+        QCOMPARE(r.options.batch, u"/work/web.pfxbatch"_s);
+        QCOMPARE(r.options.files, QStringList{u"/work/a.jpg"_s});
+    }
 };
 
 QTEST_GUILESS_MAIN(TestCliOptions)

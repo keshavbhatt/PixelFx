@@ -6,6 +6,7 @@
 #include <QObject>
 #include <QStringList>
 
+#include <pfx/document.h>
 #include <pfx/image.h>
 #include <pfx/settings.h>
 #include <vector>
@@ -28,6 +29,11 @@ struct BatchRecipe
     /// Where remembered edits are (for keepEdits); empty: none.
     QString sidecarFolder;
 };
+
+/// A batch recipe file's body as a recipe to run, and back (DOCS/presets.md section 4). Step names
+/// go into `names` when given.
+[[nodiscard]] BatchRecipe recipeFromBody(const pfx::BatchBody& body, const QString& sidecarFolder);
+[[nodiscard]] pfx::BatchBody bodyFromRecipe(const BatchRecipe& recipe, const QStringList& names = {});
 
 /// Runs a BatchRecipe over photos in the background (ADR-006), a few at a time so memory stays
 /// bounded, reporting each photo; Pause stops starting new ones, Stop drops the rest.

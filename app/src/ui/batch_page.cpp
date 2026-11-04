@@ -21,6 +21,7 @@
 #include <QUrl>
 #include <QVBoxLayout>
 
+#include <pfx/document.h>
 #include <pfx/io.h>
 #include <utility>
 
@@ -171,6 +172,33 @@ QWidget* BatchPage::buildPanel()
     panel->setObjectName(u"cropPanel"_s);
     panel->setAttribute(Qt::WA_StyledBackground);
     panel->setFixedWidth(kPanelWidth);
+    auto* saveRecipe = new QPushButton(tr("Save as batch recipe..."), panel);
+    saveRecipe->setToolTip(tr("Keep this page as a file, to run again here or from the command line"));
+    auto* openRecipe = new QPushButton(tr("Open recipe..."), panel);
+    for (QPushButton* b : {saveRecipe, openRecipe}) {
+        b->setObjectName(u"small"_s);
+    }
+    connect(saveRecipe, &QPushButton::clicked, this, [this] {
+        const QString file = QFileDialog::getSaveFileName(
+            this, tr("Save as batch recipe"), tr("Batch.pfxbatch"), tr("Batch recipes (*.pfxbatch)"));
+        if (!file.isEmpty() && !this->saveRecipe(file)) {
+            m_status->setText(tr("The recipe could not be saved there."));
+        }
+    });
+    connect(openRecipe, &QPushButton::clicked, this, [this] {
+        const QString file = QFileDialog::getOpenFileName(this, tr("Open batch recipe"), QString(),
+                                                          tr("Batch recipes (*.pfxbatch)"));
+        if (!file.isEmpty()) {
+            const QString error = loadRecipe(file);
+            if (!error.isEmpty()) {
+                m_status->setText(error);
+            }
+        }
+    });
+    auto* recipes = new QHBoxLayout;
+    recipes->addWidget(saveRecipe);
+    recipes->addWidget(openRecipe);
+    recipes->addStretch();
     m_process = new QPushButton(tr("Process"), panel);
     m_process->setObjectName(u"primary"_s);
     connect(m_process, &QPushButton::clicked, this, &BatchPage::process);
@@ -180,6 +208,7 @@ QWidget* BatchPage::buildPanel()
     column->addWidget(buildRecipe(panel));
     column->addWidget(buildOutput(panel));
     column->addStretch();
+    column->addLayout(recipes);
     column->addWidget(m_process);
     return panel;
 }
@@ -264,8 +293,8 @@ void BatchPage::setPresets(const std::vector<core::PresetEntry>& entries)
         const QString current = combo->currentText();
         combo->clear();
         combo->addItem(tr("None"));
-        for (const core::PresetEntry& e : entries) {
-            combo->addItem(e.name);
+        for (std::size_t i = 0; i < entries.size(); ++i) {
+            combo->addItem(entries[i].name, static_cast<int>(i)); // the item knows its preset
         }
         combo->setCurrentIndex(std::max(0, combo->findText(current)));
     }
@@ -297,15 +326,21 @@ void BatchPage::addPaths(const QStringList& paths)
 services::BatchRecipe BatchPage::recipe() const
 {
     services::BatchRecipe r;
+    if (m_preset->currentData().toString() == u"recipe"_s) {
+        for (const pfx::BatchStep& step : m_loadedStack) {
+            r.presets.push_back(step.settings);
+        }
+    }
     for (const QComboBox* combo : {m_preset, m_second}) {
-        const int index = combo->currentIndex() - 1;
-        if (index >= 0 && std::cmp_less(index, m_presets.size())) {
-            const core::PresetEntry& e = m_presets[static_cast<std::size_t>(index)];
-            if (e.autoEnhance) {
-                r.autoFirst = true;
-            } else {
-                r.presets.push_back(e.settings);
-            }
+        const QVariant choice = combo->currentData();
+        if (choice.typeId() != QMetaType::Int || !std::cmp_less(choice.toInt(), m_presets.size())) {
+            continue; // None, or the presets of an opened recipe
+        }
+        const core::PresetEntry& e = m_presets[static_cast<std::size_t>(choice.toInt())];
+        if (e.autoEnhance) {
+            r.autoFirst = true;
+        } else {
+            r.presets.push_back(e.settings);
         }
     }
     r.autoFirst = r.autoFirst || m_auto->isChecked();
@@ -320,6 +355,73 @@ services::BatchRecipe BatchPage::recipe() const
     }
     r.besideOriginals = m_beside->isChecked();
     return r;
+}
+
+bool BatchPage::saveRecipe(const QString& path) const
+{
+    QStringList names;
+    if (m_preset->currentData().toString() == u"recipe"_s) {
+        for (const pfx::BatchStep& step : m_loadedStack) {
+            names << QString::fromStdString(step.name);
+        }
+    } else {
+        for (const QComboBox* combo : {m_preset, m_second}) {
+            if (combo->currentIndex() > 0) {
+                names << combo->currentText();
+            }
+        }
+    }
+    pfx::Document doc;
+    doc.kind = pfx::DocumentKind::Batch;
+    doc.name = QFileInfo(path).completeBaseName().toStdString();
+    doc.batch = services::bodyFromRecipe(recipe(), names);
+    return pfx::saveDocument(doc, path.toStdString()).ok();
+}
+
+QString BatchPage::loadRecipe(const QString& path)
+{
+    pfx::ParseReport report;
+    const auto doc = pfx::loadDocument(path.toStdString(), &report);
+    if (!doc) {
+        return QString::fromStdString(doc.error().message);
+    }
+    if (doc.value().kind != pfx::DocumentKind::Batch) {
+        return tr("This file is not a batch recipe.");
+    }
+    const pfx::BatchBody& body = doc.value().batch;
+    m_loadedStack = body.stack;
+    QStringList names;
+    for (const pfx::BatchStep& step : body.stack) {
+        names << (step.name.empty() ? tr("a preset") : QString::fromStdString(step.name));
+    }
+    // The recipe's own presets travel inside it: they show as one choice.
+    const int existing = m_preset->findData(u"recipe"_s);
+    if (existing >= 0) {
+        m_preset->removeItem(existing);
+    }
+    if (!names.isEmpty()) {
+        m_preset->insertItem(1, tr("From recipe: %1").arg(names.join(u", "_s)), u"recipe"_s);
+        m_preset->setCurrentIndex(1);
+    } else {
+        m_preset->setCurrentIndex(0);
+    }
+    m_second->setCurrentIndex(0);
+    const services::BatchRecipe r = services::recipeFromBody(body, m_sidecarFolder);
+    m_auto->setChecked(r.autoFirst);
+    m_keepEdits->setChecked(r.keepEdits);
+    m_size->setCurrentIndex(std::max(0, m_size->findData(r.output.longEdge)));
+    m_format->setCurrentIndex(std::max(0, m_format->findData(r.output.extension)));
+    m_quality->setValue(r.output.quality);
+    m_beside->setChecked(r.besideOriginals);
+    m_output.keepMetadata = r.output.keepMetadata;
+    m_output.keepLocation = r.output.keepLocation;
+    m_output.nameTemplate = r.output.nameTemplate;
+    m_output.ifExists = r.output.ifExists;
+    if (!r.output.folder.isEmpty()) {
+        m_output.folder = r.output.folder;
+        m_folder->setText(QDir::toNativeSeparators(m_output.folder));
+    }
+    return {};
 }
 
 void BatchPage::process()

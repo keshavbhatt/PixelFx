@@ -152,8 +152,11 @@
   folder or a PixelFx folder beside each original, Process N photos; `services::BatchRunner` runs
   two photos at a time on its own pool with Pause, Stop, Retry failed, and each failed row says
   why in plain words. libpixelfx now explains a failed read in plain words instead of libvips's
-  developer message. Not yet: the before and after preview, the watermark, saving the page as a
-  batch recipe, the command line batch, the notification at the end.
+  developer message. Batch recipes (`.pfxbatch`, presets.md section 4) are read and written by
+  the library; the page saves and opens them, and `pixelfx --batch recipe files...` runs one
+  without a window (tested end to end on the built binary). The title follows a running batch;
+  quitting during one asks first. Not yet: the before and after preview, the watermark, the
+  notification at the end.
 - 2026-11-05: dev libvips reads HEIC, AVIF, JPEG XL and camera RAW (ADR-008 update):
   `build-deps.sh` builds libheif 1.23.7 (libde265 1.1.3, dav1d 1.5.4), libjxl 0.12.0 (highway
   1.4.0) and LibRaw 0.22.3 against the SDK overlay, about 2.5 minutes from scratch on 14 cores;

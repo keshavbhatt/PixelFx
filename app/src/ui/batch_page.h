@@ -41,6 +41,10 @@ public:
     /// The recipe and output as the page shows them.
     [[nodiscard]] services::BatchRecipe recipe() const;
     void process();
+    /// Writes the page as a batch recipe (.pfxbatch) to `path`; false when it cannot.
+    [[nodiscard]] bool saveRecipe(const QString& path) const;
+    /// Sets the page from a batch recipe; the reason when it cannot be read.
+    [[nodiscard]] QString loadRecipe(const QString& path);
     [[nodiscard]] services::BatchRunner& runner() { return m_runner; }
 
     /// Whether `path` is a photo PixelFx opens (set by the window: the library's formats).
@@ -66,6 +70,7 @@ private:
 
     QStringList m_files;
     std::vector<core::PresetEntry> m_presets;
+    std::vector<pfx::BatchStep> m_loadedStack; ///< the presets of an opened recipe
     core::ExportOptions m_output;
     QString m_sidecarFolder;
     services::BatchRunner m_runner;

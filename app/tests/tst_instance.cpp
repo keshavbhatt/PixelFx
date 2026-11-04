@@ -1,10 +1,14 @@
 // End to end: the real pixelfx binary under a throwaway profile and throwaway config and data
 // folders. A second launch forwards its photo to the first; --quit makes the first exit.
+#include <QDir>
 #include <QProcess>
 #include <QRandomGenerator>
 #include <QScopeGuard>
 #include <QTemporaryDir>
 #include <QTest>
+
+#include <pfx/document.h>
+#include <pfx/io.h>
 
 using namespace Qt::StringLiterals;
 
@@ -73,6 +77,36 @@ private Q_SLOTS:
         QCOMPARE(quit.exitCode(), 0);
         QVERIFY2(primary.waitForFinished(10000), "the running PixelFx did not quit on --quit");
         QCOMPARE(primary.exitStatus(), QProcess::NormalExit);
+    }
+
+    void batchRecipeRunsFromTheCommandLine()
+    {
+        QTemporaryDir work;
+        pfx::Document recipe;
+        recipe.kind = pfx::DocumentKind::Batch;
+        pfx::BatchStep step;
+        step.name = "Bright";
+        step.settings.set("light.exposure", 0.5);
+        recipe.batch.stack = {step};
+        recipe.batch.format = "png";
+        recipe.batch.longEdge = 16;
+        recipe.batch.folder = work.filePath(u"out"_s).toStdString();
+        const QString recipePath = work.filePath(u"web.pfxbatch"_s);
+        QVERIFY(pfx::saveDocument(recipe, recipePath.toStdString()).ok());
+        QStringList photos;
+        for (int i = 0; i < 2; ++i) {
+            pfx::Image img(32, 24);
+            img.fill(0.2F, 0.3F + (0.1F * static_cast<float>(i)), 0.4F);
+            photos << work.filePath(u"p%1.png"_s.arg(i));
+            QVERIFY(pfx::save(img, photos.last().toStdString()).ok());
+        }
+        QProcess batch;
+        start(batch, QStringList{u"--batch"_s, recipePath} + photos);
+        QVERIFY(batch.waitForFinished(60000));
+        const QString output = QString::fromUtf8(batch.readAll());
+        QVERIFY2(batch.exitCode() == 0, qPrintable(output));
+        QVERIFY2(output.contains(u"2 saved, 0 not saved"_s), qPrintable(output));
+        QCOMPARE(QDir(work.filePath(u"out"_s)).entryList({u"*.png"_s}).size(), 2);
     }
 };
 
