@@ -3,9 +3,12 @@
 #include "core/export_options.h"
 #include "core/presets.h"
 #include "services/batch_runner.h"
+#include "services/thumbnailer.h"
 
 #include <QStringList>
 #include <QWidget>
+
+#include <memory>
 
 class QCheckBox;
 class QHBoxLayout;
@@ -13,6 +16,7 @@ class QComboBox;
 class QLabel;
 class QPushButton;
 class QSpinBox;
+class QTimer;
 class QVBoxLayout;
 
 namespace pixelfx::ui {
@@ -61,12 +65,16 @@ protected:
 private:
     QWidget* buildList();
     QHBoxLayout* buildStatus(QWidget* box);
+    void buildPreview(QWidget* box);
     QWidget* buildPanel();
     QWidget* buildRecipe(QWidget* parent);
     QWidget* buildOutput(QWidget* parent);
     void rebuildRows();
+    QWidget* makeRow(const QString& file);
     void refreshRow(int index);
     void refreshStatus();
+    void schedulePreview();
+    void renderPreview();
 
     QStringList m_files;
     std::vector<core::PresetEntry> m_presets;
@@ -74,6 +82,14 @@ private:
     core::ExportOptions m_output;
     QString m_sidecarFolder;
     services::BatchRunner m_runner;
+    services::Thumbnailer* m_thumbnails = nullptr;
+    QTimer* m_previewTimer = nullptr;
+    QLabel* m_before = nullptr;
+    QLabel* m_after = nullptr;
+    QWidget* m_preview = nullptr;
+    QString m_previewPath;                            ///< the photo the small copy is of
+    std::shared_ptr<const pfx::Image> m_previewImage; ///< the first photo, small
+    quint64 m_previewGeneration = 0;
     QVBoxLayout* m_rows = nullptr;
     QWidget* m_rowsBox = nullptr;
     QLabel* m_status = nullptr;

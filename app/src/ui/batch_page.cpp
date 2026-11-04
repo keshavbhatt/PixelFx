@@ -1,5 +1,6 @@
 #include "ui/batch_page.h"
 
+#include "core/sidecar_store.h"
 #include "ui/icons.h"
 #include "ui/style.h"
 
@@ -11,15 +12,20 @@
 #include <QFileDialog>
 #include <QFileInfo>
 #include <QFormLayout>
+#include <QFutureWatcher>
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QLocale>
 #include <QMimeData>
+#include <QPixmap>
 #include <QPushButton>
 #include <QScrollArea>
 #include <QSpinBox>
+#include <QTimer>
+#include <QToolButton>
 #include <QUrl>
 #include <QVBoxLayout>
+#include <QtConcurrent/QtConcurrentRun>
 
 #include <pfx/document.h>
 #include <pfx/io.h>
@@ -60,6 +66,8 @@ void BatchPage::setPhotoTest(bool (*isPhoto)(const QString&))
 BatchPage::BatchPage(core::ExportOptions output, QWidget* parent)
     : QWidget(parent)
     , m_output(std::move(output))
+    , m_thumbnails(new services::Thumbnailer(this))
+    , m_previewTimer(new QTimer(this))
 {
     setObjectName(u"batchPage"_s);
     setAttribute(Qt::WA_StyledBackground);
@@ -69,6 +77,32 @@ BatchPage::BatchPage(core::ExportOptions output, QWidget* parent)
     row->setSpacing(0);
     row->addWidget(buildList(), 1);
     row->addWidget(buildPanel());
+    connect(m_thumbnails, &services::Thumbnailer::ready, this, [this](const services::Thumbnail& t) {
+        for (QLabel* thumb : m_rowsBox->findChildren<QLabel*>(u"batchThumb"_s)) {
+            if (thumb->property("path").toString() == t.path && !t.image.isNull()) {
+                thumb->setPixmap(QPixmap::fromImage(t.image.scaled(thumb->size() * devicePixelRatioF(),
+                                                                   Qt::KeepAspectRatioByExpanding,
+                                                                   Qt::SmoothTransformation)));
+            }
+        }
+    });
+    connect(m_thumbnails, &services::Thumbnailer::rendered, this, [this](int key, const QImage& image) {
+        if (static_cast<quint64>(key / 2) != (m_previewGeneration % 100000) || image.isNull()) {
+            return; // a picture for an older recipe
+        }
+        QLabel* target = key % 2 == 0 ? m_before : m_after;
+        target->setPixmap(QPixmap::fromImage(
+            image.scaledToHeight(static_cast<int>(56 * devicePixelRatioF()), Qt::SmoothTransformation)));
+    });
+    m_previewTimer->setSingleShot(true);
+    m_previewTimer->setInterval(200);
+    connect(m_previewTimer, &QTimer::timeout, this, &BatchPage::renderPreview);
+    for (const QComboBox* combo : {m_preset, m_second}) {
+        connect(combo, &QComboBox::currentIndexChanged, this, &BatchPage::schedulePreview);
+    }
+    for (const QCheckBox* box : {m_auto, m_keepEdits}) {
+        connect(box, &QCheckBox::toggled, this, &BatchPage::schedulePreview);
+    }
     connect(&m_runner, &services::BatchRunner::photoChanged, this, &BatchPage::refreshRow);
     connect(&m_runner, &services::BatchRunner::progress, this, &BatchPage::refreshStatus);
     connect(&m_runner, &services::BatchRunner::finished, this, &BatchPage::refreshStatus);
@@ -125,13 +159,39 @@ QWidget* BatchPage::buildList()
     scroll->setWidgetResizable(true);
     scroll->setFrameShape(QFrame::NoFrame);
 
+    buildPreview(box);
+
     auto* column = new QVBoxLayout(box);
     column->setContentsMargins(20, 14, 20, 14);
     column->setSpacing(10);
     column->addLayout(head);
     column->addLayout(status);
     column->addWidget(scroll, 1);
+    column->addWidget(m_preview);
     return box;
+}
+
+void BatchPage::buildPreview(QWidget* box)
+{
+    // Mock: "Preview", the first photo before and after the recipe.
+    m_preview = new QWidget(box);
+    auto* previewLabel = new QLabel(tr("Preview"), m_preview);
+    previewLabel->setObjectName(u"muted"_s);
+    m_before = new QLabel(m_preview);
+    m_after = new QLabel(m_preview);
+    auto* arrow = new QLabel(u"\u2192"_s, m_preview);
+    arrow->setObjectName(u"muted"_s);
+    auto* caption = new QLabel(tr("The first photo, before and after the recipe"), m_preview);
+    caption->setObjectName(u"faint"_s);
+    auto* previewRow = new QHBoxLayout(m_preview);
+    previewRow->setContentsMargins(0, 6, 0, 0);
+    previewRow->setSpacing(10);
+    previewRow->addWidget(previewLabel);
+    previewRow->addWidget(m_before);
+    previewRow->addWidget(arrow);
+    previewRow->addWidget(m_after);
+    previewRow->addWidget(caption, 1);
+    m_preview->hide();
 }
 
 QHBoxLayout* BatchPage::buildStatus(QWidget* box)
@@ -435,6 +495,54 @@ void BatchPage::process()
     refreshStatus();
 }
 
+QWidget* BatchPage::makeRow(const QString& file)
+{
+    auto* row = new QWidget(m_rowsBox);
+    row->setObjectName(u"batchRow"_s);
+    auto* name = new QLabel(QFileInfo(file).fileName(), row);
+    name->setObjectName(u"presetName"_s);
+    auto* meta = new QLabel(describe(file), row);
+    meta->setObjectName(u"presetSummary"_s);
+    auto* state = new QLabel(row);
+    state->setObjectName(u"batchState"_s);
+    state->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
+    auto* reason = new QLabel(row); // why a photo was not saved, in plain words (batch-done.html)
+    reason->setObjectName(u"batchReason"_s);
+    reason->setWordWrap(true);
+    reason->hide();
+    auto* text = new QVBoxLayout;
+    text->setSpacing(0);
+    text->addWidget(name);
+    text->addWidget(meta);
+    text->addWidget(reason);
+    auto* thumb = new QLabel(row); // mock .thumb 72 by 48
+    thumb->setObjectName(u"batchThumb"_s);
+    thumb->setProperty("path", file);
+    thumb->setFixedSize(72, 48);
+    thumb->setScaledContents(false);
+    thumb->setAlignment(Qt::AlignCenter);
+    auto* remove = new QToolButton(row);
+    remove->setObjectName(u"groupReset"_s);
+    remove->setIcon(icons::themed(u"close"_s, tokens().muted));
+    remove->setToolTip(tr("Leave %1 out").arg(QFileInfo(file).fileName()));
+    remove->setAccessibleName(tr("Leave %1 out").arg(QFileInfo(file).fileName()));
+    connect(remove, &QToolButton::clicked, this, [this, file] {
+        if (!m_runner.isRunning()) {
+            m_files.removeAll(file);
+            rebuildRows();
+        }
+    });
+    auto* line = new QHBoxLayout(row);
+    line->setContentsMargins(8, 6, 10, 6);
+    line->setSpacing(10);
+    line->addWidget(thumb);
+    line->addLayout(text, 1);
+    line->addWidget(state);
+    line->addWidget(remove);
+    m_thumbnails->request(file, 144, m_sidecarFolder);
+    return row;
+}
+
 void BatchPage::rebuildRows()
 {
     while (const QLayoutItem* item = m_rows->takeAt(0)) {
@@ -449,35 +557,66 @@ void BatchPage::rebuildRows()
         m_rows->addWidget(empty);
     }
     for (const QString& file : m_files) {
-        auto* row = new QWidget(m_rowsBox);
-        row->setObjectName(u"batchRow"_s);
-        auto* name = new QLabel(QFileInfo(file).fileName(), row);
-        name->setObjectName(u"presetName"_s);
-        auto* meta = new QLabel(describe(file), row);
-        meta->setObjectName(u"presetSummary"_s);
-        auto* state = new QLabel(row);
-        state->setObjectName(u"batchState"_s);
-        state->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
-        auto* reason = new QLabel(row); // why a photo was not saved, in plain words (batch-done.html)
-        reason->setObjectName(u"batchReason"_s);
-        reason->setWordWrap(true);
-        reason->hide();
-        auto* text = new QVBoxLayout;
-        text->setSpacing(0);
-        text->addWidget(name);
-        text->addWidget(meta);
-        text->addWidget(reason);
-        auto* line = new QHBoxLayout(row);
-        line->setContentsMargins(10, 6, 10, 6);
-        line->addLayout(text, 1);
-        line->addWidget(state);
-        m_rows->addWidget(row);
+        m_rows->addWidget(makeRow(file));
     }
     m_rows->addStretch();
     m_process->setText(m_files.isEmpty()
                            ? tr("Process")
                            : tr("Process %n photos", nullptr, static_cast<int>(m_files.size())));
     m_process->setEnabled(!m_files.isEmpty());
+    schedulePreview();
+}
+
+void BatchPage::schedulePreview()
+{
+    m_previewTimer->start();
+}
+
+void BatchPage::renderPreview()
+{
+    m_preview->setVisible(!m_files.isEmpty());
+    if (m_files.isEmpty()) {
+        return;
+    }
+    ++m_previewGeneration;
+    const auto render = [this] {
+        const services::BatchRecipe r = recipe();
+        pfx::Settings own;
+        if (r.keepEdits && !m_sidecarFolder.isEmpty()) {
+            own = core::SidecarStore(m_sidecarFolder)
+                      .read(core::fileFingerprint(m_previewPath))
+                      .value_or(pfx::Settings{});
+        }
+        const auto key = static_cast<int>((m_previewGeneration % 100000) * 2);
+        m_thumbnails->requestRender(key, m_previewImage, own);
+        m_thumbnails->requestRender(key + 1, m_previewImage,
+                                    services::BatchRunner::settingsFor(r, own, *m_previewImage));
+    };
+    if (m_previewImage && m_files.contains(m_previewPath)) {
+        render();
+        return;
+    }
+    // A small copy of the first photo that reads, decoded once on a worker.
+    using Found = std::pair<QString, std::shared_ptr<const pfx::Image>>;
+    auto* watcher = new QFutureWatcher<Found>(this);
+    connect(watcher, &QFutureWatcher<Found>::finished, this, [this, watcher, render] {
+        const Found found = watcher->result();
+        watcher->deleteLater();
+        if (!found.second || !m_files.contains(found.first)) {
+            return;
+        }
+        m_previewPath = found.first;
+        m_previewImage = found.second;
+        render();
+    });
+    watcher->setFuture(QtConcurrent::run([files = m_files.mid(0, 8)]() -> Found {
+        for (const QString& file : files) {
+            if (auto loaded = pfx::load(file.toStdString(), {240})) {
+                return {file, std::make_shared<const pfx::Image>(std::move(loaded).value().image)};
+            }
+        }
+        return {};
+    }));
 }
 
 void BatchPage::refreshRow(int index)
