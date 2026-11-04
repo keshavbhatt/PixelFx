@@ -167,6 +167,7 @@ std::vector<OpSpec> builtInOps()
          false,
          {number("detail.sharpen.amount", 0, 150), relative("detail.sharpen.radius", 0.0001, 0.003, 0.0004),
           number("detail.sharpen.masking", 0, 100)}});
+    ops.push_back({"dehaze", "detail", 1, 45, false, {number("detail.dehaze", -100, 100)}});
     addMixer(ops);
     addGrading(ops);
     addEffects(ops);

@@ -24,6 +24,8 @@ Semantic Versioning (the API may change before 1.0).
   neighbouring bands and fading out toward grey.
 - Colour grading in the split-toning form: a shadow colour, a highlight colour, their amounts
   and a balance; lightness is kept and pure black and white stay neutral.
+- Dehaze (dark channel prior with a guided filter, worked out on a copy about 1000 pixels
+  across so a preview and the export share the same haze map); negative values add haze.
 
 ## [0.1.0] - 2026-11-04
 

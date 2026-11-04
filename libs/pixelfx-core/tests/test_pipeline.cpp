@@ -57,6 +57,7 @@ std::vector<Case> cases()
                {"geometry.crop.w", 0.8},
                {"geometry.crop.h", 0.85}}),
          0.02},
+        {"dehaze", with({{"detail.dehaze", 50}}), 0.012},
         {"mixer",
          with({{"mixer.hue.yellow", -40}, {"mixer.saturation.green", -50}, {"mixer.luminance.blue", -30}}),
          0.004},

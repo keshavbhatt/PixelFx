@@ -46,6 +46,8 @@ bool mixerActive(const Settings& s);
 void mixerApply(Image& image, const Settings& s, const OpContext& ctx);
 bool gradingActive(const Settings& s);
 void gradingApply(Image& image, const Settings& s, const OpContext& ctx);
+bool dehazeActive(const Settings& s);
+void dehazeApply(Image& image, const Settings& s, const OpContext& ctx);
 bool vignetteActive(const Settings& s);
 void vignetteApply(Image& image, const Settings& s, const OpContext& ctx);
 bool grainActive(const Settings& s);
