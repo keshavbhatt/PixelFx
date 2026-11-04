@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>PixelFx mock: Welcome</title><link rel="stylesheet" href="mock.css"><script src="mock.js"></script></head>
+<body>
+<div class="window">
+  <div class="titlebar"><div class="lights"><i></i><i></i><i></i></div><div class="title">PixelFx</div><div class="wc"><span>&#x2212;</span><span>&#x25A1;</span><span>&#x2715;</span></div></div>
+  <div class="menubar"><b>PixelFx</b><span>File</span><span>Edit</span><span>Image</span><span>View</span><span>Window</span><span>Help</span></div>
+  <div class="header"><div class="brand"><span class="mark"></span>PixelFx</div><span class="grow"></span><button class="btn flat icon" title="Main menu (F10)"><svg class="ic "><use href="#i-menu"/></svg></button></div>
+  <div class="body solo">
+    <div class="rail">
+      <div class="r on" title="Edit"><svg class="ic "><use href="#i-sliders"/></svg><span>Edit</span></div><div class="r" title="Crop"><svg class="ic "><use href="#i-crop"/></svg><span>Crop</span></div><div class="r" title="Heal"><svg class="ic "><use href="#i-bandage"/></svg><span>Heal</span></div><div class="r" title="Batch"><svg class="ic "><use href="#i-stack"/></svg><span>Batch</span></div>
+      <span class="spacer"></span>
+      <div class="r" title="Settings (Ctrl+,)"><svg class="ic "><use href="#i-settings"/></svg></div>
+    </div>
+    <div class="center" style="background:var(--bg)">
+      <div style="flex:1;display:grid;place-items:center;overflow:auto">
+        <div style="width:min(760px,92%)">
+          <div class="card" style="border-style:dashed;border-width:2px;padding:44px 20px;text-align:center;background:var(--panel)">
+            <div class="muted"><svg class="ic xl"><use href="#i-images"/></svg></div>
+            <h1 style="margin-top:10px">Drop photos here</h1>
+            <p class="muted" style="margin-top:6px">Or open one to edit, or a whole folder to apply a look or preset to every image at once.</p>
+            <div class="row" style="justify-content:center;margin-top:18px;gap:10px">
+              <button class="btn primary"><svg class="ic s"><use href="#i-open"/></svg>Open images</button>
+              <button class="btn"><svg class="ic s"><use href="#i-folder"/></svg>Open folder</button>
+              <button class="btn"><svg class="ic s"><use href="#i-stack"/></svg>Batch edit</button>
+            </div>
+            <p class="small faint" style="margin-top:14px">JPEG, PNG, WebP, AVIF, HEIC, TIFF, JPEG XL and camera RAW. Paste from the clipboard with Ctrl+V.</p>
+          </div>
+          <div class="row" style="margin-top:24px"><h3>Recent</h3><span class="grow"></span><a class="small">Clear</a></div>
+          <div class="row" style="gap:12px;margin-top:10px">
+            <div style="width:170px"><img src="sample-1.svg" data-look="golden" style="width:100%;aspect-ratio:3/2;object-fit:cover;border-radius:8px"><div class="small" style="margin-top:4px">sunset-lake.jpg</div><div class="small faint">Edited yesterday</div></div>
+            <div style="width:170px"><img src="sample-2.svg" style="width:100%;aspect-ratio:3/2;object-fit:cover;border-radius:8px"><div class="small" style="margin-top:4px">beach-day.heic</div><div class="small faint">2 Nov</div></div>
+            <div style="width:170px"><img src="sample-3.svg" data-look="matte" style="width:100%;aspect-ratio:3/2;object-fit:cover;border-radius:8px"><div class="small" style="margin-top:4px">forest-path.dng</div><div class="small faint">28 Oct</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+<span class="pin" style="left:50%;top:30%">1</span><span class="pin" style="left:60%;top:52%">2</span><span class="pin" style="left:30%;top:75%">3</span>
+</div>
+<ol class="notes"><li><b>First run and empty state.</b> No modal on first start; the window opens straight on this page.</li><li>The three ways in. Open folder and Batch edit open the Batch page with the folder queued; dropping more than one file opens them all in the filmstrip.</li><li>Recent is a list of files, not a project database: PixelFx keeps no catalogue. An edit is remembered per file in a small sidecar so reopening shows the sliders where they were (ADR, DOCS/PLAN.md).</li></ol>
+</body></html>

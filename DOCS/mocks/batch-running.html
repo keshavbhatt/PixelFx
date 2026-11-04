@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>PixelFx mock: Batch, running</title><link rel="stylesheet" href="mock.css"><script src="mock.js"></script></head>
+<body>
+<div class="window">
+  <div class="titlebar"><div class="lights"><i></i><i></i><i></i></div><div class="title">Batch - PixelFx</div><div class="wc"><span>&#x2212;</span><span>&#x25A1;</span><span>&#x2715;</span></div></div>
+  <div class="menubar"><b>PixelFx</b><span>File</span><span>Edit</span><span>Image</span><span>View</span><span>Window</span><span>Help</span></div>
+  <div class="header"><div class="brand"><span class="mark"></span></div><div class="doc"><b>Batch</b><span>6 photos &middot; 129 MB</span></div><span class="grow"></span><button class="btn"><svg class="ic s"><use href="#i-plus"/></svg>Add photos</button><button class="btn"><svg class="ic s"><use href="#i-folder"/></svg>Add folder</button><button class="btn flat icon" title="Main menu (F10)"><svg class="ic "><use href="#i-menu"/></svg></button></div>
+  <div class="body" style="grid-template-columns:var(--rail-w) 1fr 380px">
+    <div class="rail">
+      <div class="r" title="Edit"><svg class="ic "><use href="#i-sliders"/></svg><span>Edit</span></div><div class="r" title="Crop"><svg class="ic "><use href="#i-crop"/></svg><span>Crop</span></div><div class="r" title="Heal"><svg class="ic "><use href="#i-bandage"/></svg><span>Heal</span></div><div class="r on" title="Batch"><svg class="ic "><use href="#i-stack"/></svg><span>Batch</span></div>
+      <span class="spacer"></span>
+      <div class="r" title="Settings (Ctrl+,)"><svg class="ic "><use href="#i-settings"/></svg></div>
+    </div>
+    <div class="center" style="background:var(--panel)">
+      <div class="row" style="padding:10px 16px;border-bottom:1px solid var(--border)"><b>Photos</b><span class="muted">Drop files or folders here</span><span class="grow"></span><div class="seg"><span class="on"><svg class="ic s"><use href="#i-list"/></svg></span><span><svg class="ic s"><use href="#i-layout-grid"/></svg></span></div><button class="btn sm">Clear</button></div>
+      <div class="list" style="flex:1;overflow:auto;padding:6px 0"><div class="it"><div class="thumb" style="width:72px;height:48px"><img src="sample-1.svg" data-look="golden"></div><div class="t"><b>DSC_0412.jpg</b><span>6000 x 4000 &middot; 8.4 MB</span></div><span class="pill ok"><svg class="ic s"><use href="#i-check"/></svg>Saved</span><span class="act"><svg class="ic s"><use href="#i-x"/></svg></span></div><div class="it"><div class="thumb" style="width:72px;height:48px"><img src="sample-2.svg" data-look="golden"></div><div class="t"><b>DSC_0413.jpg</b><span>6000 x 4000 &middot; 9.1 MB</span></div><span class="pill ok"><svg class="ic s"><use href="#i-check"/></svg>Saved</span><span class="act"><svg class="ic s"><use href="#i-x"/></svg></span></div><div class="it"><div class="thumb" style="width:72px;height:48px"><img src="sample-3.svg" data-look="golden"></div><div class="t"><b>IMG_2210.heic</b><span>3024 x 4032 &middot; 2.2 MB</span></div><span class="pill ok"><svg class="ic s"><use href="#i-check"/></svg>Saved</span><span class="act"><svg class="ic s"><use href="#i-x"/></svg></span></div><div class="it"><div class="thumb" style="width:72px;height:48px"><img src="sample-2.svg" data-look="golden"></div><div class="t"><b>IMG_2214.heic</b><span>4032 x 3024 &middot; 2.6 MB</span></div><span class="pill accent">62%</span><span class="act"><svg class="ic s"><use href="#i-x"/></svg></span></div><div class="it"><div class="thumb" style="width:72px;height:48px"><img src="sample-1.svg" data-look="golden"></div><div class="t"><b>beach-raw.dng</b><span>6048 x 4024 &middot; 25 MB</span></div><span class="pill">Waiting</span><span class="act"><svg class="ic s"><use href="#i-x"/></svg></span></div><div class="it"><div class="thumb" style="width:72px;height:48px"><img src="sample-3.svg" data-look="golden"></div><div class="t"><b>scan_007.tiff</b><span>4800 x 6000 &middot; 82 MB</span></div><span class="pill">Waiting</span><span class="act"><svg class="ic s"><use href="#i-x"/></svg></span></div></div>
+      <div class="row" style="padding:10px 16px;border-top:1px solid var(--border)"><span class="muted">Preview</span><img src="sample-1.svg" style="height:56px;border-radius:4px"><span class="muted"><svg class="ic s"><use href="#i-right"/></svg></span><img src="sample-1.svg" data-look="golden" style="height:56px;border-radius:4px"><span class="small muted">The first photo, before and after the recipe</span></div>
+      <div style="padding:12px 16px;border-top:1px solid var(--border);background:var(--bar)"><div class="row"><b>Saving 4 of 6</b><span class="muted">about 20 s left</span><span class="grow"></span><button class="btn sm"><svg class="ic s"><use href="#i-pause"/></svg>Pause</button><button class="btn sm">Stop</button></div><div style="height:4px;border-radius:2px;background:var(--track);margin-top:8px"><div style="width:58%;height:100%;border-radius:2px;background:var(--accent-strong)"></div></div></div>
+    </div>
+    <div class="side right" style="width:auto">
+      <div class="sec">1. Recipe</div>
+      <div style="padding:0 14px" class="stack">
+        <div class="seg full"><span class="on">Preset or look</span><span>Settings from a photo</span></div>
+        <div class="card row" style="padding:8px"><img src="sample-1.svg" data-look="golden" style="width:54px;height:36px;object-fit:cover;border-radius:4px"><div class="grow"><b>Golden hour</b><div class="small muted">Look, strength 72</div></div><button class="btn sm">Change</button></div>
+        <div class="row small"><span class="check on"></span>Then add preset <b>Product white</b><span class="grow"></span><a>Change</a></div>
+        <div class="row small"><span class="check"></span>Auto enhance each photo first</div>
+        <div class="row small"><span class="check"></span>Keep edits already made in PixelFx</div>
+      </div>
+      <div class="sec">2. Resize</div>
+      <div style="padding:0 14px" class="stack"><button class="btn" style="justify-content:space-between">Web &middot; 2048 long edge<svg class="ic s"><use href="#i-down"/></svg></button><span class="row small"><span class="check on"></span>Never enlarge</span></div>
+      <div class="sec">3. Watermark</div>
+      <div style="padding:0 14px" class="row"><select class="input" style="flex:1"><option>Studio signature</option><option>None</option></select><button class="btn sm">Edit...</button></div>
+      <div class="sec">4. Save as</div>
+      <div style="padding:0 14px" class="stack">
+        <div class="row"><select class="input"><option>JPEG, quality 90</option></select><button class="btn sm">More...</button></div>
+        <div class="row"><span class="mono small grow">~/Pictures/PixelFx/Batch</span><button class="btn sm">Change</button></div>
+        <div class="row"><input class="input mono" value="{name}-{preset}"></div>
+        <div class="row small"><span class="check"></span>Next to each original, in a subfolder</div>
+      </div>
+      <div class="foot" style="margin-top:auto"><button class="btn"><svg class="ic s"><use href="#i-save"/></svg>Save as batch recipe</button><span class="grow"></span><button class="btn primary" disabled><svg class="ic s"><use href="#i-play"/></svg>Process 6 photos</button></div>
+    </div>
+  </div>
+  <span class="pin" style="left:30%;top:calc(100% - 80px)">1</span>
+</div>
+<ol class="notes"><li>Progress per photo and overall, Pause and Stop. Closing the window while running asks once; a notification says when it is done.</li></ol>
+</body></html>

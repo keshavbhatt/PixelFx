@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>PixelFx mock: Crop and rotate</title><link rel="stylesheet" href="mock.css"><script src="mock.js"></script></head>
+<body>
+<div class="window">
+  <div class="titlebar"><div class="lights"><i></i><i></i><i></i></div><div class="title">sunset-lake.jpg - PixelFx</div><div class="wc"><span>&#x2212;</span><span>&#x25A1;</span><span>&#x2715;</span></div></div>
+  <div class="menubar"><b>PixelFx</b><span>File</span><span>Edit</span><span>Image</span><span>View</span><span>Window</span><span>Help</span></div>
+  <div class="header">
+    <div class="brand"><span class="mark"></span></div>
+    <button class="btn flat icon" title="Open images (Ctrl+O)"><svg class="ic "><use href="#i-open"/></svg></button>
+    <div class="doc"><b>sunset-lake.jpg</b><span>6000 x 4000 &middot; JPEG &middot; 8.4 MB</span></div>
+    <span class="grow"></span>
+    <button class="btn flat icon" title="Undo (Ctrl+Z)"><svg class="ic "><use href="#i-undo"/></svg></button>
+    <button class="btn flat icon" title="Redo (Ctrl+Shift+Z)"><svg class="ic "><use href="#i-redo"/></svg></button>
+    <button class="btn flat icon" title="History (H)"><svg class="ic "><use href="#i-history"/></svg></button>
+    <span class="sep"></span>
+    <button class="btn flat icon" title="Before and after (\)"><svg class="ic "><use href="#i-compare"/></svg></button>
+    <button class="btn flat icon" title="Show original while held (Space)"><svg class="ic "><use href="#i-eye"/></svg></button>
+    <span class="sep"></span>
+    <button class="btn" title="Save a copy with these settings (Ctrl+Shift+E)"><svg class="ic s"><use href="#i-export"/></svg>Export</button>
+    <button class="btn flat icon" title="Main menu (F10)"><svg class="ic "><use href="#i-menu"/></svg></button>
+  </div>
+  <div class="body no-left">
+    <div class="rail">
+      <div class="r" title="Edit"><svg class="ic "><use href="#i-sliders"/></svg><span>Edit</span></div><div class="r on" title="Crop"><svg class="ic "><use href="#i-crop"/></svg><span>Crop</span></div><div class="r" title="Heal"><svg class="ic "><use href="#i-bandage"/></svg><span>Heal</span></div><div class="r" title="Batch"><svg class="ic "><use href="#i-stack"/></svg><span>Batch</span></div>
+      <span class="spacer"></span>
+      <div class="r" title="Settings (Ctrl+,)"><svg class="ic "><use href="#i-settings"/></svg></div>
+    </div>
+    <div class="center"><div class="canvas"><div class="photo" style="width:min(80%,820px)"><img id="photo" src="sample-1.svg" data-look="golden" alt="" style="filter:brightness(.45)">
+  <div style="position:absolute;left:8%;top:6%;right:12%;bottom:10%;overflow:hidden;outline:1px solid #fff;box-shadow:0 0 0 1px rgba(0,0,0,.4)"><img src="sample-1.svg" data-look="golden" style="position:absolute;left:-10.5%;top:-7.4%;width:125%;height:118.2%;object-fit:cover" alt="">
+    <svg style="position:absolute;inset:0;width:100%;height:100%" viewBox="0 0 100 100" preserveAspectRatio="none"><g stroke="rgba(255,255,255,.55)" stroke-width=".3"><line x1="33.3" y1="0" x2="33.3" y2="100"/><line x1="66.6" y1="0" x2="66.6" y2="100"/><line y1="33.3" x1="0" y2="33.3" x2="100"/><line y1="66.6" x1="0" y2="66.6" x2="100"/></g></svg>
+  </div>
+  <div style="position:absolute;left:8%;top:6%;right:12%;bottom:10%;pointer-events:none">
+    <i style="position:absolute;left:-3px;top:-3px;width:18px;height:18px;border-left:4px solid #fff;border-top:4px solid #fff"></i><i style="position:absolute;right:-3px;top:-3px;width:18px;height:18px;border-right:4px solid #fff;border-top:4px solid #fff"></i><i style="position:absolute;left:-3px;bottom:-3px;width:18px;height:18px;border-left:4px solid #fff;border-bottom:4px solid #fff"></i><i style="position:absolute;right:-3px;bottom:-3px;width:18px;height:18px;border-right:4px solid #fff;border-bottom:4px solid #fff"></i>
+  </div>
+</div>
+<div style="position:absolute;bottom:62px;left:50%;transform:translateX(-50%);width:420px;text-align:center;color:#ddd;font-size:11px"><div style="display:flex;justify-content:space-between;opacity:.7"><span>-45</span><span>-30</span><span>-15</span><span style="color:#fff;font-weight:700">1.5&deg;</span><span>15</span><span>30</span><span>45</span></div><div style="height:10px;margin-top:2px;background:repeating-linear-gradient(90deg,#999 0 1px,transparent 1px 14px)"></div></div><div class="zoombar"><button class="btn sm icon flat"><svg class="ic s"><use href="#i-zoom-out"/></svg></button><span class="z">Fit</span><button class="btn sm icon flat"><svg class="ic s"><use href="#i-zoom-in"/></svg></button><span class="sep" style="width:1px;height:18px;background:var(--border);margin:0 4px"></span><button class="btn sm flat" title="100% (Ctrl+1)">1:1</button><button class="btn sm icon flat" title="Full screen (F11)"><svg class="ic s"><use href="#i-maximize"/></svg></button></div></div>
+      <div class="strip" style="justify-content:center;gap:16px;color:var(--muted)"><span class="mono" style="color:var(--text)">5160 x 3440 px</span><span>Enter applies, Escape cancels, X swaps orientation, Shift keeps the ratio while dragging</span></div>
+    </div>
+    <div class="side right">
+      <div class="sec">Aspect ratio</div>
+      <div class="chips"><span class="">Free</span><span class="">Original</span><span class="">1:1</span><span class="">4:5</span><span class="">5:7</span><span class="on">3:2</span><span class="">16:9</span><span class="">9:16</span><span class="">Custom</span></div>
+      <div class="row" style="padding:4px 14px"><span class="small muted">Orientation</span><span class="grow"></span><div class="seg"><span class="on">Landscape</span><span>Portrait</span></div></div>
+      <div class="sec">Straighten and rotate</div>
+      <div style="padding:0 14px"><div class="adj  changed"><div class="lab"><span>Straighten</span><span class="val">+1.5&deg;</span></div><input type="range" min="-45" max="45" value="1.5"></div>
+        <div class="row" style="margin-top:6px"><button class="btn sm"><svg class="ic s"><use href="#i-rotate-ccw"/></svg>90&deg;</button><button class="btn sm"><svg class="ic s"><use href="#i-rotate-cw"/></svg>90&deg;</button><button class="btn sm"><svg class="ic s"><use href="#i-flip-h"/></svg>Flip</button><button class="btn sm"><svg class="ic s"><use href="#i-flip-v"/></svg>Flip</button></div>
+        <div class="row" style="margin-top:8px"><button class="btn sm"><svg class="ic s"><use href="#i-ruler"/></svg>Draw a level line</button><button class="btn sm"><svg class="ic s"><use href="#i-wand"/></svg>Auto straighten</button></div>
+      </div>
+      <div class="sec">Perspective</div>
+      <div style="padding:0 14px"><div class="adj "><div class="lab"><span>Vertical</span><span class="val">0</span></div><input type="range" min="-100" max="100" value="0"></div><div class="adj "><div class="lab"><span>Horizontal</span><span class="val">0</span></div><input type="range" min="-100" max="100" value="0"></div><button class="btn sm" style="margin-top:4px"><svg class="ic s"><use href="#i-frame"/></svg>Fix by four corners</button></div>
+      <div class="sec">Overlay</div>
+      <div class="chips"><span class="on">Thirds</span><span>Grid</span><span>Golden</span><span>Diagonal</span><span>None</span></div>
+      <span class="grow"></span>
+      <div class="foot" style="margin-top:auto"><button class="btn">Reset</button><span class="grow"></span><button class="btn">Cancel</button><button class="btn primary">Done</button></div>
+    </div>
+  </div>
+<span class="pin" style="left:45%;top:20%">1</span><span class="pin" style="left:calc(100% - 300px);top:88px">2</span><span class="pin" style="left:calc(100% - 300px);top:270px">3</span><span class="pin" style="left:calc(100% - 300px);top:400px">4</span>
+</div>
+<ol class="notes"><li><b>Crop mode</b> (C). Drag the corners or the image; the rest of the photo dims. Crop is stored as settings, so it can be changed later and is part of presets only when the user includes it.</li><li>Ratio chips; Original keeps the camera ratio. Custom asks for numbers.</li><li>Straighten with the dial under the photo, the slider, a drawn level line, or Auto (horizon detection; LATER if it proves unreliable).</li><li>Perspective: two sliders, or drag four corners onto a rectangle (keystone correction for documents and buildings).</li></ol>
+</body></html>

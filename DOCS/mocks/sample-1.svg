@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1500 1000" preserveAspectRatio="xMidYMid slice">
+  <!-- Drawn stand-in photo for the mocks: mountain lake at sunset. Not a real photograph. -->
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2B3F73"/><stop offset=".45" stop-color="#C86B6B"/><stop offset=".7" stop-color="#F4A85E"/><stop offset="1" stop-color="#FCD58C"/></linearGradient>
+    <linearGradient id="lake" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F2B470"/><stop offset=".35" stop-color="#9C6A7A"/><stop offset="1" stop-color="#1F2C4D"/></linearGradient>
+    <radialGradient id="sun" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#FFF6D8"/><stop offset=".5" stop-color="#FFE29A"/><stop offset="1" stop-color="#FFC56B" stop-opacity="0"/></radialGradient>
+    <linearGradient id="m1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6E5A86"/><stop offset="1" stop-color="#3F3A63"/></linearGradient>
+    <linearGradient id="m2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3E3A5E"/><stop offset="1" stop-color="#232543"/></linearGradient>
+    <filter id="soft"><feGaussianBlur stdDeviation="2"/></filter>
+  </defs>
+  <rect width="1500" height="640" fill="url(#sky)"/>
+  <circle cx="980" cy="520" r="210" fill="url(#sun)"/>
+  <circle cx="980" cy="520" r="62" fill="#FFF3CF"/>
+  <g fill="#FFFFFF" opacity=".35"><ellipse cx="300" cy="180" rx="170" ry="22"/><ellipse cx="420" cy="205" rx="120" ry="16"/><ellipse cx="1180" cy="150" rx="200" ry="20"/><ellipse cx="1290" cy="176" rx="110" ry="13"/></g>
+  <path d="M0 560 L180 380 L290 470 L470 250 L620 430 L760 330 L900 500 L1060 360 L1230 470 L1380 300 L1500 420 L1500 640 L0 640Z" fill="url(#m1)"/>
+  <path d="M470 250 L520 300 L500 310 L540 340 L470 320 L430 300Z M1380 300 L1420 340 L1395 345 L1430 380 L1370 350 L1350 330Z" fill="#E9DDF0" opacity=".8"/>
+  <path d="M0 640 L0 520 L120 470 L260 560 L420 470 L560 590 L700 520 L860 600 L1000 540 L1160 610 L1320 520 L1500 590 L1500 640Z" fill="url(#m2)"/>
+  <rect y="640" width="1500" height="360" fill="url(#lake)"/>
+  <g filter="url(#soft)" opacity=".45"><ellipse cx="980" cy="700" rx="70" ry="160" fill="#FFE7AE"/></g>
+  <g stroke="#FFE7B0" stroke-width="3" opacity=".55"><line x1="900" y1="690" x2="1060" y2="690"/><line x1="920" y1="720" x2="1040" y2="720"/><line x1="940" y1="760" x2="1020" y2="760"/><line x1="955" y1="810" x2="1005" y2="810"/></g>
+  <g fill="#14182B">
+    <path d="M0 1000 L0 760 Q120 740 260 800 Q360 830 420 1000Z"/>
+    <path d="M60 790 l18 -120 l18 120z M110 800 l24 -170 l24 170z M170 815 l16 -100 l16 100z M230 830 l20 -140 l20 140z"/>
+    <path d="M1500 1000 L1500 780 Q1380 770 1260 840 Q1180 880 1150 1000Z"/>
+    <path d="M1330 810 l20 -150 l20 150z M1400 790 l24 -190 l24 190z M1450 800 l16 -110 l16 110z"/>
+  </g>
+  <g fill="#0E1120"><path d="M640 905 q40 -18 120 0 l-14 14 q-46 -8 -92 0z"/><rect x="694" y="860" width="3" height="48"/><path d="M697 862 l28 34 l-28 0z" fill="#E6D5C3"/></g>
+</svg>

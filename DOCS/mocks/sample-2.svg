@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1500 1000" preserveAspectRatio="xMidYMid slice">
+  <!-- Drawn stand-in photo for the mocks: beach at midday. Not a real photograph. -->
+  <defs>
+    <linearGradient id="s" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3A86D1"/><stop offset="1" stop-color="#BFE3F7"/></linearGradient>
+    <linearGradient id="sea" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1D6FA8"/><stop offset=".6" stop-color="#2FB3B8"/><stop offset="1" stop-color="#7FDCCB"/></linearGradient>
+    <linearGradient id="sand" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F1DDB0"/><stop offset="1" stop-color="#D9B67E"/></linearGradient>
+  </defs>
+  <rect width="1500" height="520" fill="url(#s)"/>
+  <circle cx="300" cy="150" r="70" fill="#FFF8DC"/>
+  <g fill="#FFFFFF" opacity=".85"><ellipse cx="800" cy="160" rx="160" ry="40"/><ellipse cx="900" cy="140" rx="110" ry="50"/><ellipse cx="1200" cy="230" rx="140" ry="30"/></g>
+  <rect y="500" width="1500" height="230" fill="url(#sea)"/>
+  <path d="M0 700 Q300 670 600 705 T1200 700 T1500 690 L1500 1000 L0 1000Z" fill="url(#sand)"/>
+  <path d="M0 705 Q300 676 600 712 T1200 706 T1500 696" stroke="#FFFFFF" stroke-width="10" fill="none" opacity=".8"/>
+  <g fill="#4A3524"><path d="M1130 980 Q1150 760 1110 560 l16 -2 Q1170 760 1150 980Z"/></g>
+  <g fill="#2E7D4F"><path d="M1118 560 q-140 -10 -210 70 q110 -40 210 -50z"/><path d="M1118 560 q150 -30 230 40 q-120 -20 -230 -20z"/><path d="M1118 560 q-60 -100 -170 -110 q90 50 160 120z"/><path d="M1118 560 q70 -110 190 -100 q-110 40 -180 110z"/></g>
+  <g><rect x="380" y="800" width="180" height="16" rx="8" fill="#E2513C"/><path d="M470 640 L470 820" stroke="#3B3B3B" stroke-width="5"/><path d="M360 660 Q470 580 580 660Z" fill="#F2C14E"/></g>
+</svg>

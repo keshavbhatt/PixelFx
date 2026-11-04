@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>PixelFx mock: Index</title><link rel="stylesheet" href="mock.css"><script src="mock.js"></script><style>
+  .idx { max-width: 1000px; margin: 0 auto; padding: 32px 24px 80px; }
+  .idx h2 { margin-top: 28px; }
+  .idx .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; margin-top: 12px; }
+  .idx .grid a { display: block; padding: 14px 16px; border-radius: 12px; background: var(--panel); border: 1px solid var(--border); color: var(--text); }
+  .idx .grid a:hover { background: var(--hover); }
+  .idx .grid a b { display: block; margin-bottom: 2px; }
+  .idx .grid a span { color: var(--muted); font-size: 12px; display: block; }
+  .idx .grid a em { font-style: normal; font-size: 11px; color: var(--warning); display: block; margin-top: 6px; }
+  .idx .grid a em.ok { color: var(--success); }
+  .sw { display: flex; gap: 8px; flex-wrap: wrap; margin: 10px 0 26px; }
+  .sw i { display: block; width: 44px; height: 44px; border-radius: 10px; border: 1px solid var(--border); position: relative; }
+  .sw i::after { content: attr(data-n); position: absolute; left: -6px; right: -6px; top: 48px; font-size: 10px; color: var(--muted); font-style: normal; text-align: center; }
+</style></head>
+<body>
+<div class="idx">
+  <div class="row"><span class="brand" style="padding:0"><span class="mark" style="width:28px;height:28px"></span></span><h1>PixelFx mocks</h1></div>
+  <p class="muted" style="margin-top:6px">Every screen before it is coded (DOCS/DESIGN.md). The toolbar at the bottom right switches dark and light, the OS title bar, and the review notes; yellow pins match the numbered notes. Sliders and look tiles in the editor mocks are live (CSS stand-ins, not the engine). Approval is recorded here and in <code>DOCS/PROGRESS.md</code>.</p>
+  <h2>Tokens</h2>
+  <div class="sw">
+    <i style="background:var(--accent)" data-n="accent"></i><i style="background:var(--accent-strong)" data-n="strong"></i><i style="background:var(--accent-soft)" data-n="soft"></i>
+    <i style="background:var(--bg)" data-n="bg"></i><i style="background:var(--canvas)" data-n="canvas"></i><i style="background:var(--bar)" data-n="bar"></i><i style="background:var(--panel)" data-n="panel"></i><i style="background:var(--elevated)" data-n="elevated"></i><i style="background:var(--hover)" data-n="hover"></i>
+    <i style="background:var(--text)" data-n="text"></i><i style="background:var(--muted)" data-n="muted"></i><i style="background:var(--track)" data-n="track"></i>
+    <i style="background:var(--success)" data-n="success"></i><i style="background:var(--warning)" data-n="warning"></i><i style="background:var(--danger)" data-n="danger"></i>
+  </div>
+  <h2>Start</h2><div class="grid"><a href="welcome.html"><b>Welcome, empty</b><span>First run and no photo open; drop zone, recent</span><em class="ok">Approved 2026-11-04</em></a></div><h2>Edit</h2><div class="grid"><a href="editor.html"><b>Editor, Looks</b><span>Main editor: looks, live photo, adjustments, filmstrip</span><em class="ok">Approved 2026-11-04</em></a><a href="editor-presets.html"><b>Editor, Presets</b><span>Preset library, import, apply</span><em class="ok">Approved 2026-11-04</em></a><a href="editor-compare.html"><b>Before and after</b><span>Split compare</span><em class="ok">Approved 2026-11-04</em></a><a href="history.html"><b>History</b><span>Steps and snapshots</span><em class="ok">Approved 2026-11-04</em></a><a href="crop.html"><b>Crop and rotate</b><span>Ratios, straighten, perspective</span><em class="ok">Approved 2026-11-04</em></a><a href="heal.html"><b>Spot heal</b><span>Heal blemishes, dust and small objects</span><em class="ok">Approved 2026-11-04</em></a></div><h2>Presets and looks</h2><div class="grid"><a href="preset-save.html"><b>Save as preset</b><span>Choose what the preset contains</span><em class="ok">Approved 2026-11-04</em></a><a href="filter-editor.html"><b>New look (custom filter)</b><span>Step stack, LUT import, preview, export</span><em class="ok">Approved 2026-11-04</em></a></div><h2>Many photos</h2><div class="grid"><a href="apply-to-selected.html"><b>Paste to selected</b><span>Filmstrip selection, paste settings</span><em class="ok">Approved 2026-11-04</em></a><a href="batch.html"><b>Batch</b><span>Recipe, resize, save as</span><em class="ok">Approved 2026-11-04</em></a><a href="batch-running.html"><b>Batch, running</b><span>Progress</span><em class="ok">Approved 2026-11-04</em></a><a href="batch-done.html"><b>Batch, finished</b><span>Results and failures</span><em class="ok">Approved 2026-11-04</em></a><a href="batch-compress.html"><b>Batch, compress only</b><span>Free mode: file sizes before and after, savings, compare</span><em class="ok">Approved 2026-11-04</em></a></div><h2>Output</h2><div class="grid"><a href="export.html"><b>Export</b><span>Format, quality, size, watermark, metadata, naming</span><em class="ok">Approved 2026-11-04</em></a><a href="export-sizes.html"><b>Export, size presets</b><span>Instagram, story, web, email, print; framing</span><em class="ok">Approved 2026-11-04</em></a><a href="watermark.html"><b>Watermark</b><span>Text or logo, relative size, position, saved by name</span><em class="ok">Approved 2026-11-04</em></a></div><h2>Shell</h2><div class="grid"><a href="menu.html"><b>Main menu</b><span>Header menu</span><em class="ok">Approved 2026-11-04</em></a><a href="settings.html"><b>Settings</b><span>Sidebar sheet</span><em class="ok">Approved 2026-11-04</em></a><a href="shortcuts.html"><b>Keyboard shortcuts</b><span>F1 sheet</span><em class="ok">Approved 2026-11-04</em></a></div>
+  <h2>Later (M5, kit standard sheets)</h2><p class="muted" style="margin-top:6px">About with diagnostics, What's new with the version picker, Report a bug: mocked when M5 starts, from the kit's patterns.</p>
+</div>
+</body></html>

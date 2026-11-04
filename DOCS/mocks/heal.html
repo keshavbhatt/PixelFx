@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>PixelFx mock: Spot heal</title><link rel="stylesheet" href="mock.css"><script src="mock.js"></script></head>
+<body>
+<div class="window">
+  <div class="titlebar"><div class="lights"><i></i><i></i><i></i></div><div class="title">sunset-lake.jpg - PixelFx</div><div class="wc"><span>&#x2212;</span><span>&#x25A1;</span><span>&#x2715;</span></div></div>
+  <div class="menubar"><b>PixelFx</b><span>File</span><span>Edit</span><span>Image</span><span>View</span><span>Window</span><span>Help</span></div>
+  <div class="header">
+    <div class="brand"><span class="mark"></span></div>
+    <button class="btn flat icon" title="Open images (Ctrl+O)"><svg class="ic "><use href="#i-open"/></svg></button>
+    <div class="doc"><b>sunset-lake.jpg</b><span>6000 x 4000 &middot; JPEG &middot; 8.4 MB</span></div>
+    <span class="grow"></span>
+    <button class="btn flat icon" title="Undo (Ctrl+Z)"><svg class="ic "><use href="#i-undo"/></svg></button>
+    <button class="btn flat icon" title="Redo (Ctrl+Shift+Z)"><svg class="ic "><use href="#i-redo"/></svg></button>
+    <button class="btn flat icon" title="History (H)"><svg class="ic "><use href="#i-history"/></svg></button>
+    <span class="sep"></span>
+    <button class="btn flat icon" title="Before and after (\)"><svg class="ic "><use href="#i-compare"/></svg></button>
+    <button class="btn flat icon" title="Show original while held (Space)"><svg class="ic "><use href="#i-eye"/></svg></button>
+    <span class="sep"></span>
+    <button class="btn" title="Save a copy with these settings (Ctrl+Shift+E)"><svg class="ic s"><use href="#i-export"/></svg>Export</button>
+    <button class="btn flat icon" title="Main menu (F10)"><svg class="ic "><use href="#i-menu"/></svg></button>
+  </div>
+  <div class="body no-left">
+    <div class="rail">
+      <div class="r" title="Edit"><svg class="ic "><use href="#i-sliders"/></svg><span>Edit</span></div><div class="r" title="Crop"><svg class="ic "><use href="#i-crop"/></svg><span>Crop</span></div><div class="r on" title="Heal"><svg class="ic "><use href="#i-bandage"/></svg><span>Heal</span></div><div class="r" title="Batch"><svg class="ic "><use href="#i-stack"/></svg><span>Batch</span></div>
+      <span class="spacer"></span>
+      <div class="r" title="Settings (Ctrl+,)"><svg class="ic "><use href="#i-settings"/></svg></div>
+    </div>
+
+    <div class="center">
+      <div class="canvas"><div class="photo"><img id="photo" src="sample-1.svg" data-look="golden" alt=""><div class="spot src" style="left:16%;top:22%;width:4%"></div><div class="spot dst sel" style="left:27%;top:17%;width:4%"></div><svg class="link" viewBox="0 0 100 100" preserveAspectRatio="none"><line x1="18" y1="24" x2="29" y2="19"/></svg>
+  <div class="spot dst" style="left:61%;top:12%;width:3%"></div>
+  <div class="spot dst" style="left:47%;top:72%;width:6%;height:auto"></div>
+  <i class="dust" style="left:78%;top:30%"></i><i class="dust" style="left:84%;top:16%;width:6px;height:6px"></i>
+  <div class="brush" style="left:76%;top:27%;width:5%"></div></div><div class="zoombar"><button class="btn sm icon flat"><svg class="ic s"><use href="#i-zoom-out"/></svg></button><span class="z">Fit</span><button class="btn sm icon flat"><svg class="ic s"><use href="#i-zoom-in"/></svg></button><span class="sep" style="width:1px;height:18px;background:var(--border);margin:0 4px"></span><button class="btn sm flat" title="100% (Ctrl+1)">1:1</button><button class="btn sm icon flat" title="Full screen (F11)"><svg class="ic s"><use href="#i-maximize"/></svg></button></div></div>
+      <div class="strip" style="justify-content:center;gap:16px;color:var(--muted)"><span>Click to heal &middot; drag to brush &middot; [ and ] change the size &middot; Delete removes the selected spot &middot; Escape leaves Heal</span></div>
+    </div>
+    <div class="side right">
+      <div class="sec">Heal</div>
+      <div style="padding:0 14px" class="stack">
+        <div class="seg full"><span class="on"><svg class="ic s"><use href="#i-circle-dot"/></svg>Spot</span><span><svg class="ic s"><use href="#i-brush"/></svg>Brush</span></div>
+        <div class="adj changed"><div class="lab"><span>Size</span><span class="val">4%</span></div><input type="range" min="1" max="30" value="4"></div>
+        <div class="adj"><div class="lab"><span>Feather</span><span class="val">50</span></div><input type="range" min="0" max="100" value="50"></div>
+        <div class="adj"><div class="lab"><span>Opacity</span><span class="val">100</span></div><input type="range" min="0" max="100" value="100"></div>
+        <div class="row small"><span class="switch on"></span><span>Show spots</span><span class="grow"></span><span class="kbd">V</span></div>
+        <div class="row small"><span class="switch"></span><span>Reveal dust</span><span class="grow"></span><span class="kbd">D</span></div>
+      </div>
+      <div class="sec">Spots (3)<a class="more">Remove all</a></div>
+      <div class="list">
+        <div class="it sel"><svg class="ic s"><use href="#i-circle-dot"/></svg><div class="t"><b>Spot in the sky</b><span>Patch picked for you</span></div><span class="act"><svg class="ic s"><use href="#i-x"/></svg></span></div>
+        <div class="it"><svg class="ic s"><use href="#i-circle-dot"/></svg><div class="t"><b>Spot</b><span>Size 3%</span></div><span class="act"><svg class="ic s"><use href="#i-x"/></svg></span></div>
+        <div class="it"><svg class="ic s"><use href="#i-brush"/></svg><div class="t"><b>Brush stroke</b><span>On the water</span></div><span class="act"><svg class="ic s"><use href="#i-x"/></svg></span></div>
+      </div>
+      <div class="foot" style="margin-top:auto"><button class="btn">Reset</button><span class="grow"></span><button class="btn primary">Done</button></div>
+    </div>
+  </div>
+
+<span class="pin" style="left:30%;top:24%">1</span><span class="pin" style="left:24%;top:12%">2</span><span class="pin" style="left:calc(100% - 300px);top:220px">3</span><span class="pin" style="left:calc(100% - 300px);top:300px">4</span><span class="pin" style="left:73%;top:24%">5</span>
+</div>
+<ol class="notes"><li><b>Heal mode</b> (R) for blemishes, dust spots and small objects. Click: a circle the size of the brush is healed from a patch PixelFx picks nearby with matching texture and light (solid outline = healed area, hollow = source).</li><li>Every spot is a setting, not pixels: select it to resize it, drag the hollow source circle to choose another patch, delete it any time; spots are in history and in the photo's sidecar. Spots are never part of presets or batch (they belong to one photo).</li><li>Brush mode paints a stroke for longer marks (wires, scratches, a stray hair) and heals along it.</li><li>Reveal dust shows a high-contrast view where sensor dust and specks stand out, a known pain on skies.</li><li>The brush cursor shows its size on the photo; size is relative to the photo, so it fits at any zoom.</li></ol>
+</body></html>
