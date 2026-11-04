@@ -307,4 +307,33 @@ Status save(const Image& image, const std::filesystem::path& path, const SaveOpt
     return {};
 }
 
+Result<Rgba8Image> toSrgb8(const Image& image)
+{
+    if (image.empty()) {
+        return Error{ErrorCode::InvalidArgument, "Nothing to convert: the image is empty."};
+    }
+    const ProfilePtr working = workingProfile();
+    const ProfilePtr srgb = srgbProfile();
+    const TransformPtr transform{cmsCreateTransform(working.get(), TYPE_RGBA_FLT, srgb.get(), TYPE_RGBA_8,
+                                                    INTENT_PERCEPTUAL,
+                                                    cmsFLAGS_NOCACHE | cmsFLAGS_COPY_ALPHA),
+                                 &cmsDeleteTransform};
+    if (!transform) {
+        return Error{ErrorCode::ColorManagement, "Could not prepare the sRGB conversion."};
+    }
+    Rgba8Image out;
+    out.width = image.width();
+    out.height = image.height();
+    out.pixels.resize(image.pixelCount() * 4);
+    const auto rowBytes = static_cast<std::size_t>(image.width()) * 4;
+    detail::parallelFor(image.height(), 0, [&](int y0, int y1) {
+        for (int y = y0; y < y1; ++y) {
+            cmsDoTransform(transform.get(), image.row(y),
+                           out.pixels.data() + static_cast<std::size_t>(y) * rowBytes,
+                           static_cast<cmsUInt32Number>(image.width()));
+        }
+    });
+    return out;
+}
+
 } // namespace pfx

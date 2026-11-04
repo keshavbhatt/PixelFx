@@ -22,5 +22,13 @@ target_link_libraries(pfx_tests PRIVATE pfx::core doctest::doctest PkgConfig::VI
 target_compile_definitions(pfx_tests PRIVATE PFX_GOLDEN_DIR="${CMAKE_CURRENT_SOURCE_DIR}/golden")
 pfx_set_warnings(pfx_tests)
 
-include(${doctest_SOURCE_DIR}/scripts/cmake/doctest.cmake)
-doctest_discover_tests(pfx_tests)
+# Inside a parent build that needs a special runtime environment (the PixelFx app's snap-runtime
+# dev builds), the parent sets PFX_TEST_ENVIRONMENT and the suite runs as one test with it;
+# standalone, every test case is its own CTest test.
+if(DEFINED PFX_TEST_ENVIRONMENT)
+    add_test(NAME pfx_tests COMMAND pfx_tests)
+    set_tests_properties(pfx_tests PROPERTIES ENVIRONMENT "${PFX_TEST_ENVIRONMENT}" LABELS "unit")
+else()
+    include(${doctest_SOURCE_DIR}/scripts/cmake/doctest.cmake)
+    doctest_discover_tests(pfx_tests)
+endif()

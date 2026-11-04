@@ -141,3 +141,29 @@ TEST_CASE("greyscale images, with and without alpha, load as neutral RGBA")
         CHECK(p[3] == doctest::Approx(std::string(name) == "grey.png" ? 1.0F : 64.0F / 255.0F).epsilon(0.01));
     }
 }
+
+TEST_CASE("display conversion gives 8-bit sRGB matching what save writes")
+{
+    const fixtures::TempDir dir;
+    const pfx::Image scene = fixtures::scene(64, 48);
+    const auto display = pfx::toSrgb8(scene);
+    REQUIRE(display.ok());
+    CHECK(display.value().pixels.size() == static_cast<std::size_t>(64 * 48 * 4));
+    REQUIRE(pfx::save(scene, dir.path() / "ref.png").ok());
+    vips::VImage ref = vips::VImage::new_from_file((dir.path() / "ref.png").string().c_str());
+    std::size_t size = 0;
+    void* mem = ref.write_to_memory(&size);
+    const auto* bytes = static_cast<const std::uint8_t*>(mem);
+    int worst = 0;
+    for (int i = 0; i < 64 * 48; ++i) {
+        for (int c = 0; c < 3; ++c) {
+            const int a =
+                display.value().pixels[static_cast<std::size_t>(i) * 4 + static_cast<std::size_t>(c)];
+            const int b = bytes[static_cast<std::size_t>(i) * 3 + static_cast<std::size_t>(c)];
+            worst = std::max(worst, std::abs(a - b));
+        }
+    }
+    g_free(mem);
+    CHECK(worst <= 1);
+    CHECK_FALSE(pfx::toSrgb8(pfx::Image()).ok());
+}

@@ -47,6 +47,14 @@ struct SaveOptions
     bool keepMetadata = true;
 };
 
+// 8-bit sRGB pixels with straight alpha, interleaved R, G, B, A, for display.
+struct Rgba8Image
+{
+    int width = 0;
+    int height = 0;
+    std::vector<std::uint8_t> pixels;
+};
+
 // Decodes any format libvips reads, applies the orientation tag, converts through the
 // embedded ICC profile (sRGB when there is none) into the working space.
 [[nodiscard]] Result<LoadedImage> load(const std::filesystem::path& path, const LoadOptions& options = {});
@@ -55,5 +63,9 @@ struct SaveOptions
 // Converts to sRGB, embeds the sRGB profile, writes the format the extension names.
 [[nodiscard]] Status save(const Image& image, const std::filesystem::path& path,
                           const SaveOptions& options = {}, const Metadata* metadata = nullptr);
+
+// Converts working-space pixels to 8-bit sRGB for display, through the same colour engine as
+// save(). Values outside 0..1 are clipped.
+[[nodiscard]] Result<Rgba8Image> toSrgb8(const Image& image);
 
 } // namespace pfx
