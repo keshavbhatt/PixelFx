@@ -308,6 +308,26 @@ void MainWindow::showHistory()
         step->setChecked(i == h.currentIndex());
         connect(step, &QAction::triggered, this, [this, i] { m_document.goToStep(i); });
     }
+    // Snapshots: named states kept with the edit (history.html).
+    const auto& snapshots = m_document.snapshots();
+    if (!snapshots.empty()) {
+        menu.addSection(tr("Snapshots"));
+        for (std::size_t i = 0; i < snapshots.size(); ++i) {
+            connect(menu.addAction(QString::fromStdString(snapshots[i].name)), &QAction::triggered, this,
+                    [this, i] { m_document.applySnapshot(i); });
+        }
+    }
+    menu.addSeparator();
+    connect(menu.addAction(tr("Save snapshot...")), &QAction::triggered, this, [this] {
+        bool ok = false;
+        const QString name =
+            QInputDialog::getText(this, tr("Save snapshot"), tr("Name"), QLineEdit::Normal,
+                                  tr("Snapshot %1").arg(m_document.snapshots().size() + 1), &ok);
+        if (ok) {
+            m_document.saveSnapshot(name);
+            showToast(tr("Saved snapshot %1").arg(name.trimmed()));
+        }
+    });
     menu.exec(m_history->mapToGlobal(QPoint(0, m_history->height())));
 }
 

@@ -86,6 +86,11 @@ public:
     /// applied), sampled from the original around it; one history step.
     void pickWhiteBalance(QPointF fraction);
     [[nodiscard]] const core::History& history() const { return m_history; }
+    /// Named states kept with the photo's edits (mock history.html: Save snapshot).
+    [[nodiscard]] const std::vector<pfx::BatchStep>& snapshots() const { return m_snapshots; }
+    void saveSnapshot(const QString& name);
+    /// Goes to snapshot `index` as one history step.
+    void applySnapshot(std::size_t index);
 
     /// While cropping, the preview shows the whole straightened photo so the crop box can move
     /// over it; the crop stays in the settings.
@@ -140,6 +145,7 @@ private:
     QImage m_original;
     core::Histogram m_histogram;
     pfx::Settings m_settings;
+    std::vector<pfx::BatchStep> m_snapshots;
     core::History m_history;
     RenderScheduler* m_scheduler = nullptr;
     RenderScheduler* m_originalScheduler = nullptr;

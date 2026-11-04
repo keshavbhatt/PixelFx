@@ -66,6 +66,26 @@ private Q_SLOTS:
         f.close();
         QVERIFY(!store.read(u"sha1:0123"_s).has_value());
     }
+
+    void snapshotsAreKeptAcrossWrites()
+    {
+        QTemporaryDir dir;
+        const SidecarStore store(dir.filePath(u"edits"_s));
+        pfx::Settings s;
+        s.set("light.exposure", 0.2);
+        const std::vector<pfx::BatchStep> snapshots = {{"Before colour", s}};
+        QVERIFY(store.write(u"/p/a.jpg"_s, u"fp1"_s, s, &snapshots));
+        pfx::Settings later;
+        later.set("light.exposure", 0.9);
+        QVERIFY(store.write(u"/p/a.jpg"_s, u"fp1"_s, later)); // a batch writing settings only
+        QCOMPARE(store.readSnapshots(u"fp1"_s).size(), std::size_t{1});
+        QCOMPARE(store.read(u"fp1"_s)->number("light.exposure", 0), 0.9);
+        QVERIFY(store.write(u"/p/a.jpg"_s, u"fp1"_s, {})); // no settings, but a snapshot: the file stays
+        QVERIFY(QFile::exists(store.pathFor(u"fp1"_s)));
+        const std::vector<pfx::BatchStep> none;
+        QVERIFY(store.write(u"/p/a.jpg"_s, u"fp1"_s, {}, &none));
+        QVERIFY(!QFile::exists(store.pathFor(u"fp1"_s)));
+    }
 };
 
 QTEST_GUILESS_MAIN(TestSidecarStore)

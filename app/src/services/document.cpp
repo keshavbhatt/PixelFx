@@ -32,6 +32,7 @@ struct Document::Result
     QString sidecarFolder;
     QString fingerprint;
     pfx::Settings stored;
+    std::vector<pfx::BatchStep> snapshots;
     QString error;
 };
 
@@ -124,8 +125,9 @@ void Document::saveNow(bool wait)
     if (!m_sidecars || m_fingerprint.isEmpty()) {
         return;
     }
-    m_savePool->start([store = *m_sidecars, photo = m_info.path, fp = m_fingerprint, settings = m_settings] {
-        if (!store.write(photo, fp, settings)) {
+    m_savePool->start([store = *m_sidecars, photo = m_info.path, fp = m_fingerprint, settings = m_settings,
+                       snapshots = m_snapshots] {
+        if (!store.write(photo, fp, settings, &snapshots)) {
             qCWarning(lcDocument) << "could not remember the edits of" << photo;
         }
     });
@@ -163,9 +165,11 @@ Document::Result Document::openOnWorker(Result result,
     }
     if (!result.sidecarFolder.isEmpty()) {
         result.fingerprint = core::fileFingerprint(QFileInfo(result.info.path).absoluteFilePath());
-        if (auto stored = core::SidecarStore(result.sidecarFolder).read(result.fingerprint)) {
+        const core::SidecarStore store(result.sidecarFolder);
+        if (auto stored = store.read(result.fingerprint)) {
             result.stored = std::move(*stored);
         }
+        result.snapshots = store.readSnapshots(result.fingerprint);
     }
     result.original = toQImage(display.value());
     result.histogram = core::histogramOf(result.original);
@@ -216,6 +220,7 @@ void Document::deliver(const Result& result)
     m_preview = result.original;
     m_histogram = result.histogram;
     m_fingerprint = result.fingerprint;
+    m_snapshots = result.snapshots;
     m_source = result.source;
     m_scheduler->setSource(result.source);
     m_hover.reset();
@@ -429,6 +434,24 @@ pfx::Settings withWhiteBalance(const pfx::Settings& settings, const pfx::Setting
 }
 
 } // namespace
+
+void Document::saveSnapshot(const QString& name)
+{
+    if (!isOpen() || name.trimmed().isEmpty()) {
+        return;
+    }
+    m_snapshots.push_back({name.trimmed().toStdString(), m_settings});
+    scheduleSave();
+    Q_EMIT historyChanged();
+}
+
+void Document::applySnapshot(std::size_t index)
+{
+    if (index < m_snapshots.size()) {
+        apply(m_snapshots[index].settings,
+              tr("Snapshot %1").arg(QString::fromStdString(m_snapshots[index].name)));
+    }
+}
 
 void Document::autoWhiteBalance()
 {

@@ -275,6 +275,35 @@ private Q_SLOTS:
         QCOMPARE(doc.history().undoLabel(), u"Auto white balance"_s);
     }
 
+    void snapshotsComeBackWithThePhoto()
+    {
+        QTemporaryDir dir;
+        const QString path = writePhoto(dir, u"photo.png"_s, 60, 40);
+        const QString edits = dir.filePath(u"edits"_s);
+        {
+            Document doc;
+            doc.setSidecarFolder(edits);
+            QSignalSpy ready(&doc, &Document::previewReady);
+            doc.open(path, 100);
+            QVERIFY(ready.wait(10000));
+            pfx::Settings warm;
+            warm.set("color.wb.temperature", 20.0);
+            doc.apply(warm, u"Warm"_s);
+            doc.saveSnapshot(u"Warm"_s);
+            doc.apply({}, u"Clear"_s);
+            doc.flush();
+        }
+        Document again;
+        again.setSidecarFolder(edits);
+        QSignalSpy opened(&again, &Document::opened);
+        again.open(path, 100);
+        QVERIFY(opened.wait(10000));
+        QCOMPARE(again.snapshots().size(), std::size_t{1});
+        again.applySnapshot(0);
+        QCOMPARE(again.settings().number("color.wb.temperature", 0), 20.0);
+        QCOMPARE(again.history().undoLabel(), u"Snapshot Warm"_s);
+    }
+
     void failureSaysWhy()
     {
         Document doc;

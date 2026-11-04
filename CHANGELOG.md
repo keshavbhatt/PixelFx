@@ -40,6 +40,7 @@ PixelFx 2 is rebuilt from scratch: a new editor, a new image engine, and a new l
 - Settings (Ctrl+,): light or dark theme, the colour around the photo, whether edits are
   remembered, and clipping warnings (J) that show blown highlights in red and blocked shadows
   in blue.
+- Snapshots: keep a named version of an edit from History (H) and go back to it any time.
 - Copy a photo's settings and paste them onto another (Ctrl+Shift+C, Ctrl+Shift+V); each
   photo keeps its own crop.
 - Zoom in to check detail: the scroll wheel, the zoom bar, Ctrl+0 to fit and Ctrl+1 for 100%,

@@ -3,7 +3,9 @@
 #include <QString>
 
 #include <optional>
+#include <pfx/document.h>
 #include <pfx/settings.h>
+#include <vector>
 
 namespace pixelfx::core {
 
@@ -25,9 +27,12 @@ public:
 
     /// The settings stored for this fingerprint, if any.
     [[nodiscard]] std::optional<pfx::Settings> read(const QString& fingerprint) const;
-    /// Stores `settings` for the photo; empty settings remove its file. Returns success.
-    [[nodiscard]] bool write(const QString& photo, const QString& fingerprint,
-                             const pfx::Settings& settings) const;
+    /// The snapshots kept with this photo's edits (History, Save snapshot).
+    [[nodiscard]] std::vector<pfx::BatchStep> readSnapshots(const QString& fingerprint) const;
+    /// Stores `settings` for the photo, with `snapshots` (null: keep the ones already stored);
+    /// nothing to keep removes its file. Returns success.
+    [[nodiscard]] bool write(const QString& photo, const QString& fingerprint, const pfx::Settings& settings,
+                             const std::vector<pfx::BatchStep>* snapshots = nullptr) const;
 
     /// The default folder: <AppDataLocation>/edits.
     [[nodiscard]] static QString defaultFolder();

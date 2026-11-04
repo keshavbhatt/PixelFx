@@ -64,14 +64,25 @@ std::optional<pfx::Settings> SidecarStore::read(const QString& fingerprint) cons
     return doc.value().settings;
 }
 
-bool SidecarStore::write(const QString& photo, const QString& fingerprint,
-                         const pfx::Settings& settings) const
+std::vector<pfx::BatchStep> SidecarStore::readSnapshots(const QString& fingerprint) const
+{
+    const QString path = pathFor(fingerprint);
+    if (fingerprint.isEmpty() || !QFileInfo::exists(path)) {
+        return {};
+    }
+    const auto doc = pfx::loadDocument(path.toStdString());
+    return doc ? doc.value().snapshots : std::vector<pfx::BatchStep>{};
+}
+
+bool SidecarStore::write(const QString& photo, const QString& fingerprint, const pfx::Settings& settings,
+                         const std::vector<pfx::BatchStep>* snapshots) const
 {
     if (fingerprint.isEmpty()) {
         return false;
     }
     const QString path = pathFor(fingerprint);
-    if (settings.isEmpty()) {
+    const std::vector<pfx::BatchStep> kept = snapshots != nullptr ? *snapshots : readSnapshots(fingerprint);
+    if (settings.isEmpty() && kept.empty()) {
         return !QFileInfo::exists(path) || QFile::remove(path);
     }
     if (!QDir().mkpath(m_folder)) {
@@ -83,6 +94,7 @@ bool SidecarStore::write(const QString& photo, const QString& fingerprint,
     doc.sourceSize = static_cast<std::uint64_t>(QFileInfo(photo).size());
     doc.sourceFingerprint = fingerprint.toStdString();
     doc.settings = settings;
+    doc.snapshots = kept;
     QSaveFile file(path); // written in full or not at all
     if (!file.open(QIODevice::WriteOnly)) {
         return false;
