@@ -77,6 +77,13 @@
   nothing. Before and after now uses an original with the same geometry, so the halves line up.
   Not yet: the straighten dial under the photo, the level line, Auto straighten, Custom ratio
   and Perspective (the library has no perspective op yet). 19 app suites pass.
+- 2026-11-05: dev libvips reads HEIC, AVIF, JPEG XL and camera RAW (ADR-008 update):
+  `build-deps.sh` builds libheif 1.23.7 (libde265 1.1.3, dav1d 1.5.4), libjxl 0.12.0 (highway
+  1.4.0) and LibRaw 0.22.3 against the SDK overlay, about 2.5 minutes from scratch on 14 cores;
+  a stamp of all pins rebuilds the prefix when one changes. Checked against the runtime:
+  `heifload`, `jxlload`, `jxlsave` and `dcrawload` present; a host-made HEIC, 8 and 10-bit AVIF,
+  a JPEG XL written by the dev libvips and a synthetic DNG all decode to the expected values.
+  No AVIF or HEIC writing (no encoders). 19 app suites pass.
 
 ### 2026-11-04 (M2)
 

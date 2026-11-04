@@ -214,3 +214,17 @@ M3 as snap parts and the same overlay. The snap itself builds libvips as a part 
 pinned source on core24 (M7). CI on Ubuntu, Windows (vcpkg) and macOS (Homebrew) uses each
 platform's own libvips (PLAN D19).
 
+**Update (2026-11-05).** `build-deps.sh` now also builds, pinned and SHA-256 checked, the codecs
+the SDK has no development files for, so dev libvips reads HEIC, AVIF, JPEG XL and camera RAW:
+libheif 1.23.7 with libde265 1.1.3 (HEVC) and dav1d 1.5.4 (AV1) built in, no plugin loading
+and no encoders (no x265, ADR-003; no AV1 encoder, so AVIF is read-only in dev builds); libjxl
+0.12.0 (decoder and encoder) with highway 1.4.0 and the SDK's brotli and lcms2; LibRaw 0.22.3
+with the SDK's libjpeg, zlib and lcms2, no OpenMP. highway, dav1d and libde265 are static and
+end up inside libjxl and libheif, so the runtime's older `libhwy.so.1` and `libdav1d.so.7` are
+not shadowed; the prefix's `libheif.so.1` (1.23.7) does shadow the runtime's 1.17.6, which is
+ABI compatible. The CMake projects search only the prefix, the overlay and the SDK
+(`CMAKE_FIND_ROOT_PATH`), never the host's `/usr`. dav1d uses its x86 assembly only when `nasm`
+is on the host (a build tool); without it the C paths decode the same pixels, more slowly. A
+stamp of all pinned versions in the prefix triggers a clean rebuild when any pin changes. The
+runtime's libjxl 0.7 is not used.
+
