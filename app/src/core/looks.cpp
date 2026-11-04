@@ -62,6 +62,9 @@ QString fileSafe(const QString& name)
 {
     QString s = name.trimmed();
     s.replace(QRegularExpression(u"[\\\\/:*?\"<>|\\x00-\\x1F]"_s), u"-"_s);
+    while (s.startsWith(u'.')) {
+        s.remove(0, 1); // a leading dot would hide the file from the list
+    }
     return s.isEmpty() ? u"Look"_s : s.left(80);
 }
 

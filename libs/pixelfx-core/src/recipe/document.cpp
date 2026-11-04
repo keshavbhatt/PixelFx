@@ -6,6 +6,7 @@
 
 #include <algorithm>
 #include <array>
+#include <cmath>
 #include <fstream>
 #include <nlohmann/json.hpp>
 #include <optional>
@@ -314,7 +315,7 @@ void readDomain(const Json& j, Lut& lut)
         }
         for (std::size_t c = 0; c < 3; ++c) {
             if ((*it)[c].is_number()) {
-                target->at(c) = (*it)[c].get<float>();
+                target->at(c) = static_cast<float>((*it)[c].get<double>()); // may be inf: checked below
             }
         }
     }
@@ -369,8 +370,18 @@ std::optional<Lut> lutFromJson(const std::string& name, const Json& j, ParseRepo
         return warn("size out of range");
     }
     readDomain(j, lut);
+    for (std::size_t c = 0; c < 3; ++c) {
+        // The same rule as a .cube: a finite domain whose top is above its bottom.
+        if (!std::isfinite(lut.domainMin.at(c)) || !std::isfinite(lut.domainMax.at(c)) ||
+            !(lut.domainMax.at(c) > lut.domainMin.at(c))) {
+            return warn("its domain is not a range");
+        }
+    }
     if (!readTable(stringField(j, "data"), lut)) {
         return warn("the data does not match its size");
+    }
+    if (!std::ranges::all_of(lut.table, [](float v) { return std::isfinite(v); })) {
+        return warn("the data holds values that are not numbers");
     }
     lut.title = stringField(j, "name");
     return lut;

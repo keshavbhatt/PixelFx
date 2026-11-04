@@ -37,6 +37,9 @@ QString fileSafe(const QString& name)
 {
     QString s = name.trimmed();
     s.replace(QRegularExpression(u"[\\\\/:*?\"<>|\\x00-\\x1F]"_s), u"-"_s);
+    while (s.startsWith(u'.')) {
+        s.remove(0, 1); // a leading dot would hide the file from the list
+    }
     return s.isEmpty() ? u"Watermark"_s : s.left(80);
 }
 
@@ -170,8 +173,10 @@ std::vector<QRectF> placements(const Watermark& w, const QSizeF& photo, const QS
     if (w.repeat) {
         // A grid over the photo's diagonal, so the turned grid still covers the corners.
         const double diagonal = std::hypot(photo.width(), photo.height());
-        const double stepX = mark.width() * 1.6;
-        const double stepY = mark.height() * 4.0;
+        // At least 1/40 of the diagonal apart: a sliver of a logo must not become millions of
+        // copies.
+        const double stepX = std::max(mark.width() * 1.6, diagonal / 40.0);
+        const double stepY = std::max(mark.height() * 4.0, diagonal / 40.0);
         std::vector<QRectF> out;
         const QPointF centre(photo.width() / 2, photo.height() / 2);
         const int columns = static_cast<int>(std::ceil(diagonal / stepX / 2)) + 1;
@@ -417,32 +422,46 @@ std::vector<WatermarkLibrary::Entry> WatermarkLibrary::entries() const
     return out;
 }
 
-QString WatermarkLibrary::save(const Watermark& w) const
+QString WatermarkLibrary::save(const Watermark& w, const QString& path) const
 {
     if (w.name.trimmed().isEmpty() || !QDir().mkpath(m_folder)) {
         return {};
     }
-    const QString base = m_folder + u'/' + fileSafe(w.name);
+    // A new watermark gets a file name of its own; an edited one keeps its file.
+    QString target = path;
+    if (target.isEmpty()) {
+        const QString base = m_folder + u'/' + fileSafe(w.name);
+        target = base + u".pfxwatermark"_s;
+        for (int n = 2; QFileInfo::exists(target); ++n) {
+            target = base + u"-%1.pfxwatermark"_s.arg(n);
+        }
+    }
     Watermark stored = w;
     stored.name = w.name.trimmed();
     if (w.kind == Watermark::Kind::Logo && !w.logo.isEmpty()) {
-        // Copied in under the watermark's name, so the original may move or go.
-        const QString logo = base + u'.' + QFileInfo(w.logo).suffix().toLower();
+        // Copied in beside the file, so the original may move or go; written to a new name
+        // first, so a failed copy never loses the logo there was.
+        const QString logo = QFileInfo(target).absolutePath() + u'/' + QFileInfo(target).completeBaseName() +
+                             u'.' + QFileInfo(w.logo).suffix().toLower();
         if (QFileInfo(w.logo).absoluteFilePath() != QFileInfo(logo).absoluteFilePath()) {
+            const QString fresh = logo + u".new"_s;
+            QFile::remove(fresh);
+            if (!QFile::copy(w.logo, fresh)) {
+                return {};
+            }
             QFile::remove(logo);
-            if (!QFile::copy(w.logo, logo)) {
+            if (!QFile::rename(fresh, logo)) {
                 return {};
             }
         }
         stored.logo = logo;
     }
-    const QString path = base + u".pfxwatermark"_s;
-    QSaveFile file(path);
+    QSaveFile file(target);
     if (!file.open(QIODevice::WriteOnly)) {
         return {};
     }
     file.write(watermarkToJson(stored));
-    return file.commit() ? path : QString();
+    return file.commit() ? target : QString();
 }
 
 bool WatermarkLibrary::remove(const QString& path) const

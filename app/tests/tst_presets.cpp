@@ -30,6 +30,10 @@ private Q_SLOTS:
         other.set("look.id", std::string("builtin:warm"));
         const pfx::Settings applied = pixelfx::core::applyPreset(other, preset);
         QCOMPARE(applied.text("look.id", ""), std::string("builtin:noir"));
+        // A preset from a photo without a look takes the look off, as other units reset theirs.
+        const pfx::Settings noLook = pixelfx::core::presetFrom(pfx::Settings{}, {u"look"_s});
+        QVERIFY(pixelfx::core::unitsIn(noLook).contains(u"look"_s));
+        QVERIFY(pixelfx::core::applyPreset(other, noLook).text("look.id", "").empty());
     }
 
     void unitsSplitWhiteBalanceAndPerspective()

@@ -692,7 +692,7 @@ bool WatermarkSheet::useWatermark()
             m_mark.name = u"%1 %2"_s.arg(base).arg(n);
         }
     }
-    m_path = m_library.save(m_mark);
+    m_path = m_library.save(m_mark, m_path);
     if (m_path.isEmpty()) {
         return false;
     }

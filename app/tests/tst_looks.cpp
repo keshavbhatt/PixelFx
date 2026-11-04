@@ -1,6 +1,7 @@
 #include "core/looks.h"
 
 #include <QFile>
+#include <QFileInfo>
 #include <QSet>
 #include <QTemporaryDir>
 #include <QTest>
@@ -78,6 +79,11 @@ private Q_SLOTS:
         white.fill(1.0F, 1.0F, 1.0F);
         const auto out = pixelfx::core::renderPhoto(white, pixelfx::core::withLook({}, id, 100));
         QVERIFY(out.value().pixel(1, 1)[0] < 0.01F);
+        // A name with a leading dot is saved where the list can see it.
+        QString saved;
+        QVERIFY(!library.save(u".hidden"_s, *entries.front().look, {}, &saved).isEmpty());
+        QVERIFY(!QFileInfo(saved).fileName().startsWith(u'.'));
+        QVERIFY(QFile::remove(saved));
         QVERIFY(library.remove(entries.front().path));
         QVERIFY(pixelfx::core::findLook(id) == nullptr);
         QVERIFY(library.importLut(dir.filePath(u"nothing.cube"_s), &error).isEmpty());

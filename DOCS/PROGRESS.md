@@ -258,6 +258,14 @@ Decisions the work stopped at; everything else went ahead within the approved mo
   files in the looks folder; an edited look re-renders the photo. Differences from the mock:
   Preview on Portrait and Landscape wait for test photos PixelFx can ship; the category list has
   no "Mine" (the user's looks are Mine already). 29 app suites pass.
+- A review of the night's changes (a second reader, then checked by hand) found seven bugs, all
+  fixed with tests: a look file's LUT with an empty or endless domain, or non-numbers, now is
+  left out (it made every pixel NaN); exported looks had no id and never listed; names with a
+  leading dot saved hidden files; saving a watermark could replace another of a similar name
+  and lose its logo on a failed copy; a preset's Look unit from a photo without a look did not
+  take a look off; a look tile was deleted while its own menu was running; a repeated
+  watermark of a sliver of a logo could ask for millions of copies. App suites and library
+  tests also ran clean under ASan and UBSan (29 and 104).
 
 ### 2026-11-04 (M2)
 

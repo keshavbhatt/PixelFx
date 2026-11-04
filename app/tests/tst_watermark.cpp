@@ -152,6 +152,35 @@ private Q_SLOTS:
         QVERIFY(!QFile::exists(entries.front().watermark.logo));
     }
 
+    void savingNeverReplacesAnotherWatermark()
+    {
+        QTemporaryDir dir;
+        const pixelfx::core::WatermarkLibrary library(dir.path());
+        Watermark a;
+        a.name = u"A-B"_s;
+        Watermark b;
+        b.name = u"A/B"_s; // the same file name once made safe
+        const QString first = library.save(a);
+        const QString second = library.save(b);
+        QVERIFY(!first.isEmpty() && !second.isEmpty() && first != second);
+        QCOMPARE(library.entries().size(), std::size_t{2});
+        // Editing saves into its own file; a name with a leading dot stays visible.
+        b.text = u"changed"_s;
+        QCOMPARE(library.save(b, second), second);
+        Watermark hidden;
+        hidden.name = u".secret"_s;
+        QVERIFY(!library.save(hidden).isEmpty());
+        QCOMPARE(library.entries().size(), std::size_t{3});
+    }
+
+    void aSliverOfALogoDoesNotRepeatForever()
+    {
+        Watermark w;
+        w.repeat = true;
+        const auto grid = pixelfx::core::placements(w, QSizeF(6000, 4000), QSizeF(0.0075, 30));
+        QVERIFY(grid.size() < 10000);
+    }
+
     void badFilesAreRefusedOrClamped()
     {
         QVERIFY(!pixelfx::core::watermarkFromJson("not json"));

@@ -113,9 +113,9 @@ public:
     };
     /// Sorted by name.
     [[nodiscard]] std::vector<Entry> entries() const;
-    /// Saves under the watermark's name, replacing one with the same name; copies an outside
-    /// logo in. The path, or empty on failure.
-    [[nodiscard]] QString save(const Watermark& w) const;
+    /// Saves the watermark: into `path` when given (editing a saved one), otherwise a new file
+    /// named after it that replaces nothing; copies an outside logo in. The path, or empty.
+    [[nodiscard]] QString save(const Watermark& w, const QString& path = {}) const;
     [[nodiscard]] static std::optional<Watermark> load(const QString& path);
     [[nodiscard]] bool remove(const QString& path) const;
 

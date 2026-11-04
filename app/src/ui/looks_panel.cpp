@@ -376,14 +376,22 @@ void LooksPanel::addSection(const QString& title, QWidget* extra, const std::vec
 
 void LooksPanel::rebuild()
 {
+    // Later, not now: a tile may be the one whose menu or click led here.
+    const auto retire = [](QWidget* w) {
+        if (w != nullptr) {
+            w->hide();
+            w->setParent(nullptr);
+            w->deleteLater();
+        }
+    };
     while (QLayoutItem* item = m_list->takeAt(0)) {
         if (QLayout* layout = item->layout()) {
             while (const QLayoutItem* inner = layout->takeAt(0)) {
-                delete inner->widget();
+                retire(inner->widget());
                 delete inner;
             }
         }
-        delete item->widget();
+        retire(item->widget());
         delete item;
     }
     std::vector<int> mine;

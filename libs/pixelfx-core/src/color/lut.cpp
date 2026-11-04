@@ -181,7 +181,8 @@ std::array<float, 3> Lut::lookup(float r, float g, float b) const
     const auto last = static_cast<float>(size - 1);
     for (std::size_t c = 0; c < 3; ++c) {
         const float span = domainMax.at(c) - domainMin.at(c);
-        in.at(c) = std::clamp((in.at(c) - domainMin.at(c)) / span, 0.0F, 1.0F) * last;
+        const float t = (in.at(c) - domainMin.at(c)) / span;
+        in.at(c) = (std::isnan(t) ? 0.0F : std::clamp(t, 0.0F, 1.0F)) * last; // NaN must not reach a cast
     }
     return kind == Kind::OneD ? lookup1d(*this, in) : lookup3d(*this, in);
 }

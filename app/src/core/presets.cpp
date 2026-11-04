@@ -82,6 +82,9 @@ QString fileSafe(const QString& name)
 {
     QString s = name.trimmed();
     s.replace(QRegularExpression(u"[\\\\/:*?\"<>|\\x00-\\x1F]"_s), u"-"_s);
+    while (s.startsWith(u'.')) {
+        s.remove(0, 1); // a leading dot would hide the file from the list
+    }
     return s.isEmpty() ? u"Preset"_s : s.left(80);
 }
 
@@ -119,6 +122,9 @@ QStringList unitsIn(const pfx::Settings& settings)
 
 int changedCount(const pfx::Settings& settings, const QString& unitId)
 {
+    if (unitId == u"look"_s) {
+        return settings.text("look.id", "").empty() ? 0 : 1; // a look, or none
+    }
     const UnitRule* rule = ruleFor(unitId);
     if (rule == nullptr) {
         return 0;
@@ -174,12 +180,10 @@ pfx::Settings presetFrom(const pfx::Settings& settings, const QStringList& units
         }
         const bool any = addUnit(out, settings, *rule);
         if (id == u"look"_s) {
-            // Not registry settings: the look's id and strength, when the photo has a look.
-            for (const char* key : {"look.id", "look.strength"}) {
-                if (const pfx::Value* v = settings.find(key)) {
-                    out.set(key, *v);
-                }
-            }
+            // Not registry settings: the look's id and strength. No look is stored as an empty
+            // id, so applying the preset takes a photo's look off, as other units reset theirs.
+            out.set("look.id", settings.text("look.id", ""));
+            out.set("look.strength", settings.number("look.strength", 100.0));
         }
         if (!any && id == u"curves"_s) {
             out.set("curves.rgb", pfx::Curve{{0, 0}, {1, 1}}); // an included, straight curve

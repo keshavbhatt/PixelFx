@@ -199,3 +199,28 @@ TEST_CASE("baking keeps the colour-only steps, names the rest, and reads back as
     CHECK(back.value().size == 17);
     CHECK(back.value().table[100] == doctest::Approx(baked.lut.table[100]).epsilon(1e-5));
 }
+
+TEST_CASE("a look's LUT with an empty or endless domain, or non-numbers, is left out")
+{
+    const std::string zeros =
+        "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"; // 48 bytes of 0
+    for (const std::string& domain : {std::string(R"("domainMin":[0,0,0],"domainMax":[0,0,0],)"),
+                                      std::string(R"("domainMin":[0,0,0],"domainMax":[1e300,1,1],)")}) {
+        const std::string text =
+            R"({"format":"pixelfx","kind":"look","version":1,"body":{"resources":{"x":{"type":"lut3d","size":2,)" +
+            domain + R"("domain":"srgb-gamma","encoding":"f16-base64","data":")" + zeros + R"("}}}})";
+        pfx::ParseReport report;
+        const auto doc = pfx::parseDocument(text, &report);
+        REQUIRE(doc.ok());
+        CHECK(doc.value().look.resources.empty());
+    }
+    // Half-float infinity (0x7C00) in the table.
+    std::vector<std::uint8_t> bytes(48, 0);
+    bytes[1] = 0x7C;
+    const std::string text =
+        R"({"format":"pixelfx","kind":"look","version":1,"body":{"resources":{"x":{"type":"lut3d","size":2,"domain":"srgb-gamma","encoding":"f16-base64","data":")" +
+        pfx::detail::base64Encode(bytes) + R"("}}}})";
+    const auto doc = pfx::parseDocument(text);
+    REQUIRE(doc.ok());
+    CHECK(doc.value().look.resources.empty());
+}

@@ -21,6 +21,7 @@
 #include <QScrollArea>
 #include <QSlider>
 #include <QTimer>
+#include <QUuid>
 #include <QVBoxLayout>
 #include <QtConcurrent/QtConcurrentRun>
 
@@ -620,10 +621,14 @@ void LookEditor::exportLook()
     }
     pfx::Document doc;
     doc.kind = pfx::DocumentKind::Look;
+    // An id of its own, so the file opens as a look wherever it is imported.
+    doc.id = QUuid::createUuid().toString(QUuid::WithoutBraces).toStdString();
     doc.name = m_name->text().trimmed().toStdString();
     doc.look = m_look;
     doc.look.category = m_category->currentData().toString().toStdString();
-    (void)pfx::saveDocument(doc, target.toStdString());
+    if (!pfx::saveDocument(doc, target.toStdString()).ok()) {
+        m_paramsTitle->setText(tr("The look could not be exported.").toUpper());
+    }
 }
 
 void LookEditor::bakeCube()
