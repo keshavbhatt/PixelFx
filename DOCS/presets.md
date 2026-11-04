@@ -80,33 +80,48 @@ internal units, so a file reads like the panel.
   "category": "color",
   "defaultStrength": 80,
   "steps": [
-    { "op": "tone_curve",   "v": 1, "enabled": true,  "params": { "rgb": [[0,0.04],[0.5,0.48],[1,0.97]] } },
-    { "op": "split_tone",   "v": 1, "enabled": true,  "params": { "shadowHue": 200, "highlightHue": 35, "balance": 10, "amount": 30 } },
-    { "op": "hsl",          "v": 1, "enabled": true,  "params": { "saturation": { "green": -30 }, "hue": { "blue": -10 } } },
-    { "op": "lut3d",        "v": 1, "enabled": true,  "params": { "resource": "portra", "mix": 60 } },
-    { "op": "grain",        "v": 1, "enabled": false, "params": { "amount": 18, "size": 2 } },
-    { "op": "vignette",     "v": 1, "enabled": true,  "params": { "amount": -15, "midpoint": 50 } }
+    { "op": "curves",    "v": 1, "enabled": true,  "params": { "rgb": [[0,0.04],[0.5,0.48],[1,0.97]] } },
+    { "op": "grading",   "v": 1, "enabled": true,  "params": { "shadows": { "hue": 200, "amount": 20 }, "highlights": { "hue": 35, "amount": 15 }, "balance": 10 } },
+    { "op": "mixer",     "v": 1, "enabled": true,  "params": { "saturation": { "green": -30 }, "hue": { "blue": -10 } } },
+    { "op": "lut",       "v": 1, "enabled": true,  "params": { "resource": "portra", "mix": 60 } },
+    { "op": "grain",     "v": 1, "enabled": false, "params": { "grain": { "amount": 18, "size": 2 } } },
+    { "op": "vignette",  "v": 1, "enabled": true,  "params": { "vignette": { "amount": -15, "midpoint": 50 } } }
   ],
   "resources": {
-    "portra": { "type": "lut3d", "size": 33, "domain": "srgb-gamma", "interpolation": "tetrahedral", "encoding": "f16-base64",
-                "name": "kodak-portra.cube", "sha256": "...", "data": "..." }
+    "portra": { "type": "lut3d", "size": 33, "domain": "srgb-gamma", "domainMin": [0,0,0], "domainMax": [1,1,1],
+                "interpolation": "tetrahedral", "encoding": "f16-base64", "name": "kodak-portra", "data": "..." }
   }
 }
 ```
 
-- `op` names an operation in the registry; `v` is that operation's parameter version (each
-  operation migrates its own params). An unknown `op` makes the look load with that step
-  disabled and a warning, never fail as a whole.
-- Steps run top to bottom on the image as it is after the photo's own Light, Color and Detail
-  settings (the look position in section 5). `strength` blends the look's result with its
-  input in linear light: 0 is no change, 100 is the full look.
-- LUTs are embedded, so a `.pfxlook` is one self-contained file. `domain` (the encoding the
-  LUT expects as input) is mandatory, because a LUT applied in the wrong encoding is the
-  commonest LUT bug; `sha256` detects corruption and deduplicates imports.
-- Each step may later carry `"mask"` (local adjustments, FEATURES E19); the key is reserved. Imported `.cube` (1D and 3D,
-  `DOMAIN_MIN` / `DOMAIN_MAX` honoured) and HaldCLUT PNG become `lut1d` / `lut3d` resources.
+- `op` is an operation id of the registry (`pfx ops` lists them), or `lut`. `params` are that
+  operation's settings written under its group, as in section 2 without the group's own name
+  (`exposure` reads `{"exposure": 0.5}` for `light.exposure`; `vignette` reads
+  `{"vignette": {...}}` for `effects.vignette.*`); values are clamped to the registry's ranges
+  on load. A `lut` step names a resource and a `mix` from 0 to 100. `geometry` is never a look
+  step. `v` is the operation's parameter version (each operation migrates its own params).
+- An unknown `op` is kept as it is (a newer PixelFx may know it), reported, and skipped when
+  rendering; the look never fails to load as a whole for it.
+- Steps run top to bottom on the image as it is after the photo's own settings up to colour
+  grading (the look position in section 5). `strength` blends the look's result with its input
+  in linear light: 0 is no change, 100 is the full look.
+- LUTs are embedded, so a `.pfxlook` is one self-contained file: `type` `lut3d` or `lut1d`,
+  `size` (entries per edge, 2 to 256; 1D up to 65536), the domain the `.cube` declared, and the
+  table as little-endian IEEE half floats in base64, R, G, B per entry, red fastest. `domain` is
+  the encoding the LUT expects as input and is mandatory, because a LUT applied in the wrong
+  encoding is the commonest LUT bug; version 1 reads `srgb-gamma` (sRGB primaries and curve),
+  and a resource in any other domain, or whose data does not match its size, is left out with a
+  warning (the steps using it are skipped). A `sha256` key is reserved for checking and
+  deduplicating imports; version 1 ignores it and does not write it.
+- Imported `.cube` (1D and 3D, `DOMAIN_MIN` / `DOMAIN_MAX` and `LUT_3D_INPUT_RANGE` honoured)
+  and HaldCLUT pictures become `lut1d` / `lut3d` resources.
+- Each step may later carry `"mask"` (local adjustments, FEATURES E19); the key is reserved.
 - "Bake to .cube" evaluates the colour-only steps (those the registry marks `pointwise`) on a
   33-point grid; spatial steps (grain, vignette, clarity) are listed as left out.
+- History: the M0 draft named example steps (`tone_curve`, `split_tone`, `hsl`) that never
+  existed in the registry and left the params' shape open. No look file was written before
+  libpixelfx read and wrote looks (2026-11-05), so this text is version 1 itself, not a change
+  to it.
 
 ## 4. Recipe (sidecar) and batch bodies
 

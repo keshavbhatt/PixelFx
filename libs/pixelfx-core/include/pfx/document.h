@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 #pragma once
 
+#include "pfx/look.h"
 #include "pfx/result.h"
 #include "pfx/settings.h"
 
@@ -48,8 +49,8 @@ struct BatchBody
     bool operator==(const BatchBody&) const = default;
 };
 
-// The JSON envelope shared by every PixelFx file (DOCS/presets.md section 1). This version
-// reads and writes recipe, preset and batch bodies; look bodies arrive with M4.
+// The JSON envelope shared by every PixelFx file (DOCS/presets.md section 1): recipe, preset,
+// look and batch bodies.
 struct Document
 {
     DocumentKind kind = DocumentKind::Preset;
@@ -68,6 +69,7 @@ struct Document
     std::uint64_t sourceSize = 0;
     std::string sourceFingerprint;
     BatchBody batch; // batch documents only
+    Look look;       // look documents only
     // Recipe documents: named states of the edit the user kept (History, Save snapshot).
     std::vector<BatchStep> snapshots;
     // Keys this version does not know, kept as JSON text and written back unchanged.

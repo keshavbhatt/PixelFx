@@ -83,9 +83,9 @@ TEST_CASE("documents from a newer PixelFx, other formats and broken JSON are ref
     CHECK_FALSE(pfx::parseDocument(R"({"format":"other","kind":"preset","version":1})").ok());
     CHECK_FALSE(pfx::parseDocument("{not json").ok());
     CHECK_FALSE(pfx::parseDocument(R"({"format":"pixelfx","kind":"teapot","version":1})").ok());
-    const auto look = pfx::parseDocument(R"({"format":"pixelfx","kind":"look","version":1})");
+    const auto look = pfx::parseDocument(R"({"format":"pixelfx","kind":"look","version":2})");
     REQUIRE_FALSE(look.ok());
-    CHECK(look.error().code == pfx::ErrorCode::Unsupported);
+    CHECK(look.error().code == pfx::ErrorCode::NewerVersion);
 }
 
 TEST_CASE("presets keep only the ticked groups and overlay onto a photo's settings")

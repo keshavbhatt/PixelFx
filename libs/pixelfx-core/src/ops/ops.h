@@ -55,6 +55,10 @@ void grainApply(Image& image, const Settings& s, const OpContext& ctx);
 bool fadeActive(const Settings& s);
 void fadeApply(Image& image, const Settings& s, const OpContext& ctx);
 
+// Runs one operation by its registry id on the image with `settings` (a look step), when they
+// are not its identity. False for an id with no implementation.
+bool applyOperation(std::string_view id, Image& image, const Settings& settings, const OpContext& ctx);
+
 // Ids of every implemented operation, in pipeline order (checked against the registry by tests).
 [[nodiscard]] std::vector<std::string_view> implementedOpIds();
 

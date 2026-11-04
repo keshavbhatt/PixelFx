@@ -2,6 +2,7 @@
 #include "pfx/document.h"
 
 #include "pfx/registry.h"
+#include "recipe/encoding.h"
 
 #include <algorithm>
 #include <array>
@@ -167,9 +168,6 @@ std::optional<Error> readEnvelope(const Json& json, Document& doc)
         return parseError("Unknown document kind \"" + kind + "\".");
     }
     doc.kind = kindIt->first;
-    if (doc.kind == DocumentKind::Look) {
-        return Error{ErrorCode::Unsupported, "Looks are not supported by this version yet."};
-    }
     const auto versionIt = json.find("version");
     if (versionIt == json.end() || !versionIt->is_number_integer()) {
         return parseError("The document has no version.");
@@ -305,6 +303,191 @@ Json batchToJson(const BatchBody& batch, Json body)
     return body;
 }
 
+// DOMAIN_MIN and DOMAIN_MAX as the .cube had them; absent means 0 to 1.
+void readDomain(const Json& j, Lut& lut)
+{
+    for (const auto& [key, target] :
+         {std::pair{"domainMin", &lut.domainMin}, std::pair{"domainMax", &lut.domainMax}}) {
+        const auto it = j.find(key);
+        if (it == j.end() || !it->is_array() || it->size() != 3) {
+            continue;
+        }
+        for (std::size_t c = 0; c < 3; ++c) {
+            if ((*it)[c].is_number()) {
+                target->at(c) = (*it)[c].get<float>();
+            }
+        }
+    }
+}
+
+// The table from base64 half floats, little-endian; false when the count is not the size's.
+bool readTable(const std::string& data, Lut& lut)
+{
+    const auto n = static_cast<std::size_t>(lut.size);
+    const std::size_t entries = (lut.kind == Lut::Kind::ThreeD ? n * n * n : n) * 3;
+    const auto bytes = detail::base64Decode(data);
+    if (!bytes || bytes->size() != entries * 2) {
+        return false;
+    }
+    lut.table.resize(entries);
+    for (std::size_t i = 0; i < entries; ++i) {
+        const auto low = static_cast<std::uint32_t>((*bytes)[2 * i]);
+        const auto high = static_cast<std::uint32_t>((*bytes)[(2 * i) + 1]);
+        lut.table[i] = detail::fromHalf(static_cast<std::uint16_t>(low | (high << 8U)));
+    }
+    return true;
+}
+
+// A look's LUT resource: half floats in base64, in the sRGB encoding (presets.md section 3).
+std::optional<Lut> lutFromJson(const std::string& name, const Json& j, ParseReport* report)
+{
+    const auto warn = [&](const std::string& why) {
+        if (report != nullptr) {
+            report->warnings.push_back("Left out the LUT \"" + name + "\": " + why);
+        }
+        return std::nullopt;
+    };
+    if (!j.is_object()) {
+        return warn("not an object");
+    }
+    const std::string type = stringField(j, "type");
+    if (type != "lut3d" && type != "lut1d") {
+        return warn("unknown type");
+    }
+    if (const std::string domain = stringField(j, "domain"); domain != "srgb-gamma") {
+        return warn("unsupported domain \"" + domain + "\"");
+    }
+    if (stringField(j, "encoding") != "f16-base64") {
+        return warn("unsupported encoding");
+    }
+    Lut lut;
+    lut.kind = type == "lut3d" ? Lut::Kind::ThreeD : Lut::Kind::OneD;
+    const auto sizeIt = j.find("size");
+    lut.size = sizeIt != j.end() && sizeIt->is_number_integer() ? sizeIt->get<int>() : 0;
+    const int limit = lut.kind == Lut::Kind::ThreeD ? 256 : 65536;
+    if (lut.size < 2 || lut.size > limit) {
+        return warn("size out of range");
+    }
+    readDomain(j, lut);
+    if (!readTable(stringField(j, "data"), lut)) {
+        return warn("the data does not match its size");
+    }
+    lut.title = stringField(j, "name");
+    return lut;
+}
+
+Json lutToJson(const Lut& lut)
+{
+    std::vector<std::uint8_t> bytes;
+    bytes.reserve(lut.table.size() * 2);
+    for (const float v : lut.table) {
+        const std::uint16_t half = detail::toHalf(v);
+        bytes.push_back(static_cast<std::uint8_t>(half & 0xFFU));
+        bytes.push_back(static_cast<std::uint8_t>(half >> 8U));
+    }
+    return Json{{"type", lut.kind == Lut::Kind::ThreeD ? "lut3d" : "lut1d"},
+                {"size", lut.size},
+                {"domain", "srgb-gamma"},
+                {"domainMin", lut.domainMin},
+                {"domainMax", lut.domainMax},
+                {"interpolation", lut.kind == Lut::Kind::ThreeD ? "tetrahedral" : "linear"},
+                {"encoding", "f16-base64"},
+                {"name", lut.title},
+                {"data", detail::base64Encode(bytes)}};
+}
+
+// The group a step's params are written under: the registry operation's own group; LUT steps
+// and unknown operations keep their params as they are.
+std::string stepGroup(const std::string& op)
+{
+    const OpSpec* spec = registry().op(op);
+    return spec != nullptr ? spec->group : std::string();
+}
+
+void readLookSteps(const Json& value, Look& look, ParseReport* report)
+{
+    for (const Json& j : value) {
+        if (!j.is_object()) {
+            continue;
+        }
+        LookStep step;
+        step.op = stringField(j, "op");
+        step.version = intField(j, "v", 1);
+        step.enabled = boolField(j, "enabled", true);
+        if (const auto params = j.find("params"); params != j.end() && params->is_object()) {
+            flatten(*params, stepGroup(step.op), step.params, report);
+        }
+        if (step.op != "lut" && registry().op(step.op) == nullptr && report != nullptr) {
+            // Kept for a newer PixelFx; this one skips it when rendering.
+            report->warnings.push_back("The look step \"" + step.op +
+                                       "\" is not known to this version and is skipped");
+        } else if (step.op != "lut") {
+            for (const std::string& line : registry().normalize(step.params)) {
+                if (report != nullptr) {
+                    report->warnings.push_back(line);
+                }
+            }
+        }
+        look.steps.push_back(std::move(step));
+    }
+}
+
+bool readLookField(const std::string& name, const Json& value, Look& look, ParseReport* report)
+{
+    if (name == "category" && value.is_string()) {
+        look.category = value.get<std::string>();
+    } else if (name == "defaultStrength" && value.is_number()) {
+        look.defaultStrength = std::clamp(static_cast<int>(value.get<double>()), 0, 100);
+    } else if (name == "steps" && value.is_array()) {
+        readLookSteps(value, look, report);
+    } else if (name == "resources" && value.is_object()) {
+        for (const auto& [key, resource] : value.items()) {
+            if (auto lut = lutFromJson(key, resource, report)) {
+                look.resources.emplace(key, std::move(*lut));
+            }
+        }
+    } else {
+        return false;
+    }
+    return true;
+}
+
+Json lookToJson(const Look& look, Json body)
+{
+    Json steps = Json::array();
+    for (const LookStep& step : look.steps) {
+        Json params = unflatten(step.params);
+        if (const std::string group = stepGroup(step.op); !group.empty()) {
+            params = params.contains(group) ? params[group] : Json::object();
+        }
+        steps.push_back(
+            {{"op", step.op}, {"v", step.version}, {"enabled", step.enabled}, {"params", params}});
+    }
+    Json resources = Json::object();
+    for (const auto& [key, lut] : look.resources) {
+        resources[key] = lutToJson(lut);
+    }
+    body["category"] = look.category;
+    body["defaultStrength"] = look.defaultStrength;
+    body["steps"] = steps;
+    body["resources"] = resources;
+    return body;
+}
+
+// A recipe's snapshots: named states of the edit.
+void readSnapshots(const Json& value, Document& doc, ParseReport* report)
+{
+    for (const Json& snapshot : value) {
+        BatchStep s;
+        s.name = stringField(snapshot, "name");
+        if (const auto settings = snapshot.find("settings"); settings != snapshot.end()) {
+            flatten(*settings, {}, s.settings, report);
+            dropValuesThatAreGroups(s.settings, report);
+        }
+        doc.snapshots.push_back(std::move(s));
+    }
+}
+
 void readBody(const Json& json, Document& doc, ParseReport* report)
 {
     const auto bodyIt = json.find("body");
@@ -316,18 +499,11 @@ void readBody(const Json& json, Document& doc, ParseReport* report)
         if (name == "settings" && value.is_object()) {
             flatten(value, {}, doc.settings, report);
             dropValuesThatAreGroups(doc.settings, report);
-        } else if (doc.kind == DocumentKind::Batch && readBatchField(name, value, doc.batch, report)) {
+        } else if ((doc.kind == DocumentKind::Batch && readBatchField(name, value, doc.batch, report)) ||
+                   (doc.kind == DocumentKind::Look && readLookField(name, value, doc.look, report))) {
             continue;
         } else if (doc.kind == DocumentKind::Recipe && name == "snapshots" && value.is_array()) {
-            for (const Json& snapshot : value) {
-                BatchStep s;
-                s.name = stringField(snapshot, "name");
-                if (const auto settings = snapshot.find("settings"); settings != snapshot.end()) {
-                    flatten(*settings, {}, s.settings, report);
-                    dropValuesThatAreGroups(s.settings, report);
-                }
-                doc.snapshots.push_back(std::move(s));
-            }
+            readSnapshots(value, doc, report);
         } else if (name == "source" && value.is_object() && doc.kind == DocumentKind::Recipe) {
             doc.sourceName = stringField(value, "name");
             doc.sourceFingerprint = stringField(value, "fingerprint");
@@ -412,6 +588,9 @@ std::string serializeDocument(const Document& document)
     if (document.kind == DocumentKind::Batch) {
         body = batchToJson(document.batch, body);
     }
+    if (document.kind == DocumentKind::Look) {
+        body = lookToJson(document.look, body);
+    }
     if (document.kind == DocumentKind::Recipe && !document.snapshots.empty()) {
         Json snapshots = Json::array();
         for (const BatchStep& snapshot : document.snapshots) {
@@ -419,7 +598,8 @@ std::string serializeDocument(const Document& document)
         }
         body["snapshots"] = snapshots;
     }
-    if (document.kind != DocumentKind::Batch || !document.settings.isEmpty()) {
+    if ((document.kind != DocumentKind::Batch && document.kind != DocumentKind::Look) ||
+        !document.settings.isEmpty()) {
         body["settings"] = unflatten(document.settings);
     }
     if (!document.unknownBody.empty()) {

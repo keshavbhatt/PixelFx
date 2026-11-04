@@ -48,6 +48,7 @@ add_library(pfx_core
     src/image/composite.cpp
     src/recipe/settings.cpp
     src/recipe/document.cpp
+    src/recipe/encoding.cpp
     src/recipe/xmp_import.cpp
     src/ops/registry.cpp
     src/ops/auto.cpp
@@ -63,6 +64,7 @@ add_library(pfx_core
     src/ops/grading.cpp
     src/ops/dehaze.cpp
     src/pipeline/pipeline.cpp
+    src/pipeline/look.cpp
     src/io/io.cpp
     src/io/metadata.cpp
 )

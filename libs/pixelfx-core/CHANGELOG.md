@@ -35,6 +35,10 @@ Semantic Versioning (the API may change before 1.0).
   domain), `lutFromHald` reads a HaldCLUT picture, `applyLut` applies one with tetrahedral
   interpolation and a mix. `pfx apply --lut FILE[:MIX]`.
 
+- Looks: `Look` and `applyLook` (registry steps and LUT steps, one strength blended in linear
+  light), `RenderOptions::look` and `lookStrength`, and look documents (`.pfxlook`) in
+  `parseDocument` and `serializeDocument` with their LUTs embedded.
+
 ### Added (tooling)
 
 - libFuzzer targets for the document parser, the image loader, the Exif reader and the `.cube`

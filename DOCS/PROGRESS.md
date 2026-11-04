@@ -192,6 +192,13 @@
   `pfx::applyLut` (tetrahedral, looked up in sRGB primaries and encoding as display LUTs expect,
   a mix in linear light), `pfx apply --lut FILE[:MIX]`. 0.22 s more for a 33-point cube on a
   24 MP photo (14 threads). A `.cube` fuzzer ran 10.8 million inputs clean. 96 library tests pass.
+- Looks in libpixelfx (M4 groundwork, no UI): `pfx::Look` (steps from the registry or `lut`,
+  LUT resources) and `pfx::applyLook` with a strength in linear light; `RenderOptions::look`
+  runs it after colour grading and before sharpening and the effects (presets.md section 5).
+  `.pfxlook` documents read and write (presets.md section 3, now written down exactly as version
+  1: params under the operation's group, LUTs as base64 half floats in the `srgb-gamma`
+  domain, unknown steps kept and skipped, bad resources left out with a warning). The document
+  fuzzer ran 2.2 million inputs with a look seed, clean. 102 library tests pass.
 
 ### 2026-11-04 (M2)
 

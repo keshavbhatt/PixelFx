@@ -11,6 +11,8 @@
 namespace pfx {
 namespace {
 
+constexpr int kLookStage = 100; // between grading (90) and sharpen (110)
+
 // Implementations in pipeline order; every id must be in the registry (checked by a test).
 constexpr std::array<detail::OpImpl, 15> kImpls = {{
     {"geometry", detail::geometryActive, detail::geometryApply},
@@ -48,9 +50,15 @@ Result<Image> render(Image&& input, const Settings& settings, const RenderOption
     }
     Image image = std::move(input);
     const detail::OpContext ctx{options.threads};
+    bool lookDone = options.look == nullptr;
     for (const OpSpec& spec : registry().ops()) {
         if (options.cancel != nullptr && options.cancel->load()) {
             return Error{ErrorCode::InvalidArgument, "Rendering was cancelled."};
+        }
+        // The look after colour grading, before sharpening and the effects (presets.md section 5).
+        if (!lookDone && spec.stage > kLookStage) {
+            applyLook(image, *options.look, options.lookStrength, options.threads);
+            lookDone = true;
         }
         for (const detail::OpImpl& impl : kImpls) {
             if (impl.id == spec.id && impl.active(checked)) {
@@ -58,12 +66,28 @@ Result<Image> render(Image&& input, const Settings& settings, const RenderOption
             }
         }
     }
+    if (!lookDone) {
+        applyLook(image, *options.look, options.lookStrength, options.threads);
+    }
     return image;
 }
 
 } // namespace pfx
 
 namespace pfx::detail {
+
+bool applyOperation(std::string_view id, Image& image, const Settings& settings, const OpContext& ctx)
+{
+    for (const OpImpl& impl : kImpls) {
+        if (impl.id == id) {
+            if (impl.active(settings)) {
+                impl.apply(image, settings, ctx);
+            }
+            return true;
+        }
+    }
+    return false;
+}
 
 std::vector<std::string_view> implementedOpIds()
 {
