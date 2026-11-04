@@ -151,3 +151,45 @@ TEST_CASE("names that would not read back are dropped with a reason")
     REQUIRE(again.ok());
     CHECK(again.value().settings == s);
 }
+
+TEST_CASE("batch recipes: the stack and the output round-trip")
+{
+    pfx::Document doc;
+    doc.kind = pfx::DocumentKind::Batch;
+    doc.name = "Web delivery";
+    pfx::BatchStep warm;
+    warm.name = "Warm";
+    warm.settings.set("color.wb.temperature", 15.0);
+    pfx::BatchStep crisp;
+    crisp.name = "Crisp";
+    crisp.settings.set("detail.clarity", 20.0);
+    doc.batch.stack = {warm, crisp};
+    doc.batch.autoFirst = true;
+    doc.batch.longEdge = 2048;
+    doc.batch.format = "webp";
+    doc.batch.quality = 80;
+    doc.batch.keepLocation = false;
+    doc.batch.folder = "/tmp/out";
+    doc.batch.name = "{name}-web";
+    doc.batch.ifExists = "skip";
+    const auto again = pfx::parseDocument(pfx::serializeDocument(doc));
+    REQUIRE(again.ok());
+    CHECK(again.value().kind == pfx::DocumentKind::Batch);
+    CHECK(again.value().batch == doc.batch);
+    CHECK(again.value().settings.isEmpty());
+}
+
+TEST_CASE("batch recipes: looks in the stack are skipped with a reason")
+{
+    const std::string text = R"({"format": "pixelfx", "kind": "batch", "version": 1, "name": "x",
+        "body": {"stack": [{"look": {"id": "builtin:golden-hour", "strength": 72}},
+                           {"preset": {"embedded": {"name": "P", "settings": {"light": {"exposure": 0.5}}}}}],
+                 "resize": {"mode": "longEdge", "value": 1600}}})";
+    pfx::ParseReport report;
+    const auto doc = pfx::parseDocument(text, &report);
+    REQUIRE(doc.ok());
+    REQUIRE(doc.value().batch.stack.size() == 1);
+    CHECK(doc.value().batch.stack.front().settings.number("light.exposure", 0) == 0.5);
+    CHECK(doc.value().batch.longEdge == 1600);
+    CHECK_FALSE(report.warnings.empty());
+}

@@ -38,6 +38,8 @@ Semantic Versioning (the API may change before 1.0).
   neighbouring bands and fading out toward grey.
 - Colour grading in the split-toning form: a shadow colour, a highlight colour, their amounts
   and a balance; lightness is kept and pure black and white stay neutral.
+- Batch recipes (`.pfxbatch`, DOCS/presets.md section 4): the stack of embedded presets, Auto
+  first, keep existing edits, resize and output are read and written (`Document::batch`).
 - Lightroom and Camera Raw presets (`.xmp`) read as PixelFx presets (`importXmpPreset`): light,
   white balance, colour, mixer, split toning and colour grading, curves, detail, vignette and
   grain mapped; everything else the preset changes is listed for the user.

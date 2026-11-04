@@ -167,9 +167,8 @@ std::optional<Error> readEnvelope(const Json& json, Document& doc)
         return parseError("Unknown document kind \"" + kind + "\".");
     }
     doc.kind = kindIt->first;
-    if (doc.kind == DocumentKind::Look || doc.kind == DocumentKind::Batch) {
-        return Error{ErrorCode::Unsupported,
-                     "Looks and batch recipes are not supported by this version yet."};
+    if (doc.kind == DocumentKind::Look) {
+        return Error{ErrorCode::Unsupported, "Looks are not supported by this version yet."};
     }
     const auto versionIt = json.find("version");
     if (versionIt == json.end() || !versionIt->is_number_integer()) {
@@ -203,6 +202,109 @@ std::optional<Error> readEnvelope(const Json& json, Document& doc)
     return std::nullopt;
 }
 
+bool boolField(const Json& json, const char* name, bool fallback)
+{
+    const auto it = json.find(name);
+    return it != json.end() && it->is_boolean() ? it->get<bool>() : fallback;
+}
+
+int intField(const Json& json, const char* name, int fallback)
+{
+    const auto it = json.find(name);
+    return it != json.end() && it->is_number() ? static_cast<int>(it->get<double>()) : fallback;
+}
+
+void readStack(const Json& value, BatchBody& batch, ParseReport* report)
+{
+    for (const Json& step : value) {
+        const auto preset = step.find("preset");
+        if (preset != step.end() && preset->is_object() && preset->contains("embedded")) {
+            const Json& embedded = (*preset)["embedded"];
+            BatchStep s;
+            s.name = stringField(embedded, "name");
+            if (const auto settings = embedded.find("settings"); settings != embedded.end()) {
+                flatten(*settings, {}, s.settings, report);
+                dropValuesThatAreGroups(s.settings, report);
+            }
+            batch.stack.push_back(std::move(s));
+        } else if (report != nullptr) {
+            report->warnings.emplace_back("Skipped a step of the stack: looks and preset references are not "
+                                          "supported by this version yet");
+        }
+    }
+}
+
+void readOutput(const Json& value, BatchBody& batch)
+{
+    if (const std::string format = stringField(value, "format"); !format.empty()) {
+        batch.format = format;
+    }
+    batch.quality = std::clamp(intField(value, "quality", batch.quality), 1, 100);
+    if (const auto metadata = value.find("metadata"); metadata != value.end() && metadata->is_object()) {
+        batch.keepCamera = boolField(*metadata, "camera", batch.keepCamera);
+        batch.keepLocation = boolField(*metadata, "location", batch.keepLocation);
+    }
+    batch.folder = stringField(value, "folder");
+    batch.beside = boolField(value, "beside", false);
+    if (const std::string pattern = stringField(value, "name"); !pattern.empty()) {
+        batch.name = pattern;
+    }
+    if (const std::string policy = stringField(value, "ifExists"); !policy.empty()) {
+        batch.ifExists = policy;
+    }
+}
+
+// One field of a batch body; false when the name is not a batch field (kept as unknown).
+bool readBatchField(const std::string& name, const Json& value, BatchBody& batch, ParseReport* report)
+{
+    if (name == "stack" && value.is_array()) {
+        readStack(value, batch, report);
+        return true;
+    }
+    if (name == "autoFirst") {
+        batch.autoFirst = value.is_boolean() && value.get<bool>();
+        return true;
+    }
+    if (name == "keepExistingEdits") {
+        batch.keepExistingEdits = !value.is_boolean() || value.get<bool>();
+        return true;
+    }
+    if (name == "resize" && value.is_object()) {
+        batch.longEdge =
+            stringField(value, "mode") == "longEdge" ? std::max(0, intField(value, "value", 0)) : 0;
+        return true;
+    }
+    if (name == "output" && value.is_object()) {
+        readOutput(value, batch);
+        return true;
+    }
+    return false;
+}
+
+Json batchToJson(const BatchBody& batch, Json body)
+{
+    Json stack = Json::array();
+    for (const BatchStep& step : batch.stack) {
+        stack.push_back(
+            {{"preset", {{"embedded", {{"name", step.name}, {"settings", unflatten(step.settings)}}}}}});
+    }
+    body["stack"] = stack;
+    body["autoFirst"] = batch.autoFirst;
+    body["keepExistingEdits"] = batch.keepExistingEdits;
+    body["resize"] = batch.longEdge > 0
+                         ? Json{{"mode", "longEdge"}, {"value", batch.longEdge}, {"noEnlarge", true}}
+                         : Json{{"mode", "none"}};
+    body["output"] = {{"format", batch.format},
+                      {"quality", batch.quality},
+                      {"colorSpace", "srgb"},
+                      {"metadata", {{"camera", batch.keepCamera}, {"location", batch.keepLocation}}},
+                      {"folder", batch.folder},
+                      {"beside", batch.beside},
+                      {"name", batch.name},
+                      {"ifExists", batch.ifExists}};
+    return body;
+}
+
 void readBody(const Json& json, Document& doc, ParseReport* report)
 {
     const auto bodyIt = json.find("body");
@@ -214,6 +316,8 @@ void readBody(const Json& json, Document& doc, ParseReport* report)
         if (name == "settings" && value.is_object()) {
             flatten(value, {}, doc.settings, report);
             dropValuesThatAreGroups(doc.settings, report);
+        } else if (doc.kind == DocumentKind::Batch && readBatchField(name, value, doc.batch, report)) {
+            continue;
         } else if (name == "source" && value.is_object() && doc.kind == DocumentKind::Recipe) {
             doc.sourceName = stringField(value, "name");
             doc.sourceFingerprint = stringField(value, "fingerprint");
@@ -295,7 +399,12 @@ std::string serializeDocument(const Document& document)
                               {"size", document.sourceSize},
                               {"fingerprint", document.sourceFingerprint}};
     }
-    body["settings"] = unflatten(document.settings);
+    if (document.kind == DocumentKind::Batch) {
+        body = batchToJson(document.batch, body);
+    }
+    if (document.kind != DocumentKind::Batch || !document.settings.isEmpty()) {
+        body["settings"] = unflatten(document.settings);
+    }
     if (!document.unknownBody.empty()) {
         const Json extra = Json::parse(document.unknownBody);
         for (const auto& [name, value] : extra.items()) {

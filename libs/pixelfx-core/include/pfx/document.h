@@ -22,8 +22,34 @@ enum class DocumentKind
 
 inline constexpr int kDocumentVersion = 1;
 
+// A batch recipe's body (DOCS/presets.md section 4): presets applied in order onto each photo,
+// then how the photos are written. Looks in the stack arrive with looks.
+struct BatchStep
+{
+    std::string name;
+    Settings settings;
+    bool operator==(const BatchStep&) const = default;
+};
+
+struct BatchBody
+{
+    std::vector<BatchStep> stack;
+    bool autoFirst = false;
+    bool keepExistingEdits = true;
+    int longEdge = 0;            // 0: original size; never enlarges
+    std::string format = "jpeg"; // jpeg, png, tiff, webp, avif, heic, jxl
+    int quality = 90;
+    bool keepCamera = true;
+    bool keepLocation = false;
+    std::string folder;
+    bool beside = false; // a folder next to each original instead of `folder`
+    std::string name = "{name}-edit";
+    std::string ifExists = "number"; // number, overwrite, skip
+    bool operator==(const BatchBody&) const = default;
+};
+
 // The JSON envelope shared by every PixelFx file (DOCS/presets.md section 1). This version
-// reads and writes recipe and preset bodies; look and batch bodies arrive with M4 and M5.
+// reads and writes recipe, preset and batch bodies; look bodies arrive with M4.
 struct Document
 {
     DocumentKind kind = DocumentKind::Preset;
@@ -41,6 +67,7 @@ struct Document
     std::string sourceName;
     std::uint64_t sourceSize = 0;
     std::string sourceFingerprint;
+    BatchBody batch; // batch documents only
     // Keys this version does not know, kept as JSON text and written back unchanged.
     std::string unknownTopLevel;
     std::string unknownBody;
