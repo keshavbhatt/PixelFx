@@ -104,6 +104,23 @@
   mode always fits. Past the preview's resolution the Document decodes the full photo once and
   renders it 250 ms after edits settle (`setFullResolution`, `fullReady`); it is dropped when
   the view goes back. E switches to Edit mode. FEATURES has no row for zoom yet.
+- Crop mode completed against `crop.html`: the straighten dial under the photo, Draw a level
+  line (horizontal or upright, whichever is nearer), the Custom ratio chip, and the Perspective
+  sliders (keystone in the library that never shows empty corners; turns and flips carry it).
+  The four-corner fix and Auto straighten are left for later, as the mock allows.
+- Color group: the White balance menu (As shot, Auto, Custom) and the picker (W), from
+  `pfx::neutralWhiteBalance`, which inverts the white balance model. The mock's Kelvin presets
+  (Daylight, Cloudy ...) are left out: on a JPEG they would be guesses; they come with RAW.
+- Copy and paste settings (Ctrl+Shift+C, Ctrl+Shift+V) as a preset document on the clipboard,
+  crop and turns excepted; paste a picture from the clipboard (Ctrl+V).
+- Export: Keep location (off by default) strips GPS from Exif (unlinked and zeroed) and XMP
+  without a metadata library; only formats with a working encoder are offered (AVIF and HEIC
+  were offered and failed when libheif had no encoder).
+- Settings sheet (`settings.html`, General page): theme (applied at start, since icons are
+  tinted when made), canvas background, remember edits, on open, clipping warnings (J). The
+  other pages and rows (monitor profile, GPU, batch threads, sidecars next to the photo) come
+  with their features. The light theme was checked on a grab; the histogram now multiplies its
+  channels on a light well.
 - 2026-11-05: dev libvips reads HEIC, AVIF, JPEG XL and camera RAW (ADR-008 update):
   `build-deps.sh` builds libheif 1.23.7 (libde265 1.1.3, dav1d 1.5.4), libjxl 0.12.0 (highway
   1.4.0) and LibRaw 0.22.3 against the SDK overlay, about 2.5 minutes from scratch on 14 cores;

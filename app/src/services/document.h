@@ -45,6 +45,8 @@ public:
 
     /// Remembers each photo's edits in `folder` (empty: remember nothing). Set before opening.
     void setSidecarFolder(const QString& folder);
+    /// Whether a photo opens with its remembered edits (true) or as the original.
+    void setOpenAsLeft(bool on) { m_openAsLeft = on; }
     /// Writes a pending edit file now (before quitting).
     void flush();
 
@@ -139,6 +141,7 @@ private:
     QImage m_plainOriginal; ///< decoded with no settings at all
     pfx::Settings m_originalGeometry;
     bool m_cropEditing = false;
+    bool m_openAsLeft = true;
     bool m_fullOn = false;
     QImage m_full;
     RenderScheduler* m_fullScheduler = nullptr;

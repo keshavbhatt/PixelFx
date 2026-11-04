@@ -14,6 +14,33 @@ class TestSettings : public QObject
     Q_OBJECT
 
 private Q_SLOTS:
+    void generalPageDefaultsAndChanges()
+    {
+        QTemporaryDir dir;
+        pixelfx::core::Settings s(dir.filePath(u"g.ini"_s));
+        using S = pixelfx::core::Settings;
+        QCOMPARE(s.theme(), S::Theme::Dark);
+        QCOMPARE(s.canvasBackground(), S::CanvasBackground::DarkGray);
+        QVERIFY(s.rememberEdits());
+        QVERIFY(s.openAsLeft());
+        QVERIFY(!s.clippingWarnings());
+        QSignalSpy clipping(&s, &S::clippingWarningsChanged);
+        s.setClippingWarnings(true);
+        s.setClippingWarnings(true); // no change, no signal
+        QCOMPARE(clipping.count(), 1);
+        s.setTheme(S::Theme::Light);
+        s.setCanvasBackground(S::CanvasBackground::White);
+        s.setRememberEdits(false);
+        s.setOpenAsLeft(false);
+        s.sync();
+        const pixelfx::core::Settings again(dir.filePath(u"g.ini"_s));
+        QCOMPARE(again.theme(), S::Theme::Light);
+        QCOMPARE(again.canvasBackground(), S::CanvasBackground::White);
+        QVERIFY(!again.rememberEdits());
+        QVERIFY(!again.openAsLeft());
+        QVERIFY(again.clippingWarnings());
+    }
+
     void defaultsAreSensible()
     {
         QTemporaryDir dir;

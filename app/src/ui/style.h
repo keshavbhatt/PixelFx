@@ -32,8 +32,11 @@ struct Tokens
 
 [[nodiscard]] const Tokens& darkTokens();
 [[nodiscard]] const Tokens& lightTokens();
-/// The tokens in use. Dark is the default (DESIGN section 1); the theme setting arrives in M3.
+/// The tokens in use. Dark is the default (DESIGN section 1).
 [[nodiscard]] const Tokens& tokens();
+/// Chooses the light or dark tokens; call before applyStyle and before any window is built
+/// (icons are tinted when they are made, so the theme applies at start).
+void useLightTheme(bool light);
 
 /// Fusion with a palette and style sheet built from the tokens.
 void applyStyle(QApplication& app);

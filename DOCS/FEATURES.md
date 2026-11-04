@@ -32,7 +32,7 @@ look; a **batch recipe** is a preset plus resize and save options.
 | S7 | Crash handler, log file, diagnostics copy, Report a bug sheet | none | KEEP | wip: log file done (`LogSink`); the rest M6 |
 | S8 | What's new once per version from the bundled changelog, Version picker, link in About; Online guide | none | KEEP | todo |
 | S9 | Keyboard shortcuts sheet (F1, Ctrl+/); every action shows its shortcut in its tooltip | 3 shortcuts | KEEP | todo |
-| S10 | Theme: System, Dark (default), Light; neutral grey chrome | dark only | KEEP | todo |
+| S10 | Theme: System, Dark (default), Light; neutral grey chrome | dark only | KEEP | done: System, Dark, Light in Settings, applied at start |
 | S11 | About with version, links, open-source notices, diagnostics | wrong source link | KEEP | todo |
 | S12 | Full screen (F11) and a distraction-free view (Tab hides the panels) | none | KEEP | todo |
 | S13 | Translations | none | LATER | |
@@ -69,7 +69,7 @@ preview and export use resolution-independent parameters so they match (v1 defec
 | E9 | Creative operations from v1: Sepia, Threshold, Colorize, Pixelate, Blur, Invert, Grayscale, Emboss, Edge, Sobel | some in UI, some only in Go | KEEP as look steps, not sliders | todo |
 | E10 | Auto: one click sets Light and Color from the image statistics | none | KEEP | done (`pfx::autoAdjust`; the Auto button and Ctrl+Shift+A; `pfx apply --auto`) |
 | E11 | Live preview while dragging (no apply on release), 60 fps target on the preview size | apply on release, one process per apply | KEEP | wip: live while dragging, newest request first (`RenderScheduler`); speed work (tiles, SIMD) in M3 |
-| E12 | Histogram (RGB, luminance), clipping warnings (J), camera line | RGB on GUI thread | KEEP | wip: RGB histogram computed on the render worker (`core::Histogram`, `HistogramView`); clipping counts computed, the J overlay and the camera line later in M3 |
+| E12 | Histogram (RGB, luminance), clipping warnings (J), camera line | RGB on GUI thread | KEEP | wip: RGB histogram on the render worker and clipping warnings (J, Settings) done; camera line todo |
 | E13 | Before and after: split with divider, side by side, hold Space for the original | hold button | KEEP | wip: the split with a draggable divider (\\) and holding Space done (`Canvas`, `MainWindow`); side by side in M3 |
 | E14 | Undo and redo for every change; History list; named snapshots | none | KEEP | wip: undo, redo and the History popup (H) with jump to any step done (`core::History`, `MainWindow::showHistory`); named snapshots in M3 |
 | E15 | Copy and paste settings between photos, choose groups | none | KEEP | wip: copy and paste of all settings but geometry, through the clipboard as a preset document (`core::settings_clipboard`); choosing groups with the filmstrip (M4) |

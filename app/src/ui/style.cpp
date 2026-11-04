@@ -48,6 +48,9 @@ const QString kSheet = uR"(
         QToolButton#railButton { border: 0; border-radius: 9px; background: transparent; color: {{muted}}; font-size: 11px; }
         QToolButton#railButton:hover { background: {{hover}}; color: {{text}}; }
         QToolButton#railButton:checked { background: {{accentSoft}}; color: {{accent}}; }
+        QListWidget#settingsPages { background: {{bar}}; border: 0; border-right: 1px solid {{border}}; padding-top: 8px; outline: 0; }
+        QListWidget#settingsPages::item { padding: 8px 12px; margin: 0 8px; border-radius: 7px; font-weight: 600; }
+        QListWidget#settingsPages::item:selected { background: {{accentSoft}}; color: {{accent}}; }
         #zoomBar { background: {{elevated}}; border: 1px solid {{border}}; border-radius: 10px; }
         #zoomDivider { background: {{border}}; }
         #zoomLevel { font-size: 12px; }
@@ -131,9 +134,18 @@ const Tokens& lightTokens()
     return t;
 }
 
+namespace {
+bool g_light = false; // set once at start, before any window exists
+} // namespace
+
+void useLightTheme(bool light)
+{
+    g_light = light;
+}
+
 const Tokens& tokens()
 {
-    return darkTokens();
+    return g_light ? lightTokens() : darkTokens();
 }
 
 void applyStyle(QApplication& app)

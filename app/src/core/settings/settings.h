@@ -50,6 +50,33 @@ public:
     [[nodiscard]] ExportOptions exportOptions() const;
     void setExportOptions(const ExportOptions& options);
 
+    /// Appearance (mock settings.html). The theme applies when PixelFx starts.
+    enum class Theme
+    {
+        System,
+        Dark,
+        Light
+    };
+    enum class CanvasBackground
+    {
+        DarkGray,
+        MiddleGray,
+        Black,
+        White
+    };
+    [[nodiscard]] Theme theme() const;
+    void setTheme(Theme theme);
+    [[nodiscard]] CanvasBackground canvasBackground() const;
+    void setCanvasBackground(CanvasBackground background);
+    /// Editing: keep each photo's settings in the app library; show a photo as it was left.
+    [[nodiscard]] bool rememberEdits() const;
+    void setRememberEdits(bool on);
+    [[nodiscard]] bool openAsLeft() const;
+    void setOpenAsLeft(bool on);
+    /// Display: clipped highlights and shadows shown on the photo (J).
+    [[nodiscard]] bool clippingWarnings() const;
+    void setClippingWarnings(bool on);
+
     /// Carries the last image folder over from PixelFx 1's settings file, once. Returns true
     /// when something was migrated.
     bool migrateFromVersion1(const QString& legacyFile);
@@ -59,6 +86,10 @@ public:
 Q_SIGNALS:
     void lastOpenFolderChanged(const QString& folder);
     void recentFilesChanged(const QStringList& files);
+    void canvasBackgroundChanged(pixelfx::core::Settings::CanvasBackground background);
+    void rememberEditsChanged(bool on);
+    void openAsLeftChanged(bool on);
+    void clippingWarningsChanged(bool on);
 
 private:
     std::unique_ptr<QSettings> m_settings;

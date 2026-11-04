@@ -162,4 +162,71 @@ QString Settings::legacyFilePath()
            u"/org.keshavnrj.ubuntu/pixelFx.conf"_s;
 }
 
+Settings::Theme Settings::theme() const
+{
+    const int value = m_settings->value(key(keys::kTheme), static_cast<int>(Theme::Dark)).toInt();
+    return value >= 0 && value <= static_cast<int>(Theme::Light) ? static_cast<Theme>(value) : Theme::Dark;
+}
+
+void Settings::setTheme(Theme theme)
+{
+    m_settings->setValue(key(keys::kTheme), static_cast<int>(theme));
+}
+
+Settings::CanvasBackground Settings::canvasBackground() const
+{
+    const int value =
+        m_settings->value(key(keys::kCanvasBackground), static_cast<int>(CanvasBackground::DarkGray)).toInt();
+    return value >= 0 && value <= static_cast<int>(CanvasBackground::White)
+               ? static_cast<CanvasBackground>(value)
+               : CanvasBackground::DarkGray;
+}
+
+void Settings::setCanvasBackground(CanvasBackground background)
+{
+    if (background != canvasBackground()) {
+        m_settings->setValue(key(keys::kCanvasBackground), static_cast<int>(background));
+        Q_EMIT canvasBackgroundChanged(background);
+    }
+}
+
+bool Settings::rememberEdits() const
+{
+    return m_settings->value(key(keys::kRememberEdits), true).toBool();
+}
+
+void Settings::setRememberEdits(bool on)
+{
+    if (on != rememberEdits()) {
+        m_settings->setValue(key(keys::kRememberEdits), on);
+        Q_EMIT rememberEditsChanged(on);
+    }
+}
+
+bool Settings::openAsLeft() const
+{
+    return m_settings->value(key(keys::kOpenAsLeft), true).toBool();
+}
+
+void Settings::setOpenAsLeft(bool on)
+{
+    if (on != openAsLeft()) {
+        m_settings->setValue(key(keys::kOpenAsLeft), on);
+        Q_EMIT openAsLeftChanged(on);
+    }
+}
+
+bool Settings::clippingWarnings() const
+{
+    return m_settings->value(key(keys::kClippingWarnings), false).toBool();
+}
+
+void Settings::setClippingWarnings(bool on)
+{
+    if (on != clippingWarnings()) {
+        m_settings->setValue(key(keys::kClippingWarnings), on);
+        Q_EMIT clippingWarningsChanged(on);
+    }
+}
+
 } // namespace pixelfx::core

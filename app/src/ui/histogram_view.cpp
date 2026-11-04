@@ -41,7 +41,10 @@ void HistogramView::paintEvent(QPaintEvent* /*event*/)
     const QColor colours[3] = {QColor(0xE0, 0x50, 0x50, 115), QColor(0x50, 0xC0, 0x60, 115),
                                QColor(0x50, 0x80, 0xF0, 115)};
     p.setPen(Qt::NoPen);
-    p.setCompositionMode(QPainter::CompositionMode_Plus); // overlapping channels add up to grey
+    // Overlapping channels add up to grey: adding light on a dark well, multiplying on a light one
+    // (adding would vanish into white).
+    const bool lightWell = t.input.lightness() > 128;
+    p.setCompositionMode(lightWell ? QPainter::CompositionMode_Multiply : QPainter::CompositionMode_Plus);
     for (std::size_t c = 0; c < 3; ++c) {
         QPainterPath path(QPointF(area.left(), area.bottom()));
         for (std::size_t i = 0; i < 256; ++i) {
@@ -51,7 +54,11 @@ void HistogramView::paintEvent(QPaintEvent* /*event*/)
         }
         path.lineTo(area.right(), area.bottom());
         path.closeSubpath();
-        p.setBrush(colours[c]);
+        QColor colour = colours[c];
+        if (lightWell) {
+            colour.setAlpha(200);
+        }
+        p.setBrush(colour);
         p.drawPath(path);
     }
 }

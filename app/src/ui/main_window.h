@@ -42,6 +42,7 @@ public:
     [[nodiscard]] services::Exporter& exporter() { return m_exporter; }
 
     [[nodiscard]] services::Document& document() { return m_document; }
+    [[nodiscard]] core::Settings& settings() { return m_settings; }
     [[nodiscard]] Canvas* canvas() const { return m_canvas; }
     [[nodiscard]] AdjustPanel* adjustPanel() const { return m_adjust; }
     [[nodiscard]] CropPanel* cropPanel() const { return m_cropPanel; }
@@ -58,6 +59,8 @@ public:
     /// Copies the photo's settings (crop excepted) to the clipboard; pastes them as one step.
     void copySettings();
     void pasteSettings();
+    /// The Settings sheet (Ctrl+,).
+    void openSettings();
     /// Opens the picture on the clipboard, if there is one (Ctrl+V).
     void pasteImage();
 
@@ -87,6 +90,7 @@ private:
     void connectZoom();
     void connectClipboard();
     void connectWhiteBalance();
+    void applyGeneralSettings();
     void connectDocument();
     void updateHistoryButtons();
     void showToast(const QString& text);

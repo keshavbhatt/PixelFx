@@ -17,6 +17,8 @@ qt_add_library(pixelfx_ui STATIC
     icons.h
     main_window.cpp
     main_window.h
+    settings_sheet.cpp
+    settings_sheet.h
     style.cpp
     style.h
     straighten_dial.cpp

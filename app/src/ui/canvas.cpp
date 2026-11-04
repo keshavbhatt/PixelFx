@@ -69,6 +69,44 @@ Canvas::Canvas(QWidget* parent)
     m_dial->hide();
 }
 
+void Canvas::setBackground(const QColor& color)
+{
+    m_background = color;
+    update();
+}
+
+void Canvas::setClippingWarnings(bool on)
+{
+    m_clipping = on;
+    update();
+}
+
+QImage Canvas::clippingOverlay(const QImage& image)
+{
+    const QImage src = image.convertToFormat(QImage::Format_ARGB32);
+    QImage out(src.size(), QImage::Format_ARGB32_Premultiplied);
+    out.fill(Qt::transparent);
+    constexpr int kWhite = 254; // 8-bit levels: at or above is clipped
+    constexpr int kBlack = 1;
+    for (int y = 0; y < src.height(); ++y) {
+        const auto* in = reinterpret_cast<const QRgb*>(
+            src.constScanLine(y)); // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
+        auto* dst =
+            reinterpret_cast<QRgb*>(out.scanLine(y)); // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
+        for (int x = 0; x < src.width(); ++x) {
+            const int r = qRed(in[x]);
+            const int g = qGreen(in[x]);
+            const int b = qBlue(in[x]);
+            if (r >= kWhite || g >= kWhite || b >= kWhite) {
+                dst[x] = qRgb(255, 0, 0);
+            } else if (r <= kBlack && g <= kBlack && b <= kBlack) {
+                dst[x] = qRgb(0, 96, 255);
+            }
+        }
+    }
+    return out;
+}
+
 void Canvas::startPick()
 {
     m_picking = true;
@@ -695,7 +733,7 @@ void Canvas::paintEvent(QPaintEvent* /*event*/)
 {
     const Tokens& t = tokens();
     QPainter painter(this);
-    painter.fillRect(rect(), t.canvas);
+    painter.fillRect(rect(), m_background.isValid() ? m_background : t.canvas);
     if (!m_image.isNull()) {
         const QRect target = photoRect();
         painter.fillRect(target.translated(0, 6).adjusted(-2, -2, 2, 2), QColor(0, 0, 0, 90));
@@ -709,6 +747,13 @@ void Canvas::paintEvent(QPaintEvent* /*event*/)
         const QRectF source((visible.left() - target.left()) * sx, (visible.top() - target.top()) * sy,
                             visible.width() * sx, visible.height() * sy);
         painter.drawImage(visible, shown, source);
+        if (m_clipping && !m_cropping) {
+            if (shown.cacheKey() != m_clipKey) {
+                m_clipOverlay = clippingOverlay(shown);
+                m_clipKey = shown.cacheKey();
+            }
+            painter.drawImage(visible, m_clipOverlay, source);
+        }
         if (m_cropping) {
             paintCrop(painter, target);
             if (m_drawingLine) {

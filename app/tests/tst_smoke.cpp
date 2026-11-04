@@ -81,6 +81,13 @@ private Q_SLOTS:
         QCOMPARE(window.document().history().undoLabel(), u"White balance picker"_s);
         window.document().apply({}, u"Clear"_s);
 
+        // J turns the clipping warnings on and off, through the settings.
+        QTest::keyClick(&window, Qt::Key_J);
+        QVERIFY(settings.clippingWarnings());
+        QVERIFY(window.canvas()->clippingWarnings());
+        QTest::keyClick(&window, Qt::Key_J);
+        QVERIFY(!window.canvas()->clippingWarnings());
+
         // Zoom: in from Fit, back with Ctrl+0; Crop mode always fits.
         QVERIFY(window.canvas()->isFit());
         QCOMPARE(window.canvas()->zoomText(), u"Fit"_s);

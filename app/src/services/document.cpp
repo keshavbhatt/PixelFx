@@ -219,8 +219,9 @@ void Document::deliver(const Result& result)
     m_scheduler->setSource(result.source);
     m_originalScheduler->setSource(result.source);
     // As it was left (FEATURES E17): the remembered edits are the starting point of the history.
-    m_history.reset(result.stored, tr("Opened"));
-    replaceSettings(result.stored, !result.stored.isEmpty()); // no settings: the original is the render
+    const pfx::Settings start = m_openAsLeft ? result.stored : pfx::Settings{};
+    m_history.reset(start, tr("Opened"));
+    replaceSettings(start, !start.isEmpty()); // no settings: the original is the render
     qCInfo(lcDocument) << "opened" << m_info.path << m_info.size << m_info.format;
     Q_EMIT opened(m_info);
     Q_EMIT previewReady(m_preview);

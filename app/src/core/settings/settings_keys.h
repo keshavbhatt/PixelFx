@@ -17,6 +17,11 @@ inline constexpr auto kExportFolder = "export/folder";
 inline constexpr auto kExportNameTemplate = "export/nameTemplate";
 inline constexpr auto kExportIfExists = "export/ifExists";
 inline constexpr auto kLegacyMigrated = "migration/v1Done";
+inline constexpr auto kTheme = "appearance/theme";
+inline constexpr auto kCanvasBackground = "appearance/canvasBackground";
+inline constexpr auto kRememberEdits = "editing/rememberEdits";
+inline constexpr auto kOpenAsLeft = "editing/openAsLeft";
+inline constexpr auto kClippingWarnings = "display/clippingWarnings";
 
 // PixelFx 1 (org.keshavnrj.ubuntu/pixelFx.conf): the only key worth carrying over.
 inline constexpr auto kLegacyLastFolder = "last_image_dir_path";

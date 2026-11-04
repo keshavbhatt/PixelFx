@@ -8,6 +8,7 @@
 #include "ui/crop_panel.h"
 #include "ui/export_sheet.h"
 #include "ui/icons.h"
+#include "ui/settings_sheet.h"
 #include "ui/straighten_dial.h"
 #include "ui/style.h"
 #include "ui/welcome_page.h"
@@ -128,7 +129,7 @@ MainWindow::MainWindow(core::Settings& settings, QWidget* parent)
     }
     restoreState(m_settings.windowState());
 
-    m_document.setSidecarFolder(core::SidecarStore::defaultFolder());
+    applyGeneralSettings();
     connectDocument();
     connectCrop();
     connectZoom();
@@ -303,6 +304,8 @@ void MainWindow::buildHeader()
     menu->addAction(icons::themed(u"open"_s, tokens().muted), tr("Open images..."), QKeySequence::Open, this,
                     &MainWindow::chooseFiles);
     menu->addSeparator();
+    menu->addAction(tr("Settings..."), QKeySequence(u"Ctrl+,"_s), this, &MainWindow::openSettings);
+    menu->addSeparator();
     menu->addAction(icons::themed(u"quit"_s, tokens().muted), tr("Quit"), QKeySequence(u"Ctrl+Q"_s), this,
                     &MainWindow::close);
     menuButton->setMenu(menu);
@@ -394,7 +397,14 @@ void MainWindow::setupActions()
     auto* exportAction = new QAction(tr("Export"), this);
     exportAction->setShortcut(QKeySequence(u"Ctrl+Shift+E"_s));
     connect(exportAction, &QAction::triggered, this, &MainWindow::exportPhoto);
-    addActions({openAction, quitAction, fullScreen, exportAction});
+    auto* settingsAction = new QAction(tr("Settings"), this);
+    settingsAction->setShortcut(QKeySequence(u"Ctrl+,"_s));
+    connect(settingsAction, &QAction::triggered, this, &MainWindow::openSettings);
+    auto* clipping = new QAction(tr("Clipping warnings"), this);
+    clipping->setShortcut(QKeySequence(Qt::Key_J));
+    connect(clipping, &QAction::triggered, this,
+            [this] { m_settings.setClippingWarnings(!m_settings.clippingWarnings()); });
+    addActions({openAction, quitAction, fullScreen, exportAction, settingsAction, clipping});
     setupEditActions();
     setupCropActions();
     setupZoomActions();
@@ -627,6 +637,42 @@ void MainWindow::connectClipboard()
     pasteImageAction->setShortcut(QKeySequence::Paste);
     connect(pasteImageAction, &QAction::triggered, this, &MainWindow::pasteImage);
     addActions({copy, paste, pasteImageAction});
+}
+
+void MainWindow::applyGeneralSettings()
+{
+    using S = core::Settings;
+    const auto background = [](S::CanvasBackground b) {
+        switch (b) {
+        case S::CanvasBackground::MiddleGray:
+            return QColor(0x80, 0x80, 0x80);
+        case S::CanvasBackground::Black:
+            return QColor(Qt::black);
+        case S::CanvasBackground::White:
+            return QColor(Qt::white);
+        case S::CanvasBackground::DarkGray:
+            break;
+        }
+        return QColor(); // the theme's canvas colour
+    };
+    const auto sidecars = [this](bool on) {
+        m_document.setSidecarFolder(on ? core::SidecarStore::defaultFolder() : QString());
+    };
+    m_canvas->setBackground(background(m_settings.canvasBackground()));
+    m_canvas->setClippingWarnings(m_settings.clippingWarnings());
+    m_document.setOpenAsLeft(m_settings.openAsLeft());
+    sidecars(m_settings.rememberEdits());
+    connect(&m_settings, &S::canvasBackgroundChanged, this,
+            [this, background](S::CanvasBackground b) { m_canvas->setBackground(background(b)); });
+    connect(&m_settings, &S::clippingWarningsChanged, m_canvas, &Canvas::setClippingWarnings);
+    connect(&m_settings, &S::openAsLeftChanged, &m_document, &services::Document::setOpenAsLeft);
+    connect(&m_settings, &S::rememberEditsChanged, this, sidecars);
+}
+
+void MainWindow::openSettings()
+{
+    SettingsSheet sheet(m_settings, this);
+    sheet.exec();
 }
 
 void MainWindow::connectWhiteBalance()

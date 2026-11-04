@@ -71,6 +71,13 @@ public:
     /// A sharper picture of the whole photo (the full-size render), drawn instead of the
     /// preview while zoomed in past the preview's own resolution. Null to drop it.
     void setDetail(const QImage& detail);
+    /// The colour around the photo (Settings, Canvas background); invalid for the theme's.
+    void setBackground(const QColor& color);
+    /// Clipped highlights in red and crushed shadows in blue, over the photo (J).
+    void setClippingWarnings(bool on);
+    [[nodiscard]] bool clippingWarnings() const { return m_clipping; }
+    /// The overlay for `image`: red where a channel is at white, blue where all are at black.
+    [[nodiscard]] static QImage clippingOverlay(const QImage& image);
     [[nodiscard]] bool needsDetail() const;
 
     /// The straighten ruler under the photo, shown in Crop mode.
@@ -111,6 +118,10 @@ private:
     class StraightenDial* m_dial = nullptr;
     bool m_levelLine = false;
     bool m_picking = false;
+    QColor m_background;
+    bool m_clipping = false;
+    QImage m_clipOverlay;
+    qint64 m_clipKey = 0;
     bool m_drawingLine = false;
     QPointF m_lineStart;
     QPointF m_lineEnd;
