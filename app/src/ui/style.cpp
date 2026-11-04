@@ -51,6 +51,11 @@ const QString kSheet = uR"(
         QListWidget#settingsPages { background: {{bar}}; border: 0; border-right: 1px solid {{border}}; padding-top: 8px; outline: 0; }
         QListWidget#settingsPages::item { padding: 8px 12px; margin: 0 8px; border-radius: 7px; font-weight: 600; }
         QListWidget#settingsPages::item:selected { background: {{accentSoft}}; color: {{accent}}; }
+        #presetsPanel { background: {{panel}}; border-right: 1px solid {{border}}; }
+        #panelTab { padding: 7px 10px 9px; border-bottom: 2px solid {{accent}}; font-weight: 500; }
+        #panelTabLine { background: {{border}}; }
+        #presetName { font-weight: 500; }
+        #presetSummary { color: {{muted}}; font-size: 11px; }
         #zoomBar { background: {{elevated}}; border: 1px solid {{border}}; border-radius: 10px; }
         #zoomDivider { background: {{border}}; }
         #zoomLevel { font-size: 12px; }

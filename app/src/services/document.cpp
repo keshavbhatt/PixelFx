@@ -16,6 +16,7 @@
 #include <pfx/auto.h>
 #include <pfx/color.h>
 #include <pfx/io.h>
+#include <pfx/resample.h>
 
 using namespace Qt::StringLiterals;
 
@@ -217,6 +218,10 @@ void Document::deliver(const Result& result)
     m_fingerprint = result.fingerprint;
     m_source = result.source;
     m_scheduler->setSource(result.source);
+    m_hover.reset();
+    if (auto small = pfx::fitLongEdge(*result.source, 120)) {
+        m_thumbnailSource = std::make_shared<const pfx::Image>(std::move(small).value());
+    }
     m_originalScheduler->setSource(result.source);
     // As it was left (FEATURES E17): the remembered edits are the starting point of the history.
     const pfx::Settings start = m_openAsLeft ? result.stored : pfx::Settings{};
@@ -243,7 +248,19 @@ void Document::setSettings(const pfx::Settings& settings)
 
 pfx::Settings Document::renderSettings() const
 {
+    if (m_hover) {
+        return *m_hover;
+    }
     return m_cropEditing ? core::withoutCrop(m_settings) : m_settings;
+}
+
+void Document::setHoverSettings(const std::optional<pfx::Settings>& settings)
+{
+    if (!isOpen() || settings == m_hover) {
+        return;
+    }
+    m_hover = settings;
+    m_scheduler->request(renderSettings()); // no full-size render for a passing hover
 }
 
 void Document::requestRender()

@@ -79,3 +79,6 @@ private:
 };
 
 } // namespace pixelfx::core
+
+#include <QMetaType>
+Q_DECLARE_METATYPE(pixelfx::core::PresetEntry)

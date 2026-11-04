@@ -17,6 +17,10 @@ qt_add_library(pixelfx_ui STATIC
     icons.h
     main_window.cpp
     main_window.h
+    presets_panel.cpp
+    presets_panel.h
+    preset_save_sheet.cpp
+    preset_save_sheet.h
     settings_sheet.cpp
     settings_sheet.h
     style.cpp

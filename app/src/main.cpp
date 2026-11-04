@@ -7,7 +7,7 @@
 //   PIXELFX_DEBUG_COMPARE=1            turn on before and after once the photo is open
 //   PIXELFX_DEBUG_CROP=<ratio>[,<deg>] enter Crop mode with a ratio chip ("Free", "3:2") and
 //                                      a straightening angle once the photo is open
-//   PIXELFX_DEBUG_SHEET=export|settings with GRAB: grab that sheet instead of the window
+//   PIXELFX_DEBUG_SHEET=export|settings|preset with GRAB: grab that sheet instead of the window
 //   PIXELFX_DEBUG_ZOOM=<scale>         zoom to this scale (1 is 100%) once the photo is open; with
 //                                      GRAB, grab once the full-size render is shown
 //   PIXELFX_DEBUG_GRAB=<file.png>      grab the window once the photo is shown (or after 2 s
@@ -19,6 +19,7 @@
 #include "ui/crop_panel.h"
 #include "ui/export_sheet.h"
 #include "ui/main_window.h"
+#include "ui/preset_save_sheet.h"
 #include "ui/settings_sheet.h"
 #include "ui/style.h"
 
@@ -54,7 +55,18 @@ void applyGrabHook(pixelfx::ui::MainWindow& window, const QStringList& files)
     }
     const bool exportSheet = qEnvironmentVariable("PIXELFX_DEBUG_SHEET") == u"export"_s;
     const bool settingsSheet = qEnvironmentVariable("PIXELFX_DEBUG_SHEET") == u"settings"_s;
-    const auto save = [&window, grab, exportSheet, settingsSheet] {
+    const bool presetSheet = qEnvironmentVariable("PIXELFX_DEBUG_SHEET") == u"preset"_s;
+    const auto save = [&window, grab, exportSheet, settingsSheet, presetSheet] {
+        if (presetSheet && window.document().isOpen()) {
+            auto* sheet = new pixelfx::ui::PresetSaveSheet(window.document().settings(), {}, &window);
+            sheet->setName(QStringLiteral("Warm evening"));
+            sheet->show();
+            QTimer::singleShot(300, sheet, [sheet, grab] {
+                sheet->grab().save(grab);
+                QCoreApplication::quit();
+            });
+            return;
+        }
         if (settingsSheet) {
             auto* sheet = new pixelfx::ui::SettingsSheet(window.settings(), &window);
             sheet->show();

@@ -17,6 +17,9 @@ PixelFx 2 is rebuilt from scratch: a new editor, a new image engine, and a new l
   straighten with the dial, the slider or a drawn level line, fix leaning buildings with the
   perspective sliders, turn and flip. The crop stays editable later.
 - White balance: As shot, Auto, or click something grey with the picker (W).
+- Presets: save the whole edit or only parts of it, apply with one click, preview by hovering,
+  stack a colour preset on a light one; import and export them as files to share. A few built-in
+  presets, Auto enhance among them, to start from.
 - Color mixer: hue, saturation and luminance for eight colour ranges.
 - Dehaze clears distance haze from landscapes and city views, or adds a little mist.
 - Effects: vignette, film grain and fade.

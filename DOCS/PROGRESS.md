@@ -121,6 +121,16 @@
   other pages and rows (monitor profile, GPU, batch threads, sidecars next to the photo) come
   with their features. The light theme was checked on a grab; the histogram now multiplies its
   channels on a light well.
+- Presets (M4 started early, mocks `editor-presets.html` and `preset-save.html`): the left panel
+  with the Presets tab (Looks waits for looks), grouped rows with pictures of the photo, search,
+  import, the row menu, hover preview through `Document::setHoverSettings`; Save as preset with
+  the units of the mock (White balance and Perspective apart from Color and Crop). A preset
+  writes every value of each unit it holds, defaults included, so applying replaces exactly
+  those units and presets stack. Built-in presets are a first draft made from today's
+  operations (owner to tune).
+- CI: Windows ran the full suite for the first time: two library tests assumed loaders the
+  vcpkg libvips lacks (GIF, PPM); fixed in the tests. macOS: the curve test now double-clicks
+  where the point is drawn.
 - 2026-11-05: dev libvips reads HEIC, AVIF, JPEG XL and camera RAW (ADR-008 update):
   `build-deps.sh` builds libheif 1.23.7 (libde265 1.1.3, dav1d 1.5.4), libjxl 0.12.0 (highway
   1.4.0) and LibRaw 0.22.3 against the SDK overlay, about 2.5 minutes from scratch on 14 cores;

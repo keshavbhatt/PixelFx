@@ -229,7 +229,19 @@ std::vector<PresetEntry> PresetLibrary::entries() const
         e.settings = doc.value().settings;
         out.push_back(std::move(e));
     }
-    std::ranges::sort(out, [](const PresetEntry& a, const PresetEntry& b) {
+    // Mock order: My presets, then the user's own groups, then Imported (Built in follows).
+    const QString mine = QCoreApplication::translate(kContext, "My presets");
+    const QString imported = QCoreApplication::translate(kContext, "Imported");
+    const auto rank = [&mine, &imported](const QString& group) {
+        if (group == mine) {
+            return 0;
+        }
+        return group == imported ? 2 : 1;
+    };
+    std::ranges::sort(out, [&rank](const PresetEntry& a, const PresetEntry& b) {
+        if (rank(a.group) != rank(b.group)) {
+            return rank(a.group) < rank(b.group);
+        }
         return a.group == b.group ? a.name.localeAwareCompare(b.name) < 0
                                   : a.group.localeAwareCompare(b.group) < 0;
     });

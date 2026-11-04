@@ -100,13 +100,13 @@ preview and export use resolution-independent parameters so they match (v1 defec
 
 | # | Feature | v1 | Decision | Status / class |
 |---|---|---|---|---|
-| P1 | Save the current settings as a preset, choosing which groups it contains | none | KEEP | todo |
-| P2 | Preset library with groups: My presets, Imported, Built in; search; hover preview | none | KEEP | todo |
-| P3 | Preset row menu: apply to selected, rename, update with current, duplicate, export, show file, delete | none | KEEP | todo |
-| P4 | `.pfxpreset` JSON format, versioned, documented in `DOCS/presets.md`, readable by the library and the CLI | none | KEEP | todo |
+| P1 | Save the current settings as a preset, choosing which groups it contains | none | KEEP | done: Save as preset from `preset-save.html`, units ticked as the mock says, Save to file |
+| P2 | Preset library with groups: My presets, Imported, Built in; search; hover preview | none | KEEP | wip: library with My presets, own groups, Imported, Built in; search; hover preview on the photo; pictures of the photo with each preset. Favourites todo |
+| P3 | Preset row menu: apply to selected, rename, update with current, duplicate, export, show file, delete | none | KEEP | done: Apply, Rename, Update with current settings, Export, Show file, Delete (asks first); Apply to selected with the filmstrip |
+| P4 | `.pfxpreset` JSON format, versioned, documented in `DOCS/presets.md`, readable by the library and the CLI | none | KEEP | done: `.pfxpreset` read and written through libpixelfx; presets hold whole units so they stack (`core::presets`) |
 | P5 | Import Lightroom / Camera Raw `.xmp` presets: map the settings PixelFx has, report what was skipped. A headline feature: "use your Lightroom presets without a subscription" (owner, 2026-11-04) | none | KEEP | todo |
 | P6 | Import darktable styles | none | LATER | |
-| P7 | Built-in presets including "Auto enhance" (per-image analysis) | none | KEEP | todo |
+| P7 | Built-in presets including "Auto enhance" (per-image analysis) | none | KEEP | wip: Auto enhance, Bright and airy, Punchy, Soft matte from the operations there are; more with looks |
 
 ## F. Crop and geometry
 

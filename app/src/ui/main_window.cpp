@@ -8,6 +8,8 @@
 #include "ui/crop_panel.h"
 #include "ui/export_sheet.h"
 #include "ui/icons.h"
+#include "ui/preset_save_sheet.h"
+#include "ui/presets_panel.h"
 #include "ui/settings_sheet.h"
 #include "ui/straighten_dial.h"
 #include "ui/style.h"
@@ -18,16 +20,20 @@
 #include <QCloseEvent>
 #include <QConicalGradient>
 #include <QDateTime>
+#include <QDesktopServices>
 #include <QDir>
 #include <QDragEnterEvent>
 #include <QFileDialog>
 #include <QFileInfo>
 #include <QGuiApplication>
 #include <QHBoxLayout>
+#include <QInputDialog>
 #include <QKeyEvent>
 #include <QLabel>
+#include <QLineEdit>
 #include <QLocale>
 #include <QMenu>
+#include <QMessageBox>
 #include <QMimeData>
 #include <QPainter>
 #include <QPushButton>
@@ -36,8 +42,10 @@
 #include <QStandardPaths>
 #include <QTimer>
 #include <QToolButton>
+#include <QUrl>
 #include <QVBoxLayout>
 
+#include <pfx/auto.h>
 #include <pfx/io.h>
 
 using namespace Qt::StringLiterals;
@@ -45,6 +53,11 @@ using namespace Qt::StringLiterals;
 namespace pixelfx::ui {
 
 namespace {
+
+// Preset pictures come back keyed by generation and row, so late ones from an older list are
+// dropped.
+constexpr int kThumbnailKeySpan = 10000;
+constexpr int kThumbnailGenerations = 20000;
 
 /// What the image library in this build reads (HEIC, JPEG XL, RAW only where it has them).
 const QStringList& supportedSuffixes()
@@ -130,6 +143,7 @@ MainWindow::MainWindow(core::Settings& settings, QWidget* parent)
     restoreState(m_settings.windowState());
 
     applyGeneralSettings();
+    connectPresets();
     connectDocument();
     connectCrop();
     connectZoom();
@@ -363,10 +377,13 @@ void MainWindow::setupUi()
     m_panels->setFixedWidth(m_adjust->width());
     m_panels->hide();
     buildRail();
+    m_presets = new PresetsPanel(this);
+    m_presets->hide();
     auto* body = new QHBoxLayout;
     body->setContentsMargins(0, 0, 0, 0);
     body->setSpacing(0);
     body->addWidget(m_rail);
+    body->addWidget(m_presets);
     body->addWidget(m_stack, 1);
     body->addWidget(m_panels);
 
@@ -669,6 +686,162 @@ void MainWindow::applyGeneralSettings()
     connect(&m_settings, &S::rememberEditsChanged, this, sidecars);
 }
 
+void MainWindow::connectPresets()
+{
+    m_presetThumbnails = new services::Thumbnailer(this);
+    m_thumbnailTimer = new QTimer(this);
+    m_thumbnailTimer->setSingleShot(true);
+    m_thumbnailTimer->setInterval(500); // pictures follow the edit once it settles
+    connect(m_thumbnailTimer, &QTimer::timeout, this, &MainWindow::requestPresetThumbnails);
+    connect(m_presetThumbnails, &services::Thumbnailer::rendered, this, [this](int key, const QImage& image) {
+        if (key / kThumbnailKeySpan == m_thumbnailGeneration % kThumbnailGenerations) {
+            m_presets->setThumbnail(static_cast<std::size_t>(key % kThumbnailKeySpan), image);
+        }
+    });
+    connect(&m_document, &services::Document::opened, this, [this] { m_thumbnailTimer->start(0); });
+    connect(&m_document, &services::Document::historyChanged, this, [this] { m_thumbnailTimer->start(); });
+    connect(m_presets, &PresetsPanel::applyRequested, this, &MainWindow::applyPreset);
+    connect(m_presets, &PresetsPanel::previewRequested, this, [this](const core::PresetEntry* entry) {
+        if (entry == nullptr || entry->autoEnhance || !m_document.isOpen() || isCropping()) {
+            m_document.setHoverSettings(std::nullopt);
+            return;
+        }
+        m_document.setHoverSettings(core::applyPreset(m_document.settings(), entry->settings));
+    });
+    connect(m_presets, &PresetsPanel::saveRequested, this, &MainWindow::savePreset);
+    connectPresetActions();
+    refreshPresets();
+}
+
+void MainWindow::connectPresetActions()
+{
+    connect(m_presets, &PresetsPanel::importRequested, this, [this] {
+        const QStringList files =
+            QFileDialog::getOpenFileNames(this, tr("Import presets"), m_settings.lastOpenFolder(),
+                                          tr("PixelFx presets (*.pfxpreset *.pfxrecipe)"));
+        int imported = 0;
+        QString lastError;
+        for (const QString& file : files) {
+            const auto [path, error] = m_library.importFile(file);
+            path.isEmpty() ? void(lastError = error) : void(++imported);
+        }
+        if (!files.isEmpty()) {
+            refreshPresets();
+            showToast(lastError.isEmpty()
+                          ? tr("Imported %n preset(s)", nullptr, imported)
+                          : tr("Imported %1 of %2. %3").arg(imported).arg(files.size()).arg(lastError));
+        }
+    });
+    connect(m_presets, &PresetsPanel::renameRequested, this, [this](const core::PresetEntry& e) {
+        bool ok = false;
+        const QString name =
+            QInputDialog::getText(this, tr("Rename preset"), tr("Name"), QLineEdit::Normal, e.name, &ok);
+        if (ok && !name.trimmed().isEmpty() && core::PresetLibrary::rename(e.path, name)) {
+            refreshPresets();
+        }
+    });
+    connect(m_presets, &PresetsPanel::updateRequested, this, [this](const core::PresetEntry& e) {
+        const QStringList units = core::unitsIn(e.settings);
+        const auto answer = QMessageBox::question(this, tr("Update preset"),
+                                                  tr("Replace what %1 holds (%2) with this photo's settings?")
+                                                      .arg(e.name, core::presetSummary(e.settings)));
+        if (answer == QMessageBox::Yes &&
+            core::PresetLibrary::update(e.path, core::presetFrom(m_document.settings(), units))) {
+            refreshPresets();
+            showToast(tr("Updated %1").arg(e.name));
+        }
+    });
+    connect(m_presets, &PresetsPanel::exportRequested, this, [this](const core::PresetEntry& e) {
+        const QString file = QFileDialog::getSaveFileName(this, tr("Export preset"), e.name + u".pfxpreset"_s,
+                                                          tr("PixelFx presets (*.pfxpreset)"));
+        if (!file.isEmpty()) {
+            showToast(core::PresetLibrary::exportTo(e, file)
+                          ? tr("Exported %1").arg(QFileInfo(file).fileName())
+                          : tr("Not exported: the folder is not writable."));
+        }
+    });
+    connect(m_presets, &PresetsPanel::showFileRequested, this, [](const core::PresetEntry& e) {
+        QDesktopServices::openUrl(QUrl::fromLocalFile(QFileInfo(e.path).absolutePath()));
+    });
+    connect(m_presets, &PresetsPanel::deleteRequested, this, [this](const core::PresetEntry& e) {
+        // Deleting a preset file is the one thing here undo cannot bring back: ask (DESIGN 5).
+        const auto answer = QMessageBox::question(this, tr("Delete preset"),
+                                                  tr("Delete %1? This cannot be undone.").arg(e.name));
+        if (answer == QMessageBox::Yes && m_library.remove(e.path)) {
+            refreshPresets();
+        }
+    });
+}
+
+void MainWindow::refreshPresets()
+{
+    m_presets->setEntries(m_library.entries());
+    requestPresetThumbnails();
+}
+
+void MainWindow::requestPresetThumbnails()
+{
+    const auto source = m_document.thumbnailSource();
+    if (!source || !m_document.isOpen()) {
+        return;
+    }
+    ++m_thumbnailGeneration;
+    const auto& entries = m_presets->entries();
+    for (std::size_t i = 0; i < entries.size() && i < kThumbnailKeySpan; ++i) {
+        const core::PresetEntry& e = entries[i];
+        const pfx::Settings s = e.autoEnhance ? m_document.settings().overlaidWith(pfx::autoAdjust(*source))
+                                              : core::applyPreset(m_document.settings(), e.settings);
+        m_presetThumbnails->requestRender(
+            ((m_thumbnailGeneration % kThumbnailGenerations) * kThumbnailKeySpan) + static_cast<int>(i),
+            source, s);
+    }
+}
+
+void MainWindow::applyPreset(const core::PresetEntry& entry)
+{
+    if (!m_document.isOpen() || isCropping()) {
+        return;
+    }
+    m_document.setHoverSettings(std::nullopt);
+    if (entry.autoEnhance) {
+        m_document.autoAdjust();
+        return;
+    }
+    m_document.apply(core::applyPreset(m_document.settings(), entry.settings),
+                     tr("Preset %1").arg(entry.name));
+}
+
+void MainWindow::savePreset()
+{
+    if (!m_document.isOpen()) {
+        return;
+    }
+    QStringList groups;
+    for (const core::PresetEntry& e : m_presets->entries()) {
+        if (!e.isBuiltIn() && !groups.contains(e.group)) {
+            groups << e.group;
+        }
+    }
+    PresetSaveSheet sheet(m_document.settings(), groups, this);
+    if (sheet.exec() != QDialog::Accepted) {
+        return;
+    }
+    const pfx::Settings preset = core::presetFrom(m_document.settings(), sheet.units());
+    const QString path = m_library.save(sheet.name(), sheet.group(), preset);
+    if (path.isEmpty()) {
+        showToast(tr("Not saved: the preset folder is not writable."));
+        return;
+    }
+    if (!sheet.fileCopy().isEmpty()) {
+        core::PresetEntry entry;
+        entry.name = sheet.name();
+        entry.settings = preset;
+        (void)core::PresetLibrary::exportTo(entry, sheet.fileCopy());
+    }
+    refreshPresets();
+    showToast(tr("Saved preset %1").arg(sheet.name()));
+}
+
 void MainWindow::openSettings()
 {
     SettingsSheet sheet(m_settings, this);
@@ -766,6 +939,7 @@ void MainWindow::enterCrop()
     m_canvas->dial()->setAngle(m_cropStart.number("geometry.angle", 0.0));
     m_canvas->setImage(m_document.preview(), m_document.displaySize());
     m_panels->setCurrentWidget(m_cropPanel);
+    m_presets->hide(); // mock crop.html: no left panel while cropping
     m_cropStrip->show();
     updateCropStrip();
     for (QAction* a : std::as_const(m_cropActions)) {
@@ -792,6 +966,7 @@ void MainWindow::leaveCrop(bool apply)
     }
     m_adjust->setSettings(m_document.settings());
     m_panels->setCurrentWidget(m_adjust);
+    m_presets->show();
     m_cropStrip->hide();
     m_compare->setEnabled(true);
     updateHistoryButtons();
@@ -847,6 +1022,7 @@ void MainWindow::showOpened(const services::DocumentInfo& info)
     m_settings.addRecentFile(info.path);
     m_panels->show();
     m_rail->show();
+    m_presets->setVisible(!isCropping());
     m_original->setEnabled(true);
     m_compare->setEnabled(true);
     m_export->setEnabled(true);

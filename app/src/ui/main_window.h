@@ -1,7 +1,9 @@
 #pragma once
 
+#include "core/presets.h"
 #include "services/document.h"
 #include "services/exporter.h"
+#include "services/thumbnailer.h"
 
 #include <QMainWindow>
 
@@ -10,6 +12,7 @@
 class QLabel;
 class QStackedWidget;
 class QToolButton;
+class QTimer;
 class QPushButton;
 
 namespace pixelfx::core {
@@ -21,6 +24,7 @@ namespace pixelfx::ui {
 class AdjustPanel;
 class Canvas;
 class CropPanel;
+class PresetsPanel;
 class WelcomePage;
 
 /// The main window (DESIGN section 2). M2: the header bar, the welcome page, and the canvas
@@ -46,6 +50,11 @@ public:
     [[nodiscard]] Canvas* canvas() const { return m_canvas; }
     [[nodiscard]] AdjustPanel* adjustPanel() const { return m_adjust; }
     [[nodiscard]] CropPanel* cropPanel() const { return m_cropPanel; }
+    [[nodiscard]] PresetsPanel* presetsPanel() const { return m_presets; }
+    /// Re-reads the preset library and redraws the preset pictures.
+    void refreshPresets();
+    /// Saves the photo's settings as a preset through the Save as preset sheet.
+    void savePreset();
     /// Crop mode (C): the crop box over the whole photo and the crop panel.
     void enterCrop();
     /// Leaves Crop mode, keeping the changes as one history step (`apply`) or dropping them.
@@ -91,6 +100,10 @@ private:
     void connectClipboard();
     void connectWhiteBalance();
     void applyGeneralSettings();
+    void connectPresets();
+    void connectPresetActions();
+    void requestPresetThumbnails();
+    void applyPreset(const core::PresetEntry& entry);
     void connectDocument();
     void updateHistoryButtons();
     void showToast(const QString& text);
@@ -109,6 +122,11 @@ private:
     Canvas* m_canvas = nullptr;
     AdjustPanel* m_adjust = nullptr;
     CropPanel* m_cropPanel = nullptr;
+    PresetsPanel* m_presets = nullptr;
+    core::PresetLibrary m_library{core::PresetLibrary::defaultFolder()};
+    services::Thumbnailer* m_presetThumbnails = nullptr;
+    QTimer* m_thumbnailTimer = nullptr;
+    int m_thumbnailGeneration = 0;
     QStackedWidget* m_panels = nullptr;
     QWidget* m_rail = nullptr;
     QToolButton* m_editMode = nullptr;

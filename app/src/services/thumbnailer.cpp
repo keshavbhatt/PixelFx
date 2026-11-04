@@ -54,6 +54,27 @@ Thumbnail Thumbnailer::make(const QString& path, int longEdge, const QString& si
     return thumb;
 }
 
+void Thumbnailer::requestRender(int key, std::shared_ptr<const pfx::Image> source,
+                                const pfx::Settings& settings)
+{
+    auto* watcher = new QFutureWatcher<QImage>(this);
+    connect(watcher, &QFutureWatcher<QImage>::finished, this, [this, watcher, key] {
+        Q_EMIT rendered(key, watcher->result());
+        watcher->deleteLater();
+    });
+    watcher->setFuture(QtConcurrent::run(m_pool, [source = std::move(source), settings]() -> QImage {
+        if (!source) {
+            return {};
+        }
+        const auto out = pfx::render(*source, settings, {1, nullptr}); // tiny: one thread each
+        if (!out) {
+            return {};
+        }
+        const auto display = pfx::toSrgb8(out.value());
+        return display ? toQImage(display.value()) : QImage();
+    }));
+}
+
 void Thumbnailer::request(const QString& path, int longEdge, const QString& sidecarFolder)
 {
     auto* watcher = new QFutureWatcher<Thumbnail>(this);

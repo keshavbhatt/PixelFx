@@ -5,6 +5,10 @@
 #include <QObject>
 #include <QString>
 
+#include <memory>
+#include <pfx/image.h>
+#include <pfx/settings.h>
+
 class QThreadPool;
 
 namespace pixelfx::services {
@@ -29,11 +33,14 @@ public:
 
     /// Edits are looked up in `sidecarFolder` (empty: the photo as it is).
     void request(const QString& path, int longEdge, const QString& sidecarFolder);
+    /// Renders `settings` on `source` (already small) on a worker; `key` comes back with it.
+    void requestRender(int key, std::shared_ptr<const pfx::Image> source, const pfx::Settings& settings);
     /// Runs on a worker: decode small, apply the stored settings, convert for display.
     [[nodiscard]] static Thumbnail make(const QString& path, int longEdge, const QString& sidecarFolder);
 
 Q_SIGNALS:
     void ready(const pixelfx::services::Thumbnail& thumbnail);
+    void rendered(int key, const QImage& image);
 
 private:
     QThreadPool* m_pool = nullptr;

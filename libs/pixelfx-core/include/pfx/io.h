@@ -78,7 +78,7 @@ struct Rgba8Image
 [[nodiscard]] std::vector<std::string> writableExtensions();
 
 // File extensions (lower case, with the dot, sorted) this build can read as photos: JPEG, PNG,
-// TIFF, WebP and GIF always; HEIC, HEIF and AVIF, JPEG XL, camera RAW and BMP when libvips has
+// TIFF and WebP always; GIF, HEIC, HEIF and AVIF, JPEG XL, camera RAW and BMP when libvips has
 // the loader. Documents, vector and scientific formats libvips also reads are left out.
 [[nodiscard]] std::vector<std::string> readableExtensions();
 

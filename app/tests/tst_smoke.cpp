@@ -3,6 +3,7 @@
 #include "ui/canvas.h"
 #include "ui/crop_panel.h"
 #include "ui/main_window.h"
+#include "ui/presets_panel.h"
 #include "ui/straighten_dial.h"
 #include "ui/style.h"
 
@@ -87,6 +88,30 @@ private Q_SLOTS:
         QVERIFY(window.canvas()->clippingWarnings());
         QTest::keyClick(&window, Qt::Key_J);
         QVERIFY(!window.canvas()->clippingWarnings());
+
+        // A preset from the library applies as one step and keeps what it does not hold.
+        {
+            pfx::Settings preset;
+            preset.set("detail.clarity", 25.0);
+            const QString presetPath =
+                pixelfx::core::PresetLibrary(pixelfx::core::PresetLibrary::defaultFolder())
+                    .save(u"Crisp"_s, u"My presets"_s, preset);
+            QVERIFY(!presetPath.isEmpty());
+            window.refreshPresets();
+            pfx::Settings before;
+            before.set("light.exposure", 0.4);
+            window.document().apply(before, u"Before"_s);
+            for (pixelfx::ui::PresetRow* row : window.presetsPanel()->rows()) {
+                if (row->name() == u"Crisp"_s) {
+                    QTest::mouseClick(row, Qt::LeftButton, {}, QPoint(80, 10));
+                }
+            }
+            QCOMPARE(window.document().settings().number("detail.clarity", 0), 25.0);
+            QCOMPARE(window.document().settings().number("light.exposure", 0), 0.4);
+            QCOMPARE(window.document().history().undoLabel(), u"Preset Crisp"_s);
+            QFile::remove(presetPath);
+            window.document().apply({}, u"Clear"_s);
+        }
 
         // Zoom: in from Fit, back with Ctrl+0; Crop mode always fits.
         QVERIFY(window.canvas()->isFit());

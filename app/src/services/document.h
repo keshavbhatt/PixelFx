@@ -47,6 +47,11 @@ public:
     void setSidecarFolder(const QString& folder);
     /// Whether a photo opens with its remembered edits (true) or as the original.
     void setOpenAsLeft(bool on) { m_openAsLeft = on; }
+    /// Shows `settings` on the photo without changing anything (hovering a preset); nullopt
+    /// goes back to the photo's own settings.
+    void setHoverSettings(const std::optional<pfx::Settings>& settings);
+    /// The photo at thumbnail size (about 120 px), for preset pictures; null until open.
+    [[nodiscard]] std::shared_ptr<const pfx::Image> thumbnailSource() const { return m_thumbnailSource; }
     /// Writes a pending edit file now (before quitting).
     void flush();
 
@@ -142,6 +147,8 @@ private:
     pfx::Settings m_originalGeometry;
     bool m_cropEditing = false;
     bool m_openAsLeft = true;
+    std::optional<pfx::Settings> m_hover;
+    std::shared_ptr<const pfx::Image> m_thumbnailSource;
     bool m_fullOn = false;
     QImage m_full;
     RenderScheduler* m_fullScheduler = nullptr;

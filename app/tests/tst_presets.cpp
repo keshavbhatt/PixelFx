@@ -77,10 +77,10 @@ private Q_SLOTS:
         const auto mine = std::ranges::count_if(entries, [](const PresetEntry& e) { return !e.isBuiltIn(); });
         QCOMPARE(mine, 2);
         QCOMPARE(entries.front().name, u"Warm / evening"_s);
-        QVERIFY(library.rename(path, u"Golden"_s));
+        QVERIFY(PresetLibrary::rename(path, u"Golden"_s));
         pfx::Settings changed;
         changed.set("light.exposure", -0.2);
-        QVERIFY(library.update(path, changed));
+        QVERIFY(PresetLibrary::update(path, changed));
         entries = library.entries();
         const auto golden =
             std::ranges::find_if(entries, [](const PresetEntry& e) { return e.name == u"Golden"_s; });
@@ -102,10 +102,12 @@ private Q_SLOTS:
         QVERIFY(pfx::saveDocument(doc, file.toStdString()).ok());
         const auto [path, error] = library.importFile(file);
         QVERIFY2(!path.isEmpty(), qPrintable(error));
+        QVERIFY(!library.save(u"Mine"_s, u"My presets"_s, doc.settings).isEmpty());
         const auto entries = library.entries();
-        QCOMPARE(entries.front().group, u"Imported"_s);
+        QCOMPARE(entries.front().group, u"My presets"_s); // My presets come first, Imported after
+        QCOMPARE(entries.at(1).group, u"Imported"_s);
         QVERIFY(!library.importFile(dir.filePath(u"missing.pfxpreset"_s)).second.isEmpty());
-        QVERIFY(library.exportTo(entries.front(), dir.filePath(u"out.pfxpreset"_s)));
+        QVERIFY(PresetLibrary::exportTo(entries.front(), dir.filePath(u"out.pfxpreset"_s)));
         QVERIFY(QFile::exists(dir.filePath(u"out.pfxpreset"_s)));
     }
 
