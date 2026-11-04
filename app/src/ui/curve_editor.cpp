@@ -163,6 +163,10 @@ void CurveEditor::mouseMoveEvent(QMouseEvent* event)
 void CurveEditor::mouseReleaseEvent(QMouseEvent* event)
 {
     if (event->button() == Qt::LeftButton && m_drag >= 0) {
+        // The release ends the drag where it happens, even if no move with the button reached us.
+        if (fromWidget(event->position()) != m_points[static_cast<std::size_t>(m_drag)]) {
+            moveDragged(event->position());
+        }
         m_drag = -1;
         Q_EMIT editFinished();
     }
