@@ -184,6 +184,41 @@ private Q_SLOTS:
         QCOMPARE(doc.history().undoLabel(), u"Auto"_s);
     }
 
+    void cropEditingShowsTheWholePhoto()
+    {
+        QTemporaryDir dir;
+        const QString path = writePhoto(dir, u"photo.png"_s, 400, 200);
+        Document doc;
+        QSignalSpy ready(&doc, &Document::previewReady);
+        QSignalSpy original(&doc, &Document::originalReady);
+        doc.open(path, 400);
+        QVERIFY(ready.wait(10000));
+        pfx::Settings s;
+        s.set("geometry.crop.w", 0.5);
+        s.set("geometry.crop.h", 0.5);
+        doc.apply(s, u"Crop"_s);
+        QVERIFY(ready.wait(10000));
+        QCOMPARE(doc.preview().size(), QSize(200, 100));
+        QCOMPARE(doc.outputSize(), QSize(200, 100));
+        // The original lines up with the edit: same crop, no other settings.
+        QTRY_COMPARE_WITH_TIMEOUT(doc.original().size(), QSize(200, 100), 10000);
+
+        doc.setCropEditing(true);
+        QVERIFY(ready.wait(10000));
+        QCOMPARE(doc.preview().size(), QSize(400, 200));
+        QCOMPARE(doc.displaySize(), QSize(400, 200));
+        QCOMPARE(doc.outputSize(), QSize(200, 100));
+        // Moving the crop box while cropping renders nothing.
+        ready.clear();
+        s.set("geometry.crop.x", 0.25);
+        doc.setSettings(s);
+        QTest::qWait(300);
+        QCOMPARE(ready.count(), 0);
+        doc.setCropEditing(false);
+        QVERIFY(ready.wait(10000));
+        QCOMPARE(doc.preview().size(), QSize(200, 100));
+    }
+
     void failureSaysWhy()
     {
         Document doc;

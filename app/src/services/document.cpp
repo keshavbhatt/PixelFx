@@ -1,5 +1,6 @@
 #include "services/document.h"
 
+#include "core/crop_geometry.h"
 #include "services/logging.h"
 #include "services/qt_image_bridge.h"
 #include "services/render_scheduler.h"
@@ -42,6 +43,7 @@ QString fromStd(const std::string& text)
 Document::Document(QObject* parent)
     : QObject(parent)
     , m_scheduler(new RenderScheduler(this))
+    , m_originalScheduler(new RenderScheduler(this))
     , m_saveTimer(new QTimer(this))
     , m_savePool(new QThreadPool(this))
 {
@@ -55,6 +57,13 @@ Document::Document(QObject* parent)
                 m_histogram = histogram;
                 Q_EMIT previewReady(m_preview);
                 Q_EMIT histogramReady(m_histogram);
+            });
+    connect(m_originalScheduler, &RenderScheduler::rendered, this,
+            [this](const QImage& image, const pfx::Settings& settings, const core::Histogram&) {
+                if (settings == m_originalGeometry) {
+                    m_original = image;
+                    Q_EMIT originalReady(m_original);
+                }
             });
     connect(m_scheduler, &RenderScheduler::failed, this,
             [this](const QString& message) { Q_EMIT failed(m_info.path, message); });
@@ -174,12 +183,16 @@ void Document::deliver(const Result& result)
         return;
     }
     m_info = result.info;
+    m_plainOriginal = result.original;
     m_original = result.original;
+    m_originalGeometry = {};
+    m_cropEditing = false;
     m_preview = result.original;
     m_histogram = result.histogram;
     m_fingerprint = result.fingerprint;
     m_source = result.source;
     m_scheduler->setSource(result.source);
+    m_originalScheduler->setSource(result.source);
     // As it was left (FEATURES E17): the remembered edits are the starting point of the history.
     m_history.reset(result.stored, tr("Opened"));
     replaceSettings(result.stored, !result.stored.isEmpty()); // no settings: the original is the render
@@ -195,12 +208,63 @@ void Document::setSettings(const pfx::Settings& settings)
     if (!isOpen() || settings == m_settings) {
         return;
     }
+    const pfx::Settings before = renderSettings();
     m_settings = settings;
-    m_scheduler->request(m_settings);
+    if (renderSettings() != before) { // moving the crop box while cropping needs no render
+        requestRender();
+    }
+}
+
+pfx::Settings Document::renderSettings() const
+{
+    return m_cropEditing ? core::withoutCrop(m_settings) : m_settings;
+}
+
+void Document::requestRender()
+{
+    m_scheduler->request(renderSettings());
+}
+
+void Document::refreshOriginal()
+{
+    const pfx::Settings geometry = core::geometryOnly(renderSettings());
+    if (geometry == m_originalGeometry) {
+        return;
+    }
+    m_originalGeometry = geometry;
+    if (geometry.isEmpty()) {
+        m_original = m_plainOriginal;
+        Q_EMIT originalReady(m_original);
+    } else {
+        m_originalScheduler->request(geometry);
+    }
+}
+
+void Document::setCropEditing(bool on)
+{
+    if (on == m_cropEditing) {
+        return;
+    }
+    m_cropEditing = on;
+    if (isOpen()) {
+        requestRender();
+        refreshOriginal();
+    }
+}
+
+QSize Document::displaySize() const
+{
+    return core::outputSize(renderSettings(), m_info.size);
+}
+
+QSize Document::outputSize() const
+{
+    return core::outputSize(m_settings, m_info.size);
 }
 
 void Document::commit(const QString& label)
 {
+    refreshOriginal();
     if (m_history.push(label, m_settings)) {
         scheduleSave();
         Q_EMIT historyChanged();
@@ -262,8 +326,9 @@ void Document::replaceSettings(const pfx::Settings& settings, bool render)
 {
     m_settings = settings;
     if (render) {
-        m_scheduler->request(m_settings);
+        requestRender();
     }
+    refreshOriginal();
     Q_EMIT settingsReplaced(m_settings);
 }
 

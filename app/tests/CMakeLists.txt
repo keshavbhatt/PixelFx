@@ -20,6 +20,7 @@ pixelfx_add_test(tst_export_options  tst_export_options.cpp  pixelfx_core)
 pixelfx_add_test(tst_histogram       tst_histogram.cpp       pixelfx_core)
 pixelfx_add_test(tst_sidecar_store   tst_sidecar_store.cpp   pixelfx_core)
 pixelfx_add_test(tst_log_sink        tst_log_sink.cpp        pixelfx_core)
+pixelfx_add_test(tst_crop_geometry   tst_crop_geometry.cpp   pixelfx_core)
 pixelfx_add_test(tst_changelog       tst_changelog.cpp       pixelfx_core)
 target_compile_definitions(tst_changelog PRIVATE
     PIXELFX_CHANGELOG_PATH="${PROJECT_SOURCE_DIR}/CHANGELOG.md"
@@ -32,6 +33,7 @@ pixelfx_add_test(tst_document        tst_document.cpp        pixelfx_services GU
 pixelfx_add_test(tst_cli_options     tst_cli_options.cpp     pixelfx_app)
 pixelfx_add_test(tst_single_instance tst_single_instance.cpp pixelfx_app)
 pixelfx_add_test(tst_adjust_panel    tst_adjust_panel.cpp    pixelfx_ui GUI)
+pixelfx_add_test(tst_crop_panel      tst_crop_panel.cpp      pixelfx_ui GUI)
 pixelfx_add_test(tst_export_sheet    tst_export_sheet.cpp    pixelfx_ui GUI)
 pixelfx_add_test(tst_smoke           tst_smoke.cpp           pixelfx_ui GUI)
 pixelfx_add_test(tst_instance        tst_instance.cpp        Qt6::Core GUI)

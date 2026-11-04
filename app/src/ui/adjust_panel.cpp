@@ -183,9 +183,10 @@ AdjustSlider::AdjustSlider(const QString& key, const QString& label, QWidget* pa
     Q_ASSERT(spec != nullptr);
     m_default = spec->defaultValue;
     // Small ranges (exposure in stops) get hundredths; the rest whole numbers.
-    m_scale = (spec->maximum - spec->minimum) <= 20.0 ? 100.0 : 1.0;
-    m_slider->setRange(toTicks(spec->minimum), toTicks(spec->maximum));
-    m_slider->setPageStep(m_scale > 1.0 ? 100 : 10);
+    m_minimum = spec->minimum;
+    m_maximum = spec->maximum;
+    m_degrees = spec->unit == "degrees";
+    setStepsPerUnit((spec->maximum - spec->minimum) <= 20.0 ? 100.0 : 1.0);
     m_slider->setAccessibleName(label);
     m_slider->setToolTip(tr("%1. Double-click to reset.").arg(label));
     m_slider->installEventFilter(this);
@@ -219,6 +220,17 @@ AdjustSlider::AdjustSlider(const QString& key, const QString& label, QWidget* pa
 
 AdjustSlider::~AdjustSlider() = default;
 
+void AdjustSlider::setStepsPerUnit(double steps)
+{
+    const double current = value();
+    m_scale = steps;
+    const QSignalBlocker block(m_slider);
+    m_slider->setRange(toTicks(m_minimum), toTicks(m_maximum));
+    m_slider->setPageStep(static_cast<int>(m_scale > 1.0 ? m_scale : 10));
+    m_slider->setValue(toTicks(current));
+    refresh();
+}
+
 int AdjustSlider::toTicks(double value) const
 {
     return static_cast<int>(std::lround(value * m_scale));
@@ -249,7 +261,16 @@ void AdjustSlider::setValue(double value)
 QString AdjustSlider::valueText() const
 {
     const double v = value();
-    const QString number = m_scale > 1.0 ? QString::number(v, 'f', 2) : QString::number(std::lround(v));
+    int decimals = 0;
+    if (m_scale >= 100.0) {
+        decimals = 2;
+    } else if (m_scale > 1.0) {
+        decimals = 1;
+    }
+    QString number = decimals > 0 ? QString::number(v, 'f', decimals) : QString::number(std::lround(v));
+    if (m_degrees) {
+        number += u'\u00B0';
+    }
     return v > 0.0 ? u"+"_s + number : number;
 }
 

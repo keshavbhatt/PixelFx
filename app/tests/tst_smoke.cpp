@@ -1,5 +1,7 @@
 #include "core/settings/settings.h"
+#include "ui/adjust_panel.h"
 #include "ui/canvas.h"
+#include "ui/crop_panel.h"
 #include "ui/main_window.h"
 #include "ui/style.h"
 
@@ -48,6 +50,25 @@ private Q_SLOTS:
         QVERIFY(window.canvas()->isComparing());
         QTest::keyClick(&window, Qt::Key_Backslash);
         QVERIFY(!window.canvas()->isComparing());
+
+        // Crop mode: C enters, Escape drops the change, Enter keeps it as one step.
+        const int steps = static_cast<int>(window.document().history().labels().size());
+        QTest::keyClick(&window, Qt::Key_C);
+        QVERIFY(window.isCropping());
+        QVERIFY(window.canvas()->isCropping());
+        window.cropPanel()->chooseRatio(u"1:1"_s);
+        QCOMPARE(window.document().outputSize(), QSize(200, 200));
+        QTest::keyClick(&window, Qt::Key_Escape);
+        QVERIFY(!window.isCropping());
+        QCOMPARE(window.document().outputSize(), QSize(320, 200));
+        QTest::keyClick(&window, Qt::Key_C);
+        window.cropPanel()->chooseRatio(u"1:1"_s);
+        QTest::keyClick(&window, Qt::Key_Return);
+        QVERIFY(!window.isCropping());
+        QCOMPARE(window.document().outputSize(), QSize(200, 200));
+        QCOMPARE(window.document().history().labels().size(), steps + 1);
+        QVERIFY(window.adjustPanel()->settings().contains("geometry.crop.w"));
+        QTRY_COMPARE_WITH_TIMEOUT(window.canvas()->image().size(), QSize(200, 200), 10000);
         window.close();
     }
 

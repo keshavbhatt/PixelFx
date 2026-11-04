@@ -5,6 +5,8 @@
 
 #include <QMainWindow>
 
+#include <pfx/settings.h>
+
 class QLabel;
 class QStackedWidget;
 class QToolButton;
@@ -18,6 +20,7 @@ namespace pixelfx::ui {
 
 class AdjustPanel;
 class Canvas;
+class CropPanel;
 class WelcomePage;
 
 /// The main window (DESIGN section 2). M2: the header bar, the welcome page, and the canvas
@@ -41,6 +44,12 @@ public:
     [[nodiscard]] services::Document& document() { return m_document; }
     [[nodiscard]] Canvas* canvas() const { return m_canvas; }
     [[nodiscard]] AdjustPanel* adjustPanel() const { return m_adjust; }
+    [[nodiscard]] CropPanel* cropPanel() const { return m_cropPanel; }
+    /// Crop mode (C): the crop box over the whole photo and the crop panel.
+    void enterCrop();
+    /// Leaves Crop mode, keeping the changes as one history step (`apply`) or dropping them.
+    void leaveCrop(bool apply);
+    [[nodiscard]] bool isCropping() const;
     /// Shows the photo without its settings while `on` (the eye button, or Space held).
     void showOriginal(bool on);
     /// Before and after on or off (the \\ key and the header button).
@@ -61,7 +70,13 @@ private:
     void setupUi();
     void buildHeader();
     void buildEditButtons();
+    void buildRail();
+    QWidget* buildCanvasPage();
+    void connectCrop();
+    void updateCropStrip();
     void setupActions();
+    void setupEditActions();
+    void setupCropActions();
     void connectDocument();
     void updateHistoryButtons();
     void showToast(const QString& text);
@@ -79,6 +94,16 @@ private:
     WelcomePage* m_welcome = nullptr;
     Canvas* m_canvas = nullptr;
     AdjustPanel* m_adjust = nullptr;
+    CropPanel* m_cropPanel = nullptr;
+    QStackedWidget* m_panels = nullptr;
+    QWidget* m_rail = nullptr;
+    QToolButton* m_editMode = nullptr;
+    QToolButton* m_cropMode = nullptr;
+    QWidget* m_canvasPage = nullptr;
+    QWidget* m_cropStrip = nullptr;
+    QLabel* m_cropSize = nullptr;
+    pfx::Settings m_cropStart;
+    QList<QAction*> m_cropActions;
     QToolButton* m_undo = nullptr;
     QToolButton* m_redo = nullptr;
     QToolButton* m_original = nullptr;

@@ -2,6 +2,8 @@
 qt_add_library(pixelfx_core STATIC
     changelog.cpp
     changelog.h
+    crop_geometry.cpp
+    crop_geometry.h
     export_options.cpp
     export_options.h
     histogram.cpp

@@ -34,6 +34,16 @@ const QString kSheet = uR"(
         #welcomeHint, #muted { color: {{muted}}; }
         #faint { color: {{faint}}; font-size: 12px; }
         #adjustPanel { background: {{panel}}; border-left: 1px solid {{border}}; }
+        #cropPanel { background: {{panel}}; border-left: 1px solid {{border}}; }
+        #section { color: {{muted}}; font-size: 11px; font-weight: 700; }
+        QPushButton#chip { border: 1px solid {{border}}; border-radius: 12px; padding: 3px 10px; font-size: 12px; color: {{muted}}; background: transparent; }
+        QPushButton#chip:hover { background: {{hover}}; color: {{text}}; }
+        QPushButton#chip:checked { background: {{accentSoft}}; color: {{accent}}; border-color: transparent; }
+        #rail { background: {{bar}}; border-right: 1px solid {{border}}; }
+        QToolButton#railButton { border: 0; border-radius: 9px; background: transparent; color: {{muted}}; font-size: 11px; }
+        QToolButton#railButton:hover { background: {{hover}}; color: {{text}}; }
+        QToolButton#railButton:checked { background: {{accentSoft}}; color: {{accent}}; }
+        #strip { background: {{bar}}; border-top: 1px solid {{border}}; }
         #adjustScroll, #adjustContent { background: {{panel}}; }
         #adjustGroup { border-top: 1px solid {{border}}; }
         QToolButton#groupToggle { border: 0; background: transparent; font-weight: 600; padding: 2px; }

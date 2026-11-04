@@ -5,11 +5,14 @@
 //   PIXELFX_DEBUG_WINDOW_SIZE=<w>x<h>  window size
 //   PIXELFX_DEBUG_PRESET=<file>        apply this preset or recipe once the photo is open
 //   PIXELFX_DEBUG_COMPARE=1            turn on before and after once the photo is open
+//   PIXELFX_DEBUG_CROP=<ratio>[,<deg>] enter Crop mode with a ratio chip ("Free", "3:2") and
+//                                      a straightening angle once the photo is open
 //   PIXELFX_DEBUG_SHEET=export         with GRAB: grab the Export sheet instead of the window
 //   PIXELFX_DEBUG_GRAB=<file.png>      grab the window once the photo is shown (or after 2 s
 //                                      with nothing to show) and quit
 #include "app/application.h"
 #include "core/log_sink.h"
+#include "ui/crop_panel.h"
 #include "ui/export_sheet.h"
 #include "ui/main_window.h"
 #include "ui/style.h"
@@ -23,27 +26,21 @@ using namespace Qt::StringLiterals;
 
 namespace {
 
-void applyDebugHooks(pixelfx::ui::MainWindow& window, QStringList& files)
+void applyCropHook(pixelfx::ui::MainWindow& window)
 {
-    if (const QString open = qEnvironmentVariable("PIXELFX_DEBUG_OPEN"); !open.isEmpty()) {
-        files.prepend(QFileInfo(open).absoluteFilePath());
+    if (const QString crop = qEnvironmentVariable("PIXELFX_DEBUG_CROP"); !crop.isEmpty()) {
+        QObject::connect(&window.document(), &pixelfx::services::Document::opened, &window, [&window, crop] {
+            window.enterCrop();
+            window.cropPanel()->chooseRatio(crop.section(u',', 0, 0));
+            if (crop.contains(u',')) {
+                window.cropPanel()->setAngle(crop.section(u',', 1, 1).toDouble());
+            }
+        });
     }
-    if (const QString size = qEnvironmentVariable("PIXELFX_DEBUG_WINDOW_SIZE"); size.contains(u'x')) {
-        window.resize(size.section(u'x', 0, 0).toInt(), size.section(u'x', 1, 1).toInt());
-    }
-    if (const QString preset = qEnvironmentVariable("PIXELFX_DEBUG_PRESET"); !preset.isEmpty()) {
-        QObject::connect(
-            &window.document(), &pixelfx::services::Document::opened, &window, [&window, preset] {
-                const auto doc = pfx::loadDocument(preset.toStdString());
-                if (doc) {
-                    window.document().apply(doc.value().settings, QFileInfo(preset).completeBaseName());
-                }
-            });
-    }
-    if (qEnvironmentVariableIsSet("PIXELFX_DEBUG_COMPARE")) {
-        QObject::connect(&window.document(), &pixelfx::services::Document::opened, &window,
-                         [&window] { window.setCompare(true); });
-    }
+}
+
+void applyGrabHook(pixelfx::ui::MainWindow& window, const QStringList& files)
+{
     const QString grab = qEnvironmentVariable("PIXELFX_DEBUG_GRAB");
     if (grab.isEmpty()) {
         return;
@@ -52,7 +49,7 @@ void applyDebugHooks(pixelfx::ui::MainWindow& window, QStringList& files)
     const auto save = [&window, grab, exportSheet] {
         if (exportSheet && window.document().isOpen()) {
             auto* sheet =
-                new pixelfx::ui::ExportSheet(window.document().info().path, window.document().info().size,
+                new pixelfx::ui::ExportSheet(window.document().info().path, window.document().outputSize(),
                                              pixelfx::core::ExportOptions{}, &window);
             sheet->show();
             QTimer::singleShot(300, sheet, [sheet, grab] {
@@ -78,6 +75,31 @@ void applyDebugHooks(pixelfx::ui::MainWindow& window, QStringList& files)
     if (files.isEmpty()) {
         QTimer::singleShot(2000, &window, save);
     }
+}
+
+void applyDebugHooks(pixelfx::ui::MainWindow& window, QStringList& files)
+{
+    if (const QString open = qEnvironmentVariable("PIXELFX_DEBUG_OPEN"); !open.isEmpty()) {
+        files.prepend(QFileInfo(open).absoluteFilePath());
+    }
+    if (const QString size = qEnvironmentVariable("PIXELFX_DEBUG_WINDOW_SIZE"); size.contains(u'x')) {
+        window.resize(size.section(u'x', 0, 0).toInt(), size.section(u'x', 1, 1).toInt());
+    }
+    if (const QString preset = qEnvironmentVariable("PIXELFX_DEBUG_PRESET"); !preset.isEmpty()) {
+        QObject::connect(
+            &window.document(), &pixelfx::services::Document::opened, &window, [&window, preset] {
+                const auto doc = pfx::loadDocument(preset.toStdString());
+                if (doc) {
+                    window.document().apply(doc.value().settings, QFileInfo(preset).completeBaseName());
+                }
+            });
+    }
+    if (qEnvironmentVariableIsSet("PIXELFX_DEBUG_COMPARE")) {
+        QObject::connect(&window.document(), &pixelfx::services::Document::opened, &window,
+                         [&window] { window.setCompare(true); });
+    }
+    applyCropHook(window);
+    applyGrabHook(window, files);
 }
 
 } // namespace

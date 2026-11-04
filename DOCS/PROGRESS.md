@@ -63,6 +63,20 @@
   paths in the command line and export tests, a /proc path in the log sink test, and a
   single-instance test sending from the primary's own thread (on Windows a local socket is a
   named pipe, which needs the other side to accept).
+- Geometry in libpixelfx (`geometry` op, stage 10): quarter turns, flips, straightening that
+  crops to the largest upright rectangle (2 px inside, so no soft corner shows), crop as
+  fractions of the straightened photo; `pfx::outputSize` gives the size without rendering. A
+  positive angle turns the photo clockwise (checked on a render). 53 library tests pass.
+- Crop mode from `crop.html` (C): a rail with Edit and Crop; the crop box over the whole
+  straightened photo with the rest dimmed, corner handles, Thirds, Grid, Golden and Diagonal
+  guides; ratio chips (Free, Original, 1:1, 4:5, 5:7, 3:2, 16:9, 9:16), Landscape and Portrait
+  (X), straighten slider in tenths of a degree, turn and flip buttons; Enter applies as one
+  history step, Escape cancels. `core::turn` and `core::flip` act on the photo as shown (a turn
+  under one flip goes the other way in the settings; a flip negates the angle and mirrors the
+  crop). While cropping the preview renders without the crop, and moving the box renders
+  nothing. Before and after now uses an original with the same geometry, so the halves line up.
+  Not yet: the straighten dial under the photo, the level line, Auto straighten, Custom ratio
+  and Perspective (the library has no perspective op yet). 19 app suites pass.
 
 ### 2026-11-04 (M2)
 

@@ -83,8 +83,10 @@ public:
     [[nodiscard]] bool isChanged() const;
     /// Shows `value` without emitting.
     void setValue(double value);
-    /// The value as the panel shows it: "+12", "-0.35".
+    /// The value as the panel shows it: "+12", "-0.35", "+1.5°".
     [[nodiscard]] QString valueText() const;
+    /// Steps of 1/`steps` of a unit (the default is hundredths for small ranges, else whole).
+    void setStepsPerUnit(double steps);
 
 Q_SIGNALS:
     void moved(double value);
@@ -102,6 +104,9 @@ private:
     QString m_label;
     double m_default = 0.0;
     double m_scale = 1.0;
+    double m_minimum = 0.0;
+    double m_maximum = 0.0;
+    bool m_degrees = false;
     QSlider* m_slider = nullptr;
     QLabel* m_name = nullptr;
     QLabel* m_value = nullptr;

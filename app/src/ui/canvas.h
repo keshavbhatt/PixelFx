@@ -1,5 +1,8 @@
 #pragma once
 
+#include "core/crop_geometry.h"
+#include "ui/crop_overlay.h"
+
 #include <QImage>
 #include <QString>
 #include <QWidget>
@@ -7,7 +10,8 @@
 namespace pixelfx::ui {
 
 /// The photo, fitted to the widget on the canvas colour (DESIGN section 2). Shows a status line
-/// while opening and the reason when opening failed. Zoom and pan arrive with M3.
+/// while opening and the reason when opening failed. In crop mode it draws the crop box over
+/// the whole photo (mock crop.html) and reports where the box is dragged.
 class Canvas : public QWidget
 {
     Q_OBJECT
@@ -34,6 +38,23 @@ public:
     /// Where the photo is drawn, in widget coordinates.
     [[nodiscard]] QRect photoRect() const;
 
+    void setCropMode(bool on);
+    [[nodiscard]] bool isCropping() const { return m_cropping; }
+    /// The crop box as fractions of the shown photo.
+    void setCrop(const QRectF& crop);
+    [[nodiscard]] const QRectF& crop() const { return m_crop; }
+    /// Width over height the box keeps while dragged; 0 is free (Shift keeps the current one).
+    void setCropRatio(double ratio);
+    void setCropOverlay(CropOverlay overlay);
+    /// Where the crop box is in widget coordinates.
+    [[nodiscard]] QRectF cropBox() const;
+    /// What a press at `pos` would drag.
+    [[nodiscard]] core::CropHandle cropHandleAt(QPointF pos) const;
+
+Q_SIGNALS:
+    /// The crop box was dragged to `crop` (fractions of the shown photo).
+    void cropEdited(const QRectF& crop);
+
 protected:
     void paintEvent(QPaintEvent* event) override;
     void mousePressEvent(QMouseEvent* event) override;
@@ -42,6 +63,15 @@ protected:
 
 private:
     void paintCompare(class QPainter& painter, const QRect& target);
+    void paintCrop(QPainter& painter, const QRect& target);
+    void paintOverlay(QPainter& painter, const QRectF& box) const;
+    bool m_cropping = false;
+    QRectF m_crop{0, 0, 1, 1};
+    double m_cropRatio = 0.0;
+    CropOverlay m_overlay = CropOverlay::Thirds;
+    core::CropHandle m_handle = core::CropHandle::None;
+    QPointF m_pressPos;
+    QRectF m_pressBox;
     QImage m_original;
     bool m_compare = false;
     bool m_dragging = false;

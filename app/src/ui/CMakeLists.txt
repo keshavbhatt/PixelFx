@@ -4,6 +4,9 @@ qt_add_library(pixelfx_ui STATIC
     adjust_panel.h
     canvas.cpp
     canvas.h
+    crop_overlay.h
+    crop_panel.cpp
+    crop_panel.h
     curve_editor.cpp
     curve_editor.h
     export_sheet.cpp

@@ -74,11 +74,22 @@ public:
     void autoAdjust();
     [[nodiscard]] const core::History& history() const { return m_history; }
 
+    /// While cropping, the preview shows the whole straightened photo so the crop box can move
+    /// over it; the crop stays in the settings.
+    void setCropEditing(bool on);
+    [[nodiscard]] bool isCropEditing() const { return m_cropEditing; }
+    /// The size of the photo these settings export: the upright size after turn, straighten
+    /// and crop (the uncropped size while cropping).
+    [[nodiscard]] QSize displaySize() const;
+    [[nodiscard]] QSize outputSize() const;
+
 Q_SIGNALS:
     void openStarted(const QString& path);
     void opened(const pixelfx::services::DocumentInfo& info);
     void previewReady(const QImage& image);
     void histogramReady(const pixelfx::core::Histogram& histogram);
+    /// The photo with only its geometry, for before and after (it lines up with the edit).
+    void originalReady(const QImage& image);
     /// The settings changed from outside the editing controls (open, undo, redo).
     void settingsReplaced(const pfx::Settings& settings);
     void historyChanged();
@@ -92,6 +103,11 @@ private:
     void deliver(const Result& result);
     void replaceSettings(const pfx::Settings& settings, bool render = true);
     void scheduleSave();
+    /// What the preview renders: the settings, without the crop while cropping.
+    [[nodiscard]] pfx::Settings renderSettings() const;
+    void requestRender();
+    /// Renders the original again when the geometry it needs changed.
+    void refreshOriginal();
     void saveNow(bool wait);
 
     DocumentInfo m_info;
@@ -101,6 +117,10 @@ private:
     pfx::Settings m_settings;
     core::History m_history;
     RenderScheduler* m_scheduler = nullptr;
+    RenderScheduler* m_originalScheduler = nullptr;
+    QImage m_plainOriginal; ///< decoded with no settings at all
+    pfx::Settings m_originalGeometry;
+    bool m_cropEditing = false;
     std::shared_ptr<const pfx::Image> m_source;
     std::optional<core::SidecarStore> m_sidecars;
     QString m_fingerprint;
