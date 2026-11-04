@@ -1,5 +1,6 @@
 #include "app/cli_options.h"
 
+#include <QDir>
 #include <QJsonArray>
 #include <QTest>
 
@@ -13,10 +14,14 @@ class TestCliOptions : public QObject
 private Q_SLOTS:
     void filesBecomeAbsolute()
     {
-        const auto r =
-            parseCliOptions({u"pixelfx"_s, u"a.jpg"_s, u"../b.png"_s, u"/x/c.tif"_s}, u"/home/u/pics"_s);
+        const QDir base(QDir::tempPath());
+        const QString cwd = base.filePath(u"u/pics"_s);
+        const QString absolute = base.filePath(u"x/c.tif"_s); // absolute on every system
+        const auto r = parseCliOptions({u"pixelfx"_s, u"a.jpg"_s, u"../b.png"_s, absolute}, cwd);
         QVERIFY(r.ok());
-        QCOMPARE(r.options.files, QStringList({u"/home/u/pics/a.jpg"_s, u"/home/u/b.png"_s, u"/x/c.tif"_s}));
+        QCOMPARE(r.options.files,
+                 QStringList({QDir::cleanPath(base.filePath(u"u/pics/a.jpg"_s)),
+                              QDir::cleanPath(base.filePath(u"u/b.png"_s)), QDir::cleanPath(absolute)}));
     }
 
     void optionsParse()

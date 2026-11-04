@@ -61,7 +61,11 @@ private Q_SLOTS:
 
     void unwritablePathIsIgnored()
     {
-        LogSink::setLogFile(u"/proc/definitely/not/writable/pixelfx.log"_s);
+        // A folder cannot be made inside a file, on any system.
+        QTemporaryDir dir;
+        const QString file = dir.filePath(u"plain-file"_s);
+        QVERIFY(QFile(file).open(QIODevice::WriteOnly));
+        LogSink::setLogFile(file + u"/sub/pixelfx.log"_s);
         QVERIFY(LogSink::logFilePath().isEmpty());
         qCInfo(lcTest) << "still fine";
     }

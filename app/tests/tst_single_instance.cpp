@@ -4,6 +4,8 @@
 #include <QSignalSpy>
 #include <QTest>
 
+#include <future>
+
 using namespace Qt::StringLiterals;
 using pixelfx::app::SingleInstance;
 
@@ -32,13 +34,15 @@ private Q_SLOTS:
         QSignalSpy spy(&primary, &SingleInstance::commandReceived);
         SingleInstance secondary(m_key);
 
-        QVERIFY(secondary.sendToPrimary({{u"cmd"_s, u"raise"_s}}));
-        QVERIFY(secondary.sendToPrimary({{u"cmd"_s, u"new-chat"_s}, {u"url"_s, u"wa.me/1"_s}}));
-        QVERIFY(spy.wait(2000));
-        if (spy.count() < 2) {
-            QVERIFY(spy.wait(2000));
-        }
-        QCOMPARE(spy.count(), 2);
+        // The secondary sends from another thread, as a second process would: on Windows a local
+        // socket is a named pipe, and a blocking write from the primary's own thread waits for an
+        // accept that thread cannot run.
+        auto sent = std::async(std::launch::async, [&secondary] {
+            return secondary.sendToPrimary({{u"cmd"_s, u"raise"_s}}) &&
+                   secondary.sendToPrimary({{u"cmd"_s, u"new-chat"_s}, {u"url"_s, u"wa.me/1"_s}});
+        });
+        QTRY_COMPARE_WITH_TIMEOUT(spy.count(), 2, 5000);
+        QVERIFY(sent.get());
         const QJsonObject second = spy.at(1).first().toJsonObject();
         QCOMPARE(second.value(u"cmd"_s).toString(), u"new-chat"_s);
         QCOMPARE(second.value(u"url"_s).toString(), u"wa.me/1"_s);

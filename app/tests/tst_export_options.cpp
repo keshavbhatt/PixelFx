@@ -1,5 +1,6 @@
 #include "core/export_options.h"
 
+#include <QDir>
 #include <QFile>
 #include <QTemporaryDir>
 #include <QTest>
@@ -61,7 +62,8 @@ private Q_SLOTS:
     {
         ExportOptions o;
         o.folder.clear();
-        QCOMPARE(exportTarget(u"/nonexistent/dir/a.jpg"_s, o, {}, {}), u"/nonexistent/dir/a-edit.jpg"_s);
+        const QString dir = QDir(QDir::tempPath()).filePath(u"nonexistent/dir"_s);
+        QCOMPARE(exportTarget(dir + u"/a.jpg"_s, o, {}, {}), dir + u"/a-edit.jpg"_s);
     }
 
     void policyKeysRoundTrip()
