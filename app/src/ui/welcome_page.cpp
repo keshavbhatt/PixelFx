@@ -56,10 +56,13 @@ void WelcomePage::buildDropZone()
     auto* glyph = new QLabel(m_dropZone);
     glyph->setPixmap(icons::pixmap(u"images"_s, tokens().muted, 48, devicePixelRatioF()));
     glyph->setAlignment(Qt::AlignCenter);
+    glyph->setFixedHeight(52); // the layout must not squeeze the picture
     auto* title = new QLabel(tr("Drop photos here"), m_dropZone);
     title->setObjectName(u"welcomeTitle"_s);
     title->setAlignment(Qt::AlignCenter);
-    auto* hint = new QLabel(tr("Or open one to edit."), m_dropZone);
+    auto* hint = new QLabel(
+        tr("Or open one to edit, or a whole folder to apply a look or preset to every image at once."),
+        m_dropZone);
     hint->setObjectName(u"welcomeHint"_s);
     hint->setAlignment(Qt::AlignCenter);
     auto* open = new QPushButton(icons::themed(u"open"_s, Qt::white), tr("Open images"), m_dropZone);
@@ -80,7 +83,22 @@ void WelcomePage::buildDropZone()
     zone->addWidget(title);
     zone->addWidget(hint);
     zone->addSpacing(10);
-    zone->addWidget(open, 0, Qt::AlignHCenter);
+    // Mock welcome.html: Open images, Open folder, Batch edit (the last two open Batch).
+    auto* openFolder =
+        new QPushButton(icons::themed(u"folder-plus"_s, tokens().text), tr("Open folder"), m_dropZone);
+    openFolder->setToolTip(tr("Every photo in a folder, ready for Batch"));
+    connect(openFolder, &QPushButton::clicked, this, &WelcomePage::openFolderRequested);
+    auto* batch = new QPushButton(icons::themed(u"stack"_s, tokens().text), tr("Batch edit"), m_dropZone);
+    batch->setToolTip(tr("One recipe for many photos (B)"));
+    connect(batch, &QPushButton::clicked, this, &WelcomePage::batchRequested);
+    auto* buttons = new QHBoxLayout;
+    buttons->setSpacing(10);
+    buttons->addStretch();
+    buttons->addWidget(open);
+    buttons->addWidget(openFolder);
+    buttons->addWidget(batch);
+    buttons->addStretch();
+    zone->addLayout(buttons);
     zone->addSpacing(6);
     zone->addWidget(formats);
 }

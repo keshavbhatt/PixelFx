@@ -425,6 +425,16 @@ void MainWindow::setupUi()
 
     m_welcome = new WelcomePage(this);
     connect(m_welcome, &WelcomePage::openRequested, this, &MainWindow::chooseFiles);
+    connect(m_welcome, &WelcomePage::batchRequested, this, [this] { enterBatch(); });
+    connect(m_welcome, &WelcomePage::openFolderRequested, this, [this] {
+        const QString folder =
+            QFileDialog::getExistingDirectory(this, tr("Open folder"), m_settings.lastOpenFolder());
+        if (!folder.isEmpty()) {
+            m_settings.setLastOpenFolder(folder);
+            enterBatch();
+            m_batch->addPaths({folder});
+        }
+    });
     connect(m_welcome, &WelcomePage::recentOpened, this, [this](const QString& path) { openFiles({path}); });
     connect(m_welcome, &WelcomePage::clearRecentRequested, this, [this] { m_settings.clearRecentFiles(); });
     connect(&m_settings, &core::Settings::recentFilesChanged, this, [this](const QStringList& files) {

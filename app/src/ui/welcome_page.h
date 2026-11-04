@@ -43,6 +43,8 @@ public:
 
 Q_SIGNALS:
     void openRequested();
+    void openFolderRequested();
+    void batchRequested();
     void recentOpened(const QString& path);
     void clearRecentRequested();
 
