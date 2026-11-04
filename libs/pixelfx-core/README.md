@@ -13,7 +13,8 @@ Apache-2.0. Part of the PixelFx repository (`libs/pixelfx-core`), built and test
   tag; converts through the embedded colour profile into linear Rec.2020.
 - Operations: exposure, tone (contrast, highlights, shadows, whites, blacks), white balance
   (temperature, tint), vibrance and saturation, curves (RGB and per channel), clarity,
-  sharpening, noise reduction (luminance and colour).
+  sharpening, noise reduction (luminance and colour); geometry (quarter turns, flips,
+  straightening, crop); effects (vignette, grain, fade).
 - Reads and writes PixelFx preset and recipe files (`DOCS/presets.md` in the repository).
 - Saves JPEG, PNG and TIFF (8 or 16 bit), WebP, AVIF and JPEG XL with an embedded sRGB profile,
   keeping Exif, XMP and IPTC metadata.

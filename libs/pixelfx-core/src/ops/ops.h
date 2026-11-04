@@ -41,10 +41,16 @@ void denoiseApply(Image& image, const Settings& s, const OpContext& ctx);
 bool clarityActive(const Settings& s);
 void clarityApply(Image& image, const Settings& s, const OpContext& ctx);
 bool sharpenActive(const Settings& s);
+void sharpenApply(Image& image, const Settings& s, const OpContext& ctx);
+bool vignetteActive(const Settings& s);
+void vignetteApply(Image& image, const Settings& s, const OpContext& ctx);
+bool grainActive(const Settings& s);
+void grainApply(Image& image, const Settings& s, const OpContext& ctx);
+bool fadeActive(const Settings& s);
+void fadeApply(Image& image, const Settings& s, const OpContext& ctx);
 
 // Ids of every implemented operation, in pipeline order (checked against the registry by tests).
 [[nodiscard]] std::vector<std::string_view> implementedOpIds();
-void sharpenApply(Image& image, const Settings& s, const OpContext& ctx);
 
 // Shared helper: scales every pixel's RGB by newY / Y, where newY = mapping(Y) on the Rec.2020
 // luminance. Keeps hue and saturation while changing lightness. Near-black pixels get the

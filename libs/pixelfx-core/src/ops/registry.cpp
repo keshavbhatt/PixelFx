@@ -62,11 +62,8 @@ ParamSpec choice(std::string key, std::vector<std::string> choices)
     return p;
 }
 
-// Stages follow DOCS/presets.md section 5; gaps leave room for the operations of later
-// milestones (geometry 10, dehaze 45, mixer 80, grading 90, look 100, vignette 120 ...).
-std::vector<OpSpec> builtInOps()
+void addGeometry(std::vector<OpSpec>& ops)
 {
-    std::vector<OpSpec> ops;
     ops.push_back({"geometry",
                    "geometry",
                    1,
@@ -76,6 +73,33 @@ std::vector<OpSpec> builtInOps()
                     number("geometry.angle", -45, 45, 0, "degrees"), fraction("geometry.crop.x", 0.0),
                     fraction("geometry.crop.y", 0.0), fraction("geometry.crop.w", 1.0),
                     fraction("geometry.crop.h", 1.0)}});
+}
+
+void addEffects(std::vector<OpSpec>& ops)
+{
+    ops.push_back(
+        {"vignette",
+         "effects",
+         1,
+         120,
+         false,
+         {number("effects.vignette.amount", -100, 100), number("effects.vignette.midpoint", 0, 100, 50),
+          number("effects.vignette.roundness", -100, 100)}});
+    ops.push_back({"grain",
+                   "effects",
+                   1,
+                   130,
+                   false,
+                   {number("effects.grain.amount", 0, 100), number("effects.grain.size", 0, 100, 25)}});
+    ops.push_back({"fade", "effects", 1, 140, true, {number("effects.fade", 0, 100)}});
+}
+
+// Stages follow DOCS/presets.md section 5; gaps leave room for the operations of later
+// milestones (geometry 10, dehaze 45, mixer 80, grading 90, look 100, vignette 120 ...).
+std::vector<OpSpec> builtInOps()
+{
+    std::vector<OpSpec> ops;
+    addGeometry(ops);
     ops.push_back({"denoise",
                    "detail",
                    1,
@@ -119,6 +143,7 @@ std::vector<OpSpec> builtInOps()
          false,
          {number("detail.sharpen.amount", 0, 150), relative("detail.sharpen.radius", 0.0001, 0.003, 0.0004),
           number("detail.sharpen.masking", 0, 100)}});
+    addEffects(ops);
     std::ranges::sort(ops, [](const OpSpec& a, const OpSpec& b) { return a.stage < b.stage; });
     return ops;
 }

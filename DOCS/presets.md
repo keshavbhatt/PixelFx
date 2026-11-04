@@ -63,8 +63,9 @@ internal units, so a file reads like the panel.
 - Keys inside a group are optional; a missing key in a present group is the operation's
   default. Ranges come from the registry; out-of-range values are clamped on load and
   reported once.
-- Spatial values (`radius`, crop rectangle, grain `size`) are fractions of the long edge or of
-  the image, never pixels, so the same file gives the same result on a preview and on the
+- Spatial values (`radius`, crop rectangle) are fractions of the long edge or of the image, never
+  pixels; grain `size` is a 0 to 100 slider the operation turns into 0.05% to 0.3% of the long
+  edge, so the same file gives the same result on a preview and on the
   full-size export (LESSONS row 3).
 - White balance in a preset is `relative` (shift from the photo's own) by default; `absolute`
   (Kelvin) is stored only when the user picked Kelvin.

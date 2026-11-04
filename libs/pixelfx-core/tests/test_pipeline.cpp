@@ -57,6 +57,9 @@ std::vector<Case> cases()
                {"geometry.crop.w", 0.8},
                {"geometry.crop.h", 0.85}}),
          0.02},
+        {"vignette", with({{"effects.vignette.amount", -45}, {"effects.vignette.roundness", 30}}), 0.004},
+        {"grain", with({{"effects.grain.amount", 40}, {"effects.grain.size", 80}}), 0.05},
+        {"fade", with({{"effects.fade", 40}}), 0.004},
     };
 }
 
