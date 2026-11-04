@@ -80,8 +80,9 @@ private Q_SLOTS:
         editor->resize(280, 180);
         QSignalSpy finished(&panel, &AdjustPanel::editFinished);
         const QPoint middle(140, 90);
+        // No QTest::mouseMove: on macOS it moves the real cursor. A release ends the drag where it
+        // happens, so press and release are enough.
         QTest::mousePress(editor, Qt::LeftButton, {}, middle);
-        QTest::mouseMove(editor, QPoint(140, 60));
         QTest::mouseRelease(editor, Qt::LeftButton, {}, QPoint(140, 60));
         QCOMPARE(editor->curve().size(), std::size_t{3});
         QVERIFY(panel.settings().contains("curves.rgb"));
