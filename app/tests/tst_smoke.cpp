@@ -5,6 +5,7 @@
 
 #include <QApplication>
 #include <QSignalSpy>
+#include <QStandardPaths>
 #include <QTemporaryDir>
 #include <QTest>
 
@@ -17,6 +18,11 @@ class TestSmoke : public QObject
     Q_OBJECT
 
 private Q_SLOTS:
+    void initTestCase()
+    {
+        QStandardPaths::setTestModeEnabled(true);
+    } // edit files stay out of the real data folder
+
     void windowBuildsShowsAndOpensAPhoto()
     {
         pixelfx::ui::applyStyle(*qApp);

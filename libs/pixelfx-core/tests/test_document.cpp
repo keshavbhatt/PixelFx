@@ -118,3 +118,20 @@ TEST_CASE("documents save to and load from files")
     CHECK(loaded.value().settings == doc.settings);
     CHECK(pfx::loadDocument(dir.path() / "missing.pfx").error().code == pfx::ErrorCode::NotFound);
 }
+
+TEST_CASE("a recipe keeps the photo it belongs to")
+{
+    pfx::Document doc;
+    doc.kind = pfx::DocumentKind::Recipe;
+    doc.sourceName = "sunset-lake.jpg";
+    doc.sourceSize = 8812341;
+    doc.sourceFingerprint = "sha1:9f1c0a5be2d47a10";
+    doc.settings.set("light.exposure", 0.5);
+    const auto again = pfx::parseDocument(pfx::serializeDocument(doc));
+    REQUIRE(again.ok());
+    CHECK(again.value().kind == pfx::DocumentKind::Recipe);
+    CHECK(again.value().sourceName == "sunset-lake.jpg");
+    CHECK(again.value().sourceSize == 8812341);
+    CHECK(again.value().sourceFingerprint == "sha1:9f1c0a5be2d47a10");
+    CHECK(again.value().settings == doc.settings);
+}

@@ -1,5 +1,6 @@
 #include "services/document.h"
 
+#include <QDir>
 #include <QSignalSpy>
 #include <QTemporaryDir>
 #include <QTest>
@@ -122,6 +123,33 @@ private Q_SLOTS:
         QCOMPARE(doc.history().undoLabel(), u"Moody"_s);
         doc.undo();
         QVERIFY(doc.settings().isEmpty());
+    }
+
+    void editsAreRememberedPerPhoto()
+    {
+        QTemporaryDir dir;
+        const QString path = writePhoto(dir, u"photo.png"_s, 64, 48);
+        const QString edits = dir.filePath(u"edits"_s);
+        {
+            Document doc;
+            doc.setSidecarFolder(edits);
+            QSignalSpy ready(&doc, &Document::previewReady);
+            doc.open(path, 64);
+            QVERIFY(ready.wait(10000));
+            pfx::Settings s;
+            s.set("light.shadows", 40.0);
+            doc.apply(s, u"Shadows +40"_s);
+        } // destroying the document writes what is pending
+        Document again;
+        again.setSidecarFolder(edits);
+        QSignalSpy opened(&again, &Document::opened);
+        again.open(path, 64);
+        QVERIFY(opened.wait(10000));
+        QCOMPARE(again.settings().number("light.shadows", 0), 40.0);
+        QVERIFY(!again.history().canUndo()); // the remembered edit is the starting point
+        again.apply({}, u"Reset all"_s);
+        again.flush();
+        QVERIFY(QDir(edits).entryList(QDir::Files).isEmpty()); // nothing left to remember
     }
 
     void failureSaysWhy()

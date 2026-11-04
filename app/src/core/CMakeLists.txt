@@ -12,6 +12,8 @@ qt_add_library(pixelfx_core STATIC
     log_sink.h
     logging.cpp
     logging.h
+    sidecar_store.cpp
+    sidecar_store.h
     settings/settings.cpp
     settings/settings.h
     settings/settings_keys.h

@@ -4,6 +4,7 @@
 #include "pfx/result.h"
 #include "pfx/settings.h"
 
+#include <cstdint>
 #include <filesystem>
 #include <string>
 #include <string_view>
@@ -35,6 +36,11 @@ struct Document
     std::string generator;
     std::string workingSpace = "rec2020-linear";
     Settings settings;
+    // Recipe documents (sidecars): the photo they belong to (DOCS/presets.md section 4). The
+    // fingerprint re-attaches a sidecar to a photo that was moved or renamed.
+    std::string sourceName;
+    std::uint64_t sourceSize = 0;
+    std::string sourceFingerprint;
     // Keys this version does not know, kept as JSON text and written back unchanged.
     std::string unknownTopLevel;
     std::string unknownBody;

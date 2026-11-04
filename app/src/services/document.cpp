@@ -6,6 +6,8 @@
 
 #include <QFileInfo>
 #include <QFutureWatcher>
+#include <QThreadPool>
+#include <QTimer>
 #include <QtConcurrent/QtConcurrentRun>
 
 #include <pfx/io.h>
@@ -21,6 +23,9 @@ struct Document::Result
     std::shared_ptr<const pfx::Image> source;
     QImage original;
     core::Histogram histogram;
+    QString sidecarFolder;
+    QString fingerprint;
+    pfx::Settings stored;
     QString error;
 };
 
@@ -36,7 +41,13 @@ QString fromStd(const std::string& text)
 Document::Document(QObject* parent)
     : QObject(parent)
     , m_scheduler(new RenderScheduler(this))
+    , m_saveTimer(new QTimer(this))
+    , m_savePool(new QThreadPool(this))
 {
+    m_savePool->setMaxThreadCount(1); // writes stay in order
+    m_saveTimer->setSingleShot(true);
+    m_saveTimer->setInterval(400);
+    connect(m_saveTimer, &QTimer::timeout, this, [this] { saveNow(false); });
     connect(m_scheduler, &RenderScheduler::rendered, this,
             [this](const QImage& image, const pfx::Settings&, const core::Histogram& histogram) {
                 m_preview = image;
@@ -48,7 +59,50 @@ Document::Document(QObject* parent)
             [this](const QString& message) { Q_EMIT failed(m_info.path, message); });
 }
 
-Document::~Document() = default;
+Document::~Document()
+{
+    flush();
+}
+
+void Document::setSidecarFolder(const QString& folder)
+{
+    if (folder.isEmpty()) {
+        m_sidecars.reset();
+    } else {
+        m_sidecars.emplace(folder);
+    }
+}
+
+void Document::flush()
+{
+    if (m_saveTimer->isActive()) {
+        m_saveTimer->stop();
+        saveNow(true);
+    }
+    m_savePool->waitForDone();
+}
+
+void Document::scheduleSave()
+{
+    if (m_sidecars && !m_fingerprint.isEmpty()) {
+        m_saveTimer->start();
+    }
+}
+
+void Document::saveNow(bool wait)
+{
+    if (!m_sidecars || m_fingerprint.isEmpty()) {
+        return;
+    }
+    m_savePool->start([store = *m_sidecars, photo = m_info.path, fp = m_fingerprint, settings = m_settings] {
+        if (!store.write(photo, fp, settings)) {
+            qCWarning(lcDocument) << "could not remember the edits of" << photo;
+        }
+    });
+    if (wait) {
+        m_savePool->waitForDone();
+    }
+}
 
 bool Document::isBusy() const
 {
@@ -77,6 +131,12 @@ Document::Result Document::openOnWorker(Result result,
         result.error = fromStd(display.error().message);
         return result;
     }
+    if (!result.sidecarFolder.isEmpty()) {
+        result.fingerprint = core::fileFingerprint(QFileInfo(result.info.path).absoluteFilePath());
+        if (auto stored = core::SidecarStore(result.sidecarFolder).read(result.fingerprint)) {
+            result.stored = std::move(*stored);
+        }
+    }
     result.original = toQImage(display.value());
     result.histogram = core::histogramOf(result.original);
     result.source = std::make_shared<const pfx::Image>(std::move(loaded).value().image);
@@ -85,9 +145,11 @@ Document::Result Document::openOnWorker(Result result,
 
 void Document::open(const QString& path, int previewLongEdge)
 {
+    flush(); // the photo being left keeps its last edit
     Result request;
     request.generation = ++m_generation;
     request.info.path = path;
+    request.sidecarFolder = m_sidecars ? m_sidecars->folder() : QString();
     ++m_pending;
     Q_EMIT openStarted(path);
     auto* watcher = new QFutureWatcher<Result>(this);
@@ -114,9 +176,11 @@ void Document::deliver(const Result& result)
     m_original = result.original;
     m_preview = result.original;
     m_histogram = result.histogram;
+    m_fingerprint = result.fingerprint;
     m_scheduler->setSource(result.source);
-    m_history.reset({}, tr("Opened"));
-    replaceSettings({}, false); // the original is already the render of no settings
+    // As it was left (FEATURES E17): the remembered edits are the starting point of the history.
+    m_history.reset(result.stored, tr("Opened"));
+    replaceSettings(result.stored, !result.stored.isEmpty()); // no settings: the original is the render
     qCInfo(lcDocument) << "opened" << m_info.path << m_info.size << m_info.format;
     Q_EMIT opened(m_info);
     Q_EMIT previewReady(m_preview);
@@ -136,6 +200,7 @@ void Document::setSettings(const pfx::Settings& settings)
 void Document::commit(const QString& label)
 {
     if (m_history.push(label, m_settings)) {
+        scheduleSave();
         Q_EMIT historyChanged();
     }
 }
@@ -153,6 +218,7 @@ void Document::undo()
 {
     if (m_history.canUndo()) {
         replaceSettings(m_history.undo());
+        scheduleSave();
         Q_EMIT historyChanged();
     }
 }
@@ -161,6 +227,7 @@ void Document::redo()
 {
     if (m_history.canRedo()) {
         replaceSettings(m_history.redo());
+        scheduleSave();
         Q_EMIT historyChanged();
     }
 }

@@ -46,6 +46,13 @@
   accident. libpixelfx gained `fitLongEdge` (Lanczos 3 in linear light) and `writableExtensions`.
   15 app suites and 43 library tests pass; clang-tidy clean.
 - Histogram at the top of the adjust panel, computed with each render on the worker; 16 suites pass.
+- Edits remembered per photo (`core::SidecarStore`): a recipe file per photo in the app's data
+  folder, named by a fingerprint of the file (size and the first and last 64 KiB), read on the
+  open worker, written in order on a one-thread pool after a short pause, flushed on close and
+  before the next photo opens; no settings, no file. The library's recipe documents carry the
+  `source` block of `presets.md`. 17 app suites and 44 library tests pass.
+- CI Windows: vcpkg and Qt now install; the first compile error (an iterator spelled as a
+  pointer, which MSVC rejects) fixed.
 
 ### 2026-11-04 (M2)
 

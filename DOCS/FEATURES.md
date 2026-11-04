@@ -74,7 +74,7 @@ preview and export use resolution-independent parameters so they match (v1 defec
 | E14 | Undo and redo for every change; History list; named snapshots | none | KEEP | wip: undo and redo with named steps done (`core::History`, `Document`); the History list and snapshots in M3 |
 | E15 | Copy and paste settings between photos, choose groups | none | KEEP | todo |
 | E16 | Reset a slider (double-click), a group, or everything | per row, global | KEEP | done (`AdjustPanel`) |
-| E17 | Edits remembered per photo in a sidecar (app library by default, or next to the photo) | none | KEEP | todo |
+| E17 | Edits remembered per photo in a sidecar (app library by default, or next to the photo) | none | KEEP | wip: app library by default, keyed by a file fingerprint so renames and moves keep the edit, written off the GUI thread (`core::SidecarStore`, `Document`); next to the photo and the setting in M3 |
 | E18 | GPU-accelerated preview with automatic CPU fallback | none | KEEP 2.1 (PLAN D14) | |
 | E19 | Local adjustments: brush, linear and radial gradient masks | none | LATER | |
 | E20 | Spot heal: click or brush over a blemish, dust spot or small object; the patch is found automatically and blended; spots are stored in the recipe (relative coordinates), editable and removable | none | KEEP (sells: the app is a "retouching" app, owner 2026-11-04) | todo |

@@ -105,6 +105,7 @@ MainWindow::MainWindow(core::Settings& settings, QWidget* parent)
     }
     restoreState(m_settings.windowState());
 
+    m_document.setSidecarFolder(core::SidecarStore::defaultFolder());
     connectDocument();
 }
 
@@ -378,6 +379,7 @@ int MainWindow::previewLongEdge() const
 
 void MainWindow::closeEvent(QCloseEvent* event)
 {
+    m_document.flush();
     m_settings.setWindowGeometry(saveGeometry());
     m_settings.setWindowState(saveState());
     QMainWindow::closeEvent(event);

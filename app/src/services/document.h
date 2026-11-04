@@ -2,6 +2,7 @@
 
 #include "core/histogram.h"
 #include "core/history.h"
+#include "core/sidecar_store.h"
 
 #include <QImage>
 #include <QObject>
@@ -9,6 +10,10 @@
 #include <QString>
 
 #include <memory>
+#include <optional>
+
+class QThreadPool;
+class QTimer;
 #include <pfx/image.h>
 #include <pfx/settings.h>
 
@@ -36,6 +41,11 @@ class Document : public QObject
 public:
     explicit Document(QObject* parent = nullptr);
     ~Document() override;
+
+    /// Remembers each photo's edits in `folder` (empty: remember nothing). Set before opening.
+    void setSidecarFolder(const QString& folder);
+    /// Writes a pending edit file now (before quitting).
+    void flush();
 
     /// Starts opening `path`, decoding a source whose long edge is at most `previewLongEdge`.
     void open(const QString& path, int previewLongEdge);
@@ -76,6 +86,8 @@ private:
     static Result openOnWorker(Result result, int previewLongEdge);
     void deliver(const Result& result);
     void replaceSettings(const pfx::Settings& settings, bool render = true);
+    void scheduleSave();
+    void saveNow(bool wait);
 
     DocumentInfo m_info;
     QImage m_preview;
@@ -84,6 +96,10 @@ private:
     pfx::Settings m_settings;
     core::History m_history;
     RenderScheduler* m_scheduler = nullptr;
+    std::optional<core::SidecarStore> m_sidecars;
+    QString m_fingerprint;
+    QTimer* m_saveTimer = nullptr;
+    QThreadPool* m_savePool = nullptr;
     quint64 m_generation = 0;
     int m_pending = 0;
 };
