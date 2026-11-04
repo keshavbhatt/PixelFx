@@ -1,6 +1,7 @@
 #pragma once
 
 #include "core/export_options.h"
+#include "core/looks.h"
 #include "core/presets.h"
 #include "services/batch_runner.h"
 #include "services/thumbnailer.h"
@@ -37,6 +38,8 @@ public:
 
     /// The presets the recipe can use (the library's list).
     void setPresets(const std::vector<core::PresetEntry>& entries);
+    /// Looks offered in the first choice of the recipe ("Preset or look").
+    void setLooks(const std::vector<core::LookEntry>& entries);
     /// Adds photos; folders bring every photo inside them, subfolders included.
     void addPaths(const QStringList& paths);
     [[nodiscard]] const QStringList& files() const { return m_files; }
@@ -78,6 +81,8 @@ private:
 
     QStringList m_files;
     std::vector<core::PresetEntry> m_presets;
+    std::vector<core::LookEntry> m_looks;
+    void fillRecipeChoices();
     std::vector<pfx::BatchStep> m_loadedStack; ///< the presets of an opened recipe
     core::ExportOptions m_output;
     QString m_sidecarFolder;

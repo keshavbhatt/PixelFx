@@ -213,7 +213,10 @@
   one). Choosing a look is one history step on the photo and the selection. Differences from
   the mock, until their pieces exist: no Favorites chip, and "Import LUT..." where the mock has
   "New look" (the look editor, L4). Save as preset has the mock's Look row ("Golden hour 72"),
-  so a preset can carry a look. 29 app suites pass.
+  so a preset can carry a look. Batch offers the looks in its first choice ("Preset or look", as
+  `batch.html`), at each look's own strength; a saved batch recipe refers to a built-in look by
+  id, but does not embed a user's look yet (presets.md asks for that, so the file runs on
+  another machine). 29 app suites pass.
 
 ### 2026-11-04 (M2)
 

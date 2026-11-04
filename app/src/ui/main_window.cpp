@@ -1037,6 +1037,7 @@ void MainWindow::connectLooks()
     connect(&m_document, &services::Document::settingsReplaced, this, follow);
     connect(&m_document, &services::Document::historyChanged, this, follow);
     looks->setEntries(core::LookLibrary(core::LookLibrary::defaultFolder()).entries());
+    m_batch->setLooks(looks->entries());
 }
 
 void MainWindow::importLooks()
@@ -1060,6 +1061,7 @@ void MainWindow::importLooks()
         }
     }
     m_presets->looksPanel()->setEntries(library.entries());
+    m_batch->setLooks(m_presets->looksPanel()->entries());
     requestLookThumbnails();
     showToast(lastError.isEmpty()
                   ? tr("Imported %n look(s).", nullptr, imported)

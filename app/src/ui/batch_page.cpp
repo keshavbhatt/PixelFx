@@ -285,10 +285,10 @@ QWidget* BatchPage::buildRecipe(QWidget* parent)
     m_auto = new QCheckBox(tr("Auto enhance each photo first"), box);
     m_keepEdits = new QCheckBox(tr("Keep edits already made in PixelFx"), box);
     m_keepEdits->setChecked(true);
-    m_preset->setAccessibleName(tr("Preset"));
+    m_preset->setAccessibleName(tr("Preset or look"));
     m_second->setAccessibleName(tr("Then add preset"));
     auto* form = new QFormLayout;
-    form->addRow(tr("Preset"), m_preset);
+    form->addRow(tr("Preset or look"), m_preset);
     form->addRow(tr("Then add preset"), m_second);
     auto* column = new QVBoxLayout(box);
     column->setContentsMargins(0, 0, 0, 0);
@@ -358,12 +358,37 @@ QWidget* BatchPage::buildOutput(QWidget* parent)
 void BatchPage::setPresets(const std::vector<core::PresetEntry>& entries)
 {
     m_presets = entries;
+    fillRecipeChoices();
+}
+
+void BatchPage::setLooks(const std::vector<core::LookEntry>& entries)
+{
+    m_looks = entries;
+    fillRecipeChoices();
+}
+
+void BatchPage::fillRecipeChoices()
+{
+    // Mock batch.html: "Preset or look" first, then a preset on top.
     for (QComboBox* combo : {m_preset, m_second}) {
         const QString current = combo->currentText();
+        const QVariant recipe =
+            combo->findData(u"recipe"_s) >= 0 ? combo->itemData(combo->findData(u"recipe"_s)) : QVariant();
+        const QString recipeText =
+            recipe.isValid() ? combo->itemText(combo->findData(u"recipe"_s)) : QString();
         combo->clear();
         combo->addItem(tr("None"));
-        for (std::size_t i = 0; i < entries.size(); ++i) {
-            combo->addItem(entries[i].name, static_cast<int>(i)); // the item knows its preset
+        if (recipe.isValid()) {
+            combo->addItem(recipeText, recipe);
+        }
+        for (std::size_t i = 0; i < m_presets.size(); ++i) {
+            combo->addItem(m_presets[i].name, static_cast<int>(i)); // the item knows its preset
+        }
+        if (combo == m_preset && !m_looks.empty()) {
+            combo->insertSeparator(combo->count());
+            for (const core::LookEntry& look : m_looks) {
+                combo->addItem(tr("Look: %1").arg(look.name), QString(u"look:"_s + look.id));
+            }
         }
         combo->setCurrentIndex(std::max(0, combo->findText(current)));
     }
@@ -402,6 +427,15 @@ services::BatchRecipe BatchPage::recipe() const
     }
     for (const QComboBox* combo : {m_preset, m_second}) {
         const QVariant choice = combo->currentData();
+        if (const QString look = choice.toString(); look.startsWith(u"look:"_s)) {
+            // A look at its own strength, as a step of the stack.
+            for (const core::LookEntry& e : m_looks) {
+                if (e.id == look.mid(5)) {
+                    r.presets.push_back(core::withLook({}, e.id, e.look->defaultStrength));
+                }
+            }
+            continue;
+        }
         if (choice.typeId() != QMetaType::Int || !std::cmp_less(choice.toInt(), m_presets.size())) {
             continue; // None, or the presets of an opened recipe
         }
