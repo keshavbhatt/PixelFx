@@ -52,7 +52,10 @@ const QString kSheet = uR"(
         QListWidget#settingsPages::item { padding: 8px 12px; margin: 0 8px; border-radius: 7px; font-weight: 600; }
         QListWidget#settingsPages::item:selected { background: {{accentSoft}}; color: {{accent}}; }
         #presetsPanel { background: {{panel}}; border-right: 1px solid {{border}}; }
-        #panelTab { padding: 7px 10px 9px; border-bottom: 2px solid {{accent}}; font-weight: 500; }
+        QPushButton#panelTab { padding: 7px 10px 9px; border: 0; border-bottom: 2px solid transparent; border-radius: 0; background: transparent; color: {{muted}}; font-weight: 500; }
+        QPushButton#panelTab:checked { border-bottom-color: {{accent}}; color: {{text}}; }
+        QPushButton#panelTab:hover { color: {{text}}; }
+        #lookStrength { background: {{panel}}; border-top: 1px solid {{border}}; }
         #panelTabLine { background: {{border}}; }
         #presetName { font-weight: 500; }
         #presetSummary { color: {{muted}}; font-size: 11px; }

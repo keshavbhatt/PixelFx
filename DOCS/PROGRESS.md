@@ -203,6 +203,17 @@
   an export (size, watermark) rendered on a worker (`Exporter::startCopy`, sharing
   `prepareExport` with Export), nothing written to disk; shown for one photo only. 27 app suites
   pass.
+- Looks in the app (M4, mock `editor.html`): `core::LookLibrary` with the mock's 13 built-in
+  looks (Vivid to Pastel, values are a draft for the owner to tune) built from registry steps,
+  the user's looks in `<AppData>/looks` (`.cube` and HaldCLUT import become a one-LUT look),
+  `core::findLook` (thread-safe) and `core::renderPhoto`, which every render now goes through
+  (editor, thumbnails, Export, Batch). The left panel has Looks and Presets tabs; the Looks tab
+  has search, category chips, tiles of the photo under each look (Original first), the applied
+  look outlined, and Look strength at its foot (live, one history step on release, keys step by
+  one). Choosing a look is one history step on the photo and the selection. Differences from
+  the mock, until their pieces exist: no Favorites chip, and "Import LUT..." where the mock has
+  "New look" (the look editor, L4). Save as preset does not carry the look yet. 29 app suites
+  pass.
 
 ### 2026-11-04 (M2)
 

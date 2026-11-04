@@ -19,6 +19,8 @@ qt_add_library(pixelfx_ui STATIC
     histogram_view.h
     icons.cpp
     icons.h
+    looks_panel.cpp
+    looks_panel.h
     main_window.cpp
     main_window.h
     paste_sheet.cpp

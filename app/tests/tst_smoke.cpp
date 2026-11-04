@@ -5,6 +5,7 @@
 #include "ui/canvas.h"
 #include "ui/crop_panel.h"
 #include "ui/filmstrip.h"
+#include "ui/looks_panel.h"
 #include "ui/main_window.h"
 #include "ui/presets_panel.h"
 #include "ui/straighten_dial.h"
@@ -82,6 +83,11 @@ private Q_SLOTS:
         field->setFocus();
         QTest::keyClick(field, Qt::Key_Tab);
         QVERIFY(!window.panelsHidden());
+        // A look from the Looks tab is one history step, and undo takes it off.
+        Q_EMIT window.presetsPanel()->looksPanel()->lookChosen(u"builtin:mono"_s, 100);
+        QCOMPARE(window.document().settings().text("look.id", ""), std::string("builtin:mono"));
+        QTest::keyClick(&window, Qt::Key_Z, Qt::ControlModifier);
+        QVERIFY(!window.document().settings().contains("look.id"));
         // The main menu lists the window's own actions, with their shortcuts (menu.html).
         QStringList entries;
         for (auto* button : window.findChildren<QToolButton*>()) {

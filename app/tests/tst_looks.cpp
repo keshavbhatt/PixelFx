@@ -36,17 +36,21 @@ private Q_SLOTS:
     {
         pfx::Image photo(8, 8);
         photo.fill(0.4F, 0.2F, 0.1F);
-        const auto mono = pixelfx::core::renderPhoto(photo, pixelfx::core::withLook({}, u"builtin:mono"_s, 100));
+        const auto mono =
+            pixelfx::core::renderPhoto(photo, pixelfx::core::withLook({}, u"builtin:mono"_s, 100));
         QVERIFY(mono.ok());
         const float* p = mono.value().pixel(4, 4);
         QVERIFY(std::abs(p[0] - p[1]) < 1e-3F && std::abs(p[1] - p[2]) < 1e-3F); // grey
-        const auto none = pixelfx::core::renderPhoto(photo, pixelfx::core::withLook({}, u"builtin:mono"_s, 0));
+        const auto none =
+            pixelfx::core::renderPhoto(photo, pixelfx::core::withLook({}, u"builtin:mono"_s, 0));
         QVERIFY(none.ok());
         QCOMPARE(none.value(), photo);
         // An id with no look renders without one; withLook with no id clears the group.
-        QVERIFY(pixelfx::core::renderPhoto(photo, pixelfx::core::withLook({}, u"builtin:gone"_s, 100)).value() ==
-                photo);
-        const pfx::Settings cleared = pixelfx::core::withLook(pixelfx::core::withLook({}, u"builtin:mono"_s, 50), {}, 0);
+        QVERIFY(
+            pixelfx::core::renderPhoto(photo, pixelfx::core::withLook({}, u"builtin:gone"_s, 100)).value() ==
+            photo);
+        const pfx::Settings cleared =
+            pixelfx::core::withLook(pixelfx::core::withLook({}, u"builtin:mono"_s, 50), {}, 0);
         QVERIFY(cleared.isEmpty());
     }
 
@@ -56,7 +60,8 @@ private Q_SLOTS:
         const QString cube = dir.filePath(u"Teal punch.cube"_s);
         QFile file(cube);
         QVERIFY(file.open(QIODevice::WriteOnly));
-        file.write("LUT_3D_SIZE 2\n0 0 0\n1 0 0\n0 1 0\n1 1 0\n0 0 1\n1 0 1\n0 1 1\n0 0 0\n"); // white goes black
+        file.write(
+            "LUT_3D_SIZE 2\n0 0 0\n1 0 0\n0 1 0\n1 1 0\n0 0 1\n1 0 1\n0 1 1\n0 0 0\n"); // white goes black
         file.close();
         const QString folder = dir.filePath(u"looks"_s);
         pixelfx::core::setLookFolder(folder);

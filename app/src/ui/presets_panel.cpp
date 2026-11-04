@@ -1,8 +1,10 @@
 #include "ui/presets_panel.h"
 
 #include "ui/icons.h"
+#include "ui/looks_panel.h"
 #include "ui/style.h"
 
+#include <QButtonGroup>
 #include <QEnterEvent>
 #include <QHBoxLayout>
 #include <QKeyEvent>
@@ -14,6 +16,7 @@
 #include <QPainterPath>
 #include <QPushButton>
 #include <QScrollArea>
+#include <QStackedWidget>
 #include <QToolButton>
 #include <QVBoxLayout>
 
@@ -33,21 +36,15 @@ PresetsPanel::PresetsPanel(QWidget* parent)
     , m_target(new QLabel(this))
     , m_listBox(new QWidget(this))
     , m_list(new QVBoxLayout(m_listBox))
+    , m_looks(new LooksPanel(this))
+    , m_pages(new QStackedWidget(this))
+    , m_tabs(new QButtonGroup(this))
 {
     setObjectName(u"presetsPanel"_s);
     setAttribute(Qt::WA_StyledBackground);
     setFixedWidth(kPanelWidth);
 
-    // Tabs: Presets only until looks exist (mock: Looks, Presets).
-    auto* tab = new QLabel(tr("Presets"), this);
-    tab->setObjectName(u"panelTab"_s);
-    m_target->setObjectName(u"accentText"_s);
-    m_target->hide();
-    auto* tabs = new QHBoxLayout;
-    tabs->setContentsMargins(10, 8, 10, 0);
-    tabs->addWidget(tab);
-    tabs->addStretch();
-    tabs->addWidget(m_target);
+    QHBoxLayout* tabs = buildTabs();
     auto* tabLine = new QWidget(this);
     tabLine->setObjectName(u"panelTabLine"_s);
     tabLine->setAttribute(Qt::WA_StyledBackground);
@@ -75,15 +72,56 @@ PresetsPanel::PresetsPanel(QWidget* parent)
     foot->setContentsMargins(10, 10, 10, 10);
     foot->addWidget(save, 1);
 
+    auto* presetsPage = new QWidget(this);
+    auto* presetsColumn = new QVBoxLayout(presetsPage);
+    presetsColumn->setContentsMargins(0, 0, 0, 0);
+    presetsColumn->setSpacing(0);
+    presetsColumn->addLayout(head);
+    presetsColumn->addWidget(scroll, 1);
+    presetsColumn->addWidget(footLine);
+    presetsColumn->addLayout(foot);
+    m_pages->addWidget(m_looks);
+    m_pages->addWidget(presetsPage);
+
     auto* column = new QVBoxLayout(this);
     column->setContentsMargins(0, 0, 0, 0);
     column->setSpacing(0);
     column->addLayout(tabs);
     column->addWidget(tabLine);
-    column->addLayout(head);
-    column->addWidget(scroll, 1);
-    column->addWidget(footLine);
-    column->addLayout(foot);
+    column->addWidget(m_pages, 1);
+}
+
+void PresetsPanel::showTab(int index)
+{
+    m_tabs->button(index)->setChecked(true);
+    m_pages->setCurrentIndex(index);
+}
+
+int PresetsPanel::currentTab() const
+{
+    return m_pages->currentIndex();
+}
+
+QHBoxLayout* PresetsPanel::buildTabs()
+{
+    // Tabs of the mock: Looks, Presets.
+    auto* tabs = new QHBoxLayout;
+    tabs->setContentsMargins(10, 8, 10, 0);
+    tabs->setSpacing(4);
+    for (const QString& name : {tr("Looks"), tr("Presets")}) {
+        auto* tab = new QPushButton(name, this);
+        tab->setObjectName(u"panelTab"_s);
+        tab->setCheckable(true);
+        tab->setChecked(m_tabs->buttons().isEmpty());
+        m_tabs->addButton(tab, static_cast<int>(m_tabs->buttons().size()));
+        tabs->addWidget(tab);
+    }
+    connect(m_tabs, &QButtonGroup::idClicked, m_pages, &QStackedWidget::setCurrentIndex);
+    m_target->setObjectName(u"accentText"_s);
+    m_target->hide();
+    tabs->addStretch();
+    tabs->addWidget(m_target);
+    return tabs;
 }
 
 QHBoxLayout* PresetsPanel::buildHead()

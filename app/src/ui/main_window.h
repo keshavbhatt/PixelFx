@@ -124,6 +124,9 @@ private:
     void applyGeneralSettings();
     void exportNext();
     void connectPresets();
+    void connectLooks();
+    void importLooks();
+    void requestLookThumbnails();
     void connectFilmstrip();
     /// `change` on the current photo as one step, and on every other selected photo's
     /// remembered edits.
@@ -164,6 +167,8 @@ private:
     services::Thumbnailer* m_stripThumbnails = nullptr;
     core::PresetLibrary m_library{core::PresetLibrary::defaultFolder()};
     services::Thumbnailer* m_presetThumbnails = nullptr;
+    services::Thumbnailer* m_lookThumbnails = nullptr;
+    int m_lookGeneration = 0;
     QTimer* m_thumbnailTimer = nullptr;
     int m_thumbnailGeneration = 0;
     QStackedWidget* m_panels = nullptr;

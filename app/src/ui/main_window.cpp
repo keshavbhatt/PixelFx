@@ -1,6 +1,7 @@
 #include "ui/main_window.h"
 
 #include "core/crop_geometry.h"
+#include "core/looks.h"
 #include "core/settings/settings.h"
 #include "core/settings_clipboard.h"
 #include "ui/adjust_panel.h"
@@ -10,6 +11,7 @@
 #include "ui/export_sheet.h"
 #include "ui/filmstrip.h"
 #include "ui/icons.h"
+#include "ui/looks_panel.h"
 #include "ui/paste_sheet.h"
 #include "ui/preset_save_sheet.h"
 #include "ui/presets_panel.h"
@@ -150,6 +152,7 @@ MainWindow::MainWindow(core::Settings& settings, QWidget* parent)
 
     applyGeneralSettings();
     connectPresets();
+    connectLooks();
     connectFilmstrip();
     connectDocument();
     connectCrop();
@@ -988,6 +991,98 @@ void MainWindow::connectPresetActions()
             refreshPresets();
         }
     });
+}
+
+void MainWindow::connectLooks()
+{
+    LooksPanel* looks = m_presets->looksPanel();
+    m_lookThumbnails = new services::Thumbnailer(this);
+    connect(m_lookThumbnails, &services::Thumbnailer::rendered, this,
+            [this, looks](int key, const QImage& image) {
+                if (key / kThumbnailKeySpan == m_lookGeneration % kThumbnailGenerations) {
+                    looks->setThumbnail((key % kThumbnailKeySpan) - 1, image); // 0 is Original
+                }
+            });
+    connect(m_thumbnailTimer, &QTimer::timeout, this, &MainWindow::requestLookThumbnails);
+    connect(looks, &LooksPanel::lookChosen, this, [this](const QString& id, int strength) {
+        if (!m_document.isOpen() || isCropping()) {
+            return;
+        }
+        QString name = tr("No look");
+        for (const core::LookEntry& e : m_presets->looksPanel()->entries()) {
+            if (e.id == id) {
+                name = tr("Look %1").arg(e.name);
+            }
+        }
+        applyToSelection([id, strength](const pfx::Settings& s) { return core::withLook(s, id, strength); },
+                         name);
+    });
+    connect(looks, &LooksPanel::strengthMoved, this, [this, looks](int strength) {
+        m_document.setSettings(core::withLook(m_document.settings(), looks->current(), strength));
+    });
+    connect(looks, &LooksPanel::strengthReleased, this, [this, looks](int strength) {
+        if (looks->current().isEmpty()) {
+            return;
+        }
+        m_document.setSettings(core::withLook(m_document.settings(), looks->current(), strength));
+        m_document.commit(tr("Look strength %1").arg(strength));
+    });
+    connect(looks, &LooksPanel::importRequested, this, &MainWindow::importLooks);
+    // The panel follows the photo's settings: opening, undo, a preset, a pasted edit.
+    const auto follow = [this, looks] {
+        const pfx::Settings& s = m_document.settings();
+        looks->setCurrent(QString::fromStdString(s.text("look.id", "")), s.number("look.strength", 100.0));
+    };
+    connect(&m_document, &services::Document::opened, this, follow);
+    connect(&m_document, &services::Document::settingsReplaced, this, follow);
+    connect(&m_document, &services::Document::historyChanged, this, follow);
+    looks->setEntries(core::LookLibrary(core::LookLibrary::defaultFolder()).entries());
+}
+
+void MainWindow::importLooks()
+{
+    const QStringList files = QFileDialog::getOpenFileNames(
+        this, tr("Import LUTs"), m_settings.lastOpenFolder(),
+        tr("LUTs (*.cube *.png *.tif *.tiff);;Cube LUTs (*.cube);;HaldCLUT pictures "
+           "(*.png *.tif *.tiff)"));
+    if (files.isEmpty()) {
+        return;
+    }
+    const core::LookLibrary library(core::LookLibrary::defaultFolder());
+    int imported = 0;
+    QString lastError;
+    for (const QString& file : files) {
+        QString error;
+        if (library.importLut(file, &error).isEmpty()) {
+            lastError = u"%1: %2"_s.arg(QFileInfo(file).fileName(), error);
+        } else {
+            ++imported;
+        }
+    }
+    m_presets->looksPanel()->setEntries(library.entries());
+    requestLookThumbnails();
+    showToast(lastError.isEmpty()
+                  ? tr("Imported %n look(s).", nullptr, imported)
+                  : tr("Imported %1 of %2. %3").arg(imported).arg(files.size()).arg(lastError));
+}
+
+void MainWindow::requestLookThumbnails()
+{
+    const auto source = m_document.thumbnailSource();
+    if (!source || !m_document.isOpen()) {
+        return;
+    }
+    ++m_lookGeneration;
+    const int base = (m_lookGeneration % kThumbnailGenerations) * kThumbnailKeySpan;
+    // The photo's own edit under each look, as the tile shows what a click gives.
+    const pfx::Settings photo = core::withLook(m_document.settings(), {}, 0);
+    m_lookThumbnails->requestRender(base, source, photo);
+    const auto& entries = m_presets->looksPanel()->entries();
+    for (std::size_t i = 0; i < entries.size() && i + 1 < kThumbnailKeySpan; ++i) {
+        m_lookThumbnails->requestRender(
+            base + static_cast<int>(i) + 1, source,
+            core::withLook(photo, entries[i].id, entries[i].look->defaultStrength));
+    }
 }
 
 void MainWindow::refreshPresets()

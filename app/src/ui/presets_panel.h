@@ -10,7 +10,12 @@ class QLabel;
 class QLineEdit;
 class QVBoxLayout;
 
+class QButtonGroup;
+class QStackedWidget;
+
 namespace pixelfx::ui {
+
+class LooksPanel;
 
 class PresetRow;
 
@@ -48,8 +53,16 @@ Q_SIGNALS:
     void showFileRequested(const pixelfx::core::PresetEntry& entry);
     void deleteRequested(const pixelfx::core::PresetEntry& entry);
 
+public:
+    /// The Looks tab's panel.
+    [[nodiscard]] LooksPanel* looksPanel() const { return m_looks; }
+    /// 0 Looks, 1 Presets.
+    void showTab(int index);
+    [[nodiscard]] int currentTab() const;
+
 private:
     QHBoxLayout* buildHead();
+    QHBoxLayout* buildTabs();
     void rebuild();
     void showMenu(PresetRow* row);
 
@@ -59,6 +72,9 @@ private:
     QLabel* m_target = nullptr;
     QWidget* m_listBox = nullptr;
     QVBoxLayout* m_list = nullptr;
+    LooksPanel* m_looks = nullptr;
+    QStackedWidget* m_pages = nullptr;
+    QButtonGroup* m_tabs = nullptr;
 };
 
 /// One preset: its picture on the photo, name, what it holds, and a menu button.
