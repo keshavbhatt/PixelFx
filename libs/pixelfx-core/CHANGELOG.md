@@ -11,6 +11,8 @@ Semantic Versioning (the API may change before 1.0).
   fractions of the image; `pfx::outputSize` gives the rendered size without rendering.
 - Effects: vignette (amount, midpoint, roundness), grain (amount, size; repeatable, tied to the
   image so a preview shows the same grain) and fade.
+- Colour mixer: hue, saturation and luminance for eight colour bands, blended between
+  neighbouring bands and fading out toward grey.
 
 ## [0.1.0] - 2026-11-04
 

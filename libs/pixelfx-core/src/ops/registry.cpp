@@ -75,6 +75,17 @@ void addGeometry(std::vector<OpSpec>& ops)
                     fraction("geometry.crop.h", 1.0)}});
 }
 
+void addMixer(std::vector<OpSpec>& ops)
+{
+    std::vector<ParamSpec> params;
+    for (const char* mode : {"hue", "saturation", "luminance"}) {
+        for (const char* band : {"red", "orange", "yellow", "green", "aqua", "blue", "purple", "magenta"}) {
+            params.push_back(number(std::string("mixer.") + mode + "." + band, -100, 100));
+        }
+    }
+    ops.push_back({"mixer", "mixer", 1, 80, true, std::move(params)});
+}
+
 void addEffects(std::vector<OpSpec>& ops)
 {
     ops.push_back(
@@ -143,6 +154,7 @@ std::vector<OpSpec> builtInOps()
          false,
          {number("detail.sharpen.amount", 0, 150), relative("detail.sharpen.radius", 0.0001, 0.003, 0.0004),
           number("detail.sharpen.masking", 0, 100)}});
+    addMixer(ops);
     addEffects(ops);
     std::ranges::sort(ops, [](const OpSpec& a, const OpSpec& b) { return a.stage < b.stage; });
     return ops;
