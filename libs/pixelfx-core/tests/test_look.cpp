@@ -174,3 +174,28 @@ TEST_CASE("base64 and half floats")
         CHECK(pfx::detail::fromHalf(pfx::detail::toHalf(v)) == doctest::Approx(v).epsilon(1e-3).scale(1e-4));
     }
 }
+
+TEST_CASE("baking keeps the colour-only steps, names the rest, and reads back as a .cube")
+{
+    pfx::Look look = brighter(); // exposure: pointwise
+    pfx::LookStep grain;
+    grain.op = "grain";
+    grain.params.set("effects.grain.amount", 30.0);
+    look.steps.push_back(grain);
+    const pfx::BakedLook baked = pfx::bakeLook(look, 17);
+    CHECK(baked.leftOut == std::vector<std::string>{"grain"});
+    CHECK(baked.lut.size == 17);
+    // Applying the baked table matches the look on a colour inside sRGB, below white.
+    pfx::Image a(1, 1);
+    a.fill(0.1F, 0.08F, 0.05F);
+    pfx::Image b = a;
+    pfx::applyLook(a, brighter(), 1.0F);
+    pfx::applyLut(b, baked.lut);
+    for (int c = 0; c < 3; ++c) {
+        CHECK(b.pixel(0, 0)[c] == doctest::Approx(a.pixel(0, 0)[c]).epsilon(0.02));
+    }
+    const auto back = pfx::parseCube(pfx::cubeText(baked.lut));
+    REQUIRE(back.ok());
+    CHECK(back.value().size == 17);
+    CHECK(back.value().table[100] == doctest::Approx(baked.lut.table[100]).epsilon(1e-5));
+}

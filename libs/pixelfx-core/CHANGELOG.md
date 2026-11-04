@@ -37,7 +37,8 @@ Semantic Versioning (the API may change before 1.0).
 
 - Looks: `Look` and `applyLook` (registry steps and LUT steps, one strength blended in linear
   light), `RenderOptions::look` and `lookStrength`, and look documents (`.pfxlook`) in
-  `parseDocument` and `serializeDocument` with their LUTs embedded.
+  `parseDocument` and `serializeDocument` with their LUTs embedded. `bakeLook` flattens a look's
+  colour-only steps into a 3D table and names the rest; `cubeText` writes a table as a .cube.
 
 ### Added (tooling)
 

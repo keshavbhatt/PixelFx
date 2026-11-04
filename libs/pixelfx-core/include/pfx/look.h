@@ -37,4 +37,17 @@ struct Look
 // missing LUT is skipped.
 void applyLook(Image& image, const Look& look, float strength, int threads = 0);
 
+// "Bake to .cube" (presets.md section 3): the look's colour-only steps (pointwise registry
+// operations and LUTs) evaluated on a `size`-point grid of sRGB-encoded colours, for other
+// apps. Steps that are not colour-only (grain, vignette, clarity...) are named in `leftOut`.
+struct BakedLook
+{
+    Lut lut;
+    std::vector<std::string> leftOut;
+};
+[[nodiscard]] BakedLook bakeLook(const Look& look, int size = 33);
+
+// A .cube file's text for the table (TITLE, LUT_3D_SIZE or LUT_1D_SIZE, the domain, the rows).
+[[nodiscard]] std::string cubeText(const Lut& lut);
+
 } // namespace pfx
