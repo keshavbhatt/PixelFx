@@ -1,12 +1,14 @@
 #pragma once
 
 #include "services/document.h"
+#include "services/exporter.h"
 
 #include <QMainWindow>
 
 class QLabel;
 class QStackedWidget;
 class QToolButton;
+class QPushButton;
 
 namespace pixelfx::core {
 class Settings;
@@ -32,6 +34,9 @@ public:
     /// Opens the first supported file of `files` (the filmstrip for many arrives with M3).
     void openFiles(const QStringList& files);
     void chooseFiles();
+    /// Opens the Export sheet for the open photo and writes it.
+    void exportPhoto();
+    [[nodiscard]] services::Exporter& exporter() { return m_exporter; }
 
     [[nodiscard]] services::Document& document() { return m_document; }
     [[nodiscard]] Canvas* canvas() const { return m_canvas; }
@@ -56,12 +61,16 @@ private:
     void setupActions();
     void connectDocument();
     void updateHistoryButtons();
+    void showToast(const QString& text);
     void showOpened(const services::DocumentInfo& info);
     void showFailed(const QString& path, const QString& message);
     [[nodiscard]] int previewLongEdge() const;
 
     core::Settings& m_settings;
     services::Document m_document;
+    services::Exporter m_exporter;
+    QLabel* m_toast = nullptr;
+    QPushButton* m_export = nullptr;
     QStackedWidget* m_stack = nullptr;
     WelcomePage* m_welcome = nullptr;
     Canvas* m_canvas = nullptr;

@@ -35,6 +35,7 @@ add_library(pfx_core
     src/color/color.cpp
     src/image/image.cpp
     src/image/filters.cpp
+    src/image/resample.cpp
     src/recipe/settings.cpp
     src/recipe/document.cpp
     src/ops/registry.cpp

@@ -2,6 +2,8 @@
 qt_add_library(pixelfx_core STATIC
     changelog.cpp
     changelog.h
+    export_options.cpp
+    export_options.h
     history.cpp
     history.h
     log_sink.cpp

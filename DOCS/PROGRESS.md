@@ -39,6 +39,12 @@
   clean; a grab with the example preset applied matches the mock.
 - Found and fixed: opening rendered the photo twice; changed values were not in the accent.
 - CI: Linux and macOS green after the fixes; Windows still building its vcpkg packages.
+- Export: `ExportSheet` from `export.html` (formats the build can write, quality, 16 bits for
+  PNG and TIFF, original size or a long edge, metadata on or off, folder, file-name tokens,
+  if-exists policy), `Exporter` (full resolution on a worker), a toast with the result,
+  Ctrl+Shift+E; choices remembered in settings; `core::exportTarget` never picks the original by
+  accident. libpixelfx gained `fitLongEdge` (Lanczos 3 in linear light) and `writableExtensions`.
+  15 app suites and 43 library tests pass; clang-tidy clean.
 
 ### 2026-11-04 (M2)
 

@@ -3,6 +3,7 @@
 #include "core/settings/settings.h"
 #include "ui/adjust_panel.h"
 #include "ui/canvas.h"
+#include "ui/export_sheet.h"
 #include "ui/icons.h"
 #include "ui/style.h"
 #include "ui/welcome_page.h"
@@ -20,8 +21,10 @@
 #include <QMenu>
 #include <QMimeData>
 #include <QPainter>
+#include <QPushButton>
 #include <QScreen>
 #include <QStackedWidget>
+#include <QTimer>
 #include <QToolButton>
 #include <QVBoxLayout>
 
@@ -124,6 +127,41 @@ void MainWindow::connectDocument()
     connect(&m_document, &services::Document::historyChanged, this, &MainWindow::updateHistoryButtons);
     connect(m_adjust, &AdjustPanel::settingsChanged, &m_document, &services::Document::setSettings);
     connect(m_adjust, &AdjustPanel::editFinished, &m_document, &services::Document::commit);
+    connect(&m_exporter, &services::Exporter::finished, this,
+            [this](const QString& target) { showToast(tr("Saved %1").arg(QFileInfo(target).fileName())); });
+    connect(&m_exporter, &services::Exporter::skipped, this,
+            [this] { showToast(tr("Not saved: a file with that name exists, and Skip is chosen.")); });
+    connect(&m_exporter, &services::Exporter::failed, this,
+            [this](const QString&, const QString& message) { showToast(tr("Not saved. %1").arg(message)); });
+}
+
+void MainWindow::exportPhoto()
+{
+    if (!m_document.isOpen() || m_exporter.isBusy()) {
+        return;
+    }
+    ExportSheet sheet(m_document.info().path, m_document.info().size, m_settings.exportOptions(), this);
+    if (sheet.exec() != QDialog::Accepted) {
+        return;
+    }
+    const core::ExportOptions options = sheet.options();
+    m_settings.setExportOptions(options);
+    showToast(tr("Exporting %1").arg(QFileInfo(m_document.info().path).fileName()));
+    m_exporter.start(m_document.info().path, m_document.settings(), options);
+}
+
+void MainWindow::showToast(const QString& text)
+{
+    m_toast->setText(text);
+    m_toast->adjustSize();
+    m_toast->move((m_canvas->width() - m_toast->width()) / 2, 12);
+    m_toast->show();
+    m_toast->raise();
+    QTimer::singleShot(4000, m_toast, [toast = m_toast, text] {
+        if (toast->text() == text) {
+            toast->hide();
+        }
+    });
 }
 
 void MainWindow::updateHistoryButtons()
@@ -174,6 +212,10 @@ void MainWindow::buildHeader()
     m_undo->setEnabled(false);
     m_redo->setEnabled(false);
     m_original->setEnabled(false);
+    m_export = new QPushButton(icons::themed(u"export"_s, tokens().text), tr("Export"), m_header);
+    m_export->setToolTip(tr("Save a copy with these settings (Ctrl+Shift+E)"));
+    m_export->setEnabled(false);
+    connect(m_export, &QPushButton::clicked, this, &MainWindow::exportPhoto);
     auto* menuButton = headerButton(m_header, u"menu"_s, tr("Main menu (F10)"));
     menuButton->setPopupMode(QToolButton::InstantPopup);
     auto* menu = new QMenu(menuButton);
@@ -198,6 +240,7 @@ void MainWindow::buildHeader()
     header->addSpacing(8);
     header->addWidget(m_original);
     header->addSpacing(8);
+    header->addWidget(m_export);
     header->addWidget(menuButton);
 }
 
@@ -208,6 +251,10 @@ void MainWindow::setupUi()
     m_welcome = new WelcomePage(this);
     connect(m_welcome, &WelcomePage::openRequested, this, &MainWindow::chooseFiles);
     m_canvas = new Canvas(this);
+    m_toast = new QLabel(m_canvas);
+    m_toast->setObjectName(u"toast"_s);
+    m_toast->setAttribute(Qt::WA_StyledBackground);
+    m_toast->hide();
     m_stack = new QStackedWidget(this);
     m_stack->addWidget(m_welcome);
     m_stack->addWidget(m_canvas);
@@ -257,7 +304,10 @@ void MainWindow::setupActions()
             m_adjust->resetAll();
         }
     });
-    addActions({openAction, quitAction, fullScreen, undo, redo, resetAll});
+    auto* exportAction = new QAction(tr("Export"), this);
+    exportAction->setShortcut(QKeySequence(u"Ctrl+Shift+E"_s));
+    connect(exportAction, &QAction::triggered, this, &MainWindow::exportPhoto);
+    addActions({openAction, quitAction, fullScreen, undo, redo, resetAll, exportAction});
 }
 
 bool MainWindow::isSupported(const QString& path)
@@ -302,6 +352,7 @@ void MainWindow::showOpened(const services::DocumentInfo& info)
     m_settings.addRecentFile(info.path);
     m_adjust->show();
     m_original->setEnabled(true);
+    m_export->setEnabled(true);
     m_showingOriginal = false;
 }
 

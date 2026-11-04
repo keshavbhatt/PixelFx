@@ -1,5 +1,7 @@
 #pragma once
 
+#include "core/export_options.h"
+
 #include <QByteArray>
 #include <QObject>
 #include <QSettings>
@@ -42,6 +44,11 @@ public:
     [[nodiscard]] QStringList recentFiles() const;
     void addRecentFile(const QString& path);
     void clearRecentFiles();
+
+    /// Export choices, remembered (mock export.html: "Saved formats and choices are remembered").
+    /// The folder defaults to Pictures/PixelFx.
+    [[nodiscard]] ExportOptions exportOptions() const;
+    void setExportOptions(const ExportOptions& options);
 
     /// Carries the last image folder over from PixelFx 1's settings file, once. Returns true
     /// when something was migrated.

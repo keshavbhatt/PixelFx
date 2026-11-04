@@ -64,6 +64,10 @@ struct Rgba8Image
 [[nodiscard]] Status save(const Image& image, const std::filesystem::path& path,
                           const SaveOptions& options = {}, const Metadata* metadata = nullptr);
 
+// File extensions (lower case, with the dot) this build can write: always .jpg, .png, .tif and
+// .webp; .avif, .heic and .jxl when libvips was built with them.
+[[nodiscard]] std::vector<std::string> writableExtensions();
+
 // Converts working-space pixels to 8-bit sRGB for display, through the same colour engine as
 // save(). Values outside 0..1 are clipped.
 [[nodiscard]] Result<Rgba8Image> toSrgb8(const Image& image);

@@ -16,6 +16,7 @@ endfunction()
 # core
 pixelfx_add_test(tst_settings        tst_settings.cpp        pixelfx_core)
 pixelfx_add_test(tst_history         tst_history.cpp         pixelfx_core)
+pixelfx_add_test(tst_export_options  tst_export_options.cpp  pixelfx_core)
 pixelfx_add_test(tst_log_sink        tst_log_sink.cpp        pixelfx_core)
 pixelfx_add_test(tst_changelog       tst_changelog.cpp       pixelfx_core)
 target_compile_definitions(tst_changelog PRIVATE
@@ -23,11 +24,13 @@ target_compile_definitions(tst_changelog PRIVATE
     PIXELFX_VERSION="${PROJECT_VERSION}")
 # services
 pixelfx_add_test(tst_qt_image_bridge tst_qt_image_bridge.cpp pixelfx_services)
+pixelfx_add_test(tst_exporter        tst_exporter.cpp        pixelfx_services GUI)
 pixelfx_add_test(tst_document        tst_document.cpp        pixelfx_services GUI)
 # app and ui
 pixelfx_add_test(tst_cli_options     tst_cli_options.cpp     pixelfx_app)
 pixelfx_add_test(tst_single_instance tst_single_instance.cpp pixelfx_app)
 pixelfx_add_test(tst_adjust_panel    tst_adjust_panel.cpp    pixelfx_ui GUI)
+pixelfx_add_test(tst_export_sheet    tst_export_sheet.cpp    pixelfx_ui GUI)
 pixelfx_add_test(tst_smoke           tst_smoke.cpp           pixelfx_ui GUI)
 pixelfx_add_test(tst_instance        tst_instance.cpp        Qt6::Core GUI)
 target_compile_definitions(tst_instance PRIVATE

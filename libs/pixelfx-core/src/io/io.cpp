@@ -340,4 +340,19 @@ Result<Rgba8Image> toSrgb8(const Image& image)
     return out;
 }
 
+std::vector<std::string> writableExtensions()
+{
+    ensureVips();
+    std::vector<std::string> out;
+    for (const char* ext : {".jpg", ".png", ".tif", ".webp", ".avif", ".heic", ".jxl"}) {
+        const std::string probe = std::string("probe") + ext;
+        if (vips_foreign_find_save(probe.c_str()) != nullptr) {
+            out.emplace_back(ext);
+        } else {
+            vips_error_clear();
+        }
+    }
+    return out;
+}
+
 } // namespace pfx

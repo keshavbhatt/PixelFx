@@ -4,6 +4,8 @@ qt_add_library(pixelfx_ui STATIC
     adjust_panel.h
     canvas.cpp
     canvas.h
+    export_sheet.cpp
+    export_sheet.h
     icons.cpp
     icons.h
     main_window.cpp

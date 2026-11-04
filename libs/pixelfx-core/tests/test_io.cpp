@@ -3,6 +3,7 @@
 #include "pfx/color.h"
 #include "pfx/io.h"
 
+#include <algorithm>
 #include <doctest/doctest.h>
 #include <fstream>
 #include <vips/vips8>
@@ -166,4 +167,12 @@ TEST_CASE("display conversion gives 8-bit sRGB matching what save writes")
     g_free(mem);
     CHECK(worst <= 1);
     CHECK_FALSE(pfx::toSrgb8(pfx::Image()).ok());
+}
+
+TEST_CASE("the common formats are always writable")
+{
+    const auto exts = pfx::writableExtensions();
+    for (const char* ext : {".jpg", ".png", ".tif", ".webp"}) {
+        CHECK(std::find(exts.begin(), exts.end(), ext) != exts.end());
+    }
 }

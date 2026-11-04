@@ -2,6 +2,8 @@
 qt_add_library(pixelfx_services STATIC
     document.cpp
     document.h
+    exporter.cpp
+    exporter.h
     logging.cpp
     logging.h
     qt_image_bridge.cpp

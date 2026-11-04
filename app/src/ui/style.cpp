@@ -52,6 +52,14 @@ const QString kSheet = uR"(
         QSlider#temperatureTrack::groove:horizontal { background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #4F86E8, stop:0.5 #DDDDDD, stop:1 #F0B040); }
         QSlider#tintTrack::groove:horizontal { background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #4CB060, stop:0.5 #DDDDDD, stop:1 #D050C0); }
         QSlider#saturationTrack::groove:horizontal { background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #888888, stop:0.2 #E04F4F, stop:0.4 #E0C04F, stop:0.6 #4FE070, stop:0.8 #4F9CE0, stop:1 #B04FE0); }
+        QDialog { background: {{panel}}; }
+        #sheetTitle { font-size: 16px; font-weight: 600; }
+        #mono { font-family: monospace; font-size: 12px; }
+        QPushButton#segment { border-radius: 0; padding: 5px 12px; background: {{input}}; }
+        QPushButton#segment:checked { background: {{accentSoft}}; color: {{accent}}; font-weight: 600; }
+        QLineEdit, QComboBox, QSpinBox { background: {{input}}; border: 1px solid {{border}}; border-radius: 7px; padding: 5px 8px; }
+        QLineEdit:focus, QComboBox:focus, QSpinBox:focus { border-color: {{accent}}; }
+        #toast { background: {{elevated}}; border: 1px solid {{border}}; border-radius: 9px; padding: 7px 12px; }
         QMenu { background: {{elevated}}; border: 1px solid {{border}}; border-radius: 10px; padding: 5px; }
         QMenu::item { padding: 6px 28px 6px 10px; border-radius: 6px; }
         QMenu::item:selected { background: {{hover}}; }
@@ -74,6 +82,7 @@ QString sheet(const Tokens& t)
     put(u"elevated"_s, t.elevated);
     put(u"hover"_s, t.hover);
     put(u"border"_s, t.border);
+    put(u"input"_s, t.input);
     put(u"muted"_s, t.muted);
     put(u"text"_s, t.text);
     put(u"track"_s, t.track);

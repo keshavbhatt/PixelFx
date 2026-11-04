@@ -4,10 +4,12 @@
 //   PIXELFX_DEBUG_OPEN=<file>          open this photo at start
 //   PIXELFX_DEBUG_WINDOW_SIZE=<w>x<h>  window size
 //   PIXELFX_DEBUG_PRESET=<file>        apply this preset or recipe once the photo is open
+//   PIXELFX_DEBUG_SHEET=export         with GRAB: grab the Export sheet instead of the window
 //   PIXELFX_DEBUG_GRAB=<file.png>      grab the window once the photo is shown (or after 2 s
 //                                      with nothing to show) and quit
 #include "app/application.h"
 #include "core/log_sink.h"
+#include "ui/export_sheet.h"
 #include "ui/main_window.h"
 #include "ui/style.h"
 
@@ -41,7 +43,19 @@ void applyDebugHooks(pixelfx::ui::MainWindow& window, QStringList& files)
     if (grab.isEmpty()) {
         return;
     }
-    const auto save = [&window, grab] {
+    const bool exportSheet = qEnvironmentVariable("PIXELFX_DEBUG_SHEET") == u"export"_s;
+    const auto save = [&window, grab, exportSheet] {
+        if (exportSheet && window.document().isOpen()) {
+            auto* sheet =
+                new pixelfx::ui::ExportSheet(window.document().info().path, window.document().info().size,
+                                             pixelfx::core::ExportOptions{}, &window);
+            sheet->show();
+            QTimer::singleShot(300, sheet, [sheet, grab] {
+                sheet->grab().save(grab);
+                QCoreApplication::quit();
+            });
+            return;
+        }
         window.grab().save(grab);
         QCoreApplication::quit();
     };

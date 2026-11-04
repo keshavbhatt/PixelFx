@@ -143,15 +143,15 @@ preview and export use resolution-independent parameters so they match (v1 defec
 
 | # | Feature | v1 | Decision | Status / class |
 |---|---|---|---|---|
-| X1 | Export sheet: JPEG, PNG, WebP, AVIF, TIFF, JPEG XL, HEIC (where the platform allows); per-format options with correct semantics | Qt writers, inverted PNG slider | KEEP | todo |
-| X2 | Resize on export: long edge, width, height, megapixels, percent; never enlarge | none | KEEP | todo |
+| X1 | Export sheet: JPEG, PNG, WebP, AVIF, TIFF, JPEG XL, HEIC (where the platform allows); per-format options with correct semantics | Qt writers, inverted PNG slider | KEEP | wip: sheet with the formats the build writes, quality, 16 bits (`ExportSheet`, `Exporter`); AVIF, HEIC, JPEG XL with the codec parts |
+| X2 | Resize on export: long edge, width, height, megapixels, percent; never enlarge | none | KEEP | wip: long edge, never enlarging (`pfx::fitLongEdge`); the other modes with size presets (X11) |
 | X3 | Output sharpening for screen or print | none | KEEP | todo |
 | X4 | Colour space: sRGB (default), Display P3, Adobe RGB, same as original; ICC embedded | dropped | KEEP | todo |
-| X5 | Metadata: keep camera details and copyright (default on), keep location (default off), strip all | dropped | KEEP | todo |
-| X6 | Folder, name tokens ({name}, {n}, {date}, {preset}, {w}, {h}), if-exists policy (number, overwrite with one confirmation, skip) | no overwrite check | KEEP | todo |
-| X7 | Estimated file size; options remembered | none | KEEP | todo |
+| X5 | Metadata: keep camera details and copyright (default on), keep location (default off), strip all | dropped | KEEP | wip: keep or strip all done; removing only the location needs Exif editing (M3) |
+| X6 | Folder, name tokens ({name}, {n}, {date}, {preset}, {w}, {h}), if-exists policy (number, overwrite with one confirmation, skip) | no overwrite check | KEEP | wip: folder, {name} {date} {w} {h}, add a number, overwrite, skip, never the original by accident (`core::exportTarget`); {n} and {preset} with batch, the overwrite confirmation with the sheets |
+| X7 | Estimated file size; options remembered | none | KEEP | wip: options remembered (`Settings::exportOptions`); the estimate later in M3 |
 | X8 | Copy the result to the clipboard; share through the portal | none | KEEP (clipboard); LATER (share) | todo |
-| X9 | Export is off the GUI thread with progress; failures say why | use-after-free, silent | KEEP | todo |
+| X9 | Export is off the GUI thread with progress; failures say why | use-after-free, silent | KEEP | wip: off the GUI thread, saved or the reason in a toast; a progress bar for large photos in M3 |
 | X10 | Watermark on export and in batch: text (font, colour, opacity) or a logo image (PNG with alpha), nine anchor positions plus margin, size relative to the image, optional tiling; saved watermarks reused by name; never applied to the editor view | none | KEEP | todo |
 | X11 | Size presets for where the photo is going: Instagram post (1080 by 1350) and square (1080), story (1080 by 1920), Facebook, X, web (2048 long edge), email (1600), 4K wallpaper, print sizes at 300 dpi; crop ratio follows when the photo is cropped for it; user-defined sizes | none | KEEP | todo |
 
