@@ -318,6 +318,16 @@ void readBody(const Json& json, Document& doc, ParseReport* report)
             dropValuesThatAreGroups(doc.settings, report);
         } else if (doc.kind == DocumentKind::Batch && readBatchField(name, value, doc.batch, report)) {
             continue;
+        } else if (doc.kind == DocumentKind::Recipe && name == "snapshots" && value.is_array()) {
+            for (const Json& snapshot : value) {
+                BatchStep s;
+                s.name = stringField(snapshot, "name");
+                if (const auto settings = snapshot.find("settings"); settings != snapshot.end()) {
+                    flatten(*settings, {}, s.settings, report);
+                    dropValuesThatAreGroups(s.settings, report);
+                }
+                doc.snapshots.push_back(std::move(s));
+            }
         } else if (name == "source" && value.is_object() && doc.kind == DocumentKind::Recipe) {
             doc.sourceName = stringField(value, "name");
             doc.sourceFingerprint = stringField(value, "fingerprint");
@@ -401,6 +411,13 @@ std::string serializeDocument(const Document& document)
     }
     if (document.kind == DocumentKind::Batch) {
         body = batchToJson(document.batch, body);
+    }
+    if (document.kind == DocumentKind::Recipe && !document.snapshots.empty()) {
+        Json snapshots = Json::array();
+        for (const BatchStep& snapshot : document.snapshots) {
+            snapshots.push_back({{"name", snapshot.name}, {"settings", unflatten(snapshot.settings)}});
+        }
+        body["snapshots"] = snapshots;
     }
     if (document.kind != DocumentKind::Batch || !document.settings.isEmpty()) {
         body["settings"] = unflatten(document.settings);

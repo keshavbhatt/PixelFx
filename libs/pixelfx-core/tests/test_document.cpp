@@ -193,3 +193,19 @@ TEST_CASE("batch recipes: looks in the stack are skipped with a reason")
     CHECK(doc.value().batch.longEdge == 1600);
     CHECK_FALSE(report.warnings.empty());
 }
+
+TEST_CASE("recipes keep their snapshots")
+{
+    pfx::Document doc;
+    doc.kind = pfx::DocumentKind::Recipe;
+    doc.settings.set("light.exposure", 0.3);
+    pfx::BatchStep warmer;
+    warmer.name = "Warmer";
+    warmer.settings.set("color.wb.temperature", 20.0);
+    doc.snapshots = {warmer};
+    const auto again = pfx::parseDocument(pfx::serializeDocument(doc));
+    REQUIRE(again.ok());
+    REQUIRE(again.value().snapshots.size() == 1);
+    CHECK(again.value().snapshots.front() == warmer);
+    CHECK(again.value().settings.number("light.exposure", 0) == 0.3);
+}

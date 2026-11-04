@@ -68,6 +68,8 @@ struct Document
     std::uint64_t sourceSize = 0;
     std::string sourceFingerprint;
     BatchBody batch; // batch documents only
+    // Recipe documents: named states of the edit the user kept (History, Save snapshot).
+    std::vector<BatchStep> snapshots;
     // Keys this version does not know, kept as JSON text and written back unchanged.
     std::string unknownTopLevel;
     std::string unknownBody;
