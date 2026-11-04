@@ -63,7 +63,7 @@ preview and export use resolution-independent parameters so they match (v1 defec
 | E3 | Color mixer: hue, saturation, luminance for 8 colour bands | Hue shift | KEEP | done: library (`mixer`, stage 80) and the Color mixer group of `editor.html` |
 | E4 | Curves: RGB and per channel, points, double-click removes | none | KEEP | done (`CurveEditor`, `AdjustPanel`; drawn with `pfx::sampleCurve`) |
 | E5 | Levels (black, mid, white point per channel) | none | LATER | |
-| E6 | Detail: Clarity (local contrast), Sharpen (amount, radius, masking), Noise reduction (luminance, colour), Dehaze | Sharpen, Blur, Mean, Median | KEEP | wip: clarity, sharpen, noise reduction in the library; dehaze moved to M3; UI M3 |
+| E6 | Detail: Clarity (local contrast), Sharpen (amount, radius, masking), Noise reduction (luminance, colour), Dehaze | Sharpen, Blur, Mean, Median | KEEP | done: clarity, sharpen, noise reduction and dehaze in the library and the Detail group |
 | E7 | Effects: Vignette (amount, midpoint, roundness), Grain (amount, size), Fade | none | KEEP | done: library (vignette amount, midpoint, roundness; grain amount, size; fade) and the Effects group with the three sliders of `editor.html` |
 | E8 | Split toning / color grading (shadows, midtones, highlights wheels) | Colorize | KEEP (as a step in looks and a Color group sub-panel) | todo |
 | E9 | Creative operations from v1: Sepia, Threshold, Colorize, Pixelate, Blur, Invert, Grayscale, Emboss, Edge, Sobel | some in UI, some only in Go | KEEP as look steps, not sliders | todo |
