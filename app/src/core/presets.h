@@ -64,9 +64,17 @@ public:
     [[nodiscard]] static bool update(const QString& path, const pfx::Settings& settings);
     [[nodiscard]] static bool rename(const QString& path, const QString& name);
     [[nodiscard]] bool remove(const QString& path) const;
-    /// Copies a PixelFx preset or recipe file into the library, in the Imported group.
-    /// The new path, or the reason it could not be read.
-    [[nodiscard]] std::pair<QString, QString> importFile(const QString& file) const;
+    /// What an import did: the new preset's path (empty on failure), the reason it failed, and
+    /// for a Lightroom preset the settings PixelFx has no equivalent for.
+    struct Imported
+    {
+        QString path;
+        QString error;
+        QStringList skipped;
+    };
+    /// Brings a PixelFx preset or recipe, or a Lightroom or Camera Raw preset (.xmp), into the
+    /// library, in the Imported group.
+    [[nodiscard]] Imported importFile(const QString& file) const;
     /// Writes the preset at `path` (or a built-in one) to `target` for sharing.
     [[nodiscard]] static bool exportTo(const PresetEntry& entry, const QString& target);
 

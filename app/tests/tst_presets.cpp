@@ -100,15 +100,34 @@ private Q_SLOTS:
         doc.settings.set("detail.clarity", 20.0);
         const QString file = dir.filePath(u"shared.pfxpreset"_s);
         QVERIFY(pfx::saveDocument(doc, file.toStdString()).ok());
-        const auto [path, error] = library.importFile(file);
-        QVERIFY2(!path.isEmpty(), qPrintable(error));
+        const auto imported = library.importFile(file);
+        QVERIFY2(!imported.path.isEmpty(), qPrintable(imported.error));
         QVERIFY(!library.save(u"Mine"_s, u"My presets"_s, doc.settings).isEmpty());
         const auto entries = library.entries();
         QCOMPARE(entries.front().group, u"My presets"_s); // My presets come first, Imported after
         QCOMPARE(entries.at(1).group, u"Imported"_s);
-        QVERIFY(!library.importFile(dir.filePath(u"missing.pfxpreset"_s)).second.isEmpty());
+        QVERIFY(!library.importFile(dir.filePath(u"missing.pfxpreset"_s)).error.isEmpty());
         QVERIFY(PresetLibrary::exportTo(entries.front(), dir.filePath(u"out.pfxpreset"_s)));
         QVERIFY(QFile::exists(dir.filePath(u"out.pfxpreset"_s)));
+    }
+
+    void lightroomPresetsComeInWithAReport()
+    {
+        QTemporaryDir dir;
+        const PresetLibrary library(dir.filePath(u"presets"_s));
+        const QString file = dir.filePath(u"clean.xmp"_s);
+        QFile out(file);
+        QVERIFY(out.open(QIODevice::WriteOnly));
+        out.write(R"(<x:xmpmeta><rdf:Description xmlns:crs="x" crs:Exposure2012="+0.5" crs:Texture="+20">)"
+                  R"(<crs:Name><rdf:Alt><rdf:li xml:lang="x-default">Clean</rdf:li></rdf:Alt></crs:Name>)"
+                  R"(</rdf:Description></x:xmpmeta>)");
+        out.close();
+        const auto imported = library.importFile(file);
+        QVERIFY2(!imported.path.isEmpty(), qPrintable(imported.error));
+        QCOMPARE(imported.skipped, QStringList{u"Texture"_s});
+        const auto entries = library.entries();
+        QCOMPARE(entries.front().name, u"Lightroom: Clean"_s);
+        QCOMPARE(entries.front().settings.number("light.exposure", 0), 0.5);
     }
 
     void builtInsAreThere()

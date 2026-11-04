@@ -55,6 +55,8 @@ public:
     void refreshPresets();
     /// Saves the photo's settings as a preset through the Save as preset sheet.
     void savePreset();
+    /// Imports PixelFx, Lightroom and Camera Raw presets chosen in a file dialog.
+    void importPresets();
     /// Crop mode (C): the crop box over the whole photo and the crop panel.
     void enterCrop();
     /// Leaves Crop mode, keeping the changes as one history step (`apply`) or dropping them.

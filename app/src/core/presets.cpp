@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <pfx/document.h>
 #include <pfx/registry.h>
+#include <pfx/xmp_import.h>
 
 using namespace Qt::StringLiterals;
 
@@ -298,23 +299,41 @@ bool PresetLibrary::remove(const QString& path) const
     return QFileInfo(path).absolutePath() == QFileInfo(m_folder).absoluteFilePath() && QFile::remove(path);
 }
 
-std::pair<QString, QString> PresetLibrary::importFile(const QString& file) const
+PresetLibrary::Imported PresetLibrary::importFile(const QString& file) const
 {
-    pfx::ParseReport report;
-    auto doc = pfx::loadDocument(file.toStdString(), &report);
-    if (!doc) {
-        return {{}, QString::fromStdString(doc.error().message)};
+    Imported out;
+    const QString imported = QCoreApplication::translate(kContext, "Imported");
+    if (QFileInfo(file).suffix().compare(u"xmp"_s, Qt::CaseInsensitive) == 0) {
+        auto xmp = pfx::importXmpPresetFile(file.toStdString());
+        if (!xmp) {
+            out.error = QString::fromStdString(xmp.error().message);
+            return out;
+        }
+        const QString name = QString::fromStdString(xmp.value().document.name);
+        out.path = save(QCoreApplication::translate(kContext, "Lightroom: %1").arg(name), imported,
+                        xmp.value().document.settings);
+        for (const std::string& key : xmp.value().skipped) {
+            out.skipped << QString::fromStdString(key);
+        }
+    } else {
+        pfx::ParseReport report;
+        auto doc = pfx::loadDocument(file.toStdString(), &report);
+        if (!doc) {
+            out.error = QString::fromStdString(doc.error().message);
+            return out;
+        }
+        if (doc.value().kind != pfx::DocumentKind::Preset && doc.value().kind != pfx::DocumentKind::Recipe) {
+            out.error = QCoreApplication::translate(kContext, "This file is not a preset.");
+            return out;
+        }
+        const QString name = doc.value().name.empty() ? QFileInfo(file).completeBaseName()
+                                                      : QString::fromStdString(doc.value().name);
+        out.path = save(name, imported, doc.value().settings);
     }
-    if (doc.value().kind != pfx::DocumentKind::Preset && doc.value().kind != pfx::DocumentKind::Recipe) {
-        return {{}, QCoreApplication::translate(kContext, "This file is not a preset.")};
+    if (out.path.isEmpty()) {
+        out.error = QCoreApplication::translate(kContext, "The preset folder is not writable.");
     }
-    const QString name = doc.value().name.empty() ? QFileInfo(file).completeBaseName()
-                                                  : QString::fromStdString(doc.value().name);
-    const QString path = save(name, QCoreApplication::translate(kContext, "Imported"), doc.value().settings);
-    if (path.isEmpty()) {
-        return {{}, QCoreApplication::translate(kContext, "The preset folder is not writable.")};
-    }
-    return {path, {}};
+    return out;
 }
 
 bool PresetLibrary::exportTo(const PresetEntry& entry, const QString& target)

@@ -713,25 +713,42 @@ void MainWindow::connectPresets()
     refreshPresets();
 }
 
+void MainWindow::importPresets()
+{
+    const QStringList files = QFileDialog::getOpenFileNames(
+        this, tr("Import presets"), m_settings.lastOpenFolder(),
+        tr("Presets (*.pfxpreset *.pfxrecipe *.xmp);;PixelFx presets "
+           "(*.pfxpreset *.pfxrecipe);;Lightroom and Camera Raw presets (*.xmp)"));
+    if (files.isEmpty()) {
+        return;
+    }
+    int imported = 0;
+    QString lastError;
+    QStringList skipped;
+    for (const QString& file : files) {
+        const auto result = m_library.importFile(file);
+        if (result.path.isEmpty()) {
+            lastError = result.error;
+        } else {
+            ++imported;
+            skipped << result.skipped;
+        }
+    }
+    refreshPresets();
+    skipped.removeDuplicates();
+    QString text = lastError.isEmpty()
+                       ? tr("Imported %n preset(s).", nullptr, imported)
+                       : tr("Imported %1 of %2. %3").arg(imported).arg(files.size()).arg(lastError);
+    if (!skipped.isEmpty()) {
+        // Lightroom settings with no equivalent are named, so nothing goes missing silently.
+        text += u' ' + tr("Left out: %1.").arg(skipped.mid(0, 6).join(u", "_s));
+    }
+    showToast(text);
+}
+
 void MainWindow::connectPresetActions()
 {
-    connect(m_presets, &PresetsPanel::importRequested, this, [this] {
-        const QStringList files =
-            QFileDialog::getOpenFileNames(this, tr("Import presets"), m_settings.lastOpenFolder(),
-                                          tr("PixelFx presets (*.pfxpreset *.pfxrecipe)"));
-        int imported = 0;
-        QString lastError;
-        for (const QString& file : files) {
-            const auto [path, error] = m_library.importFile(file);
-            path.isEmpty() ? void(lastError = error) : void(++imported);
-        }
-        if (!files.isEmpty()) {
-            refreshPresets();
-            showToast(lastError.isEmpty()
-                          ? tr("Imported %n preset(s)", nullptr, imported)
-                          : tr("Imported %1 of %2. %3").arg(imported).arg(files.size()).arg(lastError));
-        }
-    });
+    connect(m_presets, &PresetsPanel::importRequested, this, &MainWindow::importPresets);
     connect(m_presets, &PresetsPanel::renameRequested, this, [this](const core::PresetEntry& e) {
         bool ok = false;
         const QString name =

@@ -91,7 +91,7 @@ QHBoxLayout* PresetsPanel::buildHead()
     auto* import = new QToolButton(this);
     import->setObjectName(u"groupReset"_s);
     import->setIcon(icons::themed(u"import"_s, tokens().text));
-    import->setToolTip(tr("Import PixelFx presets"));
+    import->setToolTip(tr("Import PixelFx, Lightroom and Camera Raw presets"));
     import->setAccessibleName(tr("Import presets"));
     connect(import, &QToolButton::clicked, this, &PresetsPanel::importRequested);
     auto* head = new QHBoxLayout;

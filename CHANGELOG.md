@@ -20,6 +20,8 @@ PixelFx 2 is rebuilt from scratch: a new editor, a new image engine, and a new l
 - Presets: save the whole edit or only parts of it, apply with one click, preview by hovering,
   stack a colour preset on a light one; import and export them as files to share. A few built-in
   presets, Auto enhance among them, to start from.
+- Bring your Lightroom and Camera Raw presets (.xmp): light, colour, curves, detail and effects
+  come across, and PixelFx says which settings it left out.
 - Color mixer: hue, saturation and luminance for eight colour ranges.
 - Dehaze clears distance haze from landscapes and city views, or adds a little mist.
 - Effects: vignette, film grain and fade.
