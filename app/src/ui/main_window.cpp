@@ -429,6 +429,16 @@ void MainWindow::setupUi()
     connect(m_batch, &BatchPage::outputChanged, this,
             [this](const core::ExportOptions& output) { m_settings.setExportOptions(output); });
     m_stack->addWidget(m_batch);
+    // The window title shows a running batch, so it can be followed from the task bar.
+    connect(&m_batch->runner(), &services::BatchRunner::progress, this,
+            [this](int done, int total) { setWindowTitle(tr("Batch %1 of %2").arg(done).arg(total)); });
+    connect(&m_batch->runner(), &services::BatchRunner::finished, this, [this](int saved, int failed) {
+        setWindowTitle(m_document.isOpen() ? QFileInfo(m_document.info().path).fileName() : QString());
+        if (!isBatching()) {
+            showToast(failed > 0 ? tr("Batch done: %1 saved, %2 not saved").arg(saved).arg(failed)
+                                 : tr("Batch done: %n saved", nullptr, saved));
+        }
+    });
 
     m_adjust = new AdjustPanel(this);
     m_cropPanel = new CropPanel(this);
@@ -1299,6 +1309,17 @@ int MainWindow::previewLongEdge() const
 
 void MainWindow::closeEvent(QCloseEvent* event)
 {
+    // Closing during a batch asks once (batch-running.html); the photos written so far stay.
+    if (m_batch->runner().isRunning()) {
+        const auto answer = QMessageBox::question(
+            this, tr("Batch still running"),
+            tr("Stop the batch and quit? Photos already saved are kept; the rest are not processed."));
+        if (answer != QMessageBox::Yes) {
+            event->ignore();
+            return;
+        }
+        m_batch->runner().stop();
+    }
     m_document.flush();
     m_settings.setWindowGeometry(saveGeometry());
     m_settings.setWindowState(saveState());
