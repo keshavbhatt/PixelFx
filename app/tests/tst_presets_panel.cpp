@@ -1,3 +1,4 @@
+#include "ui/paste_sheet.h"
 #include "ui/preset_save_sheet.h"
 #include "ui/presets_panel.h"
 #include "ui/style.h"
@@ -40,6 +41,17 @@ private Q_SLOTS:
         QTest::mouseClick(panel.rows().first(), Qt::LeftButton, {}, QPoint(80, 10));
         QCOMPARE(apply.count(), 1);
         QCOMPARE(apply.first().first().value<PresetEntry>().name, u"Warm evening"_s);
+    }
+
+    void pasteSheetOffersWhatWasCopied()
+    {
+        pfx::Settings copied;
+        copied.set("light.exposure", 0.4);
+        copied.set("color.wb.temperature", 12.0);
+        pixelfx::ui::PasteSheet sheet(copied, 3);
+        QCOMPARE(sheet.units(), QStringList{u"light"_s}); // White balance offered but not ticked
+        sheet.tick({u"light"_s, u"wb"_s});
+        QCOMPARE(sheet.units().size(), 2);
     }
 
     void saveSheetTicksChangedPartsButWhiteBalanceAndCrop()

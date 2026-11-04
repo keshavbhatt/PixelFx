@@ -142,7 +142,7 @@
   selected photo: the current one as a history step, the others through their remembered edits
   (needs Remember edits on), and the Presets panel says "Applies to N photos". Export with a
   selection is "Export N photos": the same sheet, each photo with its own settings, one after
-  another. Not yet: Paste asking which groups.
+  another. Paste with a selection asks which parts (Paste to N photos).
 - Open: the curve editor's mouse test crashes (SIGSEGV) on the macOS CI runner only, after the
   synthetic double click; it is clean under ASan and UBSan on Linux (debug build, `build/asan`)
   and passes on Windows. Skipped on macOS for now; worth a look on a Mac.

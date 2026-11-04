@@ -9,6 +9,7 @@
 #include "ui/export_sheet.h"
 #include "ui/filmstrip.h"
 #include "ui/icons.h"
+#include "ui/paste_sheet.h"
 #include "ui/preset_save_sheet.h"
 #include "ui/presets_panel.h"
 #include "ui/settings_sheet.h"
@@ -666,7 +667,20 @@ void MainWindow::pasteSettings()
         showToast(tr("Nothing to paste: copy a photo's settings first."));
         return;
     }
-    applyToSelection([settings = *copied](const pfx::Settings& s) { return core::pasted(s, settings); },
+    pfx::Settings settings = *copied;
+    const auto photos = static_cast<int>(m_strip->selection().size());
+    if (photos > 1) {
+        // Several photos: ask which parts (apply-to-selected.html), as a preset of those parts.
+        PasteSheet sheet(settings, photos, this);
+        if (sheet.exec() != QDialog::Accepted || sheet.units().isEmpty()) {
+            return;
+        }
+        settings = core::presetFrom(settings, sheet.units());
+        applyToSelection([settings](const pfx::Settings& s) { return core::applyPreset(s, settings); },
+                         tr("Paste settings"));
+        return;
+    }
+    applyToSelection([settings](const pfx::Settings& s) { return core::pasted(s, settings); },
                      tr("Paste settings"));
 }
 
