@@ -74,7 +74,7 @@ struct Rgba8Image
                           const SaveOptions& options = {}, const Metadata* metadata = nullptr);
 
 // File extensions (lower case, with the dot) this build can write: always .jpg, .png, .tif and
-// .webp; .avif, .heic and .jxl when libvips was built with them.
+// .webp; .avif, .heic and .jxl when libvips has a working encoder for them (each is tried once).
 [[nodiscard]] std::vector<std::string> writableExtensions();
 
 // File extensions (lower case, with the dot, sorted) this build can read as photos: JPEG, PNG,

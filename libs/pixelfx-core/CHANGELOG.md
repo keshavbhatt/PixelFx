@@ -18,6 +18,8 @@ Semantic Versioning (the API may change before 1.0).
 
 ### Fixed
 
+- `writableExtensions` lists a format only when it really encodes: libheif can be present with
+  no HEVC or AV1 encoder, and those formats were offered and then failed.
 - Found by fuzzing: a curve whose points meet once clamped into 0 to 1 is now dropped, not
   kept broken; setting names that are empty or contain a dot, and a value that is also the name
   of a group, are dropped with a reason. Every document PixelFx writes reads back the same.

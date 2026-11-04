@@ -520,17 +520,27 @@ Result<Rgba8Image> toSrgb8(const Image& image)
 
 std::vector<std::string> writableExtensions()
 {
-    ensureVips();
-    std::vector<std::string> out;
-    for (const char* ext : {".jpg", ".png", ".tif", ".webp", ".avif", ".heic", ".jxl"}) {
-        const std::string probe = std::string("probe") + ext;
-        if (vips_foreign_find_save(probe.c_str()) != nullptr) {
-            out.emplace_back(ext);
-        } else {
-            vips_error_clear();
+    // A saver can exist without an encoder behind it (libheif without x265 or an AV1 encoder):
+    // each format is tried once on a tiny image, and only those that really write are offered.
+    static const std::vector<std::string> extensions = [] {
+        ensureVips();
+        std::vector<std::string> out;
+        const vips::VImage probe =
+            vips::VImage::black(8, 8, vips::VImage::option()->set("bands", 3)).cast(VIPS_FORMAT_UCHAR);
+        for (const char* ext : {".jpg", ".png", ".tif", ".webp", ".avif", ".heic", ".jxl"}) {
+            try {
+                void* buffer = nullptr;
+                std::size_t size = 0;
+                probe.write_to_buffer(ext, &buffer, &size);
+                g_free(buffer);
+                out.emplace_back(ext);
+            } catch (const vips::VError&) {
+                vips_error_clear();
+            }
         }
-    }
-    return out;
+        return out;
+    }();
+    return extensions;
 }
 
 namespace {
