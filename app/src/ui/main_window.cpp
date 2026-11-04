@@ -94,7 +94,13 @@ QToolButton* headerButton(QWidget* parent, const QString& glyph, const QString& 
 
 QString describe(const services::DocumentInfo& info)
 {
-    const QString format = info.format.endsWith(u"load"_s) ? info.format.chopped(4).toUpper() : info.format;
+    QString format = info.format.endsWith(u"load"_s) ? info.format.chopped(4).toUpper() : info.format;
+    const QString suffix = QFileInfo(info.path).suffix().toUpper();
+    if (format == u"HEIF"_s && !suffix.isEmpty()) {
+        format = suffix; // one loader for HEIC, HEIF and AVIF: name the file's own kind
+    } else if (format == u"DCRAW"_s) {
+        format = u"RAW (%1)"_s.arg(suffix); // camera raw: say which maker's format
+    }
     const QString size =
         QLocale().formattedDataSize(QFileInfo(info.path).size(), 1, QLocale::DataSizeSIFormat);
     return u"%1 x %2 · %3 · %4"_s.arg(info.size.width()).arg(info.size.height()).arg(format, size);
