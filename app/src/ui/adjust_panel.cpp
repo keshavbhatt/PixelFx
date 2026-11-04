@@ -6,6 +6,7 @@
 #include "ui/style.h"
 
 #include <QButtonGroup>
+#include <QComboBox>
 #include <QEvent>
 #include <QHBoxLayout>
 #include <QLabel>
@@ -354,6 +355,9 @@ AdjustPanel::AdjustPanel(QWidget* parent)
     groups->setSpacing(0);
     for (const GroupSpec& g : groupSpecs()) {
         auto* group = new AdjustGroup(tr(g.name), QString::fromLatin1(g.glyph), content);
+        if (std::string_view(g.name) == "Color") {
+            group->addContent(buildWhiteBalanceRow(group));
+        }
         for (const ControlSpec& c : g.controls) {
             auto* s = new AdjustSlider(QString::fromLatin1(c.key), tr(c.label), group);
             if (c.track[0] != '\0') {
@@ -391,6 +395,75 @@ AdjustPanel::AdjustPanel(QWidget* parent)
 }
 
 AdjustPanel::~AdjustPanel() = default;
+
+QWidget* AdjustPanel::buildWhiteBalanceRow(QWidget* parent)
+{
+    // Mock editor.html: "White balance" with a menu and a picker, above Temperature. Kelvin
+    // presets (Daylight, Cloudy ...) need the camera's own white balance and come with RAW.
+    auto* row = new QWidget(parent);
+    auto* label = new QLabel(tr("White balance"), row);
+    label->setObjectName(u"adjustName"_s);
+    m_wbMode = new QComboBox(row);
+    m_wbMode->addItems({tr("As shot"), tr("Auto"), tr("Custom")});
+    m_wbMode->setAccessibleName(tr("White balance"));
+    m_wbMode->setToolTip(tr("As shot keeps the camera's colours; Auto neutralises a colour cast"));
+    m_picker = new QToolButton(row);
+    m_picker->setObjectName(u"groupReset"_s);
+    m_picker->setIcon(icons::themed(u"pipette"_s, tokens().text));
+    m_picker->setCheckable(true);
+    m_picker->setToolTip(tr("Pick a neutral point (W): click something that should be grey or white"));
+    m_picker->setAccessibleName(tr("Pick a neutral point"));
+    connect(m_picker, &QToolButton::toggled, this, &AdjustPanel::whiteBalancePickRequested);
+    connect(m_wbMode, &QComboBox::activated, this, [this](int index) {
+        if (index == 0) {
+            m_settings.erase("color.wb.temperature");
+            m_settings.erase("color.wb.tint");
+            m_wbAuto = false;
+            setSettings(m_settings);
+            Q_EMIT settingsChanged(m_settings);
+            Q_EMIT editFinished(tr("White balance as shot"));
+        } else if (index == 1) {
+            Q_EMIT whiteBalanceAutoRequested();
+        } else {
+            refreshWhiteBalance(); // Custom is what the sliders say; picking it changes nothing
+        }
+    });
+    auto* layout = new QHBoxLayout(row);
+    layout->setContentsMargins(0, 4, 0, 4);
+    layout->setSpacing(4);
+    layout->addWidget(label);
+    layout->addStretch();
+    layout->addWidget(m_wbMode);
+    layout->addWidget(m_picker);
+    return row;
+}
+
+void AdjustPanel::markWhiteBalanceAuto()
+{
+    m_wbAuto = true;
+    refreshWhiteBalance();
+}
+
+void AdjustPanel::setPicking(bool on)
+{
+    const QSignalBlocker block(m_picker);
+    m_picker->setChecked(on);
+}
+
+void AdjustPanel::refreshWhiteBalance()
+{
+    const bool asShot = !m_settings.contains("color.wb.temperature") && !m_settings.contains("color.wb.tint");
+    if (asShot) {
+        m_wbAuto = false;
+    }
+    int index = 2; // Custom
+    if (asShot) {
+        index = 0;
+    } else if (m_wbAuto) {
+        index = 1;
+    }
+    m_wbMode->setCurrentIndex(index);
+}
 
 void AdjustPanel::setPasteEnabled(bool enabled)
 {
@@ -635,10 +708,14 @@ void AdjustPanel::setSettings(const pfx::Settings& settings)
     }
     m_curve->setCurve(settings.curve(m_curveKey.toStdString()));
     refreshGroups();
+    refreshWhiteBalance();
 }
 
 void AdjustPanel::setValue(const QString& key, double value, bool finished)
 {
+    if (key.startsWith(u"color.wb."_s)) {
+        m_wbAuto = false; // moved by hand: Custom
+    }
     const AdjustSlider* s = slider(key);
     const std::string k = key.toStdString();
     if (s != nullptr && std::abs(value - s->defaultValue()) < 1e-9) {
@@ -652,6 +729,7 @@ void AdjustPanel::setValue(const QString& key, double value, bool finished)
         Q_EMIT editFinished(s->isChanged() ? u"%1 %2"_s.arg(s->label(), s->valueText())
                                            : tr("Reset %1").arg(s->label()));
     }
+    refreshWhiteBalance();
 }
 
 void AdjustPanel::resetGroup(AdjustGroup* group)

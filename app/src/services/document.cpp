@@ -7,11 +7,14 @@
 
 #include <QFileInfo>
 #include <QFutureWatcher>
+#include <QPointF>
 #include <QThreadPool>
 #include <QTimer>
 #include <QtConcurrent/QtConcurrentRun>
 
+#include <array>
 #include <pfx/auto.h>
+#include <pfx/color.h>
 #include <pfx/io.h>
 
 using namespace Qt::StringLiterals;
@@ -389,6 +392,58 @@ void Document::autoAdjust()
         }
     }
     apply(next.overlaidWith(pfx::autoAdjust(*m_source)), tr("Auto"));
+}
+
+namespace {
+
+/// Replaces the white balance keys of `settings` with those of `wb` (absent keys: as shot).
+pfx::Settings withWhiteBalance(const pfx::Settings& settings, const pfx::Settings& wb)
+{
+    pfx::Settings next = settings;
+    for (const char* key : {"color.wb.temperature", "color.wb.tint"}) {
+        if (const pfx::Value* v = wb.find(key)) {
+            next.set(key, *v);
+        } else {
+            next.erase(key);
+        }
+    }
+    return next;
+}
+
+} // namespace
+
+void Document::autoWhiteBalance()
+{
+    if (!isOpen() || !m_source) {
+        return;
+    }
+    apply(withWhiteBalance(m_settings, pfx::autoAdjust(*m_source)), tr("Auto white balance"));
+}
+
+void Document::pickWhiteBalance(QPointF fraction)
+{
+    if (!isOpen() || m_original.isNull()) {
+        return;
+    }
+    const QImage img = m_original.convertToFormat(QImage::Format_RGB32);
+    const int cx = std::clamp(static_cast<int>(fraction.x() * img.width()), 0, img.width() - 1);
+    const int cy = std::clamp(static_cast<int>(fraction.y() * img.height()), 0, img.height() - 1);
+    const int radius = std::max(1, static_cast<int>(0.003 * std::max(img.width(), img.height())));
+    std::array<double, 3> sum{};
+    int n = 0;
+    for (int y = std::max(0, cy - radius); y <= std::min(img.height() - 1, cy + radius); ++y) {
+        for (int x = std::max(0, cx - radius); x <= std::min(img.width() - 1, cx + radius); ++x) {
+            const QRgb c = img.pixel(x, y);
+            sum[0] += pfx::color::srgbDecode(qRed(c) / 255.0);
+            sum[1] += pfx::color::srgbDecode(qGreen(c) / 255.0);
+            sum[2] += pfx::color::srgbDecode(qBlue(c) / 255.0);
+            ++n;
+        }
+    }
+    const pfx::color::Vec3 rec2020 =
+        pfx::color::transform(pfx::color::kSrgbToRec2020, {sum[0] / n, sum[1] / n, sum[2] / n});
+    apply(withWhiteBalance(m_settings, pfx::neutralWhiteBalance(rec2020[0], rec2020[1], rec2020[2])),
+          tr("White balance picker"));
 }
 
 void Document::replaceSettings(const pfx::Settings& settings, bool render)

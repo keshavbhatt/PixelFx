@@ -69,6 +69,20 @@ Canvas::Canvas(QWidget* parent)
     m_dial->hide();
 }
 
+void Canvas::startPick()
+{
+    m_picking = true;
+    setCursor(Qt::CrossCursor);
+}
+
+void Canvas::cancelPick()
+{
+    if (m_picking) {
+        m_picking = false;
+        setCursor(isFit() ? Qt::ArrowCursor : Qt::OpenHandCursor);
+    }
+}
+
 void Canvas::startLevelLine()
 {
     if (m_cropping) {
@@ -455,6 +469,15 @@ core::CropHandle Canvas::cropHandleAt(QPointF pos) const
 
 void Canvas::mousePressEvent(QMouseEvent* event)
 {
+    if (m_picking && event->button() == Qt::LeftButton) {
+        const QRectF photo(photoRect());
+        if (photo.contains(event->position())) {
+            cancelPick();
+            Q_EMIT pointPicked({(event->position().x() - photo.left()) / photo.width(),
+                                (event->position().y() - photo.top()) / photo.height()});
+        }
+        return;
+    }
     if (m_cropping && m_levelLine && event->button() == Qt::LeftButton) {
         m_drawingLine = true;
         m_lineStart = event->position();

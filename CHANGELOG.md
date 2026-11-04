@@ -15,6 +15,7 @@ PixelFx 2 is rebuilt from scratch: a new editor, a new image engine, and a new l
 - Crop and rotate (C): crop freely or to a ratio with thirds, grid, golden or diagonal guides,
   straighten with the dial, the slider or a drawn level line, fix leaning buildings with the
   perspective sliders, turn and flip. The crop stays editable later.
+- White balance: As shot, Auto, or click something grey with the picker (W).
 - Color mixer: hue, saturation and luminance for eight colour ranges.
 - Dehaze clears distance haze from landscapes and city views, or adds a little mist.
 - Effects: vignette, film grain and fade.

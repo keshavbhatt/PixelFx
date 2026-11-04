@@ -130,6 +130,7 @@ MainWindow::MainWindow(core::Settings& settings, QWidget* parent)
     connectCrop();
     connectZoom();
     connectClipboard();
+    connectWhiteBalance();
 }
 
 void MainWindow::connectDocument()
@@ -603,6 +604,30 @@ void MainWindow::connectClipboard()
     addActions({copy, paste});
 }
 
+void MainWindow::connectWhiteBalance()
+{
+    connect(m_adjust, &AdjustPanel::whiteBalanceAutoRequested, this, [this] {
+        m_document.autoWhiteBalance();
+        m_adjust->markWhiteBalanceAuto();
+    });
+    connect(m_adjust, &AdjustPanel::whiteBalancePickRequested, this, [this](bool on) {
+        on&& m_document.isOpen() && !isCropping() ? m_canvas->startPick() : m_canvas->cancelPick();
+    });
+    connect(m_canvas, &Canvas::pointPicked, this, [this](QPointF fraction) {
+        m_adjust->setPicking(false);
+        m_document.pickWhiteBalance(fraction);
+    });
+    auto* pick = new QAction(tr("Pick a neutral point"), this);
+    pick->setShortcut(QKeySequence(Qt::Key_W));
+    connect(pick, &QAction::triggered, this, [this] {
+        if (m_document.isOpen() && !isCropping()) {
+            m_adjust->setPicking(true);
+            m_canvas->startPick();
+        }
+    });
+    addAction(pick);
+}
+
 void MainWindow::connectZoom()
 {
     // Zoomed in past the preview: a full-size render, made a moment after edits settle.
@@ -653,6 +678,8 @@ void MainWindow::enterCrop()
         return;
     }
     showOriginal(false);
+    m_canvas->cancelPick();
+    m_adjust->setPicking(false);
     m_compare->setChecked(false);
     m_compare->setEnabled(false);
     m_undo->setEnabled(false);

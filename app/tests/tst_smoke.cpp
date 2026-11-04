@@ -70,6 +70,14 @@ private Q_SLOTS:
         QCOMPARE(window.document().history().undoLabel(), u"Paste settings"_s);
         window.document().apply({}, u"Clear"_s);
 
+        // The white balance picker: W, then a click on the photo, is one step.
+        QTest::keyClick(&window, Qt::Key_W);
+        QVERIFY(window.canvas()->isPicking());
+        QTest::mouseClick(window.canvas(), Qt::LeftButton, {}, window.canvas()->photoRect().center());
+        QVERIFY(!window.canvas()->isPicking());
+        QCOMPARE(window.document().history().undoLabel(), u"White balance picker"_s);
+        window.document().apply({}, u"Clear"_s);
+
         // Zoom: in from Fit, back with Ctrl+0; Crop mode always fits.
         QVERIFY(window.canvas()->isFit());
         QCOMPARE(window.canvas()->zoomText(), u"Fit"_s);

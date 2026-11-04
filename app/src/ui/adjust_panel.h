@@ -8,6 +8,8 @@
 #include <vector>
 
 class QButtonGroup;
+class QComboBox;
+class QToolButton;
 class QHBoxLayout;
 class QLabel;
 class QPushButton;
@@ -48,6 +50,10 @@ public:
     void setHistogram(const core::Histogram& histogram);
     /// Clears every setting (Ctrl+R) and reports it as one step.
     void resetAll();
+    /// White balance shows "Auto" until a slider moves it.
+    void markWhiteBalanceAuto();
+    /// The picker button's state, without emitting.
+    void setPicking(bool on);
     /// Paste is available when the clipboard holds PixelFx settings.
     void setPasteEnabled(bool enabled);
 
@@ -58,6 +64,9 @@ Q_SIGNALS:
     void editFinished(const QString& label);
     void autoRequested();
     void copyRequested();
+    void whiteBalanceAutoRequested();
+    /// The picker button: the next click on the photo picks a neutral point.
+    void whiteBalancePickRequested(bool on);
     void pasteRequested();
 
 private:
@@ -67,12 +76,17 @@ private:
     void buildCurvesGroup(QWidget* content, QVBoxLayout* groups);
     void buildMixerGroup(QWidget* content, QVBoxLayout* groups);
     QHBoxLayout* buildTopRow();
+    QWidget* buildWhiteBalanceRow(QWidget* parent);
+    void refreshWhiteBalance();
     void showMixerSlider();
     void curveEdited(const pfx::Curve& curve);
 
     pfx::Settings m_settings;
     HistogramView* m_histogram = nullptr;
     QPushButton* m_paste = nullptr;
+    QComboBox* m_wbMode = nullptr;
+    QToolButton* m_picker = nullptr;
+    bool m_wbAuto = false;
     AdjustGroup* m_curvesGroup = nullptr;
     CurveEditor* m_curve = nullptr;
     QButtonGroup* m_curveChannels = nullptr;

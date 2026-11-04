@@ -77,6 +77,10 @@ public:
     [[nodiscard]] class StraightenDial* dial() const { return m_dial; }
     /// The next drag draws a line instead of moving the crop box (Draw a level line).
     void startLevelLine();
+    /// The next click on the photo reports where it landed (the white balance picker).
+    void startPick();
+    void cancelPick();
+    [[nodiscard]] bool isPicking() const { return m_picking; }
     [[nodiscard]] bool isDrawingLevelLine() const { return m_levelLine; }
 
 Q_SIGNALS:
@@ -85,6 +89,8 @@ Q_SIGNALS:
     void zoomChanged();
     /// A level line was drawn; `degrees` is its tilt on screen, positive clockwise.
     void levelLineDrawn(double degrees);
+    /// A click while picking, as fractions of the photo.
+    void pointPicked(QPointF fraction);
     void fullScreenRequested();
 
 protected:
@@ -104,6 +110,7 @@ private:
     void updateZoomBar();
     class StraightenDial* m_dial = nullptr;
     bool m_levelLine = false;
+    bool m_picking = false;
     bool m_drawingLine = false;
     QPointF m_lineStart;
     QPointF m_lineEnd;

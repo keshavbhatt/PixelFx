@@ -6,6 +6,7 @@
 
 #include <QImage>
 #include <QObject>
+#include <QPointF>
 #include <QSize>
 #include <QString>
 
@@ -72,6 +73,11 @@ public:
     /// Light and Color from the photo's statistics (the Auto button), as one step. Curves and
     /// Detail stay as they are.
     void autoAdjust();
+    /// White balance only, from the photo's statistics (the Auto choice of the menu).
+    void autoWhiteBalance();
+    /// White balance that makes the photo grey at `fraction` (of the photo as shown, geometry
+    /// applied), sampled from the original around it; one history step.
+    void pickWhiteBalance(QPointF fraction);
     [[nodiscard]] const core::History& history() const { return m_history; }
 
     /// While cropping, the preview shows the whole straightened photo so the crop box can move

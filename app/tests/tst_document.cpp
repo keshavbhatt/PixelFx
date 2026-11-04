@@ -246,6 +246,35 @@ private Q_SLOTS:
         QVERIFY(doc.fullImage().isNull());
     }
 
+    void whiteBalancePickerNeutralisesTheCast()
+    {
+        QTemporaryDir dir;
+        pfx::Image warm(120, 80);
+        warm.fill(0.45F, 0.30F, 0.18F); // a grey wall under tungsten light
+        const QString path = dir.filePath(u"warm.png"_s);
+        QVERIFY(pfx::save(warm, path.toStdString()).ok());
+        Document doc;
+        QSignalSpy ready(&doc, &Document::previewReady);
+        doc.open(path, 200);
+        QVERIFY(ready.wait(10000));
+        pfx::Settings start;
+        start.set("light.exposure", 0.3);
+        doc.apply(start, u"Start"_s);
+        QVERIFY(ready.wait(10000));
+        doc.pickWhiteBalance({0.5, 0.5});
+        QVERIFY(doc.settings().number("color.wb.temperature", 0) < -10); // cooled
+        QCOMPARE(doc.settings().number("light.exposure", 0), 0.3);       // the rest stays
+        QCOMPARE(doc.history().undoLabel(), u"White balance picker"_s);
+        QVERIFY(ready.wait(10000));
+        const QColor c = doc.preview().pixelColor(60, 40);
+        QVERIFY2(std::abs(c.red() - c.blue()) <= 6,
+                 qPrintable(u"%1 %2 %3"_s.arg(c.red()).arg(c.green()).arg(c.blue())));
+        QVERIFY(std::abs(c.green() - c.blue()) <= 6);
+        doc.autoWhiteBalance();
+        QCOMPARE(doc.settings().number("light.exposure", 0), 0.3);
+        QCOMPARE(doc.history().undoLabel(), u"Auto white balance"_s);
+    }
+
     void failureSaysWhy()
     {
         Document doc;

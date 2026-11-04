@@ -84,6 +84,7 @@ private:
     void setupZoomActions();
     void connectZoom();
     void connectClipboard();
+    void connectWhiteBalance();
     void connectDocument();
     void updateHistoryButtons();
     void showToast(const QString& text);
