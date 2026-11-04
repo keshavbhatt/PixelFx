@@ -7,8 +7,8 @@
 //   PIXELFX_DEBUG_COMPARE=1            turn on before and after once the photo is open
 //   PIXELFX_DEBUG_CROP=<ratio>[,<deg>] enter Crop mode with a ratio chip ("Free", "3:2") and
 //                                      a straightening angle once the photo is open
-//   PIXELFX_DEBUG_SHEET=export|settings|preset|shortcuts|watermark with GRAB: grab that sheet instead of the
-//   window PIXELFX_DEBUG_ZOOM=<scale>         zoom to this scale (1 is 100%) once the photo is open; with
+//   PIXELFX_DEBUG_SHEET=export|settings|preset|shortcuts|watermark|look with GRAB: grab that sheet instead of
+//   the window PIXELFX_DEBUG_ZOOM=<scale>         zoom to this scale (1 is 100%) once the photo is open; with
 //                                      GRAB, grab once the full-size render is shown
 //   PIXELFX_DEBUG_BATCH=<folder>       open Batch with this folder and process it; with GRAB, grab
 //                                      when the batch is done
@@ -16,6 +16,7 @@
 //                                      with nothing to show) and quit
 #include "app/application.h"
 #include "core/log_sink.h"
+#include "core/looks.h"
 #include "core/settings/settings.h"
 #include "core/sidecar_store.h"
 #include "services/batch_runner.h"
@@ -23,6 +24,7 @@
 #include "ui/canvas.h"
 #include "ui/crop_panel.h"
 #include "ui/export_sheet.h"
+#include "ui/look_editor.h"
 #include "ui/main_window.h"
 #include "ui/preset_save_sheet.h"
 #include "ui/settings_sheet.h"
@@ -75,6 +77,14 @@ bool grabSheet(pixelfx::ui::MainWindow& window, const QString& grab, bool export
             new pixelfx::ui::WatermarkSheet(window.document().preview(), QString(),
                                             pixelfx::core::WatermarkLibrary::defaultFolder(), &window);
         sheet = mark;
+    } else if (qEnvironmentVariable("PIXELFX_DEBUG_SHEET") == u"look"_s && window.document().isOpen()) {
+        // The look editor on a built-in look's steps, unsaved.
+        pixelfx::core::LookEntry entry = pixelfx::core::builtInLooks().at(3); // Film: curve, grading, grain
+        entry.path.clear();
+        auto* editor =
+            new pixelfx::ui::LookEditor(window.document().previewSource(), window.document().settings(),
+                                        entry, pixelfx::core::LookLibrary::defaultFolder(), &window);
+        sheet = editor;
     } else if (exportSheet && window.document().isOpen()) {
         sheet = new pixelfx::ui::ExportSheet(window.document().info().path, window.document().outputSize(),
                                              window.settings().exportOptions(), &window);

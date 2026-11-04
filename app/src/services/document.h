@@ -55,6 +55,8 @@ public:
     void setHoverSettings(const std::optional<pfx::Settings>& settings);
     /// The photo at thumbnail size (about 120 px), for preset pictures; null until open.
     [[nodiscard]] std::shared_ptr<const pfx::Image> thumbnailSource() const { return m_thumbnailSource; }
+    /// The decoded photo at preview size, before any settings (the look editor's preview).
+    [[nodiscard]] std::shared_ptr<const pfx::Image> previewSource() const { return m_source; }
     /// Writes a pending edit file now (before quitting).
     void flush();
 
@@ -72,6 +74,8 @@ public:
     [[nodiscard]] const pfx::Settings& settings() const { return m_settings; }
     /// Changes the settings and re-renders, without a history step (live slider moves).
     void setSettings(const pfx::Settings& settings);
+    /// Renders again with the same settings: a look they name was edited.
+    void refresh();
     /// Records the current settings as a history step named `label` (slider released, reset).
     void commit(const QString& label);
     /// Replaces the settings as one history step (a preset, pasted settings).

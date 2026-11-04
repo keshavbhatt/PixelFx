@@ -126,6 +126,10 @@ private:
     void connectPresets();
     void connectLooks();
     void importLooks();
+    void refreshLooks();
+    void editLook(const QString& id);
+    void exportLook(const QString& id);
+    void deleteLook(const QString& id);
     void requestLookThumbnails();
     void connectFilmstrip();
     /// `change` on the current photo as one step, and on every other selected photo's

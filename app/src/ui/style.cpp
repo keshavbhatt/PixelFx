@@ -105,6 +105,10 @@ const QString kSheet = uR"(
         QToolButton#positionCell { border: 1px solid {{faint}}; border-radius: 5px; background: {{input}}; }
         QToolButton#positionCell:hover { background: {{hover}}; }
         QToolButton#positionCell:checked { background: {{accent}}; border-color: {{accent}}; }
+        QListWidget#lookSteps { background: {{panel}}; border: 0; outline: 0; }
+        QListWidget#lookSteps::item { padding: 6px 8px; border-radius: 7px; margin: 1px 6px; }
+        QListWidget#lookSteps::item:selected { background: {{accentSoft}}; color: {{text}}; }
+        QListWidget#lookSteps::item:hover:!selected { background: {{hover}}; }
         QMenu { background: {{elevated}}; border: 1px solid {{border}}; border-radius: 10px; padding: 5px; }
         QMenu::item { padding: 6px 28px 6px 10px; border-radius: 6px; }
         QMenu::item:selected { background: {{hover}}; }

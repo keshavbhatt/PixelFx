@@ -41,6 +41,12 @@ public:
     /// file. The new look's id, or empty with `error` set.
     [[nodiscard]] QString importLut(const QString& file, QString* error = nullptr) const;
     [[nodiscard]] bool remove(const QString& path) const;
+    /// Saves a look of the user's under `name`: a new file when `path` is empty, otherwise that
+    /// file, keeping its id. The look's id, or empty on failure; `savedPath` gets the file.
+    [[nodiscard]] QString save(const QString& name, const pfx::Look& look, const QString& path = {},
+                               QString* savedPath = nullptr) const;
+    /// Writes the user's look at `path` (or a built-in one, by id) to `target` for sharing.
+    [[nodiscard]] static bool exportTo(const LookEntry& entry, const QString& target);
 
 private:
     QString m_folder;

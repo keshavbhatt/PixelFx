@@ -34,8 +34,10 @@ public:
 
 Q_SIGNALS:
     void clicked();
+    void menuRequested(const QPoint& globalPos);
 
 protected:
+    void contextMenuEvent(QContextMenuEvent* event) override;
     void paintEvent(QPaintEvent* event) override;
     void mouseReleaseEvent(QMouseEvent* event) override;
     void keyPressEvent(QKeyEvent* event) override;
@@ -76,6 +78,10 @@ Q_SIGNALS:
     void strengthMoved(int strength);
     void strengthReleased(int strength);
     void importRequested();
+    void newLookRequested();
+    void editLookRequested(const QString& id);
+    void exportLookRequested(const QString& id);
+    void deleteLookRequested(const QString& id);
 
 private:
     void rebuild();

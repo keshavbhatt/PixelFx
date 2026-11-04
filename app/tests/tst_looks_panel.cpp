@@ -1,11 +1,14 @@
+#include "ui/look_editor.h"
 #include "ui/looks_panel.h"
 #include "ui/style.h"
 
 #include <QApplication>
 #include <QLineEdit>
+#include <QListWidget>
 #include <QPushButton>
 #include <QSignalSpy>
 #include <QSlider>
+#include <QTemporaryDir>
 #include <QTest>
 
 using namespace Qt::StringLiterals;
@@ -53,6 +56,46 @@ private Q_SLOTS:
         tile->setFocus();
         QTest::keyClick(tile, Qt::Key_Return);
         QCOMPARE(chosen.size(), 2);
+    }
+
+    void lookEditorMakesALook()
+    {
+        QTemporaryDir dir;
+        auto photo = std::make_shared<pfx::Image>(120, 80);
+        photo->fill(0.2F, 0.2F, 0.2F);
+        pixelfx::ui::LookEditor editor(photo, {}, {}, dir.filePath(u"looks"_s));
+        QSignalSpy rendered(&editor, &pixelfx::ui::LookEditor::previewRendered);
+        editor.show();
+        QVERIFY(QTest::qWaitForWindowExposed(&editor));
+        QVERIFY(rendered.wait(5000)); // the photo with an empty look
+        editor.addStep(u"exposure"_s);
+        editor.addStep(u"grain"_s);
+        QCOMPARE(editor.stepList()->count(), 2);
+        // The exposure step's slider: the selected step is grain; pick exposure and move its first slider.
+        editor.stepList()->setCurrentRow(0);
+        QSlider* exposure = nullptr;
+        for (auto* slider : editor.findChildren<QSlider*>()) {
+            if (slider->accessibleName() == u"Exposure"_s) {
+                exposure = slider;
+            }
+        }
+        QVERIFY(exposure);
+        exposure->setValue(600); // -5 to 5 over 1000 ticks: +1 EV
+        QCOMPARE(editor.look().steps.front().params.number("light.exposure", 0), 1.0);
+        rendered.clear();
+        QVERIFY(rendered.wait(5000));
+        const QColor shown = editor.previewImage().pixelColor(60, 40);
+        QVERIFY2(shown.red() > 130,
+                 qPrintable(QString::number(shown.red()))); // brighter than 0.2 linear (124)
+        // Switching a step off leaves it in the look, not run.
+        editor.stepList()->item(1)->setCheckState(Qt::Unchecked);
+        QVERIFY(!editor.look().steps.back().enabled);
+        QVERIFY(editor.saveLook());
+        const auto entries = pixelfx::core::LookLibrary(dir.filePath(u"looks"_s)).entries();
+        QCOMPARE(entries.front().name, u"My look"_s);
+        QVERIFY(entries.front().isMine());
+        QCOMPARE(entries.front().id, editor.savedId());
+        QCOMPARE(entries.front().look->steps.size(), std::size_t{2});
     }
 
     void currentLookSelectsItsTileAndTheSlider()

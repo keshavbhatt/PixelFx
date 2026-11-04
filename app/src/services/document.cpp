@@ -256,6 +256,13 @@ void Document::setSettings(const pfx::Settings& settings)
     }
 }
 
+void Document::refresh()
+{
+    if (isOpen()) {
+        requestRender();
+    }
+}
+
 pfx::Settings Document::renderSettings() const
 {
     if (m_hover) {

@@ -11,6 +11,7 @@
 #include "ui/export_sheet.h"
 #include "ui/filmstrip.h"
 #include "ui/icons.h"
+#include "ui/look_editor.h"
 #include "ui/looks_panel.h"
 #include "ui/paste_sheet.h"
 #include "ui/preset_save_sheet.h"
@@ -1028,6 +1029,10 @@ void MainWindow::connectLooks()
         m_document.commit(tr("Look strength %1").arg(strength));
     });
     connect(looks, &LooksPanel::importRequested, this, &MainWindow::importLooks);
+    connect(looks, &LooksPanel::newLookRequested, this, [this] { editLook({}); });
+    connect(looks, &LooksPanel::editLookRequested, this, &MainWindow::editLook);
+    connect(looks, &LooksPanel::exportLookRequested, this, &MainWindow::exportLook);
+    connect(looks, &LooksPanel::deleteLookRequested, this, &MainWindow::deleteLook);
     // The panel follows the photo's settings: opening, undo, a preset, a pasted edit.
     const auto follow = [this, looks] {
         const pfx::Settings& s = m_document.settings();
@@ -1038,6 +1043,61 @@ void MainWindow::connectLooks()
     connect(&m_document, &services::Document::historyChanged, this, follow);
     looks->setEntries(core::LookLibrary(core::LookLibrary::defaultFolder()).entries());
     m_batch->setLooks(looks->entries());
+}
+
+void MainWindow::exportLook(const QString& id)
+{
+    for (const core::LookEntry& e : m_presets->looksPanel()->entries()) {
+        if (e.id != id) {
+            continue;
+        }
+        const QString target = QFileDialog::getSaveFileName(this, tr("Export look"), e.name + u".pfxlook"_s,
+                                                            tr("PixelFx looks (*.pfxlook)"));
+        if (!target.isEmpty()) {
+            showToast(core::LookLibrary::exportTo(e, target) ? tr("Exported %1").arg(e.name)
+                                                             : tr("%1 could not be exported.").arg(e.name));
+        }
+    }
+}
+
+void MainWindow::deleteLook(const QString& id)
+{
+    const core::LookLibrary library(core::LookLibrary::defaultFolder());
+    for (const core::LookEntry& e : m_presets->looksPanel()->entries()) {
+        if (e.id == id && e.isMine() && library.remove(e.path)) {
+            showToast(tr("Deleted %1").arg(e.name));
+        }
+    }
+    refreshLooks();
+}
+
+void MainWindow::refreshLooks()
+{
+    const core::LookLibrary library(core::LookLibrary::defaultFolder());
+    m_presets->looksPanel()->setEntries(library.entries());
+    m_batch->setLooks(m_presets->looksPanel()->entries());
+    requestLookThumbnails();
+    m_document.refresh(); // the photo's own look may have changed
+}
+
+void MainWindow::editLook(const QString& id)
+{
+    if (!m_document.isOpen()) {
+        return;
+    }
+    core::LookEntry entry;
+    for (const core::LookEntry& e : m_presets->looksPanel()->entries()) {
+        if (e.id == id && e.isMine()) {
+            entry = e;
+        }
+    }
+    LookEditor editor(m_document.previewSource(), m_document.settings(), entry,
+                      core::LookLibrary::defaultFolder(), this);
+    if (editor.exec() != QDialog::Accepted) {
+        return;
+    }
+    refreshLooks();
+    showToast(tr("Saved the look %1").arg(core::lookName(editor.savedId())));
 }
 
 void MainWindow::importLooks()

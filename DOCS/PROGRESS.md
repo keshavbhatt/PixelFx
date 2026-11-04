@@ -218,6 +218,15 @@
   `batch.html`), at each look's own strength; a saved batch recipe refers to a built-in look by
   id, but does not embed a user's look yet (presets.md asks for that, so the file runs on
   another machine). 29 app suites pass.
+- The look editor (L4, L6, mock `filter-editor.html`): New look beside My looks, Edit look,
+  Export look and Delete on the user's tiles. A step list (registry operations and LUTs, a
+  checkbox to switch one off, drag or Move up and down, Duplicate, Remove), the selected step's
+  sliders built from the registry (the tone curve with the curve editor), a live preview on the
+  photo or a colour ramp rendered on a worker, the default strength, Export look... and Bake to
+  .cube... (`pfx::bakeLook`, 33 points, names the steps left out). Saved looks are `.pfxlook`
+  files in the looks folder; an edited look re-renders the photo. Differences from the mock:
+  Preview on Portrait and Landscape wait for test photos PixelFx can ship; the category list has
+  no "Mine" (the user's looks are Mine already). 29 app suites pass.
 
 ### 2026-11-04 (M2)
 

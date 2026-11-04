@@ -4,10 +4,12 @@
 #include "ui/style.h"
 
 #include <QButtonGroup>
+#include <QContextMenuEvent>
 #include <QGridLayout>
 #include <QKeyEvent>
 #include <QLabel>
 #include <QLineEdit>
+#include <QMenu>
 #include <QMouseEvent>
 #include <QPainter>
 #include <QPainterPath>
@@ -126,6 +128,11 @@ void LookTile::paintEvent(QPaintEvent* /*event*/)
         p.setBrush(Qt::NoBrush);
         p.drawRoundedRect(box, 8, 8);
     }
+}
+
+void LookTile::contextMenuEvent(QContextMenuEvent* event)
+{
+    Q_EMIT menuRequested(event->globalPos());
 }
 
 void LookTile::mouseReleaseEvent(QMouseEvent* event)
@@ -348,6 +355,20 @@ void LooksPanel::addSection(const QString& title, QWidget* extra, const std::vec
         const core::LookEntry& e = m_entries[static_cast<std::size_t>(i)];
         auto* tile = new LookTile(e.id, e.name, e.isMine(), m_listBox);
         tile->setImage(m_thumbnails[static_cast<std::size_t>(i)]);
+        if (e.isMine()) {
+            tile->setToolTip(tr("%1. Right-click to edit, export or delete.").arg(e.name));
+            connect(tile, &LookTile::menuRequested, this, [this, id = e.id](const QPoint& where) {
+                QMenu menu(this);
+                connect(menu.addAction(tr("Edit look...")), &QAction::triggered, this,
+                        [this, id] { Q_EMIT editLookRequested(id); });
+                connect(menu.addAction(tr("Export look...")), &QAction::triggered, this,
+                        [this, id] { Q_EMIT exportLookRequested(id); });
+                menu.addSeparator();
+                connect(menu.addAction(tr("Delete")), &QAction::triggered, this,
+                        [this, id] { Q_EMIT deleteLookRequested(id); });
+                menu.exec(where);
+            });
+        }
         place(tile);
     }
     m_list->addLayout(grid);
@@ -373,11 +394,13 @@ void LooksPanel::rebuild()
         }
     }
     const bool all = m_chips->checkedId() <= 0 && m_search->text().trimmed().isEmpty();
-    if (!mine.empty() || m_chips->checkedId() == 1) {
-        auto* import = new QPushButton(tr("Import LUT..."), m_listBox);
-        import->setObjectName(u"link"_s);
-        connect(import, &QPushButton::clicked, this, &LooksPanel::importRequested);
-        addSection(tr("My looks"), import, mine, false);
+    if (!mine.empty() || all || m_chips->checkedId() == 1) {
+        // Mock editor.html: "My looks" with New look beside it.
+        auto* make = new QPushButton(tr("New look"), m_listBox);
+        make->setObjectName(u"link"_s);
+        make->setToolTip(tr("Make a look of your own from steps and LUTs"));
+        connect(make, &QPushButton::clicked, this, &LooksPanel::newLookRequested);
+        addSection(tr("My looks"), make, mine, false);
     }
     if (!builtIn.empty() || all) {
         addSection(tr("Built in"), nullptr, builtIn, all);

@@ -265,6 +265,61 @@ QString LookLibrary::importLut(const QString& file, QString* error) const
     return QString::fromStdString(doc.id);
 }
 
+QString LookLibrary::save(const QString& name, const pfx::Look& look, const QString& path,
+                          QString* savedPath) const
+{
+    pfx::Document doc;
+    doc.kind = pfx::DocumentKind::Look;
+    if (!path.isEmpty()) {
+        if (auto existing = pfx::loadDocument(path.toStdString());
+            existing && existing.value().kind == pfx::DocumentKind::Look) {
+            doc = std::move(existing).value();
+        }
+    }
+    if (doc.id.empty()) {
+        doc.id = QUuid::createUuid().toString(QUuid::WithoutBraces).toStdString();
+    }
+    doc.name = name.trimmed().toStdString();
+    doc.look = look;
+    QString target = path;
+    if (target.isEmpty()) {
+        if (!QDir().mkpath(m_folder)) {
+            return {};
+        }
+        const QString base = m_folder + u'/' + fileSafe(name);
+        target = base + u".pfxlook"_s;
+        for (int n = 2; QFileInfo::exists(target); ++n) {
+            target = base + u"-%1.pfxlook"_s.arg(n);
+        }
+    }
+    if (!pfx::saveDocument(doc, target.toStdString()).ok()) {
+        return {};
+    }
+    if (savedPath != nullptr) {
+        *savedPath = std::move(target);
+    }
+    lookFolderChanged();
+    return QString::fromStdString(doc.id);
+}
+
+bool LookLibrary::exportTo(const LookEntry& entry, const QString& target)
+{
+    pfx::Document doc;
+    if (entry.isMine()) {
+        auto existing = pfx::loadDocument(entry.path.toStdString());
+        if (!existing) {
+            return false;
+        }
+        doc = std::move(existing).value();
+    } else {
+        doc.kind = pfx::DocumentKind::Look;
+        doc.id = QUuid::createUuid().toString(QUuid::WithoutBraces).toStdString();
+        doc.name = entry.name.toStdString();
+        doc.look = *entry.look;
+    }
+    return pfx::saveDocument(doc, target.toStdString()).ok();
+}
+
 bool LookLibrary::remove(const QString& path) const
 {
     const bool removed =
