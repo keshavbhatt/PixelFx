@@ -3,6 +3,7 @@
 #include "core/export_options.h"
 
 #include <QDialog>
+#include <QImage>
 #include <QSize>
 
 class QButtonGroup;
@@ -32,6 +33,10 @@ public:
     [[nodiscard]] core::ExportOptions options() const;
     /// Several photos at once: the title and button say "Export 4 photos" (apply-to-selected.html).
     void setPhotoCount(int count);
+    /// What the watermark sheet previews on (the photo as edited).
+    void setPreview(const QImage& preview);
+    /// Where saved watermarks are kept (tests use their own folder).
+    void setWatermarkFolder(const QString& folder);
 
 private:
     void updateForFormat();
@@ -48,6 +53,8 @@ private:
     [[nodiscard]] QWidget* nameRow(const QString& nameTemplate);
     [[nodiscard]] QWidget* ifExistsBox(core::ExportOptions::IfExists ifExists);
     void addFooter(QVBoxLayout* column);
+    [[nodiscard]] QWidget* watermarkRow(const QString& current);
+    [[nodiscard]] QWidget* metadataRow(const core::ExportOptions& options);
 
     QString m_source;
     QButtonGroup* m_formats = nullptr;
@@ -68,6 +75,7 @@ private:
     QLabel* m_extension = nullptr;
     QComboBox* m_ifExists = nullptr;
     QString m_folderPath;
+    class WatermarkPicker* m_watermark = nullptr;
 };
 
 } // namespace pixelfx::ui

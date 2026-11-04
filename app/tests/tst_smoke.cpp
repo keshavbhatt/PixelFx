@@ -18,12 +18,12 @@
 #include <QFileInfo>
 #include <QLineEdit>
 #include <QMenu>
-#include <QToolButton>
 #include <QSignalSpy>
 #include <QStandardPaths>
 #include <QTemporaryDir>
 #include <QTest>
 #include <QTimer>
+#include <QToolButton>
 
 #include <cmath>
 #include <numbers>

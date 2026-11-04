@@ -1,5 +1,7 @@
+#include "core/watermark.h"
 #include "services/exporter.h"
 
+#include <QFile>
 #include <QSignalSpy>
 #include <QTemporaryDir>
 #include <QTest>
@@ -70,6 +72,51 @@ private Q_SLOTS:
         QCOMPARE(run(u"email"_s, false), QSize(600, 400));         // a long edge never enlarges
     }
 
+    void watermarkGoesOnTheExport()
+    {
+        QTemporaryDir dir;
+        pfx::Image img(800, 400); // dark: Auto picks a light mark
+        img.fill(0.02F, 0.02F, 0.02F);
+        const QString source = dir.filePath(u"photo.png"_s);
+        QVERIFY(pfx::save(img, source.toStdString()).ok());
+        pixelfx::core::Watermark mark;
+        mark.name = u"Studio"_s;
+        mark.text = u"PIXELFX {year}"_s;
+        mark.size = 0.1;
+        mark.opacity = 1.0;
+        mark.shadow = false;
+        const pixelfx::core::WatermarkLibrary library(dir.filePath(u"marks"_s));
+        ExportOptions o;
+        o.folder = dir.filePath(u"out"_s);
+        o.extension = u"png"_s;
+        o.longEdge = 400; // the mark is sized on the final pixels
+        o.watermark = library.save(mark);
+        QVERIFY(!o.watermark.isEmpty());
+        Exporter exporter;
+        QSignalSpy done(&exporter, &Exporter::finished);
+        exporter.start(source, {}, o);
+        QVERIFY(done.wait(15000));
+        const auto written = pfx::load(done.first().first().toString().toStdString());
+        QVERIFY(written.ok());
+        const pfx::Image& out = written.value().image;
+        QCOMPARE(out.width(), 400);
+        // Light pixels in the bottom right corner, the top left untouched.
+        float brightest = 0.0F;
+        for (int y = 140; y < 200; ++y) {
+            for (int x = 200; x < 400; ++x) {
+                brightest = std::max(brightest, out.pixel(x, y)[1]);
+            }
+        }
+        QVERIFY2(brightest > 0.5F, qPrintable(QString::number(brightest)));
+        QVERIFY(out.pixel(20, 20)[1] < 0.05F);
+
+        // A watermark that went missing fails the export rather than leaving the mark off.
+        QVERIFY(QFile::remove(o.watermark));
+        QSignalSpy failed(&exporter, &Exporter::failed);
+        exporter.start(source, {}, o);
+        QVERIFY(failed.wait(15000));
+    }
+
     void failureSaysWhy()
     {
         Exporter exporter;
@@ -80,5 +127,5 @@ private Q_SLOTS:
     }
 };
 
-QTEST_GUILESS_MAIN(TestExporter)
+QTEST_MAIN(TestExporter) // a watermark draws text, which needs a GUI application
 #include "tst_exporter.moc"

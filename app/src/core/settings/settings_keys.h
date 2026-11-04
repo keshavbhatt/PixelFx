@@ -15,6 +15,7 @@ inline constexpr auto kExportKeepMetadata = "export/keepMetadata";
 inline constexpr auto kExportKeepLocation = "export/keepLocation";
 inline constexpr auto kExportSizePreset = "export/sizePreset";
 inline constexpr auto kExportFitInside = "export/fitInside";
+inline constexpr auto kExportWatermark = "export/watermark";
 inline constexpr auto kExportFolder = "export/folder";
 inline constexpr auto kExportNameTemplate = "export/nameTemplate";
 inline constexpr auto kExportIfExists = "export/ifExists";

@@ -27,6 +27,8 @@ struct ExportOptions
     bool fitInside = false;
     bool keepMetadata = true;
     bool keepLocation = false; ///< off by default for privacy (mock export.html)
+    /// A saved watermark (.pfxwatermark) to lay on each photo, empty for none.
+    QString watermark;
     QString folder;
     QString nameTemplate = QStringLiteral("{name}-edit");
     IfExists ifExists = IfExists::AddNumber;

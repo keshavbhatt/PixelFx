@@ -112,6 +112,7 @@ private:
     void updateCropStrip();
     void setupActions();
     void buildMainMenu();
+    void buildRecentMenu(class QMenu* recent);
     void setupPanelActions();
     [[nodiscard]] QAction* namedAction(const QString& name) const;
     void setupEditActions();

@@ -1,6 +1,7 @@
 #include "ui/export_sheet.h"
 
 #include "ui/style.h"
+#include "ui/watermark_sheet.h"
 
 #include <QAbstractButton>
 #include <QButtonGroup>
@@ -103,18 +104,9 @@ ExportSheet::ExportSheet(const QString& source, const QSize& photoSize, const co
     form->addRow(QString(), fitRow(options.fitInside));
     refreshSize(photoSize);
 
-    m_metadata = new QCheckBox(tr("Keep camera details and copyright"), this);
-    m_metadata->setChecked(options.keepMetadata);
-    m_location = new QCheckBox(tr("Keep location"), this);
-    m_location->setChecked(options.keepLocation);
-    m_location->setToolTip(tr("Where the photo was taken (GPS). Off unless you choose to share it."));
-    m_location->setEnabled(options.keepMetadata);
-    connect(m_metadata, &QCheckBox::toggled, m_location, &QWidget::setEnabled);
-    auto* metadata = new QVBoxLayout;
-    metadata->setSpacing(4);
-    metadata->addWidget(m_metadata);
-    metadata->addWidget(m_location);
-    form->addRow(tr("Metadata"), metadata);
+    form->addRow(tr("Watermark"), watermarkRow(options.watermark));
+
+    form->addRow(tr("Metadata"), metadataRow(options));
 
     form->addRow(tr("Save to"), folderRow());
 
@@ -389,6 +381,40 @@ void ExportSheet::setPhotoCount(int count)
     m_file->setText(tr("each with its own settings; the size and name apply to all"));
 }
 
+QWidget* ExportSheet::metadataRow(const core::ExportOptions& options)
+{
+    m_metadata = new QCheckBox(tr("Keep camera details and copyright"), this);
+    m_metadata->setChecked(options.keepMetadata);
+    m_location = new QCheckBox(tr("Keep location"), this);
+    m_location->setChecked(options.keepLocation);
+    m_location->setToolTip(tr("Where the photo was taken (GPS). Off unless you choose to share it."));
+    m_location->setEnabled(options.keepMetadata);
+    connect(m_metadata, &QCheckBox::toggled, m_location, &QWidget::setEnabled);
+    auto* box = new QWidget(this);
+    auto* metadata = new QVBoxLayout(box);
+    metadata->setContentsMargins(0, 0, 0, 0);
+    metadata->setSpacing(4);
+    metadata->addWidget(m_metadata);
+    metadata->addWidget(m_location);
+    return box;
+}
+
+QWidget* ExportSheet::watermarkRow(const QString& current)
+{
+    m_watermark = new WatermarkPicker(current, this);
+    return m_watermark;
+}
+
+void ExportSheet::setPreview(const QImage& preview)
+{
+    m_watermark->setPreview(preview);
+}
+
+void ExportSheet::setWatermarkFolder(const QString& folder)
+{
+    m_watermark->setFolder(folder);
+}
+
 core::ExportOptions ExportSheet::options() const
 {
     core::ExportOptions o;
@@ -401,6 +427,7 @@ core::ExportOptions ExportSheet::options() const
     o.fitInside = m_fit->isChecked();
     o.keepMetadata = m_metadata->isChecked();
     o.keepLocation = m_location->isChecked();
+    o.watermark = m_watermark->path();
     o.folder = m_folderPath;
     o.nameTemplate = m_name->text();
     o.ifExists = static_cast<core::ExportOptions::IfExists>(m_ifExists->currentData().toInt());

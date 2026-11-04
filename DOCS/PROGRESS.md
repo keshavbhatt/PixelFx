@@ -172,6 +172,18 @@
   nothing has the focus, so Tab still walks through sliders and fields. Left out until they
   exist: Save edit with the file, Copy to clipboard (Ctrl+Shift+C is Copy settings, so the mock's
   key clashes), What's new, Online guide, About. 26 app suites pass.
+- Watermark (X10) from `watermark.html`: `core::Watermark` (text or logo, Auto, white, black or
+  a picked colour, size and margin as shares of the long edge, nine anchors or a dragged
+  position, repeat with an angle, soft shadow), drawn with QPainter onto a picture covering
+  only the mark, then laid on the exported pixels in linear light by the new
+  `pfx::blendOverlay`; Auto reads `pfx::meanLuminance` under the mark. Tokens {year}, {date},
+  {camera} from the new `pfx::readExif` (fuzzed: 1.7 million runs clean). Saved watermarks are
+  `.pfxwatermark` files (presets.md section 7, new) with the logo copied beside them. The sheet
+  opens from a Watermark row in Export and in Batch (section 3, as `batch.html`); Batch no longer
+  inherits Export's choice unseen. A watermark file that went missing fails the export instead
+  of leaving the mark off. Not yet: Preview on the batch's photos, keeping the watermark in a
+  `.pfxbatch` (needs batch format version 2, an owner decision). 27 app suites and 90 library
+  tests pass.
 
 ### 2026-11-04 (M2)
 

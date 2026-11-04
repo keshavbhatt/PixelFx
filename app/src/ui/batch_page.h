@@ -107,6 +107,7 @@ private:
     QSpinBox* m_quality = nullptr;
     QLabel* m_folder = nullptr;
     QCheckBox* m_beside = nullptr;
+    class WatermarkPicker* m_watermark = nullptr;
 };
 
 } // namespace pixelfx::ui

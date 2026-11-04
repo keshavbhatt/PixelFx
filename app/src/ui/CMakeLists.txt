@@ -35,6 +35,8 @@ qt_add_library(pixelfx_ui STATIC
     style.h
     straighten_dial.cpp
     straighten_dial.h
+    watermark_sheet.cpp
+    watermark_sheet.h
     welcome_page.cpp
     welcome_page.h
 )

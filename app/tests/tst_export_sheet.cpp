@@ -1,9 +1,14 @@
+#include "core/watermark.h"
 #include "ui/export_sheet.h"
 #include "ui/style.h"
+#include "ui/watermark_sheet.h"
 
 #include <QApplication>
 #include <QCheckBox>
+#include <QComboBox>
+#include <QFile>
 #include <QPushButton>
+#include <QTemporaryDir>
 #include <QTest>
 
 using namespace Qt::StringLiterals;
@@ -34,6 +39,28 @@ private Q_SLOTS:
         in.ifExists = ExportOptions::IfExists::Skip;
         const ExportSheet sheet(u"/p/photo.jpg"_s, QSize(6000, 4000), in);
         QCOMPARE(sheet.options(), in);
+    }
+
+    void watermarkRowListsTheSavedOnes()
+    {
+        QTemporaryDir dir;
+        pixelfx::core::Watermark mark;
+        mark.name = u"Studio"_s;
+        const QString saved = pixelfx::core::WatermarkLibrary(dir.path()).save(mark);
+        QVERIFY(!saved.isEmpty());
+        ExportOptions in;
+        in.watermark = saved;
+        ExportSheet sheet(u"/p/photo.jpg"_s, QSize(6000, 4000), in);
+        sheet.setWatermarkFolder(dir.path());
+        QCOMPARE(sheet.options().watermark, saved);
+        auto* picker = sheet.findChild<pixelfx::ui::WatermarkPicker*>();
+        QVERIFY(picker);
+        const QStringList items = picker->names();
+        QCOMPARE(items, (QStringList{u"None"_s, u"Studio"_s, u"New watermark..."_s}));
+        // One that is gone falls back to None.
+        QVERIFY(QFile::remove(saved));
+        sheet.setWatermarkFolder(dir.path());
+        QVERIFY(sheet.options().watermark.isEmpty());
     }
 
     void locationIsOffByDefaultAndFollowsMetadata()

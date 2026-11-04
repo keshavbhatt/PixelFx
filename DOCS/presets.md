@@ -154,3 +154,53 @@ saturation -> colour grading -> **look** (blended by strength) -> sharpen -> vig
 | RawTherapee `.pp3` | LATER (subset) | |
 | Lightroom / Camera Raw `.xmp` preset (`crs:` namespace) | preset | Exposure2012, Contrast2012, Highlights2012, Shadows2012, Whites2012, Blacks2012, Temperature/Tint (relative), Vibrance, Saturation, Clarity2012, Dehaze, HSL (8 bands), ToneCurvePV2012 (and per channel), SplitToning / ColorGrade, Sharpness, LuminanceSmoothing, ColorNoiseReduction, PostCropVignette, Grain; approximate, a report lists every setting skipped (profiles, masks, lens and camera calibration) |
 | darktable style (`.dtstyle`) | LATER | |
+
+## 7. Watermark (`.pfxwatermark`, version 1)
+
+A saved watermark (FEATURES X10, mock `watermark.html`). The app reads and writes it (text is
+drawn with Qt, so this kind stays out of libpixelfx); it uses the envelope of section 1 with
+`kind: "watermark"`. Kept in `<AppData>/watermarks`, one file each, named after the
+watermark; a logo is copied beside it under the same name, and only its file name is stored,
+so a watermark never points outside its folder.
+
+```json
+{
+  "format": "pixelfx",
+  "kind": "watermark",
+  "version": 1,
+  "name": "Studio signature",
+  "body": {
+    "type": "text",
+    "text": "© {year} Keshav Bhatt",
+    "logo": "",
+    "font": "",
+    "colorMode": "auto",
+    "color": "#ffffff",
+    "size": 0.03,
+    "opacity": 0.7,
+    "margin": 0.02,
+    "anchor": 8,
+    "position": { "x": 0.5, "y": 0.9 },
+    "repeat": false,
+    "angle": -30,
+    "shadow": true
+  }
+}
+```
+
+- `type`: `text` or `logo`. `text` may hold `{year}`, `{date}` (ISO) and `{camera}`, filled
+  per photo from its Exif (today's date when it has none). `font` empty means the system's
+  sans; text is drawn semibold.
+- `colorMode`: `auto` (white over dark areas, near black over light ones, whichever has the
+  higher contrast against the mean luminance under the mark), `white`, `black` or `custom`
+  (`color`). A logo keeps its own colours.
+- `size` is the mark's height and `margin` its distance from the edges, both as shares of the
+  photo's long edge, so the mark looks the same on every photo of a batch. `size` is kept in
+  0.005 to 0.25, `margin` in 0 to 0.2, `opacity` in 0 to 1; values outside are clamped.
+- `anchor`: 0 to 8, rows of three from the top left (8 is bottom right). `position`, when
+  present, is the mark's centre as shares of the width and height (dragged on the preview)
+  and wins over `anchor`; the mark is kept inside the photo.
+- `repeat` tiles the mark over the photo in offset rows turned by `angle` degrees (-90 to 90).
+- Applied on export after resizing, so it is sized for the final pixels; never on the editor
+  view, never stored in a photo's settings. Batch recipes (section 4) do not carry a watermark
+  yet: that is a batch format version 2.

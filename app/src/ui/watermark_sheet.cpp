@@ -1,0 +1,733 @@
+#include "ui/watermark_sheet.h"
+
+#include "ui/icons.h"
+#include "ui/style.h"
+
+#include <QButtonGroup>
+#include <QCheckBox>
+#include <QColorDialog>
+#include <QComboBox>
+#include <QFileDialog>
+#include <QFileInfo>
+#include <QFontComboBox>
+#include <QGridLayout>
+#include <QHBoxLayout>
+#include <QInputDialog>
+#include <QLabel>
+#include <QLineEdit>
+#include <QMouseEvent>
+#include <QPainter>
+#include <QPushButton>
+#include <QSlider>
+#include <QStackedWidget>
+#include <QToolButton>
+#include <QVBoxLayout>
+
+#include <algorithm>
+#include <cmath>
+
+using namespace Qt::StringLiterals;
+
+namespace pixelfx::ui {
+
+namespace {
+
+// Tokens for the preview: this year and no camera, as most photos will say something close.
+core::WatermarkTokens previewTokens()
+{
+    return {QDate::currentDate(), QObject::tr("Camera")};
+}
+
+QImage shaped(const QImage& photo, WatermarkPreview::Shape shape)
+{
+    if (photo.isNull() || shape == WatermarkPreview::Shape::Photo) {
+        return photo;
+    }
+    // The middle of the photo in the other shape: 4:5 portrait or 1:1.
+    const double ratio = shape == WatermarkPreview::Shape::Portrait ? 4.0 / 5.0 : 1.0;
+    QSize size = photo.size();
+    if (static_cast<double>(size.width()) / size.height() > ratio) {
+        size.setWidth(static_cast<int>(std::lround(size.height() * ratio)));
+    } else {
+        size.setHeight(static_cast<int>(std::lround(size.width() / ratio)));
+    }
+    return photo.copy(
+        QRect(QPoint((photo.width() - size.width()) / 2, (photo.height() - size.height()) / 2), size));
+}
+
+} // namespace
+
+WatermarkPreview::WatermarkPreview(QWidget* parent)
+    : QWidget(parent)
+{
+    setObjectName(u"watermarkPreview"_s);
+    setAttribute(Qt::WA_StyledBackground);
+    setMinimumSize(360, 300);
+    setCursor(Qt::CrossCursor);
+}
+
+WatermarkPreview::~WatermarkPreview() = default;
+
+void WatermarkPreview::setPhoto(const QImage& photo)
+{
+    m_photo = photo.convertToFormat(QImage::Format_RGB32);
+    rebuild();
+}
+
+void WatermarkPreview::setShape(Shape shape)
+{
+    m_shape = shape;
+    rebuild();
+}
+
+void WatermarkPreview::setWatermark(const core::Watermark& w)
+{
+    m_mark = w;
+    rebuild();
+}
+
+QRect WatermarkPreview::photoRect() const
+{
+    if (m_shown.isNull()) {
+        return {};
+    }
+    const QRect area = rect().adjusted(16, 16, -16, -16);
+    return {QPoint(area.x() + ((area.width() - m_shown.width()) / 2),
+                   area.y() + ((area.height() - m_shown.height()) / 2)),
+            m_shown.size()};
+}
+
+QImage WatermarkPreview::composed() const
+{
+    return m_shown;
+}
+
+void WatermarkPreview::rebuild()
+{
+    const QImage source = shaped(m_photo, m_shape);
+    const QSize room = rect().adjusted(16, 16, -16, -16).size();
+    if (source.isNull() || room.isEmpty()) {
+        m_shown = QImage();
+        update();
+        return;
+    }
+    m_shown = source.scaled(room, Qt::KeepAspectRatio, Qt::SmoothTransformation)
+                  .convertToFormat(QImage::Format_ARGB32_Premultiplied);
+    const QImage under = m_shown; // Auto reads the photo, not the mark being drawn
+    QPainter painter(&m_shown);
+    core::paintWatermark(painter, m_mark, m_shown.size(), previewTokens(),
+                         [&under](const QRect& r) { return core::meanLuminance(under, r); });
+    update();
+}
+
+void WatermarkPreview::paintEvent(QPaintEvent*)
+{
+    QPainter p(this);
+    if (!m_shown.isNull()) {
+        p.drawImage(photoRect().topLeft(), m_shown);
+    }
+}
+
+void WatermarkPreview::resizeEvent(QResizeEvent*)
+{
+    rebuild();
+}
+
+void WatermarkPreview::place(const QPointF& at)
+{
+    const QRect r = photoRect();
+    if (r.isEmpty() || m_mark.repeat) {
+        return;
+    }
+    const QPointF centre(std::clamp((at.x() - r.x()) / r.width(), 0.0, 1.0),
+                         std::clamp((at.y() - r.y()) / r.height(), 0.0, 1.0));
+    Q_EMIT placed(centre);
+}
+
+void WatermarkPreview::mousePressEvent(QMouseEvent* event)
+{
+    if (event->button() == Qt::LeftButton) {
+        place(event->position());
+    }
+}
+
+void WatermarkPreview::mouseMoveEvent(QMouseEvent* event)
+{
+    if ((event->buttons() & Qt::LeftButton) != 0) {
+        place(event->position());
+    }
+}
+
+WatermarkSheet::WatermarkSheet(const QImage& photo, const QString& current, const QString& folder,
+                               QWidget* parent)
+    : QDialog(parent)
+    , m_library(folder)
+{
+    setWindowTitle(tr("Watermark"));
+    setModal(true);
+    resize(980, 640); // mock .sheet.wide
+
+    auto* head = buildHeader();
+
+    auto* body = new QHBoxLayout;
+    body->setContentsMargins(0, 0, 0, 0);
+    body->setSpacing(0);
+    body->addWidget(buildControls());
+    body->addWidget(buildPreview(), 1);
+
+    auto* foot = buildFooter();
+
+    auto* column = new QVBoxLayout(this);
+    column->setContentsMargins(0, 0, 0, 0);
+    column->setSpacing(0);
+    column->addLayout(head);
+    column->addLayout(body, 1);
+    column->addLayout(foot);
+
+    m_preview->setPhoto(photo);
+    connect(m_list, &QComboBox::activated, this, [this](int index) {
+        const QString path = m_list->itemData(index).toString();
+        if (path.isEmpty()) {
+            core::Watermark fresh;
+            fresh.name = tr("My watermark");
+            load(fresh, QString());
+        } else if (const auto w = core::WatermarkLibrary::load(path)) {
+            load(*w, path);
+        }
+    });
+    refreshList(current);
+    const auto start = current.isEmpty() ? std::nullopt : core::WatermarkLibrary::load(current);
+    if (start) {
+        load(*start, current);
+    } else {
+        core::Watermark fresh;
+        fresh.name = tr("My watermark");
+        load(fresh, QString());
+    }
+}
+
+WatermarkSheet::~WatermarkSheet() = default;
+
+QLayout* WatermarkSheet::buildHeader()
+{
+    auto* title = new QLabel(tr("Watermark"), this);
+    title->setObjectName(u"sheetTitle"_s);
+    m_list = new QComboBox(this);
+    m_list->setFixedWidth(200);
+    m_list->setAccessibleName(tr("Saved watermarks"));
+    auto* saveAs = new QPushButton(tr("Save as..."), this);
+    saveAs->setObjectName(u"small"_s);
+    connect(saveAs, &QPushButton::clicked, this, &WatermarkSheet::saveAs);
+    auto* head = new QHBoxLayout;
+    head->setContentsMargins(20, 14, 20, 12);
+    head->addWidget(title);
+    head->addSpacing(8);
+    head->addWidget(m_list);
+    head->addSpacing(6);
+    head->addWidget(saveAs);
+    head->addStretch();
+    return head;
+}
+
+QLayout* WatermarkSheet::buildFooter()
+{
+    auto* note = new QLabel(tr("Applied on export only; the editor view never shows it."), this);
+    note->setObjectName(u"faint"_s);
+    auto* cancel = new QPushButton(tr("Cancel"), this);
+    connect(cancel, &QPushButton::clicked, this, &QDialog::reject);
+    auto* use = new QPushButton(tr("Use watermark"), this);
+    use->setObjectName(u"primary"_s);
+    use->setDefault(true);
+    connect(use, &QPushButton::clicked, this, &WatermarkSheet::useWatermark);
+    auto* foot = new QHBoxLayout;
+    foot->setContentsMargins(20, 10, 20, 14);
+    foot->addWidget(note);
+    foot->addStretch();
+    foot->addWidget(cancel);
+    foot->addWidget(use);
+    return foot;
+}
+
+QWidget* WatermarkSheet::buildLogoPage()
+{
+    auto* logoPage = new QWidget(m_kindPages);
+    m_logoName = new QLabel(logoPage);
+    m_logoName->setObjectName(u"muted"_s);
+    auto* chooseLogo = new QPushButton(tr("Choose logo..."), logoPage);
+    chooseLogo->setObjectName(u"small"_s);
+    connect(chooseLogo, &QPushButton::clicked, this, [this] {
+        const QString file = QFileDialog::getOpenFileName(this, tr("Choose a logo"), QString(),
+                                                          tr("Logos (*.png *.svg *.webp)"));
+        if (!file.isEmpty()) {
+            m_mark.logo = file;
+            m_logoName->setText(QFileInfo(file).fileName());
+            sync();
+        }
+    });
+    auto* logoHint = new QLabel(tr("A PNG or SVG with a transparent background works best."), logoPage);
+    logoHint->setObjectName(u"faint"_s);
+    logoHint->setWordWrap(true);
+    auto* logoColumn = new QVBoxLayout(logoPage);
+    logoColumn->setContentsMargins(0, 0, 0, 0);
+    logoColumn->setSpacing(6);
+    auto* logoRow = new QHBoxLayout;
+    logoRow->addWidget(m_logoName, 1);
+    logoRow->addWidget(chooseLogo);
+    logoColumn->addLayout(logoRow);
+    logoColumn->addWidget(logoHint);
+    return logoPage;
+}
+
+QWidget* WatermarkSheet::buildKindRow(QWidget* parent)
+{
+    auto* box = new QWidget(parent);
+    auto* panel = box;
+    auto* column = new QVBoxLayout(box);
+    column->setContentsMargins(0, 0, 0, 0);
+    column->setSpacing(10);
+    // Text or Logo.
+    m_kind = new QButtonGroup(panel);
+    auto* kinds = new QHBoxLayout;
+    kinds->setSpacing(0);
+    const std::array<std::pair<QString, QString>, 2> kindNames = {
+        {{tr("Text"), u"type"_s}, {tr("Logo"), u"image"_s}}};
+    for (std::size_t i = 0; i < kindNames.size(); ++i) {
+        auto* b = new QPushButton(icons::themed(kindNames.at(i).second, tokens().muted),
+                                  kindNames.at(i).first, panel);
+        b->setObjectName(u"segment"_s);
+        b->setCheckable(true);
+        m_kind->addButton(b, static_cast<int>(i));
+        kinds->addWidget(b, 1);
+    }
+
+    m_kindPages = new QStackedWidget(panel);
+    auto* textPage = new QWidget(m_kindPages);
+    m_text = new QLineEdit(textPage);
+    m_text->setAccessibleName(tr("Watermark text"));
+    auto* tokensHint = new QLabel(tr("Tokens: {year}, {camera}, {date}"), textPage);
+    tokensHint->setObjectName(u"faint"_s);
+    auto* textColumn = new QVBoxLayout(textPage);
+    textColumn->setContentsMargins(0, 0, 0, 0);
+    textColumn->setSpacing(6);
+    textColumn->addWidget(m_text);
+    textColumn->addWidget(tokensHint);
+    auto* logoPage = buildLogoPage();
+    m_kindPages->addWidget(textPage);
+    m_kindPages->addWidget(logoPage);
+    column->addLayout(kinds);
+    column->addWidget(m_kindPages);
+    return box;
+}
+
+QWidget* WatermarkSheet::buildControls()
+{
+    auto* panel = new QWidget(this);
+    panel->setObjectName(u"watermarkControls"_s);
+    panel->setAttribute(Qt::WA_StyledBackground);
+    panel->setFixedWidth(340); // mock grid column
+    auto* column = new QVBoxLayout(panel);
+    column->setContentsMargins(16, 12, 16, 12);
+    column->setSpacing(10);
+
+    column->addWidget(buildKindRow(panel));
+    connect(m_kind, &QButtonGroup::idClicked, this, [this](int id) {
+        m_kindPages->setCurrentIndex(id);
+        sync();
+    });
+    connect(m_text, &QLineEdit::textEdited, this, &WatermarkSheet::sync);
+
+    column->addWidget(buildColorRow());
+
+    const auto sliderRow = [this, panel, column](const QString& name, int low, int high,
+                                                 const QString& unit) {
+        auto* label = new QLabel(name, panel);
+        label->setObjectName(u"adjustName"_s);
+        auto* value = new QLabel(panel);
+        value->setObjectName(u"adjustValue"_s);
+        auto* slider = new QSlider(Qt::Horizontal, panel);
+        slider->setRange(low, high);
+        slider->setAccessibleName(name);
+        connect(slider, &QSlider::valueChanged, value,
+                [value, unit](int v) { value->setText(QString::number(v) + unit); });
+        connect(slider, &QSlider::valueChanged, this, &WatermarkSheet::sync);
+        auto* top = new QHBoxLayout;
+        top->addWidget(label);
+        top->addStretch();
+        top->addWidget(value);
+        auto* box = new QVBoxLayout;
+        box->setSpacing(0);
+        box->addLayout(top);
+        box->addWidget(slider);
+        column->addLayout(box);
+        return slider;
+    };
+    m_size = sliderRow(tr("Size"), 1, 20, u"%"_s);
+    m_opacity = sliderRow(tr("Opacity"), 0, 100, QString());
+    m_margin = sliderRow(tr("Margin"), 0, 10, u"%"_s);
+
+    column->addWidget(buildPositionRow());
+
+    auto* note = new QLabel(tr("Size and margin are shares of the photo's long edge, so the mark looks "
+                               "the same on every photo in a batch."),
+                            panel);
+    note->setObjectName(u"faint"_s);
+    note->setWordWrap(true);
+    column->addWidget(note);
+    column->addStretch();
+    return panel;
+}
+
+QWidget* WatermarkSheet::buildColorRow()
+{
+    auto* row = new QWidget(this);
+    m_font = new QFontComboBox(row);
+    m_font->setAccessibleName(tr("Font"));
+    m_font->setMinimumWidth(120);
+    connect(m_font, &QFontComboBox::currentFontChanged, this, &WatermarkSheet::sync);
+    m_colors = new QButtonGroup(row);
+    auto* autoButton = new QPushButton(tr("Auto"), row);
+    autoButton->setObjectName(u"chip"_s);
+    autoButton->setCheckable(true);
+    autoButton->setToolTip(tr("Light or dark, whichever reads on the area under the mark"));
+    m_colors->addButton(autoButton, static_cast<int>(core::Watermark::ColorMode::Auto));
+    const auto swatch = [this, row](const QColor& c, const QString& name, core::Watermark::ColorMode mode) {
+        auto* s = new QToolButton(row);
+        s->setObjectName(u"swatch"_s);
+        s->setCheckable(true);
+        s->setFixedSize(24, 24);
+        s->setStyleSheet(u"QToolButton#swatch { background: %1; }"_s.arg(c.name()));
+        s->setToolTip(name);
+        s->setAccessibleName(name);
+        m_colors->addButton(s, static_cast<int>(mode));
+        return s;
+    };
+    auto* white = swatch(Qt::white, tr("White"), core::Watermark::ColorMode::White);
+    auto* black = swatch(QColor(0x11, 0x11, 0x11), tr("Black"), core::Watermark::ColorMode::Black);
+    m_custom = swatch(Qt::white, tr("Pick a colour"), core::Watermark::ColorMode::Custom);
+    m_custom->setStyleSheet(
+        u"QToolButton#swatch { background: qconicalgradient(cx:0.5, cy:0.5, angle:0, stop:0 red, "
+        "stop:0.17 magenta, stop:0.33 blue, stop:0.5 cyan, stop:0.67 lime, stop:0.83 yellow, stop:1 red); }"_s);
+    connect(m_custom, &QToolButton::clicked, this, [this] {
+        const QColor c = QColorDialog::getColor(m_mark.color, this, tr("Watermark colour"));
+        if (c.isValid()) {
+            m_mark.color = c;
+        }
+        sync();
+    });
+    connect(m_colors, &QButtonGroup::idClicked, this, [this](int id) {
+        if (id != static_cast<int>(core::Watermark::ColorMode::Custom)) {
+            sync();
+        }
+    });
+    auto* layout = new QHBoxLayout(row);
+    layout->setContentsMargins(0, 0, 0, 0);
+    layout->setSpacing(6);
+    layout->addWidget(m_font, 1);
+    layout->addWidget(autoButton);
+    layout->addWidget(white);
+    layout->addWidget(black);
+    layout->addWidget(m_custom);
+    return row;
+}
+
+QWidget* WatermarkSheet::buildPositionRow()
+{
+    auto* row = new QWidget(this);
+    auto* label = new QLabel(tr("Position"), row);
+    label->setObjectName(u"faint"_s);
+    auto* grid = new QGridLayout;
+    grid->setSpacing(3);
+    m_anchors = new QButtonGroup(row);
+    static const std::array<const char*, 9> names = {
+        QT_TR_NOOP("Top left"),    QT_TR_NOOP("Top"),    QT_TR_NOOP("Top right"),
+        QT_TR_NOOP("Left"),        QT_TR_NOOP("Middle"), QT_TR_NOOP("Right"),
+        QT_TR_NOOP("Bottom left"), QT_TR_NOOP("Bottom"), QT_TR_NOOP("Bottom right")};
+    for (int i = 0; i < 9; ++i) {
+        auto* cell = new QToolButton(row);
+        cell->setObjectName(u"positionCell"_s);
+        cell->setCheckable(true);
+        cell->setFixedSize(26, 26); // review: 24 px minimum
+        cell->setToolTip(tr(names.at(static_cast<std::size_t>(i))));
+        cell->setAccessibleName(cell->toolTip());
+        m_anchors->addButton(cell, i);
+        grid->addWidget(cell, i / 3, i % 3);
+    }
+    connect(m_anchors, &QButtonGroup::idClicked, this, [this] {
+        m_mark.position.reset(); // a cell undoes a free placement
+        sync();
+    });
+    auto* left = new QVBoxLayout;
+    left->setSpacing(4);
+    left->addWidget(label);
+    left->addLayout(grid);
+
+    m_repeat = new QCheckBox(tr("Repeat across the photo"), row);
+    m_shadow = new QCheckBox(tr("Soft shadow"), row);
+    connect(m_repeat, &QCheckBox::toggled, this, &WatermarkSheet::sync);
+    connect(m_shadow, &QCheckBox::toggled, this, &WatermarkSheet::sync);
+    // The angle matters only when the mark repeats (review: shown only then).
+    m_angleRow = new QWidget(row);
+    auto* angleLabel = new QLabel(tr("Angle"), m_angleRow);
+    angleLabel->setObjectName(u"adjustName"_s);
+    m_angle = new QSlider(Qt::Horizontal, m_angleRow);
+    m_angle->setRange(-90, 90);
+    m_angle->setAccessibleName(tr("Angle"));
+    connect(m_angle, &QSlider::valueChanged, this, &WatermarkSheet::sync);
+    auto* angleLayout = new QHBoxLayout(m_angleRow);
+    angleLayout->setContentsMargins(0, 0, 0, 0);
+    angleLayout->addWidget(angleLabel);
+    angleLayout->addWidget(m_angle, 1);
+    auto* right = new QVBoxLayout;
+    right->setSpacing(6);
+    right->addSpacing(18);
+    right->addWidget(m_repeat);
+    right->addWidget(m_shadow);
+    right->addWidget(m_angleRow);
+    right->addStretch();
+
+    auto* layout = new QHBoxLayout(row);
+    layout->setContentsMargins(0, 0, 0, 0);
+    layout->setSpacing(16);
+    layout->addLayout(left);
+    layout->addLayout(right, 1);
+    return row;
+}
+
+QWidget* WatermarkSheet::buildPreview()
+{
+    auto* side = new QWidget(this);
+    m_preview = new WatermarkPreview(side);
+    connect(m_preview, &WatermarkPreview::placed, this, [this](QPointF centre) {
+        m_mark.position = centre;
+        if (QAbstractButton* b = m_anchors->checkedButton()) {
+            m_anchors->setExclusive(false); // a free place has no cell
+            b->setChecked(false);
+            m_anchors->setExclusive(true);
+        }
+        sync();
+    });
+    auto* bar = new QWidget(side);
+    bar->setObjectName(u"watermarkBar"_s);
+    bar->setAttribute(Qt::WA_StyledBackground);
+    auto* on = new QLabel(tr("Preview on"), bar);
+    on->setObjectName(u"faint"_s);
+    auto* shapes = new QButtonGroup(bar);
+    auto* barLayout = new QHBoxLayout(bar);
+    barLayout->setContentsMargins(12, 8, 12, 8);
+    barLayout->setSpacing(0);
+    barLayout->addWidget(on);
+    barLayout->addSpacing(6);
+    const std::array<QString, 3> shapeNames = {tr("This photo"), tr("Portrait"), tr("Square")};
+    for (int i = 0; i < 3; ++i) {
+        auto* b = new QPushButton(shapeNames.at(static_cast<std::size_t>(i)), bar);
+        b->setObjectName(u"segment"_s);
+        b->setCheckable(true);
+        b->setChecked(i == 0);
+        shapes->addButton(b, i);
+        barLayout->addWidget(b);
+    }
+    connect(shapes, &QButtonGroup::idClicked, this,
+            [this](int id) { m_preview->setShape(static_cast<WatermarkPreview::Shape>(id)); });
+    barLayout->addStretch();
+    auto* drag = new QLabel(tr("Drag the mark to place it freely"), bar);
+    drag->setObjectName(u"faint"_s);
+    barLayout->addWidget(drag);
+    auto* column = new QVBoxLayout(side);
+    column->setContentsMargins(0, 0, 0, 0);
+    column->setSpacing(0);
+    column->addWidget(m_preview, 1);
+    column->addWidget(bar);
+    return side;
+}
+
+void WatermarkSheet::refreshList(const QString& select)
+{
+    m_list->clear();
+    for (const auto& e : m_library.entries()) {
+        m_list->addItem(e.watermark.name, e.path);
+    }
+    m_list->addItem(tr("New watermark"), QString());
+    const int index = select.isEmpty() ? m_list->count() - 1 : m_list->findData(select);
+    m_list->setCurrentIndex(std::max(0, index));
+}
+
+void WatermarkSheet::load(const core::Watermark& w, const QString& path)
+{
+    m_loading = true;
+    m_mark = w;
+    m_path = path;
+    m_kind->button(static_cast<int>(w.kind))->setChecked(true);
+    m_kindPages->setCurrentIndex(static_cast<int>(w.kind));
+    m_text->setText(w.text);
+    m_logoName->setText(w.logo.isEmpty() ? tr("No logo yet") : QFileInfo(w.logo).fileName());
+    m_font->setCurrentFont(w.font.isEmpty() ? QFont(u"Sans Serif"_s) : QFont(w.font));
+    m_colors->button(static_cast<int>(w.colorMode))->setChecked(true);
+    m_size->setValue(static_cast<int>(std::lround(w.size * 100)));
+    m_opacity->setValue(static_cast<int>(std::lround(w.opacity * 100)));
+    m_margin->setValue(static_cast<int>(std::lround(w.margin * 100)));
+    if (w.position) {
+        m_anchors->setExclusive(false);
+        for (QAbstractButton* b : m_anchors->buttons()) {
+            b->setChecked(false);
+        }
+        m_anchors->setExclusive(true);
+    } else {
+        m_anchors->button(w.anchor)->setChecked(true);
+    }
+    m_repeat->setChecked(w.repeat);
+    m_shadow->setChecked(w.shadow);
+    m_angle->setValue(static_cast<int>(std::lround(w.angle)));
+    m_loading = false;
+    sync();
+}
+
+void WatermarkSheet::sync()
+{
+    if (m_loading) {
+        return;
+    }
+    m_mark.kind = static_cast<core::Watermark::Kind>(std::max(0, m_kind->checkedId()));
+    m_mark.text = m_text->text();
+    // The family as picked; the system sans is stored as empty so it follows the system.
+    const QString family = m_font->currentFont().family();
+    m_mark.font = family == QFont(u"Sans Serif"_s).family() ? QString() : family;
+    m_mark.colorMode = static_cast<core::Watermark::ColorMode>(std::max(0, m_colors->checkedId()));
+    m_mark.size = m_size->value() / 100.0;
+    m_mark.opacity = m_opacity->value() / 100.0;
+    m_mark.margin = m_margin->value() / 100.0;
+    if (m_anchors->checkedId() >= 0) {
+        m_mark.anchor = m_anchors->checkedId();
+    }
+    m_mark.repeat = m_repeat->isChecked();
+    m_mark.shadow = m_shadow->isChecked();
+    m_mark.angle = m_angle->value();
+    m_angleRow->setVisible(m_mark.repeat);
+    m_text->setEnabled(m_mark.kind == core::Watermark::Kind::Text);
+    m_font->setEnabled(m_mark.kind == core::Watermark::Kind::Text);
+    m_preview->setWatermark(m_mark);
+}
+
+void WatermarkSheet::saveAs()
+{
+    bool ok = false;
+    const QString name =
+        QInputDialog::getText(this, tr("Save watermark"), tr("Name"), QLineEdit::Normal, m_mark.name, &ok)
+            .trimmed();
+    if (!ok || name.isEmpty()) {
+        return;
+    }
+    m_mark.name = name;
+    const QString path = m_library.save(m_mark);
+    if (!path.isEmpty()) {
+        refreshList(path);
+        if (const auto saved = core::WatermarkLibrary::load(path)) {
+            load(*saved, path);
+        }
+    }
+}
+
+bool WatermarkSheet::useWatermark()
+{
+    if (m_mark.kind == core::Watermark::Kind::Logo && m_mark.logo.isEmpty()) {
+        m_logoName->setText(tr("Choose a logo first."));
+        return false;
+    }
+    if (m_mark.name.trimmed().isEmpty()) {
+        m_mark.name = tr("My watermark");
+    }
+    if (m_path.isEmpty()) {
+        // A new watermark never replaces a saved one of the same name.
+        QStringList taken;
+        for (const auto& e : m_library.entries()) {
+            taken << e.watermark.name;
+        }
+        const QString base = m_mark.name.trimmed();
+        for (int n = 2; taken.contains(m_mark.name.trimmed()); ++n) {
+            m_mark.name = u"%1 %2"_s.arg(base).arg(n);
+        }
+    }
+    m_path = m_library.save(m_mark);
+    if (m_path.isEmpty()) {
+        return false;
+    }
+    accept();
+    return true;
+}
+
+WatermarkPicker::WatermarkPicker(const QString& current, QWidget* parent)
+    : QWidget(parent)
+    , m_box(new QComboBox(this))
+    , m_edit(new QPushButton(tr("Edit..."), this))
+    , m_folder(core::WatermarkLibrary::defaultFolder())
+    , m_remembered(current)
+{
+    m_box->setAccessibleName(tr("Watermark"));
+    m_edit->setObjectName(u"small"_s);
+    refresh(current);
+    connect(m_box, &QComboBox::activated, this, [this](int index) {
+        if (m_box->itemData(index).toString() == u"new"_s) {
+            edit(QString());
+        } else {
+            m_last = index;
+            m_edit->setEnabled(!path().isEmpty());
+            Q_EMIT changed();
+        }
+    });
+    connect(m_edit, &QPushButton::clicked, this, [this] { edit(path()); });
+    auto* layout = new QHBoxLayout(this);
+    layout->setContentsMargins(0, 0, 0, 0);
+    layout->addWidget(m_box, 1);
+    layout->addWidget(m_edit);
+}
+
+WatermarkPicker::~WatermarkPicker() = default;
+
+QString WatermarkPicker::path() const
+{
+    const QString file = m_box->currentData().toString();
+    return file == u"new"_s ? QString() : file;
+}
+
+QStringList WatermarkPicker::names() const
+{
+    QStringList out;
+    for (int i = 0; i < m_box->count(); ++i) {
+        out << m_box->itemText(i);
+    }
+    return out;
+}
+
+void WatermarkPicker::setFolder(const QString& folder)
+{
+    const QString current = path();
+    m_folder = folder;
+    refresh(current.isEmpty() ? m_remembered : current);
+}
+
+void WatermarkPicker::refresh(const QString& select)
+{
+    m_box->clear();
+    m_box->addItem(tr("None"), QString());
+    for (const auto& e : core::WatermarkLibrary(m_folder).entries()) {
+        m_box->addItem(e.watermark.name, e.path);
+    }
+    m_box->addItem(tr("New watermark..."), u"new"_s);
+    // A remembered watermark that is gone falls back to None.
+    m_last = select.isEmpty() ? 0 : std::max(0, m_box->findData(select));
+    m_box->setCurrentIndex(m_last);
+    m_edit->setEnabled(m_last > 0);
+}
+
+void WatermarkPicker::edit(const QString& file)
+{
+    WatermarkSheet sheet(m_preview, file, m_folder, this);
+    if (sheet.exec() == QDialog::Accepted) {
+        refresh(sheet.chosenPath());
+        Q_EMIT changed();
+    } else {
+        m_box->setCurrentIndex(m_last); // "New watermark..." cancelled
+    }
+    m_edit->setEnabled(!path().isEmpty());
+}
+
+} // namespace pixelfx::ui

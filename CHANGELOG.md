@@ -34,6 +34,10 @@ PixelFx 2 is rebuilt from scratch: a new editor, a new image engine, and a new l
 - Effects: vignette, film grain and fade.
 - The start page lists recent photos as they were left; click one to carry on.
 - Export leaves out where a photo was taken unless you tick Keep location.
+- Watermarks on export and in Batch: your name, the year or the camera, or a logo; placed in a
+  corner or anywhere you drag it, or repeated across the photo for proofs. The colour can follow
+  the photo, light on dark areas and dark on light ones, and the size follows the photo, so a
+  whole batch gets the same-looking mark. The editor view never shows it.
 - Export sizes named for where the photo is going: Instagram portrait, square and story, X,
   web, email, a 4K wallpaper, prints at 300 dpi; crop to fill or fit inside with a border.
 - A sheet of every keyboard shortcut (F1), and a main menu (F10) that reaches every command.

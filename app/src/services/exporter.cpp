@@ -1,5 +1,6 @@
 #include "services/exporter.h"
 
+#include "core/watermark.h"
 #include "services/logging.h"
 
 #include <QDir>
@@ -7,11 +8,66 @@
 #include <QFutureWatcher>
 #include <QtConcurrent/QtConcurrentRun>
 
+#include <pfx/composite.h>
 #include <pfx/io.h>
 #include <pfx/pipeline.h>
 #include <pfx/resample.h>
 
 namespace pixelfx::services {
+
+namespace {
+
+// Lays the saved watermark at `file` on the image; an error when the file cannot be read, so a
+// missing watermark never goes unnoticed.
+QString applyWatermark(pfx::Image& image, const QString& file, const pfx::Metadata& metadata)
+{
+    if (file.isEmpty()) {
+        return {};
+    }
+    const auto mark = core::WatermarkLibrary::load(file);
+    if (!mark) {
+        return QObject::tr("The watermark %1 could not be read.").arg(QFileInfo(file).completeBaseName());
+    }
+    const core::WatermarkTokens tokens = core::tokensFrom(pfx::readExif(metadata.exif), QDate::currentDate());
+    const core::WatermarkOverlay overlay =
+        core::renderWatermark(*mark, QSize(image.width(), image.height()), tokens, [&image](const QRect& r) {
+            return pfx::meanLuminance(image, r.x(), r.y(), r.width(), r.height());
+        });
+    if (!overlay.image.isNull()) {
+        pfx::blendOverlay(image, {overlay.image.constBits(), overlay.image.width(), overlay.image.height(),
+                                  overlay.image.bytesPerLine(), overlay.origin.x(), overlay.origin.y()});
+    }
+    return {};
+}
+
+// The size the options ask for: a size preset's exact frame (filled or fitted) or long edge, or
+// the long edge; never enlarging to a long edge. A reason on failure.
+std::string resize(pfx::Image& image, const core::ExportOptions& options)
+{
+    int longEdge = options.longEdge;
+    if (const core::SizePreset* preset = core::sizePreset(options.sizePreset)) {
+        longEdge = preset->longEdge;
+        const QSize exact = core::exactSize(*preset, QSize(image.width(), image.height()));
+        if (exact.isValid()) {
+            auto framed = options.fitInside ? pfx::fitInside(image, exact.width(), exact.height(), 1.0F)
+                                            : pfx::fillSize(image, exact.width(), exact.height());
+            if (!framed) {
+                return framed.error().message;
+            }
+            image = std::move(framed).value();
+        }
+    }
+    if (longEdge > 0 && image.longEdge() > longEdge) {
+        auto resized = pfx::fitLongEdge(image, longEdge);
+        if (!resized) {
+            return resized.error().message;
+        }
+        image = std::move(resized).value();
+    }
+    return {};
+}
+
+} // namespace
 
 ExportOutcome exportFile(const QString& source,
                          const std::function<pfx::Settings(const pfx::Image&)>& settingsFor,
@@ -32,26 +88,14 @@ ExportOutcome exportFile(const QString& source,
         return fail(rendered.error().message);
     }
     pfx::Image image = std::move(rendered).value();
-    // A size preset decides the size: an exact frame (filled or fitted) or a long edge.
-    int longEdge = options.longEdge;
-    if (const core::SizePreset* preset = core::sizePreset(options.sizePreset)) {
-        longEdge = preset->longEdge;
-        const QSize exact = core::exactSize(*preset, QSize(image.width(), image.height()));
-        if (exact.isValid()) {
-            auto framed = options.fitInside ? pfx::fitInside(image, exact.width(), exact.height(), 1.0F)
-                                            : pfx::fillSize(image, exact.width(), exact.height());
-            if (!framed) {
-                return fail(framed.error().message);
-            }
-            image = std::move(framed).value();
-        }
+    if (const std::string error = resize(image, options); !error.empty()) {
+        return fail(error);
     }
-    if (longEdge > 0 && image.longEdge() > longEdge) { // never enlarges
-        auto resized = pfx::fitLongEdge(image, longEdge);
-        if (!resized) {
-            return fail(resized.error().message);
-        }
-        image = std::move(resized).value();
+    // The watermark goes on last, on the final pixels, so its size is right for them.
+    if (const QString error = applyWatermark(image, options.watermark, loaded.value().metadata);
+        !error.isEmpty()) {
+        out.error = error;
+        return out;
     }
     out.target =
         core::exportTarget(source, options, QSize(image.width(), image.height()), QDate::currentDate());

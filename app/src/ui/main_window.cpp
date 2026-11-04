@@ -240,6 +240,7 @@ void MainWindow::exportPhoto()
     }
     ExportSheet sheet(m_document.info().path, m_document.outputSize(), m_settings.exportOptions(), this);
     sheet.setPhotoCount(static_cast<int>(jobs.size()));
+    sheet.setPreview(m_document.preview());
     if (sheet.exec() != QDialog::Accepted) {
         return;
     }
@@ -618,7 +619,7 @@ void MainWindow::setupZoomActions()
 {
     // Shortcuts as in the shortcuts sheet: Ctrl+0 fit, Ctrl+1 100%, Ctrl+Plus and Ctrl+Minus.
     const auto add = [this](const QString& id, const QString& name, const QList<QKeySequence>& keys,
-                           auto slot) {
+                            auto slot) {
         auto* a = new QAction(name, this);
         a->setObjectName(id);
         a->setShortcuts(keys);
@@ -631,7 +632,8 @@ void MainWindow::setupZoomActions()
     };
     add(u"fit"_s, tr("Fit"), {QKeySequence(u"Ctrl+0"_s)}, [this] { m_canvas->zoomToFit(); });
     add(u"actualSize"_s, tr("Actual size"), {QKeySequence(u"Ctrl+1"_s)}, [this] { m_canvas->setZoom(1.0); });
-    add(u"zoomIn"_s, tr("Zoom in"), {QKeySequence::ZoomIn, QKeySequence(u"Ctrl+="_s)}, [this] { m_canvas->zoomIn(); });
+    add(u"zoomIn"_s, tr("Zoom in"), {QKeySequence::ZoomIn, QKeySequence(u"Ctrl+="_s)},
+        [this] { m_canvas->zoomIn(); });
     add(u"zoomOut"_s, tr("Zoom out"), {QKeySequence::ZoomOut}, [this] { m_canvas->zoomOut(); });
 }
 
@@ -1472,17 +1474,8 @@ void MainWindow::setupPanelActions()
     addActions({m_hidePanels, tab, menu});
 }
 
-void MainWindow::buildMainMenu()
+void MainWindow::buildRecentMenu(QMenu* recent)
 {
-    // The entries of menu.html that exist; each one is the window's own action, so the
-    // shortcut shown is the one that works.
-    setupPanelActions();
-    auto* menu = new QMenu(m_menuButton);
-    QAction* open = namedAction(u"open"_s);
-    open->setIcon(icons::themed(u"open"_s, tokens().muted));
-    menu->addAction(open);
-    menu->addAction(namedAction(u"openFolder"_s));
-    QMenu* recent = menu->addMenu(tr("Open recent"));
     connect(recent, &QMenu::aboutToShow, this, [this, recent] {
         recent->clear();
         const QStringList files = m_settings.recentFiles();
@@ -1499,6 +1492,19 @@ void MainWindow::buildMainMenu()
                     [this] { m_settings.clearRecentFiles(); });
         }
     });
+}
+
+void MainWindow::buildMainMenu()
+{
+    // The entries of menu.html that exist; each one is the window's own action, so the
+    // shortcut shown is the one that works.
+    setupPanelActions();
+    auto* menu = new QMenu(m_menuButton);
+    QAction* open = namedAction(u"open"_s);
+    open->setIcon(icons::themed(u"open"_s, tokens().muted));
+    menu->addAction(open);
+    menu->addAction(namedAction(u"openFolder"_s));
+    buildRecentMenu(menu->addMenu(tr("Open recent")));
     menu->addAction(namedAction(u"pasteImage"_s));
     menu->addSeparator();
 
@@ -1537,9 +1543,8 @@ void MainWindow::buildMainMenu()
     menu->addSeparator();
     menu->addAction(namedAction(u"settings"_s));
     menu->addAction(namedAction(u"shortcuts"_s));
-    connect(menu->addAction(tr("Report a bug")), &QAction::triggered, this, [] {
-        QDesktopServices::openUrl(QUrl(u"https://github.com/keshavbhatt/PixelFx/issues"_s));
-    });
+    connect(menu->addAction(tr("Report a bug")), &QAction::triggered, this,
+            [] { QDesktopServices::openUrl(QUrl(u"https://github.com/keshavbhatt/PixelFx/issues"_s)); });
     menu->addSeparator();
     QAction* quit = namedAction(u"quit"_s);
     quit->setIcon(icons::themed(u"quit"_s, tokens().muted));

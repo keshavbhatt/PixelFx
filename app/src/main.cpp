@@ -7,8 +7,8 @@
 //   PIXELFX_DEBUG_COMPARE=1            turn on before and after once the photo is open
 //   PIXELFX_DEBUG_CROP=<ratio>[,<deg>] enter Crop mode with a ratio chip ("Free", "3:2") and
 //                                      a straightening angle once the photo is open
-//   PIXELFX_DEBUG_SHEET=export|settings|preset|shortcuts with GRAB: grab that sheet instead of the window
-//   PIXELFX_DEBUG_ZOOM=<scale>         zoom to this scale (1 is 100%) once the photo is open; with
+//   PIXELFX_DEBUG_SHEET=export|settings|preset|shortcuts|watermark with GRAB: grab that sheet instead of the
+//   window PIXELFX_DEBUG_ZOOM=<scale>         zoom to this scale (1 is 100%) once the photo is open; with
 //                                      GRAB, grab once the full-size render is shown
 //   PIXELFX_DEBUG_BATCH=<folder>       open Batch with this folder and process it; with GRAB, grab
 //                                      when the batch is done
@@ -28,6 +28,7 @@
 #include "ui/settings_sheet.h"
 #include "ui/shortcuts_sheet.h"
 #include "ui/style.h"
+#include "ui/watermark_sheet.h"
 
 #include <QDialog>
 #include <QFileInfo>
@@ -68,6 +69,12 @@ bool grabSheet(pixelfx::ui::MainWindow& window, const QString& grab, bool export
         sheet = new pixelfx::ui::SettingsSheet(window.settings(), &window);
     } else if (qEnvironmentVariable("PIXELFX_DEBUG_SHEET") == u"shortcuts"_s) {
         sheet = new pixelfx::ui::ShortcutsSheet(&window);
+    } else if (qEnvironmentVariable("PIXELFX_DEBUG_SHEET") == u"watermark"_s && window.document().isOpen()) {
+        // A sample text watermark, unsaved, in the scratch profile's folder.
+        auto* mark =
+            new pixelfx::ui::WatermarkSheet(window.document().preview(), QString(),
+                                            pixelfx::core::WatermarkLibrary::defaultFolder(), &window);
+        sheet = mark;
     } else if (exportSheet && window.document().isOpen()) {
         sheet = new pixelfx::ui::ExportSheet(window.document().info().path, window.document().outputSize(),
                                              window.settings().exportOptions(), &window);

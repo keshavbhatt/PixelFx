@@ -3,6 +3,7 @@
 #include "core/sidecar_store.h"
 #include "ui/icons.h"
 #include "ui/style.h"
+#include "ui/watermark_sheet.h"
 
 #include <QCheckBox>
 #include <QComboBox>
@@ -91,6 +92,9 @@ BatchPage::BatchPage(core::ExportOptions output, QWidget* parent)
             return; // a picture for an older recipe
         }
         QLabel* target = key % 2 == 0 ? m_before : m_after;
+        if (target == m_after) {
+            m_watermark->setPreview(image); // the watermark sheet previews on the batch's own photo
+        }
         target->setPixmap(QPixmap::fromImage(
             image.scaledToHeight(static_cast<int>(56 * devicePixelRatioF()), Qt::SmoothTransformation)));
     });
@@ -339,7 +343,12 @@ QWidget* BatchPage::buildOutput(QWidget* parent)
     column->setContentsMargins(0, 0, 0, 0);
     column->addWidget(sectionTitle(tr("2. Resize"), box));
     column->addWidget(m_size);
-    column->addWidget(sectionTitle(tr("3. Save as"), box));
+    // Mock batch.html: 3. Watermark, 4. Save as.
+    column->addWidget(sectionTitle(tr("3. Watermark"), box));
+    m_watermark = new WatermarkPicker(m_output.watermark, box);
+    connect(m_watermark, &WatermarkPicker::changed, this, [this] { Q_EMIT outputChanged(recipe().output); });
+    column->addWidget(m_watermark);
+    column->addWidget(sectionTitle(tr("4. Save as"), box));
     column->addLayout(formatRow);
     column->addLayout(folderRow);
     column->addWidget(m_beside);
@@ -410,6 +419,7 @@ services::BatchRecipe BatchPage::recipe() const
     r.output.longEdge = m_size->currentData().toInt();
     r.output.extension = m_format->currentData().toString();
     r.output.quality = m_quality->value();
+    r.output.watermark = m_watermark->path();
     if (r.output.extension != u"png"_s && r.output.extension != u"tif"_s) {
         r.output.bitsPerSample = 8;
     }

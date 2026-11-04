@@ -96,6 +96,12 @@ const QString kSheet = uR"(
         QLineEdit, QComboBox, QSpinBox { background: {{input}}; border: 1px solid {{border}}; border-radius: 7px; padding: 5px 8px; }
         QLineEdit:focus, QComboBox:focus, QSpinBox:focus { border-color: {{accent}}; }
         #toast { background: {{elevated}}; border: 1px solid {{border}}; border-radius: 9px; padding: 7px 12px; }
+        #watermarkControls { background: {{panel}}; border-top: 1px solid {{border}}; border-right: 1px solid {{border}}; }
+        #watermarkPreview { background: {{canvas}}; border-top: 1px solid {{border}}; }
+        #watermarkBar { background: {{panel}}; border-top: 1px solid {{border}}; }
+        QToolButton#positionCell { border: 1px solid {{faint}}; border-radius: 5px; background: {{input}}; }
+        QToolButton#positionCell:hover { background: {{hover}}; }
+        QToolButton#positionCell:checked { background: {{accent}}; border-color: {{accent}}; }
         QMenu { background: {{elevated}}; border: 1px solid {{border}}; border-radius: 10px; padding: 5px; }
         QMenu::item { padding: 6px 28px 6px 10px; border-radius: 6px; }
         QMenu::item:selected { background: {{hover}}; }
@@ -125,6 +131,7 @@ QString sheet(const Tokens& t)
     put(u"faint"_s, t.faint);
     put(u"link"_s, t.link);
     put(u"danger"_s, t.danger);
+    put(u"canvas"_s, t.canvas);
     return s;
 }
 

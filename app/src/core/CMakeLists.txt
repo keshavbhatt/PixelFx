@@ -18,6 +18,8 @@ qt_add_library(pixelfx_core STATIC
     presets.h
     sidecar_store.cpp
     sidecar_store.h
+    watermark.cpp
+    watermark.h
     settings/settings.cpp
     settings_clipboard.cpp
     settings_clipboard.h
@@ -26,4 +28,4 @@ qt_add_library(pixelfx_core STATIC
 )
 pixelfx_set_warnings(pixelfx_core)
 target_include_directories(pixelfx_core PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/..")
-target_link_libraries(pixelfx_core PUBLIC Qt6::Core Qt6::Gui pfx::core)
+target_link_libraries(pixelfx_core PUBLIC Qt6::Core Qt6::Gui Qt6::Svg pfx::core)

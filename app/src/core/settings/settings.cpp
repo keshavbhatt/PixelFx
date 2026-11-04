@@ -118,6 +118,7 @@ ExportOptions Settings::exportOptions() const
     o.keepLocation = m_settings->value(key(keys::kExportKeepLocation), o.keepLocation).toBool();
     o.sizePreset = m_settings->value(key(keys::kExportSizePreset)).toString();
     o.fitInside = m_settings->value(key(keys::kExportFitInside), false).toBool();
+    o.watermark = m_settings->value(key(keys::kExportWatermark)).toString();
     const QString pictures = QStandardPaths::writableLocation(QStandardPaths::PicturesLocation);
     const QString defaultFolder = (pictures.isEmpty() ? QDir::homePath() : pictures) + u"/PixelFx"_s;
     o.folder = m_settings->value(key(keys::kExportFolder), defaultFolder).toString();
@@ -136,6 +137,7 @@ void Settings::setExportOptions(const ExportOptions& options)
     m_settings->setValue(key(keys::kExportKeepLocation), options.keepLocation);
     m_settings->setValue(key(keys::kExportSizePreset), options.sizePreset);
     m_settings->setValue(key(keys::kExportFitInside), options.fitInside);
+    m_settings->setValue(key(keys::kExportWatermark), options.watermark);
     m_settings->setValue(key(keys::kExportFolder), options.folder);
     m_settings->setValue(key(keys::kExportNameTemplate), options.nameTemplate);
     m_settings->setValue(key(keys::kExportIfExists), ifExistsKey(options.ifExists));
