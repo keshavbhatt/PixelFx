@@ -134,7 +134,9 @@ std::string stringField(const Json& j, const char* name)
 std::optional<Error> readEnvelope(const Json& json, Document& doc)
 {
     const std::string kind = stringField(json, "kind");
-    const auto* const kindIt = std::ranges::find_if(kKinds, [&](const auto& k) { return k.second == kind; });
+    // An iterator, not a pointer: MSVC's std::array iterators are class types.
+    const auto kindIt = // NOLINT(readability-qualified-auto)
+        std::ranges::find_if(kKinds, [&](const auto& k) { return k.second == kind; });
     if (kindIt == kKinds.end()) {
         return parseError("Unknown document kind \"" + kind + "\".");
     }
@@ -185,6 +187,12 @@ void readBody(const Json& json, Document& doc, ParseReport* report)
     for (const auto& [name, value] : bodyIt->items()) {
         if (name == "settings" && value.is_object()) {
             flatten(value, {}, doc.settings, report);
+        } else if (name == "source" && value.is_object() && doc.kind == DocumentKind::Recipe) {
+            doc.sourceName = stringField(value, "name");
+            doc.sourceFingerprint = stringField(value, "fingerprint");
+            const auto size = value.find("size");
+            doc.sourceSize =
+                size != value.end() && size->is_number_unsigned() ? size->get<std::uint64_t>() : 0;
         } else {
             unknownBody[name] = value;
         }
@@ -255,6 +263,11 @@ std::string serializeDocument(const Document& document)
         }
     }
     Json body = Json::object();
+    if (document.kind == DocumentKind::Recipe && !document.sourceFingerprint.empty()) {
+        body["source"] = Json{{"name", document.sourceName},
+                              {"size", document.sourceSize},
+                              {"fingerprint", document.sourceFingerprint}};
+    }
     body["settings"] = unflatten(document.settings);
     if (!document.unknownBody.empty()) {
         const Json extra = Json::parse(document.unknownBody);
