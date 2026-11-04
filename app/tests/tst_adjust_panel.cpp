@@ -1,4 +1,5 @@
 #include "ui/adjust_panel.h"
+#include "ui/curve_editor.h"
 #include "ui/style.h"
 
 #include <QApplication>
@@ -68,6 +69,38 @@ private Q_SLOTS:
         panel.resetAll();
         QVERIFY(panel.settings().isEmpty());
         QCOMPARE(finished.first().first().toString(), u"Reset all"_s);
+    }
+
+    void curvePointsAreAddedDraggedAndRemovedWithTheMouse()
+    {
+        AdjustPanel panel;
+        panel.show();
+        QVERIFY(QTest::qWaitForWindowExposed(&panel));
+        auto* editor = panel.curveEditor();
+        editor->resize(280, 180);
+        QSignalSpy finished(&panel, &AdjustPanel::editFinished);
+        const QPoint middle(140, 90);
+        QTest::mousePress(editor, Qt::LeftButton, {}, middle);
+        QTest::mouseMove(editor, QPoint(140, 60));
+        QTest::mouseRelease(editor, Qt::LeftButton, {}, QPoint(140, 60));
+        QCOMPARE(editor->curve().size(), std::size_t{3});
+        QVERIFY(panel.settings().contains("curves.rgb"));
+        QCOMPARE(panel.settings().curve("curves.rgb").at(1).y > 0.55, true); // dragged up
+        QCOMPARE(finished.last().first().toString(), u"Curve"_s);
+        QTest::mouseDClick(editor, Qt::LeftButton, {}, QPoint(140, 60));
+        QCOMPARE(editor->curve().size(), std::size_t{2});
+        QVERIFY(!panel.settings().contains("curves.rgb")); // back to identity: not stored
+    }
+
+    void eachChannelHasItsOwnCurve()
+    {
+        AdjustPanel panel;
+        pfx::Settings s;
+        s.set("curves.r", pfx::Curve{{0, 0}, {0.5, 0.7}, {1, 1}});
+        panel.setSettings(s);
+        QCOMPARE(panel.curveEditor()->curve().size(), std::size_t{2}); // RGB shown, identity
+        panel.showCurve(u"curves.r"_s);
+        QCOMPARE(panel.curveEditor()->curve().size(), std::size_t{3});
     }
 
     void setSettingsDoesNotEmit()

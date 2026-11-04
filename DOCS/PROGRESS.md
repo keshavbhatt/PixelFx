@@ -51,6 +51,8 @@
   open worker, written in order on a one-thread pool after a short pause, flushed on close and
   before the next photo opens; no settings, no file. The library's recipe documents carry the
   `source` block of `presets.md`. 17 app suites and 44 library tests pass.
+- Curves group (`CurveEditor`): RGB, R, G, B; click to add, drag, double-click to remove; drawn
+  with the library's own sampler (`pfx::sampleCurve`) so the drawing is what renders.
 - CI Windows: vcpkg and Qt now install; the first compile error (an iterator spelled as a
   pointer, which MSVC rejects) fixed.
 

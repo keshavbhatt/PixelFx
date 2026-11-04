@@ -1,9 +1,11 @@
 #include "ui/adjust_panel.h"
 
+#include "ui/curve_editor.h"
 #include "ui/histogram_view.h"
 #include "ui/icons.h"
 #include "ui/style.h"
 
+#include <QButtonGroup>
 #include <QEvent>
 #include <QHBoxLayout>
 #include <QLabel>
@@ -16,6 +18,7 @@
 #include <QVBoxLayout>
 
 #include <cmath>
+#include <string_view>
 #include <pfx/registry.h>
 
 using namespace Qt::StringLiterals;
@@ -129,6 +132,11 @@ public:
         setChanged(false);
     }
 
+    void addContent(QWidget* widget)
+    {
+        widget->setParent(m_body);
+        m_bodyLayout->addWidget(widget);
+    }
     void addSlider(AdjustSlider* slider)
     {
         slider->setParent(m_body);
@@ -306,6 +314,9 @@ AdjustPanel::AdjustPanel(QWidget* parent)
         connect(group->resetButton(), &QToolButton::clicked, this, [this, group] { resetGroup(group); });
         groups->addWidget(group);
         m_groups.push_back(group);
+        if (std::string_view(g.name) == "Color") {
+            buildCurvesGroup(content, groups); // mock order: Light, Color, Curves, Detail
+        }
     }
     groups->addStretch();
 
@@ -326,6 +337,105 @@ AdjustPanel::AdjustPanel(QWidget* parent)
 }
 
 AdjustPanel::~AdjustPanel() = default;
+
+namespace {
+
+struct CurveChannel
+{
+    const char* key;
+    const char* label;
+    QColor color;
+};
+
+const std::vector<CurveChannel>& curveChannels()
+{
+    static const std::vector<CurveChannel> channels = {
+        {"curves.rgb", QT_TRANSLATE_NOOP("AdjustPanel", "RGB"), QColor()},
+        {"curves.r", QT_TRANSLATE_NOOP("AdjustPanel", "R"), QColor(0xE0, 0x50, 0x50)},
+        {"curves.g", QT_TRANSLATE_NOOP("AdjustPanel", "G"), QColor(0x50, 0xC0, 0x60)},
+        {"curves.b", QT_TRANSLATE_NOOP("AdjustPanel", "B"), QColor(0x50, 0x80, 0xF0)},
+    };
+    return channels;
+}
+
+const std::vector<QString>& curveKeys()
+{
+    static const std::vector<QString> keys = {u"curves.rgb"_s, u"curves.r"_s, u"curves.g"_s, u"curves.b"_s};
+    return keys;
+}
+
+} // namespace
+
+void AdjustPanel::buildCurvesGroup(QWidget* content, QVBoxLayout* groups)
+{
+    m_curvesGroup = new AdjustGroup(tr("Curves"), u"curves"_s, content);
+    auto* channels = new QWidget(m_curvesGroup);
+    auto* channelRow = new QHBoxLayout(channels);
+    channelRow->setContentsMargins(0, 4, 0, 4);
+    channelRow->setSpacing(0);
+    m_curveChannels = new QButtonGroup(this);
+    for (const CurveChannel& c : curveChannels()) {
+        auto* b = new QPushButton(tr(c.label), channels);
+        b->setObjectName(u"segment"_s);
+        b->setCheckable(true);
+        b->setChecked(QLatin1StringView(c.key) == m_curveKey);
+        b->setProperty("curveKey", QString::fromLatin1(c.key));
+        if (c.color.isValid()) {
+            b->setStyleSheet(u"color: %1;"_s.arg(c.color.name()));
+        }
+        m_curveChannels->addButton(b);
+        channelRow->addWidget(b, 1);
+    }
+    connect(m_curveChannels, &QButtonGroup::buttonClicked, this,
+            [this](QAbstractButton* b) { showCurve(b->property("curveKey").toString()); });
+    m_curve = new CurveEditor(m_curvesGroup);
+    auto* hint = new QLabel(tr("Double-click a point to remove it"), m_curvesGroup);
+    hint->setObjectName(u"faint"_s);
+    m_curvesGroup->addContent(channels);
+    m_curvesGroup->addContent(m_curve);
+    m_curvesGroup->addContent(hint);
+    connect(m_curve, &CurveEditor::curveChanged, this, &AdjustPanel::curveEdited);
+    connect(m_curve, &CurveEditor::editFinished, this, [this] {
+        const auto* channel = m_curveChannels->checkedButton();
+        Q_EMIT editFinished(m_curveKey == u"curves.rgb"_s ? tr("Curve")
+                                                          : tr("%1 curve").arg(channel->text()));
+    });
+    connect(m_curvesGroup->resetButton(), &QToolButton::clicked, this, [this] {
+        for (const QString& key : curveKeys()) {
+            m_settings.erase(key.toStdString());
+        }
+        m_curve->setCurve({});
+        refreshGroups();
+        Q_EMIT settingsChanged(m_settings);
+        Q_EMIT editFinished(tr("Reset Curves"));
+    });
+    groups->addWidget(m_curvesGroup);
+}
+
+void AdjustPanel::showCurve(const QString& key)
+{
+    m_curveKey = key;
+    for (const CurveChannel& c : curveChannels()) {
+        if (key == QLatin1StringView(c.key)) {
+            m_curve->setColor(c.color.isValid() ? c.color : tokens().text);
+        }
+    }
+    for (QAbstractButton* b : m_curveChannels->buttons()) {
+        b->setChecked(b->property("curveKey").toString() == key);
+    }
+    m_curve->setCurve(m_settings.curve(key.toStdString()));
+}
+
+void AdjustPanel::curveEdited(const pfx::Curve& curve)
+{
+    if (m_curve->isIdentity()) {
+        m_settings.erase(m_curveKey.toStdString());
+    } else {
+        m_settings.set(m_curveKey.toStdString(), curve);
+    }
+    refreshGroups();
+    Q_EMIT settingsChanged(m_settings);
+}
 
 void AdjustPanel::setHistogram(const core::Histogram& histogram)
 {
@@ -348,6 +458,7 @@ void AdjustPanel::setSettings(const pfx::Settings& settings)
     for (AdjustSlider* s : m_sliders) {
         s->setValue(settings.number(s->key().toStdString(), s->defaultValue()));
     }
+    m_curve->setCurve(settings.curve(m_curveKey.toStdString()));
     refreshGroups();
 }
 
@@ -385,6 +496,7 @@ void AdjustPanel::resetAll()
     for (AdjustSlider* s : m_sliders) {
         s->setValue(s->defaultValue());
     }
+    m_curve->setCurve({});
     refreshGroups();
     Q_EMIT settingsChanged(m_settings);
     Q_EMIT editFinished(tr("Reset all"));
@@ -395,6 +507,10 @@ void AdjustPanel::refreshGroups()
     for (AdjustGroup* group : m_groups) {
         const auto& sliders = group->sliders();
         group->setChanged(std::ranges::any_of(sliders, [](const AdjustSlider* s) { return s->isChanged(); }));
+    }
+    if (m_curvesGroup != nullptr) {
+        m_curvesGroup->setChanged(std::ranges::any_of(
+            curveKeys(), [this](const QString& k) { return m_settings.contains(k.toStdString()); }));
     }
 }
 

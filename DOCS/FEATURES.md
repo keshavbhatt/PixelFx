@@ -61,7 +61,7 @@ preview and export use resolution-independent parameters so they match (v1 defec
 | E1 | Light: Exposure (stops), Contrast, Highlights, Shadows, Whites, Blacks | Brightness, Contrast, Sigmoidal contrast, Gamma | KEEP | wip: library done (tone v1 is a global curve; a local version may follow as v2); UI M3 |
 | E2 | Color: White balance (As shot, Auto, presets, Temperature, Tint, picker), Vibrance, Saturation | Saturation, Color balance R/G/B | KEEP | wip: relative temperature and tint, vibrance, saturation in the library; Auto, presets, picker and Kelvin in M3 |
 | E3 | Color mixer: hue, saturation, luminance for 8 colour bands | Hue shift | KEEP | todo |
-| E4 | Curves: RGB and per channel, points, double-click removes | none | KEEP | wip: library done (monotone curves); UI M3 |
+| E4 | Curves: RGB and per channel, points, double-click removes | none | KEEP | done (`CurveEditor`, `AdjustPanel`; drawn with `pfx::sampleCurve`) |
 | E5 | Levels (black, mid, white point per channel) | none | LATER | |
 | E6 | Detail: Clarity (local contrast), Sharpen (amount, radius, masking), Noise reduction (luminance, colour), Dehaze | Sharpen, Blur, Mean, Median | KEEP | wip: clarity, sharpen, noise reduction in the library; dehaze moved to M3; UI M3 |
 | E7 | Effects: Vignette (amount, midpoint, roundness), Grain (amount, size), Fade | none | KEEP | todo |

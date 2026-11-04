@@ -7,13 +7,16 @@
 #include <pfx/settings.h>
 #include <vector>
 
+class QButtonGroup;
 class QLabel;
+class QVBoxLayout;
 class QSlider;
 
 namespace pixelfx::ui {
 
 class AdjustGroup;
 class AdjustSlider;
+class CurveEditor;
 class HistogramView;
 
 /// The adjustments panel (mock editor.html, right side): groups in a photographer's order,
@@ -32,6 +35,9 @@ public:
     void setSettings(const pfx::Settings& settings);
     [[nodiscard]] const pfx::Settings& settings() const { return m_settings; }
     [[nodiscard]] AdjustSlider* slider(const QString& key) const;
+    [[nodiscard]] CurveEditor* curveEditor() const { return m_curve; }
+    /// Shows the curve of `key` (curves.rgb, curves.r, curves.g, curves.b) in the editor.
+    void showCurve(const QString& key);
     void setHistogram(const core::Histogram& histogram);
     /// Clears every setting (Ctrl+R) and reports it as one step.
     void resetAll();
@@ -46,9 +52,15 @@ private:
     void setValue(const QString& key, double value, bool finished);
     void resetGroup(AdjustGroup* group);
     void refreshGroups();
+    void buildCurvesGroup(QWidget* content, QVBoxLayout* groups);
+    void curveEdited(const pfx::Curve& curve);
 
     pfx::Settings m_settings;
     HistogramView* m_histogram = nullptr;
+    AdjustGroup* m_curvesGroup = nullptr;
+    CurveEditor* m_curve = nullptr;
+    QButtonGroup* m_curveChannels = nullptr;
+    QString m_curveKey = QStringLiteral("curves.rgb");
     std::vector<AdjustGroup*> m_groups;
     std::vector<AdjustSlider*> m_sliders;
 };

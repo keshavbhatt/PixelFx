@@ -4,6 +4,8 @@ qt_add_library(pixelfx_ui STATIC
     adjust_panel.h
     canvas.cpp
     canvas.h
+    curve_editor.cpp
+    curve_editor.h
     export_sheet.cpp
     export_sheet.h
     histogram_view.cpp

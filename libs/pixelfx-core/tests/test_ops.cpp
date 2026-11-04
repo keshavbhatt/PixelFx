@@ -3,6 +3,7 @@
 // in test_pipeline.cpp pin the exact output).
 #include "fixtures.h"
 #include "pfx/color.h"
+#include "pfx/curve.h"
 #include "pfx/pipeline.h"
 
 #include <algorithm>
@@ -165,4 +166,18 @@ TEST_CASE("rendering can be cancelled")
     s.set("light.exposure", 1.0);
     const auto result = pfx::render(fixtures::scene(), s, {0, &cancel});
     CHECK_FALSE(result.ok());
+}
+
+TEST_CASE("the public curve sampler matches what the operation applies, and never reverses")
+{
+    const pfx::Curve points{{0, 0}, {0.25, 0.4}, {0.3, 0.42}, {1, 1}};
+    const auto samples = pfx::sampleCurve(points, 101);
+    REQUIRE(samples.size() == 101);
+    CHECK(samples.front() == doctest::Approx(0.0));
+    CHECK(samples.back() == doctest::Approx(1.0));
+    CHECK(samples[25] == doctest::Approx(0.4));
+    for (std::size_t i = 1; i < samples.size(); ++i) {
+        CHECK(samples[i] >= samples[i - 1]);
+    }
+    CHECK(pfx::sampleCurve(points, 1).empty());
 }
