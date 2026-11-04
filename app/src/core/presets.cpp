@@ -1,0 +1,350 @@
+#include "core/presets.h"
+
+#include <QCoreApplication>
+#include <QDir>
+#include <QFileInfo>
+#include <QRegularExpression>
+#include <QStandardPaths>
+
+#include <algorithm>
+#include <pfx/document.h>
+#include <pfx/registry.h>
+
+using namespace Qt::StringLiterals;
+
+namespace pixelfx::core {
+
+namespace {
+
+const char* const kContext = "PresetUnits";
+
+struct UnitRule
+{
+    const char* id;
+    const char* label;
+    std::vector<std::string_view> prefixes;
+    std::vector<std::string_view> excludes;
+};
+
+const std::vector<UnitRule>& rules()
+{
+    static const std::vector<UnitRule> list = {
+        {"light", QT_TRANSLATE_NOOP("PresetUnits", "Light"), {"light."}, {}},
+        {"color", QT_TRANSLATE_NOOP("PresetUnits", "Color"), {"color."}, {"color.wb."}},
+        {"wb", QT_TRANSLATE_NOOP("PresetUnits", "White balance"), {"color.wb."}, {}},
+        {"mixer", QT_TRANSLATE_NOOP("PresetUnits", "Color mixer"), {"mixer."}, {}},
+        {"grading", QT_TRANSLATE_NOOP("PresetUnits", "Color grading"), {"grading."}, {}},
+        {"curves", QT_TRANSLATE_NOOP("PresetUnits", "Curves"), {"curves."}, {}},
+        {"detail", QT_TRANSLATE_NOOP("PresetUnits", "Detail"), {"detail."}, {}},
+        {"effects", QT_TRANSLATE_NOOP("PresetUnits", "Effects"), {"effects."}, {}},
+        {"crop",
+         QT_TRANSLATE_NOOP("PresetUnits", "Crop and rotate"),
+         {"geometry."},
+         {"geometry.perspective."}},
+        {"perspective", QT_TRANSLATE_NOOP("PresetUnits", "Perspective"), {"geometry.perspective."}, {}},
+    };
+    return list;
+}
+
+const UnitRule* ruleFor(const QString& id)
+{
+    for (const UnitRule& r : rules()) {
+        if (id == QLatin1StringView(r.id)) {
+            return &r;
+        }
+    }
+    return nullptr;
+}
+
+bool matches(const UnitRule& rule, std::string_view key)
+{
+    const auto starts = [key](std::string_view p) { return key.starts_with(p); };
+    return std::ranges::any_of(rule.prefixes, starts) && std::ranges::none_of(rule.excludes, starts);
+}
+
+bool isDefault(const pfx::ParamSpec& spec, const pfx::Value& value)
+{
+    if (const auto* d = std::get_if<double>(&value)) {
+        return std::abs(*d - spec.defaultValue) < 1e-9;
+    }
+    if (const auto* b = std::get_if<bool>(&value)) {
+        return !*b;
+    }
+    if (const auto* c = std::get_if<pfx::Curve>(&value)) {
+        return c->empty() || *c == pfx::Curve{{0, 0}, {1, 1}};
+    }
+    return false;
+}
+
+QString fileSafe(const QString& name)
+{
+    QString s = name.trimmed();
+    s.replace(QRegularExpression(u"[\\\\/:*?\"<>|\\x00-\\x1F]"_s), u"-"_s);
+    return s.isEmpty() ? u"Preset"_s : s.left(80);
+}
+
+} // namespace
+
+const std::vector<PresetUnit>& presetUnits()
+{
+    static const std::vector<PresetUnit> units = [] {
+        std::vector<PresetUnit> out;
+        for (const UnitRule& r : rules()) {
+            out.push_back({QString::fromLatin1(r.id), QCoreApplication::translate(kContext, r.label)});
+        }
+        return out;
+    }();
+    return units;
+}
+
+bool keyInUnit(std::string_view key, const QString& unitId)
+{
+    const UnitRule* rule = ruleFor(unitId);
+    return rule != nullptr && matches(*rule, key);
+}
+
+QStringList unitsIn(const pfx::Settings& settings)
+{
+    QStringList out;
+    for (const UnitRule& r : rules()) {
+        const auto keys = settings.keys();
+        if (std::ranges::any_of(keys, [&r](const std::string& k) { return matches(r, k); })) {
+            out << QString::fromLatin1(r.id);
+        }
+    }
+    return out;
+}
+
+int changedCount(const pfx::Settings& settings, const QString& unitId)
+{
+    const UnitRule* rule = ruleFor(unitId);
+    if (rule == nullptr) {
+        return 0;
+    }
+    int n = 0;
+    for (const std::string& key : settings.keys()) {
+        if (!matches(*rule, key)) {
+            continue;
+        }
+        const pfx::ParamSpec* spec = pfx::registry().param(key);
+        if (spec == nullptr || !isDefault(*spec, *settings.find(key))) {
+            ++n;
+        }
+    }
+    return n;
+}
+
+pfx::Settings presetFrom(const pfx::Settings& settings, const QStringList& units)
+{
+    pfx::Settings out;
+    for (const QString& id : units) {
+        const UnitRule* rule = ruleFor(id);
+        if (rule == nullptr) {
+            continue;
+        }
+        bool any = false;
+        for (const pfx::OpSpec& op : pfx::registry().ops()) {
+            for (const pfx::ParamSpec& p : op.params) {
+                if (!matches(*rule, p.key)) {
+                    continue;
+                }
+                if (const pfx::Value* v = settings.find(p.key)) {
+                    out.set(p.key, *v);
+                    any = true;
+                } else if (p.type == pfx::ParamType::Number) {
+                    out.set(p.key, p.defaultValue);
+                    any = true;
+                } else if (p.type == pfx::ParamType::Boolean) {
+                    out.set(p.key, false);
+                    any = true;
+                }
+            }
+        }
+        if (!any && id == u"curves"_s) {
+            out.set("curves.rgb", pfx::Curve{{0, 0}, {1, 1}}); // an included, straight curve
+        }
+    }
+    return out;
+}
+
+pfx::Settings applyPreset(const pfx::Settings& current, const pfx::Settings& preset)
+{
+    const QStringList units = unitsIn(preset);
+    pfx::Settings out;
+    for (const std::string& key : current.keys()) {
+        const bool replaced =
+            std::ranges::any_of(units, [&key](const QString& id) { return keyInUnit(key, id); });
+        if (!replaced) {
+            out.set(key, *current.find(key));
+        }
+    }
+    for (const std::string& key : preset.keys()) {
+        const pfx::ParamSpec* spec = pfx::registry().param(key);
+        if (spec != nullptr && isDefault(*spec, *preset.find(key))) {
+            continue; // the default is the absence of the key
+        }
+        out.set(key, *preset.find(key));
+    }
+    return out;
+}
+
+QString presetSummary(const pfx::Settings& preset)
+{
+    QStringList names;
+    const QStringList units = unitsIn(preset);
+    for (const PresetUnit& u : presetUnits()) {
+        if (units.contains(u.id)) {
+            names << u.label;
+        }
+    }
+    return names.join(u", "_s);
+}
+
+PresetLibrary::PresetLibrary(QString folder)
+    : m_folder(std::move(folder))
+{}
+
+QString PresetLibrary::defaultFolder()
+{
+    return QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + u"/presets"_s;
+}
+
+std::vector<PresetEntry> PresetLibrary::entries() const
+{
+    std::vector<PresetEntry> out;
+    const QDir dir(m_folder);
+    for (const QFileInfo& file : dir.entryInfoList({u"*.pfxpreset"_s}, QDir::Files, QDir::Name)) {
+        const auto doc = pfx::loadDocument(file.absoluteFilePath().toStdString());
+        if (!doc) {
+            continue;
+        }
+        PresetEntry e;
+        e.name = QString::fromStdString(doc.value().name);
+        if (e.name.isEmpty()) {
+            e.name = file.completeBaseName();
+        }
+        e.group = doc.value().group.empty() ? QCoreApplication::translate(kContext, "My presets")
+                                            : QString::fromStdString(doc.value().group);
+        e.path = file.absoluteFilePath();
+        e.settings = doc.value().settings;
+        out.push_back(std::move(e));
+    }
+    std::ranges::sort(out, [](const PresetEntry& a, const PresetEntry& b) {
+        return a.group == b.group ? a.name.localeAwareCompare(b.name) < 0
+                                  : a.group.localeAwareCompare(b.group) < 0;
+    });
+    for (PresetEntry& e : builtIn()) {
+        out.push_back(std::move(e));
+    }
+    return out;
+}
+
+QString PresetLibrary::freePath(const QString& name) const
+{
+    const QString base = m_folder + u'/' + fileSafe(name);
+    QString path = base + u".pfxpreset"_s;
+    for (int n = 2; QFileInfo::exists(path); ++n) {
+        path = base + u"-%1.pfxpreset"_s.arg(n);
+    }
+    return path;
+}
+
+QString PresetLibrary::save(const QString& name, const QString& group, const pfx::Settings& settings) const
+{
+    QDir().mkpath(m_folder);
+    pfx::Document doc;
+    doc.kind = pfx::DocumentKind::Preset;
+    doc.name = name.trimmed().toStdString();
+    doc.group = group.toStdString();
+    doc.settings = settings;
+    const QString path = freePath(name);
+    return pfx::saveDocument(doc, path.toStdString()).ok() ? path : QString();
+}
+
+bool PresetLibrary::update(const QString& path, const pfx::Settings& settings)
+{
+    auto doc = pfx::loadDocument(path.toStdString());
+    if (!doc) {
+        return false;
+    }
+    doc.value().settings = settings;
+    return pfx::saveDocument(doc.value(), path.toStdString()).ok();
+}
+
+bool PresetLibrary::rename(const QString& path, const QString& name)
+{
+    auto doc = pfx::loadDocument(path.toStdString());
+    if (!doc || name.trimmed().isEmpty()) {
+        return false;
+    }
+    doc.value().name = name.trimmed().toStdString();
+    return pfx::saveDocument(doc.value(), path.toStdString()).ok();
+}
+
+bool PresetLibrary::remove(const QString& path) const
+{
+    return QFileInfo(path).absolutePath() == QFileInfo(m_folder).absoluteFilePath() && QFile::remove(path);
+}
+
+std::pair<QString, QString> PresetLibrary::importFile(const QString& file) const
+{
+    pfx::ParseReport report;
+    auto doc = pfx::loadDocument(file.toStdString(), &report);
+    if (!doc) {
+        return {{}, QString::fromStdString(doc.error().message)};
+    }
+    if (doc.value().kind != pfx::DocumentKind::Preset && doc.value().kind != pfx::DocumentKind::Recipe) {
+        return {{}, QCoreApplication::translate(kContext, "This file is not a preset.")};
+    }
+    const QString name = doc.value().name.empty() ? QFileInfo(file).completeBaseName()
+                                                  : QString::fromStdString(doc.value().name);
+    const QString path = save(name, QCoreApplication::translate(kContext, "Imported"), doc.value().settings);
+    if (path.isEmpty()) {
+        return {{}, QCoreApplication::translate(kContext, "The preset folder is not writable.")};
+    }
+    return {path, {}};
+}
+
+bool PresetLibrary::exportTo(const PresetEntry& entry, const QString& target)
+{
+    pfx::Document doc;
+    doc.kind = pfx::DocumentKind::Preset;
+    doc.name = entry.name.toStdString();
+    doc.settings = entry.settings;
+    return pfx::saveDocument(doc, target.toStdString()).ok();
+}
+
+std::vector<PresetEntry> PresetLibrary::builtIn()
+{
+    const QString group = QCoreApplication::translate(kContext, "Built in");
+    const auto make = [&group](const char* name,
+                               std::initializer_list<std::pair<const char*, double>> values) {
+        PresetEntry e;
+        e.name = QCoreApplication::translate(kContext, name);
+        e.group = group;
+        for (const auto& [key, value] : values) {
+            e.settings.set(key, value);
+        }
+        return e;
+    };
+    // Starting points made from the operations there are today (FEATURES P7); the looks of M4
+    // will give them more character.
+    PresetEntry autoEnhance = make(QT_TRANSLATE_NOOP("PresetUnits", "Auto enhance"), {});
+    autoEnhance.autoEnhance = true;
+    return {
+        autoEnhance,
+        make(QT_TRANSLATE_NOOP("PresetUnits", "Bright and airy"), {{"light.exposure", 0.35},
+                                                                   {"light.shadows", 35},
+                                                                   {"light.highlights", -20},
+                                                                   {"light.contrast", -10},
+                                                                   {"color.vibrance", 10},
+                                                                   {"effects.fade", 15}}),
+        make(QT_TRANSLATE_NOOP("PresetUnits", "Punchy"),
+             {{"light.contrast", 30}, {"color.vibrance", 30}, {"detail.clarity", 25}, {"light.blacks", -10}}),
+        make(QT_TRANSLATE_NOOP("PresetUnits", "Soft matte"), {{"light.contrast", -15},
+                                                              {"effects.fade", 35},
+                                                              {"color.saturation", -15},
+                                                              {"effects.grain.amount", 15}})};
+}
+
+} // namespace pixelfx::core

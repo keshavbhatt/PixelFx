@@ -22,6 +22,7 @@ pixelfx_add_test(tst_sidecar_store   tst_sidecar_store.cpp   pixelfx_core)
 pixelfx_add_test(tst_log_sink        tst_log_sink.cpp        pixelfx_core)
 pixelfx_add_test(tst_crop_geometry   tst_crop_geometry.cpp   pixelfx_core)
 pixelfx_add_test(tst_settings_clipboard tst_settings_clipboard.cpp pixelfx_core)
+pixelfx_add_test(tst_presets         tst_presets.cpp         pixelfx_core)
 pixelfx_add_test(tst_changelog       tst_changelog.cpp       pixelfx_core)
 target_compile_definitions(tst_changelog PRIVATE
     PIXELFX_CHANGELOG_PATH="${PROJECT_SOURCE_DIR}/CHANGELOG.md"
