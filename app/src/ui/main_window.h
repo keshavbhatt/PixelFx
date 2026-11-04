@@ -24,6 +24,7 @@ namespace pixelfx::ui {
 
 class AdjustPanel;
 class Canvas;
+class BatchPage;
 class CropPanel;
 class Filmstrip;
 class PresetsPanel;
@@ -67,6 +68,11 @@ public:
     /// Leaves Crop mode, keeping the changes as one history step (`apply`) or dropping them.
     void leaveCrop(bool apply);
     [[nodiscard]] bool isCropping() const;
+    /// Batch mode (B): the Batch page in place of the photo.
+    void enterBatch();
+    void leaveBatch();
+    [[nodiscard]] bool isBatching() const;
+    [[nodiscard]] BatchPage* batchPage() const { return m_batch; }
     /// Shows the photo without its settings while `on` (the eye button, or Space held).
     void showOriginal(bool on);
     /// Before and after on or off (the \\ key and the header button).
@@ -155,6 +161,8 @@ private:
     QWidget* m_rail = nullptr;
     QToolButton* m_editMode = nullptr;
     QToolButton* m_cropMode = nullptr;
+    QToolButton* m_batchMode = nullptr;
+    BatchPage* m_batch = nullptr;
     QWidget* m_canvasPage = nullptr;
     QWidget* m_cropStrip = nullptr;
     QLabel* m_cropSize = nullptr;

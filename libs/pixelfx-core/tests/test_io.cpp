@@ -372,3 +372,17 @@ TEST_CASE("a JPEG saved without location has no GPS block; with it, keeps it")
     CHECK(hasGps(kept.value().metadata.exif));
     CHECK_FALSE(hasGps(dropped.value().metadata.exif));
 }
+
+TEST_CASE("a file that is not a photo fails in plain words, without its path")
+{
+    const fixtures::TempDir dir;
+    const auto path = dir.path() / "notes.jpg";
+    {
+        std::ofstream out(path, std::ios::binary);
+        out << "these are words, not pixels";
+    }
+    const auto loaded = pfx::load(path);
+    REQUIRE_FALSE(loaded.ok());
+    CHECK(loaded.error().message == "This file is not a photo PixelFx can read.");
+    CHECK(loaded.error().message.find(path.string()) == std::string::npos);
+}

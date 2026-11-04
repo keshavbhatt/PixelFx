@@ -1,5 +1,7 @@
 # services: work behind the UI (opening and rendering photos through libpixelfx).
 qt_add_library(pixelfx_services STATIC
+    batch_runner.cpp
+    batch_runner.h
     document.cpp
     document.h
     exporter.cpp

@@ -282,6 +282,25 @@ vips::VImage normalizeBands(vips::VImage in, double& scale)
 
 // libvips caches loaded files by name; `revalidate` makes it check the file again, so a photo
 // overwritten on disk (an export over an existing file) is never served from the stale cache.
+// libvips explains a failed read for developers ("VipsForeignLoad: "/path" is not a known
+// file format"); people get the reason in plain words, without the path they already see.
+std::string readFailure(const std::string& detail)
+{
+    const auto has = [&detail](const char* text) { return detail.find(text) != std::string::npos; };
+    if (has("not a known file format") || has("unsupported image format") || has("not a valid")) {
+        return "This file is not a photo PixelFx can read.";
+    }
+    if (has("Premature end") || has("truncated") || has("end of file") || has("short read") ||
+        has("out of order read") || has("Corrupt") || has("corrupt")) {
+        return "The file is damaged or incomplete.";
+    }
+    if (has("Permission denied")) {
+        return "PixelFx is not allowed to read this file.";
+    }
+    const std::string firstLine = detail.substr(0, detail.find('\n'));
+    return "The photo could not be read (" + firstLine + ").";
+}
+
 vips::VImage openFile(const std::filesystem::path& path)
 {
     return vips::VImage::new_from_file(path.string().c_str(),
@@ -305,7 +324,7 @@ Result<ImageInfo> probe(const std::filesystem::path& path)
         info.hasProfile = in.get_typeof(VIPS_META_ICC_NAME) != 0;
         return info;
     } catch (const vips::VError& e) {
-        return Error{ErrorCode::DecodeFailed, std::string("Could not read the image: ") + e.what()};
+        return Error{ErrorCode::DecodeFailed, readFailure(e.what())};
     } catch (const std::bad_alloc&) {
         return Error{ErrorCode::DecodeFailed, "There is not enough memory to open this image."};
     }
@@ -383,7 +402,7 @@ Result<LoadedImage> load(const std::filesystem::path& path, const LoadOptions& o
             throw vips::VError();
         }
     } catch (const vips::VError& e) {
-        return Error{ErrorCode::DecodeFailed, std::string("Could not read the image: ") + e.what()};
+        return Error{ErrorCode::DecodeFailed, readFailure(e.what())};
     }
 
     if (const Status converted = toWorkingSpace(result.image, icc); !converted) {

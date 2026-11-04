@@ -4,6 +4,7 @@
 #include "core/settings/settings.h"
 #include "core/settings_clipboard.h"
 #include "ui/adjust_panel.h"
+#include "ui/batch_page.h"
 #include "ui/canvas.h"
 #include "ui/crop_panel.h"
 #include "ui/export_sheet.h"
@@ -160,6 +161,9 @@ void MainWindow::connectDocument()
     connect(&m_document, &services::Document::openStarted, this, [this](const QString& path) {
         if (isCropping()) {
             leaveCrop(true);
+        }
+        if (isBatching()) {
+            leaveBatch();
         }
         m_stack->setCurrentWidget(m_canvasPage);
         m_canvas->setStatus(tr("Opening %1").arg(QFileInfo(path).fileName()));
@@ -420,6 +424,11 @@ void MainWindow::setupUi()
     m_stack = new QStackedWidget(this);
     m_stack->addWidget(m_welcome);
     m_stack->addWidget(m_canvasPage);
+    BatchPage::setPhotoTest(&MainWindow::isSupported);
+    m_batch = new BatchPage(m_settings.exportOptions(), this);
+    connect(m_batch, &BatchPage::outputChanged, this,
+            [this](const core::ExportOptions& output) { m_settings.setExportOptions(output); });
+    m_stack->addWidget(m_batch);
 
     m_adjust = new AdjustPanel(this);
     m_cropPanel = new CropPanel(this);
@@ -550,7 +559,14 @@ void MainWindow::setupCropActions()
 {
     auto* edit = new QAction(tr("Edit"), this); // mode keys of the shortcuts sheet: E and C
     edit->setShortcut(QKeySequence(Qt::Key_E));
-    connect(edit, &QAction::triggered, this, [this] { leaveCrop(true); });
+    connect(edit, &QAction::triggered, this, [this] {
+        leaveCrop(true);
+        leaveBatch();
+    });
+    auto* batch = new QAction(tr("Batch"), this);
+    batch->setShortcut(QKeySequence(Qt::Key_B));
+    connect(batch, &QAction::triggered, this, &MainWindow::enterBatch);
+    addAction(batch);
     addAction(edit);
     auto* crop = new QAction(tr("Crop"), this);
     crop->setShortcut(QKeySequence(Qt::Key_C));
@@ -577,7 +593,7 @@ void MainWindow::buildRail()
     m_rail->setObjectName(u"rail"_s);
     m_rail->setAttribute(Qt::WA_StyledBackground);
     m_rail->setFixedWidth(56);
-    m_rail->hide();
+    // Shown from the start: Batch works without a photo open (mock welcome.html has the rail).
     const auto railButton = [this](const QString& glyph, const QString& text, const QString& tip) {
         auto* b = new QToolButton(m_rail);
         b->setObjectName(u"railButton"_s);
@@ -602,17 +618,21 @@ void MainWindow::buildRail()
     m_editMode->setChecked(true);
     m_cropMode = railButton(u"crop"_s, tr("Crop"), tr("Crop and rotate (C)"));
     m_cropMode->setEnabled(false);
+    m_batchMode = railButton(u"stack"_s, tr("Batch"), tr("Batch: one recipe for many photos (B)"));
     connect(m_editMode, &QToolButton::clicked, this, [this] {
         if (isCropping()) {
             leaveCrop(true);
         }
+        leaveBatch();
     });
+    connect(m_batchMode, &QToolButton::clicked, this, &MainWindow::enterBatch);
     connect(m_cropMode, &QToolButton::clicked, this, &MainWindow::enterCrop);
     auto* column = new QVBoxLayout(m_rail);
     column->setContentsMargins(6, 8, 6, 8);
     column->setSpacing(4);
     column->addWidget(m_editMode);
     column->addWidget(m_cropMode);
+    column->addWidget(m_batchMode);
     column->addStretch();
 }
 
@@ -1001,8 +1021,41 @@ bool MainWindow::isCropping() const
     return m_canvas->isCropping();
 }
 
+void MainWindow::enterBatch()
+{
+    if (isCropping()) {
+        leaveCrop(true);
+    }
+    m_batch->setPresets(m_library.entries());
+    m_batch->setSidecarFolder(m_settings.rememberEdits() ? core::SidecarStore::defaultFolder() : QString());
+    if (m_batch->files().isEmpty() && m_strip->files().size() > 1) {
+        m_batch->addPaths(m_strip->files()); // the photos open in the editor, as a start
+    }
+    m_stack->setCurrentWidget(m_batch);
+    m_presets->hide();
+    m_panels->hide();
+    m_batchMode->setChecked(true);
+}
+
+void MainWindow::leaveBatch()
+{
+    if (m_stack->currentWidget() != m_batch) {
+        return;
+    }
+    m_stack->setCurrentWidget(m_document.isOpen() ? m_canvasPage : static_cast<QWidget*>(m_welcome));
+    m_presets->setVisible(m_document.isOpen());
+    m_panels->setVisible(m_document.isOpen());
+    m_editMode->setChecked(true);
+}
+
+bool MainWindow::isBatching() const
+{
+    return m_stack->currentWidget() == m_batch;
+}
+
 void MainWindow::enterCrop()
 {
+    leaveBatch();
     if (!m_document.isOpen() || isCropping()) {
         m_cropMode->setChecked(isCropping());
         m_editMode->setChecked(!isCropping());

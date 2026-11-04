@@ -1,6 +1,7 @@
 #include "core/settings/settings.h"
 #include "core/sidecar_store.h"
 #include "ui/adjust_panel.h"
+#include "ui/batch_page.h"
 #include "ui/canvas.h"
 #include "ui/crop_panel.h"
 #include "ui/filmstrip.h"
@@ -237,6 +238,23 @@ private Q_SLOTS:
         window.exportPhoto();
         QTRY_COMPARE_WITH_TIMEOUT(QDir(dir.filePath(u"out"_s)).entryList({u"*.png"_s}).size(), 2, 20000);
         QVERIFY(QFile::remove(store.pathFor(pixelfx::core::fileFingerprint(files.at(0)))));
+    }
+
+    void batchModeComesAndGoes()
+    {
+        QStandardPaths::setTestModeEnabled(true);
+        pixelfx::ui::applyStyle(*qApp);
+        QTemporaryDir dir;
+        pixelfx::core::Settings settings(dir.filePath(u"s.ini"_s));
+        pixelfx::ui::MainWindow window(settings);
+        window.show();
+        QVERIFY(QTest::qWaitForWindowExposed(&window));
+        QTest::keyClick(&window, Qt::Key_B);
+        QVERIFY(window.isBatching());
+        window.batchPage()->addPaths({dir.path()}); // an empty folder adds nothing
+        QVERIFY(window.batchPage()->files().isEmpty());
+        QTest::keyClick(&window, Qt::Key_E);
+        QVERIFY(!window.isBatching());
     }
 
     void supportedExtensions()

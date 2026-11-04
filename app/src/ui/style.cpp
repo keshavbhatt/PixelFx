@@ -59,6 +59,10 @@ const QString kSheet = uR"(
         QToolButton#stripAdd { border: 1.5px dashed {{faint}}; border-radius: 6px; background: transparent; }
         QToolButton#stripAdd:hover { background: {{hover}}; }
         #accentText { color: {{accent}}; font-size: 12px; }
+        #batchPage { background: {{bg}}; }
+        #batchRow { background: {{panel}}; border-radius: 7px; }
+        #batchState { color: {{muted}}; font-size: 12px; }
+        #batchReason { color: {{danger}}; font-size: 12px; }
         #zoomBar { background: {{elevated}}; border: 1px solid {{border}}; border-radius: 10px; }
         #zoomDivider { background: {{border}}; }
         #zoomLevel { font-size: 12px; }
@@ -119,6 +123,7 @@ QString sheet(const Tokens& t)
     put(u"track"_s, t.track);
     put(u"faint"_s, t.faint);
     put(u"link"_s, t.link);
+    put(u"danger"_s, t.danger);
     return s;
 }
 

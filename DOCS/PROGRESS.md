@@ -146,6 +146,14 @@
 - Open: the curve editor's mouse test crashes (SIGSEGV) on the macOS CI runner only, after the
   synthetic double click; it is clean under ASan and UBSan on Linux (debug build, `build/asan`)
   and passes on Windows. Skipped on macOS for now; worth a look on a Mac.
+- Batch (M5 started, mocks `batch.html`, `batch-running.html`, `batch-done.html`): the Batch
+  mode on the rail (B) with the photo list (files, folders with subfolders, drops), the recipe
+  (two presets stacked, Auto enhance first, keep edits already made), resize, format and quality,
+  folder or a PixelFx folder beside each original, Process N photos; `services::BatchRunner` runs
+  two photos at a time on its own pool with Pause, Stop, Retry failed, and each failed row says
+  why in plain words. libpixelfx now explains a failed read in plain words instead of libvips's
+  developer message. Not yet: the before and after preview, the watermark, saving the page as a
+  batch recipe, the command line batch, the notification at the end.
 - 2026-11-05: dev libvips reads HEIC, AVIF, JPEG XL and camera RAW (ADR-008 update):
   `build-deps.sh` builds libheif 1.23.7 (libde265 1.1.3, dav1d 1.5.4), libjxl 0.12.0 (highway
   1.4.0) and LibRaw 0.22.3 against the SDK overlay, about 2.5 minutes from scratch on 14 cores;

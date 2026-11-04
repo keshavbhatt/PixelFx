@@ -13,20 +13,11 @@
 
 namespace pixelfx::services {
 
-namespace {
-
-struct Outcome
+ExportOutcome exportFile(const QString& source,
+                         const std::function<pfx::Settings(const pfx::Image&)>& settingsFor,
+                         const core::ExportOptions& options)
 {
-    QString source;
-    QString target;
-    QString error;
-    bool skipped = false;
-};
-
-Outcome exportOnWorker(const QString& source, const pfx::Settings& settings,
-                       const core::ExportOptions& options)
-{
-    Outcome out{source, {}, {}, false};
+    ExportOutcome out{source, {}, {}, false};
     const auto fail = [&out](const std::string& message) {
         out.error = QString::fromStdString(message);
         return out;
@@ -35,12 +26,13 @@ Outcome exportOnWorker(const QString& source, const pfx::Settings& settings,
     if (!loaded) {
         return fail(loaded.error().message);
     }
+    const pfx::Settings settings = settingsFor(loaded.value().image);
     auto rendered = pfx::render(std::move(loaded.value().image), settings);
     if (!rendered) {
         return fail(rendered.error().message);
     }
     pfx::Image image = std::move(rendered).value();
-    if (options.longEdge > 0) {
+    if (options.longEdge > 0 && image.longEdge() > options.longEdge) { // never enlarges
         auto resized = pfx::fitLongEdge(image, options.longEdge);
         if (!resized) {
             return fail(resized.error().message);
@@ -70,8 +62,6 @@ Outcome exportOnWorker(const QString& source, const pfx::Settings& settings,
     return out;
 }
 
-} // namespace
-
 Exporter::Exporter(QObject* parent)
     : QObject(parent)
 {}
@@ -81,9 +71,9 @@ Exporter::~Exporter() = default;
 void Exporter::start(const QString& source, const pfx::Settings& settings, const core::ExportOptions& options)
 {
     m_busy = true;
-    auto* watcher = new QFutureWatcher<Outcome>(this);
-    connect(watcher, &QFutureWatcher<Outcome>::finished, this, [this, watcher] {
-        const Outcome o = watcher->result();
+    auto* watcher = new QFutureWatcher<ExportOutcome>(this);
+    connect(watcher, &QFutureWatcher<ExportOutcome>::finished, this, [this, watcher] {
+        const ExportOutcome o = watcher->result();
         watcher->deleteLater();
         m_busy = false;
         if (o.skipped) {
@@ -96,7 +86,9 @@ void Exporter::start(const QString& source, const pfx::Settings& settings, const
             Q_EMIT finished(o.target);
         }
     });
-    watcher->setFuture(QtConcurrent::run(exportOnWorker, source, settings, options));
+    watcher->setFuture(QtConcurrent::run([source, settings, options] {
+        return exportFile(source, [&settings](const pfx::Image&) { return settings; }, options);
+    }));
 }
 
 } // namespace pixelfx::services

@@ -2,6 +2,8 @@
 qt_add_library(pixelfx_ui STATIC
     adjust_panel.cpp
     adjust_panel.h
+    batch_page.cpp
+    batch_page.h
     canvas.cpp
     canvas.h
     crop_overlay.h

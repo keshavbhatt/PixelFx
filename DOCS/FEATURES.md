@@ -127,8 +127,8 @@ preview and export use resolution-independent parameters so they match (v1 defec
 |---|---|---|---|---|
 | M1 | Filmstrip of every open photo; Ctrl and Shift selection; Ctrl+A | none | KEEP | done: filmstrip of every open photo with pictures of their edits, Left and Right, Ctrl and Shift click, Ctrl+A (`Filmstrip`) |
 | M2 | With a selection, applying a look or preset, pasting settings, and Export act on all selected | none | KEEP | done: presets, pasted settings (asking which parts) and Export ("Export N photos", each with its own settings) act on the selection |
-| M3 | Batch page: add files and folders, recipe (looks and presets stacked, or settings from a photo), optional Auto first, resize, format, folder, name tokens | none | KEEP | todo |
-| M4 | Batch runs on all cores in the background with a memory cap; pause, stop, per-file status and reason, retry failed, notification | none | KEEP | todo |
+| M3 | Batch page: add files and folders, recipe (looks and presets stacked, or settings from a photo), optional Auto first, resize, format, folder, name tokens | none | KEEP | wip: Batch page from `batch.html` (photos and folders, two stacked presets, Auto first, keep edits, resize, format, folder or beside the originals, Process); before and after preview, watermark and saved batch recipes todo |
+| M4 | Batch runs on all cores in the background with a memory cap; pause, stop, per-file status and reason, retry failed, notification | none | KEEP | wip: background runner, two photos at a time (memory), Pause, Stop, per-photo status and reason, Retry failed, Show in folder; notification todo |
 | M5 | Save and reuse batch recipes (`.pfxbatch`) | none | KEEP | todo |
 | M6 | Command line batch: `pixelfx --batch recipe.pfxbatch files...` and the library's own `pfx` CLI | none | KEEP | todo |
 | M7 | Watch folder (process new files automatically) | none | LATER | |

@@ -1,0 +1,167 @@
+#include "services/batch_runner.h"
+
+#include "core/presets.h"
+#include "core/sidecar_store.h"
+#include "services/exporter.h"
+
+#include <QFileInfo>
+#include <QFutureWatcher>
+#include <QThreadPool>
+#include <QtConcurrent/QtConcurrentRun>
+
+#include <algorithm>
+#include <pfx/auto.h>
+
+using namespace Qt::StringLiterals;
+
+namespace pixelfx::services {
+
+BatchRunner::BatchRunner(QObject* parent)
+    : QObject(parent)
+    , m_pool(new QThreadPool(this))
+{
+    m_pool->setMaxThreadCount(kAtOnce);
+}
+
+BatchRunner::~BatchRunner()
+{
+    m_queue.clear();
+    m_pool->waitForDone();
+}
+
+pfx::Settings BatchRunner::settingsFor(const BatchRecipe& recipe, const pfx::Settings& own,
+                                       const pfx::Image& photo)
+{
+    pfx::Settings s = recipe.keepEdits ? own : pfx::Settings{};
+    if (recipe.autoFirst) {
+        s = s.overlaidWith(pfx::autoAdjust(photo));
+    }
+    for (const pfx::Settings& preset : recipe.presets) {
+        s = core::applyPreset(s, preset);
+    }
+    return s;
+}
+
+void BatchRunner::start(const QStringList& files, const BatchRecipe& recipe)
+{
+    ++m_generation;
+    m_files = files;
+    m_recipe = recipe;
+    m_states.assign(static_cast<std::size_t>(files.size()), State::Waiting);
+    m_reasons.assign(static_cast<std::size_t>(files.size()), QString());
+    m_targets.assign(static_cast<std::size_t>(files.size()), QString());
+    m_queue.clear();
+    for (int i = 0; i < files.size(); ++i) {
+        m_queue.push_back(i);
+    }
+    m_paused = false;
+    m_running = 0;
+    m_clock.start();
+    for (int i = 0; i < kAtOnce; ++i) {
+        startNext();
+    }
+}
+
+void BatchRunner::retryFailed()
+{
+    for (std::size_t i = 0; i < m_states.size(); ++i) {
+        if (m_states[i] == State::Failed) {
+            m_states[i] = State::Waiting;
+            m_reasons[i].clear();
+            m_queue.push_back(static_cast<int>(i));
+            Q_EMIT photoChanged(static_cast<int>(i));
+        }
+    }
+    m_paused = false;
+    m_clock.start();
+    for (int i = 0; i < kAtOnce; ++i) {
+        startNext();
+    }
+}
+
+void BatchRunner::setPaused(bool paused)
+{
+    m_paused = paused;
+    for (int i = 0; !paused && i < kAtOnce; ++i) {
+        startNext();
+    }
+}
+
+void BatchRunner::stop()
+{
+    m_queue.clear();
+    m_paused = false;
+    if (m_running == 0) {
+        Q_EMIT finished(saved(), failed(), m_clock.elapsed());
+    }
+}
+
+int BatchRunner::saved() const
+{
+    return static_cast<int>(std::ranges::count(m_states, State::Saved));
+}
+
+int BatchRunner::failed() const
+{
+    return static_cast<int>(std::ranges::count(m_states, State::Failed));
+}
+
+void BatchRunner::startNext()
+{
+    if (m_paused || m_queue.empty() || m_running >= kAtOnce) {
+        return;
+    }
+    const int index = m_queue.front();
+    m_queue.erase(m_queue.begin());
+    m_states[static_cast<std::size_t>(index)] = State::Working;
+    ++m_running;
+    Q_EMIT photoChanged(index);
+
+    core::ExportOptions options = m_recipe.output;
+    const QString source = m_files.at(index);
+    if (m_recipe.besideOriginals) {
+        options.folder = QFileInfo(source).absolutePath() + u"/PixelFx"_s;
+    }
+    const BatchRecipe recipe = m_recipe;
+    const quint64 generation = m_generation;
+    auto* watcher = new QFutureWatcher<ExportOutcome>(this);
+    connect(watcher, &QFutureWatcher<ExportOutcome>::finished, this, [this, watcher, index, generation] {
+        const ExportOutcome o = watcher->result();
+        watcher->deleteLater();
+        if (generation != m_generation) {
+            return; // a newer batch replaced this one
+        }
+        --m_running;
+        const auto i = static_cast<std::size_t>(index);
+        if (o.skipped) {
+            m_states[i] = State::Skipped;
+            m_reasons[i] = tr("A file with that name exists, and Skip is chosen.");
+        } else if (!o.error.isEmpty()) {
+            m_states[i] = State::Failed;
+            m_reasons[i] = o.error;
+        } else {
+            m_states[i] = State::Saved;
+            m_targets[i] = o.target;
+        }
+        Q_EMIT photoChanged(index);
+        const auto done = static_cast<int>(std::ranges::count_if(
+            m_states, [](State s) { return s != State::Waiting && s != State::Working; }));
+        Q_EMIT progress(done, total());
+        startNext();
+        if (m_running == 0 && m_queue.empty()) {
+            Q_EMIT finished(saved(), failed(), m_clock.elapsed());
+        }
+    });
+    watcher->setFuture(QtConcurrent::run(m_pool, [source, recipe, options] {
+        pfx::Settings own;
+        if (recipe.keepEdits && !recipe.sidecarFolder.isEmpty()) {
+            own = core::SidecarStore(recipe.sidecarFolder)
+                      .read(core::fileFingerprint(source))
+                      .value_or(pfx::Settings{});
+        }
+        return exportFile(
+            source, [&](const pfx::Image& photo) { return settingsFor(recipe, own, photo); }, options);
+    }));
+}
+
+} // namespace pixelfx::services
