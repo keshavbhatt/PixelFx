@@ -26,6 +26,8 @@ public:
     [[nodiscard]] bool canRedo() const { return m_index + 1 < m_steps.size(); }
     const pfx::Settings& undo();
     const pfx::Settings& redo();
+    /// Jumps to step `index` (0 is the oldest), like several undos or redos at once.
+    const pfx::Settings& goTo(int index);
 
     [[nodiscard]] const pfx::Settings& current() const;
     /// Label of the step undo would revert, and of the step redo would apply.

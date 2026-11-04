@@ -38,6 +38,14 @@ const pfx::Settings& History::redo()
     return current();
 }
 
+const pfx::Settings& History::goTo(int index)
+{
+    if (index >= 0 && static_cast<std::size_t>(index) < m_steps.size()) {
+        m_index = static_cast<std::size_t>(index);
+    }
+    return current();
+}
+
 const pfx::Settings& History::current() const
 {
     return m_steps[m_index].settings;

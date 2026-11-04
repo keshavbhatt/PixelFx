@@ -169,11 +169,27 @@ void MainWindow::showToast(const QString& text)
 void MainWindow::updateHistoryButtons()
 {
     const core::History& h = m_document.history();
+    m_history->setEnabled(m_document.isOpen());
     m_undo->setEnabled(h.canUndo());
     m_redo->setEnabled(h.canRedo());
     m_undo->setToolTip(h.canUndo() ? tr("Undo %1 (Ctrl+Z)").arg(h.undoLabel()) : tr("Undo (Ctrl+Z)"));
     m_redo->setToolTip(h.canRedo() ? tr("Redo %1 (Ctrl+Shift+Z)").arg(h.redoLabel())
                                    : tr("Redo (Ctrl+Shift+Z)"));
+}
+
+void MainWindow::showHistory()
+{
+    const core::History& h = m_document.history();
+    QMenu menu(this);
+    menu.addSection(tr("History"));
+    const QStringList labels = h.labels();
+    for (int i = static_cast<int>(labels.size()) - 1; i >= 0; --i) { // newest first, as in history.html
+        QAction* step = menu.addAction(labels.at(i));
+        step->setCheckable(true);
+        step->setChecked(i == h.currentIndex());
+        connect(step, &QAction::triggered, this, [this, i] { m_document.goToStep(i); });
+    }
+    menu.exec(m_history->mapToGlobal(QPoint(0, m_history->height())));
 }
 
 void MainWindow::showOriginal(bool on)
@@ -206,6 +222,9 @@ void MainWindow::buildHeader()
     doc->addWidget(m_docMeta);
     m_undo = headerButton(m_header, u"undo"_s, tr("Undo (Ctrl+Z)"));
     m_redo = headerButton(m_header, u"redo"_s, tr("Redo (Ctrl+Shift+Z)"));
+    m_history = headerButton(m_header, u"history"_s, tr("History (H)"));
+    m_history->setEnabled(false);
+    connect(m_history, &QToolButton::clicked, this, &MainWindow::showHistory);
     m_original = headerButton(m_header, u"original"_s, tr("Show the original while held (Space)"));
     connect(m_undo, &QToolButton::clicked, &m_document, &services::Document::undo);
     connect(m_redo, &QToolButton::clicked, &m_document, &services::Document::redo);
@@ -239,6 +258,7 @@ void MainWindow::buildHeader()
     header->addStretch();
     header->addWidget(m_undo);
     header->addWidget(m_redo);
+    header->addWidget(m_history);
     header->addSpacing(8);
     header->addWidget(m_original);
     header->addSpacing(8);
@@ -309,7 +329,14 @@ void MainWindow::setupActions()
     auto* exportAction = new QAction(tr("Export"), this);
     exportAction->setShortcut(QKeySequence(u"Ctrl+Shift+E"_s));
     connect(exportAction, &QAction::triggered, this, &MainWindow::exportPhoto);
-    addActions({openAction, quitAction, fullScreen, undo, redo, resetAll, exportAction});
+    auto* history = new QAction(tr("History"), this);
+    history->setShortcut(QKeySequence(Qt::Key_H));
+    connect(history, &QAction::triggered, this, [this] {
+        if (m_document.isOpen()) {
+            showHistory();
+        }
+    });
+    addActions({openAction, quitAction, fullScreen, undo, redo, resetAll, exportAction, history});
 }
 
 bool MainWindow::isSupported(const QString& path)

@@ -67,6 +67,8 @@ public:
     void apply(const pfx::Settings& settings, const QString& label);
     void undo();
     void redo();
+    /// Jumps to a history step (the History popup).
+    void goToStep(int index);
     [[nodiscard]] const core::History& history() const { return m_history; }
 
 Q_SIGNALS:

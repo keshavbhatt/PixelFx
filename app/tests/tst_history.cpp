@@ -38,6 +38,19 @@ private Q_SLOTS:
         QCOMPARE(h.currentIndex(), 1);
     }
 
+    void goToJumpsAndKeepsTheSteps()
+    {
+        History h;
+        h.reset({}, u"Opened"_s);
+        h.push(u"a"_s, exposure(1));
+        h.push(u"b"_s, exposure(2));
+        QCOMPARE(h.goTo(0).number("light.exposure", 0), 0.0);
+        QVERIFY(h.canRedo());
+        QCOMPARE(h.goTo(2).number("light.exposure", 0), 2.0);
+        QCOMPARE(h.goTo(99).number("light.exposure", 0), 2.0); // out of range: unchanged
+        QCOMPARE(h.labels().size(), 3);
+    }
+
     void aNewStepDropsTheRedoSteps()
     {
         History h;

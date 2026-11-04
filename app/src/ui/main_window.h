@@ -62,6 +62,7 @@ private:
     void connectDocument();
     void updateHistoryButtons();
     void showToast(const QString& text);
+    void showHistory();
     void showOpened(const services::DocumentInfo& info);
     void showFailed(const QString& path, const QString& message);
     [[nodiscard]] int previewLongEdge() const;
@@ -78,6 +79,7 @@ private:
     QToolButton* m_undo = nullptr;
     QToolButton* m_redo = nullptr;
     QToolButton* m_original = nullptr;
+    QToolButton* m_history = nullptr;
     bool m_showingOriginal = false;
     QLabel* m_docName = nullptr;
     QLabel* m_docMeta = nullptr;

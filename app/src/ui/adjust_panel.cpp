@@ -18,8 +18,8 @@
 #include <QVBoxLayout>
 
 #include <cmath>
-#include <string_view>
 #include <pfx/registry.h>
+#include <string_view>
 
 using namespace Qt::StringLiterals;
 

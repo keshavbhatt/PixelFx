@@ -232,6 +232,15 @@ void Document::redo()
     }
 }
 
+void Document::goToStep(int index)
+{
+    if (index != m_history.currentIndex()) {
+        replaceSettings(m_history.goTo(index));
+        scheduleSave();
+        Q_EMIT historyChanged();
+    }
+}
+
 void Document::replaceSettings(const pfx::Settings& settings, bool render)
 {
     m_settings = settings;
