@@ -14,6 +14,24 @@ class TestPresets : public QObject
     Q_OBJECT
 
 private Q_SLOTS:
+    void aPresetCarriesTheLook()
+    {
+        pfx::Settings photo;
+        photo.set("light.exposure", 0.5);
+        photo.set("look.id", std::string("builtin:noir"));
+        photo.set("look.strength", 64.0);
+        QVERIFY(pixelfx::core::unitsIn(photo).contains(u"look"_s));
+        const pfx::Settings preset = pixelfx::core::presetFrom(photo, {u"look"_s});
+        QCOMPARE(preset.text("look.id", ""), std::string("builtin:noir"));
+        QCOMPARE(preset.number("look.strength", 0), 64.0);
+        QVERIFY(!preset.contains("light.exposure"));
+        QVERIFY(pixelfx::core::presetSummary(preset).contains(u"Look"_s));
+        pfx::Settings other;
+        other.set("look.id", std::string("builtin:warm"));
+        const pfx::Settings applied = pixelfx::core::applyPreset(other, preset);
+        QCOMPARE(applied.text("look.id", ""), std::string("builtin:noir"));
+    }
+
     void unitsSplitWhiteBalanceAndPerspective()
     {
         pfx::Settings s;

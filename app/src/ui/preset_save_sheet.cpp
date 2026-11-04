@@ -1,5 +1,6 @@
 #include "ui/preset_save_sheet.h"
 
+#include "core/looks.h"
 #include "core/presets.h"
 
 #include <QCheckBox>
@@ -13,6 +14,8 @@
 #include <QLineEdit>
 #include <QPushButton>
 #include <QVBoxLayout>
+
+#include <cmath>
 
 using namespace Qt::StringLiterals;
 
@@ -136,6 +139,14 @@ void PresetSaveSheet::buildInclude(QFormLayout* form, const pfx::Settings& setti
         row->addStretch();
         if (unit.id == u"wb"_s) {
             auto* note = new QLabel(tr("relative to the photo"), this);
+            note->setObjectName(u"faint"_s);
+            row->addWidget(note);
+        } else if (unit.id == u"look"_s && settings.contains("look.id")) {
+            // Mock preset-save.html: "Look  Golden hour 72".
+            const QString name = core::lookName(QString::fromStdString(settings.text("look.id", "")));
+            auto* note = new QLabel(u"%1 %2"_s.arg(name.isEmpty() ? tr("A look") : name)
+                                        .arg(std::lround(settings.number("look.strength", 100.0))),
+                                    this);
             note->setObjectName(u"faint"_s);
             row->addWidget(note);
         } else if (changed > 0) {

@@ -61,6 +61,9 @@ void lookFolderChanged();
 [[nodiscard]] pfx::Result<pfx::Image> renderPhoto(pfx::Image&& input, const pfx::Settings& settings,
                                                   pfx::RenderOptions options = {});
 
+/// The look's name for people ("Golden hour"), built-in or the user's; empty when unknown.
+[[nodiscard]] QString lookName(const QString& id);
+
 /// The settings with `id` as their look at `strength` (0 to 100), or with no look for an empty id.
 [[nodiscard]] pfx::Settings withLook(const pfx::Settings& settings, const QString& id, double strength);
 

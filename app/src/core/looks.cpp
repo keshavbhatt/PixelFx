@@ -336,6 +336,24 @@ pfx::Result<pfx::Image> renderPhoto(const pfx::Image& input, const pfx::Settings
     return renderPhoto(pfx::Image(input), settings, options);
 }
 
+QString lookName(const QString& id)
+{
+    if (id.isEmpty()) {
+        return {};
+    }
+    const QString folder = [] {
+        Registry& r = lookRegistry();
+        const QMutexLocker lock(&r.mutex);
+        return r.folder.isEmpty() ? LookLibrary::defaultFolder() : r.folder;
+    }();
+    for (const LookEntry& e : LookLibrary(folder).entries()) {
+        if (e.id == id) {
+            return e.name;
+        }
+    }
+    return {};
+}
+
 pfx::Settings withLook(const pfx::Settings& settings, const QString& id, double strength)
 {
     pfx::Settings out = settings;

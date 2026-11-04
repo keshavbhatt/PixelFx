@@ -38,6 +38,7 @@ const std::vector<UnitRule>& rules()
         {"curves", QT_TRANSLATE_NOOP("PresetUnits", "Curves"), {"curves."}, {}},
         {"detail", QT_TRANSLATE_NOOP("PresetUnits", "Detail"), {"detail."}, {}},
         {"effects", QT_TRANSLATE_NOOP("PresetUnits", "Effects"), {"effects."}, {}},
+        {"look", QT_TRANSLATE_NOOP("PresetUnits", "Look"), {"look."}, {}},
         {"crop",
          QT_TRANSLATE_NOOP("PresetUnits", "Crop and rotate"),
          {"geometry."},
@@ -158,6 +159,14 @@ pfx::Settings presetFrom(const pfx::Settings& settings, const QStringList& units
                 } else if (p.type == pfx::ParamType::Boolean) {
                     out.set(p.key, false);
                     any = true;
+                }
+            }
+        }
+        if (id == u"look"_s) {
+            // Not registry settings: the look's id and strength, when the photo has a look.
+            for (const char* key : {"look.id", "look.strength"}) {
+                if (const pfx::Value* v = settings.find(key)) {
+                    out.set(key, *v);
                 }
             }
         }

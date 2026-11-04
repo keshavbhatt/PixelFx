@@ -212,8 +212,8 @@
   look outlined, and Look strength at its foot (live, one history step on release, keys step by
   one). Choosing a look is one history step on the photo and the selection. Differences from
   the mock, until their pieces exist: no Favorites chip, and "Import LUT..." where the mock has
-  "New look" (the look editor, L4). Save as preset does not carry the look yet. 29 app suites
-  pass.
+  "New look" (the look editor, L4). Save as preset has the mock's Look row ("Golden hour 72"),
+  so a preset can carry a look. 29 app suites pass.
 
 ### 2026-11-04 (M2)
 
