@@ -22,6 +22,8 @@ public:
     /// Shows `curve` (identity when it has fewer than two points) without emitting.
     void setCurve(const pfx::Curve& curve);
     [[nodiscard]] const pfx::Curve& curve() const { return m_points; }
+    /// Where point `index` is drawn, in widget coordinates.
+    [[nodiscard]] QPointF pointPosition(std::size_t index) const { return toWidget(m_points.at(index)); }
     [[nodiscard]] bool isIdentity() const;
     void setColor(const QColor& color);
 
