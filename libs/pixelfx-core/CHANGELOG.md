@@ -31,9 +31,14 @@ Semantic Versioning (the API may change before 1.0).
 - `readExif` reads the camera, lens, date taken, ISO, aperture, shutter speed and focal length
   from an Exif block, without a metadata library.
 
+- Colour lookup tables: `parseCube` and `loadCube` read `.cube` files (1D and 3D, with their
+  domain), `lutFromHald` reads a HaldCLUT picture, `applyLut` applies one with tetrahedral
+  interpolation and a mix. `pfx apply --lut FILE[:MIX]`.
+
 ### Added (tooling)
 
-- libFuzzer targets for the document parser, the image loader and the Exif reader (`make fuzz`).
+- libFuzzer targets for the document parser, the image loader, the Exif reader and the `.cube`
+  reader (`make fuzz`).
 
 ### Added
 

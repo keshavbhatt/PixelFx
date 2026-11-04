@@ -25,6 +25,7 @@ add_executable(pfx_tests
     test_io.cpp
     test_resample.cpp
     test_composite.cpp
+    test_lut.cpp
 )
 target_include_directories(pfx_tests PRIVATE ${PROJECT_SOURCE_DIR}/src)
 target_link_libraries(pfx_tests PRIVATE pfx::core doctest::doctest PkgConfig::VIPS PkgConfig::LCMS2)

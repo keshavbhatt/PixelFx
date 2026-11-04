@@ -187,6 +187,11 @@
 - The exposure line of `editor.html` under the histogram ("ISO 400 · f/2.8 · 1/250 s · 35 mm",
   `core::exposureLine`), the camera and lens as its tooltip; checked on a scratch JPEG with a
   hand-made Exif block. Photos without exposure data show nothing there.
+- LUTs in libpixelfx (L5, ahead of the look step): `pfx::parseCube` (1D and 3D, domain,
+  input range, refusing short or long tables with the line number), `pfx::lutFromHald`,
+  `pfx::applyLut` (tetrahedral, looked up in sRGB primaries and encoding as display LUTs expect,
+  a mix in linear light), `pfx apply --lut FILE[:MIX]`. 0.22 s more for a 33-point cube on a
+  24 MP photo (14 threads). A `.cube` fuzzer ran 10.8 million inputs clean. 96 library tests pass.
 
 ### 2026-11-04 (M2)
 

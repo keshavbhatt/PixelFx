@@ -92,7 +92,7 @@ preview and export use resolution-independent parameters so they match (v1 defec
 | L2 | One strength slider per applied look (0 to 100), stored in the recipe | none | KEEP | todo |
 | L3 | About 30 built-in looks (colour, film, black and white, creative), made from library operations, shipped as files | none | KEEP | todo |
 | L4 | Custom look editor: ordered steps from the operation registry, enable, reorder, duplicate, parameters, preview on test images | none | KEEP | todo |
-| L5 | LUT steps: import `.cube` (1D and 3D) and HaldCLUT PNG | none | KEEP | todo |
+| L5 | LUT steps: import `.cube` (1D and 3D) and HaldCLUT PNG | none | KEEP | wip: the library reads `.cube` (1D, 3D, DOMAIN_MIN and DOMAIN_MAX) and HaldCLUT pictures and applies them (tetrahedral, in the sRGB encoding, with a mix; `pfx apply --lut`); the look step and the app todo |
 | L6 | Export a look as `.pfxlook`; bake the colour-only steps to a `.cube` | none | KEEP | todo |
 | L7 | Apply a look to the selection in the filmstrip | none | KEEP | todo |
 

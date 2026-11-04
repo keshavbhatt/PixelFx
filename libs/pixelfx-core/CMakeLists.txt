@@ -41,6 +41,7 @@ add_library(pfx_core
     src/core/log.cpp
     src/core/parallel.cpp
     src/color/color.cpp
+    src/color/lut.cpp
     src/image/image.cpp
     src/image/filters.cpp
     src/image/resample.cpp

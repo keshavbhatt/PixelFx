@@ -5,6 +5,7 @@
 #include "pfx/document.h"
 #include "pfx/io.h"
 #include "pfx/log.h"
+#include "pfx/lut.h"
 #include "pfx/pipeline.h"
 #include "pfx/registry.h"
 
@@ -36,6 +37,7 @@ Options for apply:
   --quality N        1 to 100 for lossy formats (default 90)
   --bits 8|16        bits per channel for PNG and TIFF (default 8)
   --long-edge N      downscale so the long edge is at most N pixels
+  --lut FILE[:MIX]   apply a .cube LUT after the settings, MIX 0 to 100 (default 100)
 )";
 
 int fail(std::string_view message)
@@ -108,6 +110,8 @@ struct ApplyArgs
     pfx::SaveOptions save;
     int longEdge = 0;
     bool autoFirst = false;
+    std::optional<pfx::Lut> lut;
+    int lutMix = 100;
     std::vector<std::string> files;
 };
 
@@ -179,6 +183,22 @@ const std::map<std::string, OptionHandler>& optionHandlers()
          [](const std::string& v, ApplyArgs& a) { return wholeNumber("--bits", v, a.save.bitsPerSample); }},
         {"--long-edge",
          [](const std::string& v, ApplyArgs& a) { return wholeNumber("--long-edge", v, a.longEdge); }},
+        {"--lut",
+         [](const std::string& v, ApplyArgs& a) -> std::optional<std::string> {
+             std::string file = v;
+             if (const auto colon = v.rfind(':'); colon != std::string::npos && colon > 1) {
+                 file = v.substr(0, colon);
+                 if (auto error = wholeNumber("--lut mix", v.substr(colon + 1), a.lutMix)) {
+                     return error;
+                 }
+             }
+             auto lut = pfx::loadCube(file);
+             if (!lut) {
+                 return file + ": " + lut.error().message;
+             }
+             a.lut = std::move(lut).value();
+             return std::nullopt;
+         }},
     };
     return handlers;
 }
@@ -249,11 +269,14 @@ int apply(int argc, char* const* argv)
         const pfx::Settings settings = args.autoFirst
                                            ? pfx::autoAdjust(loaded.value().image).overlaidWith(args.settings)
                                            : args.settings;
-        const auto rendered = pfx::render(std::move(loaded.value().image), settings);
+        auto rendered = pfx::render(std::move(loaded.value().image), settings);
         if (!rendered) {
             std::cerr << file << ": " << rendered.error().message << "\n";
             status = 1;
             continue;
+        }
+        if (args.lut) {
+            pfx::applyLut(rendered.value(), *args.lut, static_cast<float>(args.lutMix) / 100.0F);
         }
         const auto target = outputPathFor(args, file);
         const auto saved = pfx::save(rendered.value(), target, args.save, &loaded.value().metadata);
