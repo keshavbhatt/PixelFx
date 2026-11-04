@@ -5,6 +5,7 @@ project(pixelfx_core VERSION 0.1.0 DESCRIPTION "Non-destructive photo processing
 option(PFX_BUILD_TESTS "Build the library tests" ${PROJECT_IS_TOP_LEVEL})
 option(PFX_BUILD_TOOLS "Build the pfx command line tool" ON)
 option(PFX_WERROR "Treat warnings as errors" OFF)
+option(PFX_BUILD_FUZZERS "Build the libFuzzer targets (clang, with sanitizers)" OFF)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -28,6 +29,13 @@ FetchContent_Declare(nlohmann_json
     SYSTEM
     FIND_PACKAGE_ARGS 3.12)
 FetchContent_MakeAvailable(nlohmann_json)
+
+if(PFX_BUILD_FUZZERS)
+    # Coverage for the fuzzer and the address and undefined-behaviour sanitizers on the whole
+    # library, so the fuzzers find their way in and see what goes wrong.
+    add_compile_options(-fsanitize=fuzzer-no-link,address,undefined -fno-omit-frame-pointer)
+    add_link_options(-fsanitize=address,undefined)
+endif()
 
 add_library(pfx_core
     src/core/log.cpp
@@ -73,4 +81,8 @@ endif()
 if(PFX_BUILD_TESTS)
     enable_testing()
     add_subdirectory(tests)
+endif()
+
+if(PFX_BUILD_FUZZERS)
+    add_subdirectory(fuzz)
 endif()

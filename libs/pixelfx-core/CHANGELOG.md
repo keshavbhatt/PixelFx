@@ -13,6 +13,18 @@ Semantic Versioning (the API may change before 1.0).
   profiles is a matrix and tabulated curves (LittleCMS for the rest), loading decodes straight
   into the image and saving converts row by row into the output buffer.
 - `render` takes the image by move when the caller is done with it.
+- `load` refuses images over 512 megapixels with a reason, and reports running out of memory
+  as an error instead of throwing.
+
+### Fixed
+
+- Found by fuzzing: a curve whose points meet once clamped into 0 to 1 is now dropped, not
+  kept broken; setting names that are empty or contain a dot, and a value that is also the name
+  of a group, are dropped with a reason. Every document PixelFx writes reads back the same.
+
+### Added (tooling)
+
+- libFuzzer targets for the document parser and the image loader (`make fuzz`).
 
 ### Added
 

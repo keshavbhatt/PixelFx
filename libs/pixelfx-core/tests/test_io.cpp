@@ -247,3 +247,18 @@ TEST_CASE("readable extensions: the common photo formats, and no documents")
     CHECK(std::is_sorted(exts.begin(), exts.end()));
     CHECK(std::adjacent_find(exts.begin(), exts.end()) == exts.end());
 }
+
+TEST_CASE("a header claiming a huge image is refused, not allocated")
+{
+    const fixtures::TempDir dir;
+    const auto path = dir.path() / "huge.pgm";
+    {
+        std::ofstream out(path, std::ios::binary);
+        out << "P5\n30000 30000\n255\n" << std::string(64, '\x80'); // 900 MP claimed, 64 bytes given
+    }
+    const auto loaded = pfx::load(path);
+    REQUIRE_FALSE(loaded.ok());
+    CHECK(loaded.error().message.find("too large") != std::string::npos);
+    // Downscaled on load it fits the limit and is read (or fails on the missing data, but sanely).
+    (void)pfx::load(path, {512});
+}

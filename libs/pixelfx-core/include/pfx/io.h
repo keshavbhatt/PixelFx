@@ -57,6 +57,8 @@ struct Rgba8Image
 
 // Decodes any format libvips reads, applies the orientation tag, converts through the
 // embedded ICC profile (sRGB when there is none) into the working space.
+// Images over 512 megapixels (after any downscale) are refused with a reason, so a damaged
+// header cannot exhaust memory.
 [[nodiscard]] Result<LoadedImage> load(const std::filesystem::path& path, const LoadOptions& options = {});
 [[nodiscard]] Result<ImageInfo> probe(const std::filesystem::path& path);
 

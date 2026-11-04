@@ -60,3 +60,7 @@ repository holds no third-party pictures. `tests/golden/` holds each operation's
 output as a 16-bit PNG; regenerate them only on purpose with `PFX_GOLDEN_UPDATE=1` and review
 the images like any other change. Scale tests check that a half-size render matches the
 full-size render downscaled.
+
+`make fuzz` (from the repository root, with clang) runs libFuzzer with the address and
+undefined-behaviour sanitizers on the document parser and the image loader; crashes land in
+`build/fuzz/crashes`. The parser target checks that every document written reads back the same.

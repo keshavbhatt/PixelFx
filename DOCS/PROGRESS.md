@@ -91,6 +91,14 @@
   per-step timing. Bounded memory (tiled rendering) is still open.
 - CI: Windows (MSVC, vcpkg) green for the first time; macOS failed on a test that used
   QTest::mouseMove (it moves the real cursor there), fixed.
+- Dehaze (dark channel prior, guided filter, haze map worked out at about 1000 px and applied
+  at full size: 0.75 s and 0.69 GB at 24 MP instead of 2.35 s and 2.1 GB) in the library and
+  the Detail group.
+- Fuzzing (`make fuzz`): libFuzzer with ASan and UBSan. The document parser ran 8.5 million
+  inputs clean after two fixes it found (a curve clamped into colliding points was kept broken;
+  empty or dotted names and value-group collisions did not read back the same). The loader
+  target runs about 2 inputs a second (thread start-up under the sanitizers), 600 runs clean;
+  reading it showed an unbounded allocation from a hostile header, now refused over 512 MP.
 - 2026-11-05: dev libvips reads HEIC, AVIF, JPEG XL and camera RAW (ADR-008 update):
   `build-deps.sh` builds libheif 1.23.7 (libde265 1.1.3, dav1d 1.5.4), libjxl 0.12.0 (highway
   1.4.0) and LibRaw 0.22.3 against the SDK overlay, about 2.5 minutes from scratch on 14 cores;

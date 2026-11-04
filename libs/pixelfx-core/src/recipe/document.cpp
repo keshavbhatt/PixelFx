@@ -58,6 +58,15 @@ std::optional<Curve> curveFromJson(const Json& j)
 void flatten(const Json& node, const std::string& prefix, Settings& out, ParseReport* report)
 {
     for (const auto& [name, child] : node.items()) {
+        if (name.empty() || name.find('.') != std::string::npos) {
+            // A dotted key is built from names; an empty or dotted name would not read back.
+            if (report != nullptr) {
+                report->warnings.push_back("Ignored \"" + name + "\" in " +
+                                           (prefix.empty() ? "settings" : prefix) +
+                                           ": a name must not be empty or contain a dot");
+            }
+            continue;
+        }
         std::string key = prefix;
         if (!key.empty()) {
             key += '.';
@@ -77,6 +86,23 @@ void flatten(const Json& node, const std::string& prefix, Settings& out, ParseRe
             out.set(key, std::move(*curve));
         } else if (report != nullptr) {
             report->warnings.push_back("Ignored " + key + ": unreadable value");
+        }
+    }
+}
+
+// A key cannot be both a value and a group ("light": 5 beside "light": {...} after merging):
+// the value goes, so what is written reads back the same.
+void dropValuesThatAreGroups(Settings& settings, ParseReport* report)
+{
+    const std::vector<std::string> keys = settings.keys(); // sorted
+    for (const std::string& key : keys) {
+        const std::string group = key + '.';
+        const auto at = std::ranges::lower_bound(keys, group);
+        if (at != keys.end() && at->starts_with(group)) {
+            settings.erase(key);
+            if (report != nullptr) {
+                report->warnings.push_back("Ignored " + key + ": it is also the name of a group");
+            }
         }
     }
 }
@@ -187,6 +213,7 @@ void readBody(const Json& json, Document& doc, ParseReport* report)
     for (const auto& [name, value] : bodyIt->items()) {
         if (name == "settings" && value.is_object()) {
             flatten(value, {}, doc.settings, report);
+            dropValuesThatAreGroups(doc.settings, report);
         } else if (name == "source" && value.is_object() && doc.kind == DocumentKind::Recipe) {
             doc.sourceName = stringField(value, "name");
             doc.sourceFingerprint = stringField(value, "fingerprint");

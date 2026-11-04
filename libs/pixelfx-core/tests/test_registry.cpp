@@ -55,3 +55,12 @@ TEST_CASE("default values render as the identity")
         CHECK_FALSE(impl(defaults));
     }
 }
+
+TEST_CASE("a curve whose points meet once clamped is dropped, not kept broken")
+{
+    pfx::Settings s;
+    s.set("curves.rgb", pfx::Curve{{0, 0}, {0.3, 0.2}, {5.7, 0.8}, {9, 1}});
+    const auto lines = pfx::registry().normalize(s);
+    CHECK_FALSE(s.contains("curves.rgb"));
+    CHECK_FALSE(lines.empty());
+}

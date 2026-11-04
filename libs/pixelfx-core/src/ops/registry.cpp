@@ -206,6 +206,10 @@ std::optional<std::string> normalizeCurve(const std::string& key, Settings& sett
     if (clamped == *c) {
         return std::nullopt;
     }
+    if (!validCurve(clamped)) { // points beyond 1 can land on the same x once clamped
+        settings.erase(key);
+        return "Ignored " + key + ": its points fall on each other once clamped into 0 to 1";
+    }
     settings.set(key, clamped);
     return "Clamped points of " + key + " into 0 to 1";
 }

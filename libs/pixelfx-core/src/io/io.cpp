@@ -16,12 +16,18 @@
 #include <lcms2.h>
 #include <memory>
 #include <mutex>
+#include <new>
 #include <optional>
+#include <string>
 #include <string_view>
 #include <vips/vips8>
 
 namespace pfx {
 namespace {
+
+// The largest image load() accepts, as Lightroom does; a damaged or hostile header cannot make
+// it reserve more than about 8 GB.
+constexpr double kMaxMegapixels = 512.0;
 
 using ProfilePtr = std::unique_ptr<void, decltype(&cmsCloseProfile)>;
 
@@ -72,8 +78,11 @@ public:
     static std::optional<RowConverter> create(cmsHPROFILE from, cmsHPROFILE to)
     {
         RowConverter c;
-        if (matrixShaper(from, cmsSigAToB0Tag) && matrixShaper(to, cmsSigBToA0Tag)) {
-            c.m_matrix = color::multiply(color::inverse(colorants(to)), colorants(from));
+        const auto fromColorants = colorants(from);
+        const auto toColorants = colorants(to);
+        if (matrixShaper(from, cmsSigAToB0Tag) && matrixShaper(to, cmsSigBToA0Tag) && fromColorants &&
+            toColorants && std::abs(determinant(*toColorants)) > 1e-9) {
+            c.m_matrix = color::multiply(color::inverse(*toColorants), *fromColorants);
             for (std::size_t i = 0; i < 3; ++i) {
                 c.m_decode.at(i) = curveTable(from, kTrcTags.at(i), false);
                 c.m_encode.at(i) = curveTable(to, kTrcTags.at(i), true);
@@ -115,19 +124,31 @@ private:
                cmsGetColorSpace(profile) == cmsSigRgbData;
     }
 
-    // RGB to the profile connection space (XYZ, D50): the colorant tags are its columns.
-    static color::Mat3 colorants(cmsHPROFILE profile)
+    // RGB to the profile connection space (XYZ, D50): the colorant tags are its columns. None
+    // when a tag cannot be read (a damaged profile goes to LittleCMS, which reports it).
+    static std::optional<color::Mat3> colorants(cmsHPROFILE profile)
     {
         const std::array<cmsTagSignature, 3> tags = {cmsSigRedColorantTag, cmsSigGreenColorantTag,
                                                      cmsSigBlueColorantTag};
         color::Mat3 m{};
         for (std::size_t c = 0; c < 3; ++c) {
             const auto* xyz = static_cast<const cmsCIEXYZ*>(cmsReadTag(profile, tags.at(c)));
+            if (xyz == nullptr || !std::isfinite(xyz->X) || !std::isfinite(xyz->Y) ||
+                !std::isfinite(xyz->Z)) {
+                return std::nullopt;
+            }
             m[0][c] = xyz->X;
             m[1][c] = xyz->Y;
             m[2][c] = xyz->Z;
         }
         return m;
+    }
+
+    static double determinant(const color::Mat3& m)
+    {
+        return (m[0][0] * ((m[1][1] * m[2][2]) - (m[1][2] * m[2][1]))) -
+               (m[0][1] * ((m[1][0] * m[2][2]) - (m[1][2] * m[2][0]))) +
+               (m[0][2] * ((m[1][0] * m[2][1]) - (m[1][1] * m[2][0])));
     }
 
     // The profile's tone curve (decoding) or its inverse (encoding) as a table; none when it is
@@ -141,6 +162,9 @@ private:
         }
         const std::shared_ptr<cmsToneCurve> owned(
             inverse ? cmsReverseToneCurve(curve) : cmsDupToneCurve(curve), &cmsFreeToneCurve);
+        if (!owned) {
+            return nullptr; // treated as linear rather than crash on a curve that cannot be inverted
+        }
         return std::make_shared<detail::ValueTable>([owned](double v) {
             return double{cmsEvalToneCurveFloat(owned.get(), static_cast<cmsFloat32Number>(v))};
         });
@@ -282,8 +306,37 @@ Result<ImageInfo> probe(const std::filesystem::path& path)
         return info;
     } catch (const vips::VError& e) {
         return Error{ErrorCode::DecodeFailed, std::string("Could not read the image: ") + e.what()};
+    } catch (const std::bad_alloc&) {
+        return Error{ErrorCode::DecodeFailed, "There is not enough memory to open this image."};
     }
 }
+
+namespace {
+
+// Converts decoded pixels from their embedded profile (sRGB when there is none or it is not an
+// RGB profile) to the working space, in place.
+Status toWorkingSpace(Image& image, const std::vector<std::uint8_t>& icc)
+{
+    ProfilePtr source(
+        icc.empty() ? nullptr : cmsOpenProfileFromMem(icc.data(), static_cast<cmsUInt32Number>(icc.size())),
+        &cmsCloseProfile);
+    if (source && cmsGetColorSpace(source.get()) != cmsSigRgbData) {
+        detail::log(LogLevel::Warning, "Embedded profile is not RGB; treating the image as sRGB");
+        source.reset();
+    }
+    if (!source) {
+        source = srgbProfile();
+    }
+    const ProfilePtr working = workingProfile();
+    const auto convert = RowConverter::create(source.get(), working.get());
+    if (!convert) {
+        return Error{ErrorCode::ColorManagement, "The image's colour profile could not be used."};
+    }
+    convertInPlace(*convert, image);
+    return {};
+}
+
+} // namespace
 
 Result<LoadedImage> load(const std::filesystem::path& path, const LoadOptions& options)
 {
@@ -314,6 +367,13 @@ Result<LoadedImage> load(const std::filesystem::path& path, const LoadOptions& o
         }
         result.info.width = in.width();
         result.info.height = in.height();
+        const double megapixels = static_cast<double>(in.width()) * static_cast<double>(in.height()) / 1e6;
+        if (megapixels > kMaxMegapixels) {
+            return Error{ErrorCode::DecodeFailed,
+                         "The image is too large to edit: " + std::to_string(static_cast<long>(megapixels)) +
+                             " megapixels, and the limit is " +
+                             std::to_string(static_cast<int>(kMaxMegapixels)) + "."};
+        }
         result.image = Image(in.width(), in.height());
         // libvips decodes and scales straight into the image's own buffer, in parallel.
         const vips::VImage target =
@@ -326,22 +386,9 @@ Result<LoadedImage> load(const std::filesystem::path& path, const LoadOptions& o
         return Error{ErrorCode::DecodeFailed, std::string("Could not read the image: ") + e.what()};
     }
 
-    ProfilePtr source(
-        icc.empty() ? nullptr : cmsOpenProfileFromMem(icc.data(), static_cast<cmsUInt32Number>(icc.size())),
-        &cmsCloseProfile);
-    if (source && cmsGetColorSpace(source.get()) != cmsSigRgbData) {
-        detail::log(LogLevel::Warning, "Embedded profile is not RGB; treating the image as sRGB");
-        source.reset();
+    if (const Status converted = toWorkingSpace(result.image, icc); !converted) {
+        return converted.error();
     }
-    if (!source) {
-        source = srgbProfile();
-    }
-    const ProfilePtr working = workingProfile();
-    const auto convert = RowConverter::create(source.get(), working.get());
-    if (!convert) {
-        return Error{ErrorCode::ColorManagement, "The image's colour profile could not be used."};
-    }
-    convertInPlace(*convert, result.image);
     return result;
 }
 

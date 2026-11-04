@@ -135,3 +135,19 @@ TEST_CASE("a recipe keeps the photo it belongs to")
     CHECK(again.value().sourceFingerprint == "sha1:9f1c0a5be2d47a10");
     CHECK(again.value().settings == doc.settings);
 }
+
+TEST_CASE("names that would not read back are dropped with a reason")
+{
+    const std::string text = R"({"format": "pixelfx", "kind": "preset", "version": 1, "name": "x",
+        "body": {"settings": {".color": 40, "light": {"": 3, "a.b": 2, "exposure": 0.5},
+                              "detail": {"clarity": 10}, "detail.clarity": {"x": 1}}}})";
+    pfx::ParseReport report;
+    const auto doc = pfx::parseDocument(text, &report);
+    REQUIRE(doc.ok());
+    const pfx::Settings& s = doc.value().settings;
+    CHECK(s.keys() == std::vector<std::string>{"detail.clarity", "light.exposure"});
+    CHECK(report.warnings.size() >= 3);
+    const auto again = pfx::parseDocument(pfx::serializeDocument(doc.value()));
+    REQUIRE(again.ok());
+    CHECK(again.value().settings == s);
+}
