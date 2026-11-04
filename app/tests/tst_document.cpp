@@ -219,6 +219,33 @@ private Q_SLOTS:
         QCOMPARE(doc.preview().size(), QSize(200, 100));
     }
 
+    void fullResolutionRendersTheWholePhotoWhenAsked()
+    {
+        QTemporaryDir dir;
+        const QString path = writePhoto(dir, u"photo.png"_s, 400, 300);
+        Document doc;
+        QSignalSpy ready(&doc, &Document::previewReady);
+        doc.open(path, 100);
+        QVERIFY(ready.wait(10000));
+        QCOMPARE(doc.preview().size(), QSize(100, 75));
+        QSignalSpy full(&doc, &Document::fullReady);
+        QSignalSpy stale(&doc, &Document::fullStale);
+        doc.setFullResolution(true);
+        QVERIFY(full.wait(10000));
+        QCOMPARE(full.last().first().value<QImage>().size(), QSize(400, 300));
+        QCOMPARE(doc.fullImage().size(), QSize(400, 300));
+        // An edit makes it stale at once and brings a new one a moment later.
+        pfx::Settings s;
+        s.set("light.exposure", 1.0);
+        doc.setSettings(s);
+        QCOMPARE(stale.count(), 1);
+        QVERIFY(doc.fullImage().isNull());
+        QVERIFY(full.wait(10000));
+        QVERIFY(!doc.fullImage().isNull());
+        doc.setFullResolution(false);
+        QVERIFY(doc.fullImage().isNull());
+    }
+
     void failureSaysWhy()
     {
         Document doc;

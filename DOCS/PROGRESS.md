@@ -99,6 +99,11 @@
   empty or dotted names and value-group collisions did not read back the same). The loader
   target runs about 2 inputs a second (thread start-up under the sanitizers), 600 runs clean;
   reading it showed an unbounded allocation from a hostile header, now refused over 512 MP.
+- Zoom and pan from the zoom bar of `editor.html`: wheel zoom around the cursor, drag to pan,
+  double-click for Fit and 100%, Ctrl+0, Ctrl+1, Ctrl+Plus and Ctrl+Minus, full screen; Crop
+  mode always fits. Past the preview's resolution the Document decodes the full photo once and
+  renders it 250 ms after edits settle (`setFullResolution`, `fullReady`); it is dropped when
+  the view goes back. E switches to Edit mode. FEATURES has no row for zoom yet.
 - 2026-11-05: dev libvips reads HEIC, AVIF, JPEG XL and camera RAW (ADR-008 update):
   `build-deps.sh` builds libheif 1.23.7 (libde265 1.1.3, dav1d 1.5.4), libjxl 0.12.0 (highway
   1.4.0) and LibRaw 0.22.3 against the SDK overlay, about 2.5 minutes from scratch on 14 cores;

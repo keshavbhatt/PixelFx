@@ -77,6 +77,8 @@ private:
     void setupActions();
     void setupEditActions();
     void setupCropActions();
+    void setupZoomActions();
+    void connectZoom();
     void connectDocument();
     void updateHistoryButtons();
     void showToast(const QString& text);

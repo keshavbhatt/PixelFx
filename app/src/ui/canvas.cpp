@@ -1,13 +1,23 @@
 #include "ui/canvas.h"
 
+#include "ui/icons.h"
 #include "ui/style.h"
 
+#include <QHBoxLayout>
+#include <QLabel>
 #include <QMouseEvent>
 #include <QPainter>
 #include <QPainterPath>
+#include <QPushButton>
+#include <QToolButton>
+#include <QWheelEvent>
 
 #include <algorithm>
+#include <array>
 #include <cmath>
+#include <ranges>
+
+using namespace Qt::StringLiterals;
 
 namespace pixelfx::ui {
 
@@ -18,6 +28,9 @@ constexpr double kEdgeReach = 8.0;
 constexpr double kMinimumBox = 24.0;
 constexpr int kCornerLength = 18; ///< mock crop.html: 18 px corners, 4 px thick, 3 px outside
 constexpr int kCornerWidth = 4;
+// Zoom steps in screen pixels per photo pixel; Fit sits wherever the window puts it.
+constexpr std::array kZoomSteps = {0.0625, 0.125, 0.25, 1.0 / 3, 0.5, 2.0 / 3, 1.0, 1.5, 2.0, 3.0, 4.0, 8.0};
+constexpr double kWheelStep = 1.25;
 
 Qt::CursorShape cursorFor(core::CropHandle handle)
 {
@@ -49,6 +62,222 @@ Canvas::Canvas(QWidget* parent)
 {
     setAttribute(Qt::WA_OpaquePaintEvent);
     setAccessibleName(tr("Photo"));
+    buildZoomBar();
+}
+
+void Canvas::buildZoomBar()
+{
+    // Mock editor.html .zoombar: zoom out, the level, zoom in, a divider, 1:1, full screen.
+    m_zoomBar = new QWidget(this);
+    m_zoomBar->setObjectName(u"zoomBar"_s);
+    m_zoomBar->setAttribute(Qt::WA_StyledBackground);
+    const auto tool = [this](const QString& glyph, const QString& tip) {
+        auto* b = new QToolButton(m_zoomBar);
+        b->setObjectName(u"zoomButton"_s);
+        b->setIcon(icons::themed(glyph, tokens().text, tokens().faint));
+        b->setIconSize(QSize(16, 16));
+        b->setToolTip(tip);
+        b->setAccessibleName(tip);
+        b->setAutoRaise(true);
+        return b;
+    };
+    m_zoomOut = tool(u"zoom-out"_s, tr("Zoom out (Ctrl+Minus)"));
+    m_zoomIn = tool(u"zoom-in"_s, tr("Zoom in (Ctrl+Plus)"));
+    m_zoomLabel = new QLabel(tr("Fit"), m_zoomBar);
+    m_zoomLabel->setObjectName(u"zoomLevel"_s);
+    m_zoomLabel->setAlignment(Qt::AlignCenter);
+    m_zoomLabel->setMinimumWidth(54);
+    m_zoomLabel->setToolTip(tr("Fit the photo (Ctrl+0)"));
+    m_actual = tool(QString(), tr("100% (Ctrl+1)"));
+    m_actual->setText(u"1:1"_s);
+    m_actual->setToolButtonStyle(Qt::ToolButtonTextOnly);
+    auto* fullScreen = tool(u"maximize"_s, tr("Full screen (F11)"));
+    auto* divider = new QWidget(m_zoomBar);
+    divider->setObjectName(u"zoomDivider"_s);
+    divider->setAttribute(Qt::WA_StyledBackground);
+    divider->setFixedSize(1, 18);
+    connect(m_zoomOut, &QToolButton::clicked, this, &Canvas::zoomOut);
+    connect(m_zoomIn, &QToolButton::clicked, this, &Canvas::zoomIn);
+    connect(m_actual, &QToolButton::clicked, this, [this] { setZoom(1.0); });
+    connect(fullScreen, &QToolButton::clicked, this, &Canvas::fullScreenRequested);
+    auto* row = new QHBoxLayout(m_zoomBar);
+    row->setContentsMargins(4, 4, 4, 4);
+    row->setSpacing(2);
+    row->addWidget(m_zoomOut);
+    row->addWidget(m_zoomLabel);
+    row->addWidget(m_zoomIn);
+    row->addSpacing(4);
+    row->addWidget(divider);
+    row->addSpacing(4);
+    row->addWidget(m_actual);
+    row->addWidget(fullScreen);
+    m_zoomBar->hide();
+}
+
+void Canvas::updateZoomBar()
+{
+    m_zoomBar->setVisible(!m_image.isNull());
+    m_zoomLabel->setText(zoomText());
+    const bool zoomable = !m_cropping && !m_image.isNull();
+    m_zoomOut->setEnabled(zoomable && !isFit());
+    m_zoomIn->setEnabled(zoomable && scale() < kZoomSteps.back());
+    m_actual->setEnabled(zoomable);
+    m_zoomBar->adjustSize();
+    m_zoomBar->move((width() - m_zoomBar->width()) / 2, height() - m_zoomBar->height() - 12);
+    m_zoomBar->raise();
+}
+
+void Canvas::resizeEvent(QResizeEvent* event)
+{
+    QWidget::resizeEvent(event);
+    clampCentre();
+    updateZoomBar();
+}
+
+QSizeF Canvas::zoomedSize() const
+{
+    const double dpr = devicePixelRatioF();
+    return {m_fullSize.width() * m_zoom / dpr, m_fullSize.height() * m_zoom / dpr};
+}
+
+double Canvas::scale() const
+{
+    if (!isFit() && !m_cropping) {
+        return m_zoom;
+    }
+    const QRect fit = fitRect();
+    return m_fullSize.width() > 0 ? fit.width() * devicePixelRatioF() / m_fullSize.width() : 1.0;
+}
+
+QString Canvas::zoomText() const
+{
+    return (isFit() || m_cropping) ? tr("Fit") : u"%1%"_s.arg(qRound(m_zoom * 100));
+}
+
+void Canvas::clampCentre()
+{
+    if (isFit()) {
+        m_centre = {0.5, 0.5};
+        return;
+    }
+    const QSizeF size = zoomedSize();
+    const auto clampAxis = [](double centre, double view, double extent) {
+        if (extent <= view) {
+            return 0.5; // smaller than the window: centred
+        }
+        const double half = view / 2.0 / extent;
+        return std::clamp(centre, half, 1.0 - half);
+    };
+    m_centre = {clampAxis(m_centre.x(), width(), size.width()),
+                clampAxis(m_centre.y(), height(), size.height())};
+}
+
+void Canvas::setZoom(double scale, QPointF anchor)
+{
+    if (m_cropping || m_image.isNull() || m_fullSize.isEmpty()) {
+        return;
+    }
+    const QPointF middle(width() / 2.0, height() / 2.0);
+    if (anchor.isNull()) {
+        anchor = middle;
+    }
+    // The photo point under the anchor stays under it.
+    const QRectF before(photoRect());
+    const QPointF point((anchor.x() - before.left()) / std::max(1.0, before.width()),
+                        (anchor.y() - before.top()) / std::max(1.0, before.height()));
+    const double fitScale = [this] {
+        const QRect fit = fitRect();
+        return fit.width() * devicePixelRatioF() / std::max(1, m_fullSize.width());
+    }();
+    m_zoom = scale <= fitScale * 1.001 ? 0.0 : std::min(scale, kZoomSteps.back());
+    if (!isFit()) {
+        const QSizeF size = zoomedSize();
+        m_centre = {point.x() - ((anchor.x() - middle.x()) / size.width()),
+                    point.y() - ((anchor.y() - middle.y()) / size.height())};
+    }
+    clampCentre();
+    if (m_compare) {
+        setCursor(Qt::SplitHCursor);
+    } else {
+        setCursor(isFit() ? Qt::ArrowCursor : Qt::OpenHandCursor);
+    }
+    updateZoomBar();
+    update();
+    Q_EMIT zoomChanged();
+}
+
+void Canvas::zoomToFit()
+{
+    setZoom(0.0);
+}
+
+void Canvas::zoomIn()
+{
+    const double now = scale();
+    for (const double step : kZoomSteps) {
+        if (step > now * 1.01) {
+            setZoom(step);
+            return;
+        }
+    }
+}
+
+void Canvas::zoomOut()
+{
+    const double now = scale();
+    for (const double step : std::views::reverse(kZoomSteps)) {
+        if (step < now * 0.99) {
+            setZoom(step);
+            return;
+        }
+    }
+    zoomToFit();
+}
+
+QRectF Canvas::visibleFraction() const
+{
+    const QRectF photo(photoRect());
+    if (photo.isEmpty()) {
+        return {};
+    }
+    const QRectF shown = photo.intersected(QRectF(rect()));
+    return {(shown.left() - photo.left()) / photo.width(), (shown.top() - photo.top()) / photo.height(),
+            shown.width() / photo.width(), shown.height() / photo.height()};
+}
+
+void Canvas::setDetail(const QImage& detail)
+{
+    m_detail = detail;
+    update();
+}
+
+bool Canvas::needsDetail() const
+{
+    // Past the preview's own resolution the preview would be enlarged: a sharper picture helps.
+    return !m_image.isNull() && !m_cropping && !isFit() &&
+           scale() * m_fullSize.width() > m_image.width() * 1.05;
+}
+
+void Canvas::wheelEvent(QWheelEvent* event)
+{
+    if (m_cropping || m_image.isNull()) {
+        return;
+    }
+    const double notches = event->angleDelta().y() / 120.0;
+    if (notches == 0.0) {
+        return;
+    }
+    setZoom(scale() * std::pow(kWheelStep, notches), event->position());
+    event->accept();
+}
+
+void Canvas::mouseDoubleClickEvent(QMouseEvent* event)
+{
+    if (m_cropping || m_compare || event->button() != Qt::LeftButton) {
+        return;
+    }
+    // Fit and 100% at the spot clicked, as photo viewers do.
+    isFit() ? setZoom(1.0, event->position()) : zoomToFit();
 }
 
 Canvas::~Canvas() = default;
@@ -56,9 +285,15 @@ Canvas::~Canvas() = default;
 void Canvas::setImage(const QImage& image, const QSize& fullSize)
 {
     m_image = image;
-    m_fullSize = fullSize.isValid() ? fullSize : image.size();
+    const QSize full = fullSize.isValid() ? fullSize : image.size();
+    if (full != m_fullSize) {
+        m_detail = QImage(); // another photo, or another shape after a crop
+    }
+    m_fullSize = full;
     m_status.clear();
     m_error.clear();
+    clampCentre();
+    updateZoomBar();
     update();
 }
 
@@ -123,7 +358,13 @@ void Canvas::paintCompare(QPainter& painter, const QRect& target)
 
 void Canvas::setCropMode(bool on)
 {
+    if (on) {
+        m_zoom = 0.0; // the crop box works on the whole photo
+        m_centre = {0.5, 0.5};
+        m_detail = QImage();
+    }
     m_cropping = on;
+    updateZoomBar();
     m_handle = core::CropHandle::None;
     setMouseTracking(on);
     setCursor(Qt::ArrowCursor);
@@ -204,6 +445,15 @@ void Canvas::mousePressEvent(QMouseEvent* event)
         }
         return;
     }
+    const bool pan = !isFit() && ((event->button() == Qt::LeftButton && !m_compare) ||
+                                  event->button() == Qt::MiddleButton);
+    if (pan) {
+        m_panning = true;
+        m_panStart = event->position();
+        m_centreStart = m_centre;
+        setCursor(Qt::ClosedHandCursor);
+        return;
+    }
     if (m_compare && event->button() == Qt::LeftButton && photoRect().isValid()) {
         m_dragging = true;
         mouseMoveEvent(event);
@@ -232,6 +482,16 @@ void Canvas::mouseMoveEvent(QMouseEvent* event)
         Q_EMIT cropEdited(m_crop);
         return;
     }
+    if (m_panning) {
+        const QSizeF size = zoomedSize();
+        const QPointF moved = event->position() - m_panStart;
+        m_centre = {m_centreStart.x() - (moved.x() / size.width()),
+                    m_centreStart.y() - (moved.y() / size.height())};
+        clampCentre();
+        update();
+        Q_EMIT zoomChanged();
+        return;
+    }
     if (m_dragging) {
         const QRect target = photoRect();
         setSplit((event->position().x() - target.left()) / std::max(1, target.width()));
@@ -242,6 +502,10 @@ void Canvas::mouseReleaseEvent(QMouseEvent* /*event*/)
 {
     m_dragging = false;
     m_handle = core::CropHandle::None;
+    if (m_panning) {
+        m_panning = false;
+        setCursor(Qt::OpenHandCursor);
+    }
 }
 
 void Canvas::paintOverlay(QPainter& painter, const QRectF& box) const
@@ -332,7 +596,7 @@ void Canvas::setError(const QString& text)
     update();
 }
 
-QRect Canvas::photoRect() const
+QRect Canvas::fitRect() const
 {
     if (m_image.isNull()) {
         return {};
@@ -348,6 +612,17 @@ QRect Canvas::photoRect() const
     return target;
 }
 
+QRect Canvas::photoRect() const
+{
+    if (isFit() || m_cropping) {
+        return fitRect();
+    }
+    const QSizeF size = zoomedSize();
+    const QPointF topLeft((width() / 2.0) - (m_centre.x() * size.width()),
+                          (height() / 2.0) - (m_centre.y() * size.height()));
+    return QRectF(topLeft, size).toAlignedRect();
+}
+
 void Canvas::paintEvent(QPaintEvent* /*event*/)
 {
     const Tokens& t = tokens();
@@ -357,7 +632,15 @@ void Canvas::paintEvent(QPaintEvent* /*event*/)
         const QRect target = photoRect();
         painter.fillRect(target.translated(0, 6).adjusted(-2, -2, 2, 2), QColor(0, 0, 0, 90));
         painter.setRenderHint(QPainter::SmoothPixmapTransform);
-        painter.drawImage(target, m_image);
+        const bool sharp = !m_detail.isNull() && needsDetail();
+        const QImage& shown = sharp ? m_detail : m_image;
+        // Only the part on screen: a 400% view never scales the whole picture.
+        const QRectF visible = QRectF(target).intersected(QRectF(rect()));
+        const double sx = shown.width() / static_cast<double>(target.width());
+        const double sy = shown.height() / static_cast<double>(target.height());
+        const QRectF source((visible.left() - target.left()) * sx, (visible.top() - target.top()) * sy,
+                            visible.width() * sx, visible.height() * sy);
+        painter.drawImage(visible, shown, source);
         if (m_cropping) {
             paintCrop(painter, target);
         } else if (m_compare && !m_original.isNull()) {

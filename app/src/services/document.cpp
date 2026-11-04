@@ -44,6 +44,8 @@ Document::Document(QObject* parent)
     : QObject(parent)
     , m_scheduler(new RenderScheduler(this))
     , m_originalScheduler(new RenderScheduler(this))
+    , m_fullScheduler(new RenderScheduler(this))
+    , m_fullTimer(new QTimer(this))
     , m_saveTimer(new QTimer(this))
     , m_savePool(new QThreadPool(this))
 {
@@ -63,6 +65,20 @@ Document::Document(QObject* parent)
                 if (settings == m_originalGeometry) {
                     m_original = image;
                     Q_EMIT originalReady(m_original);
+                }
+            });
+    m_fullTimer->setSingleShot(true);
+    m_fullTimer->setInterval(250); // a moment after a slider stops: no full-size render per step
+    connect(m_fullTimer, &QTimer::timeout, this, [this] {
+        if (m_fullOn && m_fullLoaded) {
+            m_fullScheduler->request(renderSettings());
+        }
+    });
+    connect(m_fullScheduler, &RenderScheduler::rendered, this,
+            [this](const QImage& image, const pfx::Settings& settings, const core::Histogram&) {
+                if (m_fullOn && settings == renderSettings()) {
+                    m_full = image;
+                    Q_EMIT fullReady(image);
                 }
             });
     connect(m_scheduler, &RenderScheduler::failed, this,
@@ -187,6 +203,12 @@ void Document::deliver(const Result& result)
     m_original = result.original;
     m_originalGeometry = {};
     m_cropEditing = false;
+    m_fullOn = false;
+    m_fullLoaded = false;
+    ++m_fullGeneration;
+    m_fullTimer->stop();
+    m_fullScheduler->setSource(nullptr);
+    m_full = QImage();
     m_preview = result.original;
     m_histogram = result.histogram;
     m_fingerprint = result.fingerprint;
@@ -223,6 +245,53 @@ pfx::Settings Document::renderSettings() const
 void Document::requestRender()
 {
     m_scheduler->request(renderSettings());
+    scheduleFull();
+}
+
+void Document::scheduleFull()
+{
+    if (m_fullOn) {
+        m_full = QImage();
+        Q_EMIT fullStale();
+        m_fullTimer->start();
+    }
+}
+
+void Document::setFullResolution(bool on)
+{
+    if (on == m_fullOn || !isOpen()) {
+        return;
+    }
+    m_fullOn = on;
+    if (!on) {
+        m_fullTimer->stop();
+        m_fullScheduler->setSource(nullptr); // frees the full-size photo
+        m_fullLoaded = false;
+        m_full = QImage();
+        return;
+    }
+    // Decode the full photo on a worker, then render it.
+    const quint64 generation = ++m_fullGeneration;
+    auto* watcher = new QFutureWatcher<std::shared_ptr<const pfx::Image>>(this);
+    connect(watcher, &QFutureWatcher<std::shared_ptr<const pfx::Image>>::finished, this,
+            [this, watcher, generation] {
+                const auto image = watcher->result();
+                watcher->deleteLater();
+                if (!m_fullOn || generation != m_fullGeneration || !image) {
+                    return;
+                }
+                m_fullScheduler->setSource(image);
+                m_fullLoaded = true;
+                m_fullScheduler->request(renderSettings());
+            });
+    const std::string path = QFileInfo(m_info.path).absoluteFilePath().toStdString();
+    watcher->setFuture(QtConcurrent::run([path]() -> std::shared_ptr<const pfx::Image> {
+        auto loaded = pfx::load(path);
+        if (!loaded) {
+            return nullptr;
+        }
+        return std::make_shared<const pfx::Image>(std::move(loaded).value().image);
+    }));
 }
 
 void Document::refreshOriginal()

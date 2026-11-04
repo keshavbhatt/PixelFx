@@ -48,6 +48,11 @@ const QString kSheet = uR"(
         QToolButton#railButton { border: 0; border-radius: 9px; background: transparent; color: {{muted}}; font-size: 11px; }
         QToolButton#railButton:hover { background: {{hover}}; color: {{text}}; }
         QToolButton#railButton:checked { background: {{accentSoft}}; color: {{accent}}; }
+        #zoomBar { background: {{elevated}}; border: 1px solid {{border}}; border-radius: 10px; }
+        #zoomDivider { background: {{border}}; }
+        #zoomLevel { font-size: 12px; }
+        QToolButton#zoomButton { border: 0; border-radius: 6px; padding: 4px; background: transparent; font-size: 12px; }
+        QToolButton#zoomButton:hover { background: {{hover}}; }
         #strip { background: {{bar}}; border-top: 1px solid {{border}}; }
         #adjustScroll, #adjustContent { background: {{panel}}; }
         #adjustGroup { border-top: 1px solid {{border}}; }

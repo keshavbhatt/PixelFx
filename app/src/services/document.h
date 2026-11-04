@@ -83,6 +83,14 @@ public:
     [[nodiscard]] QSize displaySize() const;
     [[nodiscard]] QSize outputSize() const;
 
+    /// While on (zoomed in past the preview), keeps a full-size render of the settings, made a
+    /// moment after they stop changing; the full photo is decoded on first use and dropped when
+    /// this goes off.
+    void setFullResolution(bool on);
+    [[nodiscard]] bool isFullResolution() const { return m_fullOn; }
+    /// The newest full-size render matching the settings; null while one is being made.
+    [[nodiscard]] const QImage& fullImage() const { return m_full; }
+
 Q_SIGNALS:
     void openStarted(const QString& path);
     void opened(const pixelfx::services::DocumentInfo& info);
@@ -90,6 +98,9 @@ Q_SIGNALS:
     void histogramReady(const pixelfx::core::Histogram& histogram);
     /// The photo with only its geometry, for before and after (it lines up with the edit).
     void originalReady(const QImage& image);
+    /// The full-size render for zoomed-in views, and the moment the one shown stops matching.
+    void fullReady(const QImage& image);
+    void fullStale();
     /// The settings changed from outside the editing controls (open, undo, redo).
     void settingsReplaced(const pfx::Settings& settings);
     void historyChanged();
@@ -108,6 +119,7 @@ private:
     void requestRender();
     /// Renders the original again when the geometry it needs changed.
     void refreshOriginal();
+    void scheduleFull();
     void saveNow(bool wait);
 
     DocumentInfo m_info;
@@ -121,6 +133,12 @@ private:
     QImage m_plainOriginal; ///< decoded with no settings at all
     pfx::Settings m_originalGeometry;
     bool m_cropEditing = false;
+    bool m_fullOn = false;
+    QImage m_full;
+    RenderScheduler* m_fullScheduler = nullptr;
+    QTimer* m_fullTimer = nullptr;
+    bool m_fullLoaded = false;
+    quint64 m_fullGeneration = 0;
     std::shared_ptr<const pfx::Image> m_source;
     std::optional<core::SidecarStore> m_sidecars;
     QString m_fingerprint;

@@ -124,6 +124,7 @@ MainWindow::MainWindow(core::Settings& settings, QWidget* parent)
     m_document.setSidecarFolder(core::SidecarStore::defaultFolder());
     connectDocument();
     connectCrop();
+    connectZoom();
 }
 
 void MainWindow::connectDocument()
@@ -236,6 +237,11 @@ void MainWindow::showOriginal(bool on)
     }
     m_showingOriginal = on;
     m_canvas->showImage(on ? m_document.original() : m_document.preview());
+    if (on) {
+        m_canvas->setDetail(QImage()); // the sharp picture is of the edit
+    } else {
+        m_canvas->setDetail(m_document.fullImage());
+    }
     m_original->setDown(on);
 }
 
@@ -382,6 +388,7 @@ void MainWindow::setupActions()
     addActions({openAction, quitAction, fullScreen, exportAction});
     setupEditActions();
     setupCropActions();
+    setupZoomActions();
 }
 
 void MainWindow::setupEditActions()
@@ -432,8 +439,31 @@ void MainWindow::setupEditActions()
     addActions({undo, redo, resetAll, history, compare});
 }
 
+void MainWindow::setupZoomActions()
+{
+    // Shortcuts as in the shortcuts sheet: Ctrl+0 fit, Ctrl+1 100%, Ctrl+Plus and Ctrl+Minus.
+    const auto add = [this](const QString& name, const QList<QKeySequence>& keys, auto slot) {
+        auto* a = new QAction(name, this);
+        a->setShortcuts(keys);
+        connect(a, &QAction::triggered, this, [this, slot] {
+            if (m_document.isOpen() && !isCropping()) {
+                slot();
+            }
+        });
+        addAction(a);
+    };
+    add(tr("Fit"), {QKeySequence(u"Ctrl+0"_s)}, [this] { m_canvas->zoomToFit(); });
+    add(tr("100%"), {QKeySequence(u"Ctrl+1"_s)}, [this] { m_canvas->setZoom(1.0); });
+    add(tr("Zoom in"), {QKeySequence::ZoomIn, QKeySequence(u"Ctrl+="_s)}, [this] { m_canvas->zoomIn(); });
+    add(tr("Zoom out"), {QKeySequence::ZoomOut}, [this] { m_canvas->zoomOut(); });
+}
+
 void MainWindow::setupCropActions()
 {
+    auto* edit = new QAction(tr("Edit"), this); // mode keys of the shortcuts sheet: E and C
+    edit->setShortcut(QKeySequence(Qt::Key_E));
+    connect(edit, &QAction::triggered, this, [this] { leaveCrop(true); });
+    addAction(edit);
     auto* crop = new QAction(tr("Crop"), this);
     crop->setShortcut(QKeySequence(Qt::Key_C));
     connect(crop, &QAction::triggered, this, [this] { isCropping() ? leaveCrop(true) : enterCrop(); });
@@ -480,7 +510,7 @@ void MainWindow::buildRail()
         b->setFixedSize(44, 48);
         return b;
     };
-    m_editMode = railButton(u"sliders"_s, tr("Edit"), tr("Edit"));
+    m_editMode = railButton(u"sliders"_s, tr("Edit"), tr("Edit (E)"));
     m_editMode->setChecked(true);
     m_cropMode = railButton(u"crop"_s, tr("Crop"), tr("Crop and rotate (C)"));
     m_cropMode->setEnabled(false);
@@ -526,6 +556,24 @@ QWidget* MainWindow::buildCanvasPage()
     column->addWidget(m_canvas, 1);
     column->addWidget(m_cropStrip);
     return page;
+}
+
+void MainWindow::connectZoom()
+{
+    // Zoomed in past the preview: a full-size render, made a moment after edits settle.
+    connect(m_canvas, &Canvas::zoomChanged, this, [this] {
+        const bool want = m_canvas->needsDetail() && !m_showingOriginal;
+        if (want != m_document.isFullResolution()) {
+            m_document.setFullResolution(want);
+            if (!want) {
+                m_canvas->setDetail(QImage());
+            }
+        }
+    });
+    connect(&m_document, &services::Document::fullReady, m_canvas, &Canvas::setDetail);
+    connect(&m_document, &services::Document::fullStale, this, [this] { m_canvas->setDetail(QImage()); });
+    connect(m_canvas, &Canvas::fullScreenRequested, this,
+            [this] { isFullScreen() ? showNormal() : showFullScreen(); });
 }
 
 void MainWindow::connectCrop()

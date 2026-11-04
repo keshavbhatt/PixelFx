@@ -51,6 +51,21 @@ private Q_SLOTS:
         QTest::keyClick(&window, Qt::Key_Backslash);
         QVERIFY(!window.canvas()->isComparing());
 
+        // Zoom: in from Fit, back with Ctrl+0; Crop mode always fits.
+        QVERIFY(window.canvas()->isFit());
+        QCOMPARE(window.canvas()->zoomText(), u"Fit"_s);
+        window.canvas()->zoomIn();
+        QVERIFY(!window.canvas()->isFit());
+        QVERIFY(window.canvas()->scale() > 1.0);
+        QVERIFY(window.canvas()->zoomText().endsWith(u'%'));
+        QTest::keyClick(&window, Qt::Key_0, Qt::ControlModifier);
+        QVERIFY(window.canvas()->isFit());
+        window.canvas()->setZoom(3.0);
+        QVERIFY(window.canvas()->visibleFraction().width() < 1.0); // 960 px of photo, smaller window
+        QTest::keyClick(&window, Qt::Key_C);
+        QVERIFY(window.canvas()->isFit());
+        QTest::keyClick(&window, Qt::Key_Escape);
+
         // Crop mode: C enters, Escape drops the change, Enter keeps it as one step.
         const int steps = static_cast<int>(window.document().history().labels().size());
         QTest::keyClick(&window, Qt::Key_C);

@@ -8,10 +8,13 @@
 //   PIXELFX_DEBUG_CROP=<ratio>[,<deg>] enter Crop mode with a ratio chip ("Free", "3:2") and
 //                                      a straightening angle once the photo is open
 //   PIXELFX_DEBUG_SHEET=export         with GRAB: grab the Export sheet instead of the window
+//   PIXELFX_DEBUG_ZOOM=<scale>         zoom to this scale (1 is 100%) once the photo is open; with
+//                                      GRAB, grab once the full-size render is shown
 //   PIXELFX_DEBUG_GRAB=<file.png>      grab the window once the photo is shown (or after 2 s
 //                                      with nothing to show) and quit
 #include "app/application.h"
 #include "core/log_sink.h"
+#include "ui/canvas.h"
 #include "ui/crop_panel.h"
 #include "ui/export_sheet.h"
 #include "ui/main_window.h"
@@ -61,6 +64,11 @@ void applyGrabHook(pixelfx::ui::MainWindow& window, const QStringList& files)
         window.grab().save(grab);
         QCoreApplication::quit();
     };
+    if (qEnvironmentVariableIsSet("PIXELFX_DEBUG_ZOOM")) { // the sharp full-size picture is what counts
+        QObject::connect(&window.document(), &pixelfx::services::Document::fullReady, &window,
+                         [save, &window] { QTimer::singleShot(300, &window, save); });
+        return;
+    }
     // Grab once rendering has settled (a preset re-renders after the first preview).
     QObject::connect(&window.document(), &pixelfx::services::Document::previewReady, &window,
                      [save, &window] {
@@ -79,6 +87,11 @@ void applyGrabHook(pixelfx::ui::MainWindow& window, const QStringList& files)
 
 void applyDebugHooks(pixelfx::ui::MainWindow& window, QStringList& files)
 {
+    if (const QString zoom = qEnvironmentVariable("PIXELFX_DEBUG_ZOOM"); !zoom.isEmpty()) {
+        QObject::connect(&window.document(), &pixelfx::services::Document::opened, &window, [&window, zoom] {
+            QTimer::singleShot(100, &window, [&window, zoom] { window.canvas()->setZoom(zoom.toDouble()); });
+        });
+    }
     if (const QString open = qEnvironmentVariable("PIXELFX_DEBUG_OPEN"); !open.isEmpty()) {
         files.prepend(QFileInfo(open).absoluteFilePath());
     }

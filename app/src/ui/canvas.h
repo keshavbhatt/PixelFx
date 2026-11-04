@@ -7,6 +7,9 @@
 #include <QString>
 #include <QWidget>
 
+class QLabel;
+class QToolButton;
+
 namespace pixelfx::ui {
 
 /// The photo, fitted to the widget on the canvas colour (DESIGN section 2). Shows a status line
@@ -51,17 +54,57 @@ public:
     /// What a press at `pos` would drag.
     [[nodiscard]] core::CropHandle cropHandleAt(QPointF pos) const;
 
+    /// Zoom: Fit (the default) shows the whole photo; otherwise the scale is screen pixels per
+    /// photo pixel at its full size (1 is 100%), kept around `anchor` (widget coordinates; the
+    /// middle when null). Crop mode always fits.
+    void setZoom(double scale, QPointF anchor = {});
+    void zoomToFit();
+    void zoomIn();
+    void zoomOut();
+    [[nodiscard]] bool isFit() const { return m_zoom <= 0.0; }
+    /// The scale on screen now, Fit included.
+    [[nodiscard]] double scale() const;
+    /// "Fit" or "45%", as the zoom bar shows it.
+    [[nodiscard]] QString zoomText() const;
+    /// The part of the photo on screen, as fractions of it.
+    [[nodiscard]] QRectF visibleFraction() const;
+    /// A sharper picture of the whole photo (the full-size render), drawn instead of the
+    /// preview while zoomed in past the preview's own resolution. Null to drop it.
+    void setDetail(const QImage& detail);
+    [[nodiscard]] bool needsDetail() const;
+
 Q_SIGNALS:
     /// The crop box was dragged to `crop` (fractions of the shown photo).
     void cropEdited(const QRectF& crop);
+    void zoomChanged();
+    void fullScreenRequested();
 
 protected:
     void paintEvent(QPaintEvent* event) override;
     void mousePressEvent(QMouseEvent* event) override;
     void mouseMoveEvent(QMouseEvent* event) override;
     void mouseReleaseEvent(QMouseEvent* event) override;
+    void mouseDoubleClickEvent(QMouseEvent* event) override;
+    void wheelEvent(QWheelEvent* event) override;
+    void resizeEvent(QResizeEvent* event) override;
 
 private:
+    [[nodiscard]] QRect fitRect() const;
+    [[nodiscard]] QSizeF zoomedSize() const;
+    void clampCentre();
+    void buildZoomBar();
+    void updateZoomBar();
+    double m_zoom = 0.0;        // 0: Fit
+    QPointF m_centre{0.5, 0.5}; // the photo point at the middle of the widget, as fractions
+    bool m_panning = false;
+    QPointF m_panStart;
+    QPointF m_centreStart;
+    QImage m_detail;
+    QWidget* m_zoomBar = nullptr;
+    QLabel* m_zoomLabel = nullptr;
+    QToolButton* m_zoomOut = nullptr;
+    QToolButton* m_zoomIn = nullptr;
+    QToolButton* m_actual = nullptr;
     void paintCompare(class QPainter& painter, const QRect& target);
     void paintCrop(QPainter& painter, const QRect& target);
     void paintOverlay(QPainter& painter, const QRectF& box) const;
