@@ -6,12 +6,16 @@
 #include "ui/style.h"
 
 #include <QButtonGroup>
+#include <QDialog>
+#include <QDialogButtonBox>
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QPushButton>
+#include <QSpinBox>
 #include <QVBoxLayout>
 
 #include <array>
+#include <cmath>
 
 using namespace Qt::StringLiterals;
 
@@ -144,8 +148,17 @@ QWidget* CropPanel::buildRatios()
         m_ratios->addButton(c);
         ratioChips << c;
     }
-    connect(m_ratios, &QButtonGroup::buttonClicked, this,
-            [this](QAbstractButton* b) { chooseRatio(b->property("ratioName").toString()); });
+    connect(m_ratios, &QButtonGroup::buttonClicked, this, [this](QAbstractButton* b) {
+        if (b == m_customChip) {
+            askCustomRatio();
+        } else {
+            chooseRatio(b->property("ratioName").toString());
+        }
+    });
+    m_customChip = chip(tr("Custom"), this);
+    m_customChip->setToolTip(tr("A ratio of your own, such as 7:5"));
+    m_ratios->addButton(m_customChip);
+    ratioChips << m_customChip;
     return chipRows(ratioChips, this);
 }
 
@@ -205,6 +218,13 @@ QLayout* CropPanel::buildStraighten()
     }
     turns->addStretch();
     straighten->addLayout(turns);
+    auto* level = smallButton(u"ruler"_s, tr("Draw a level line"),
+                              tr("Drag along something that should be level or upright"), this);
+    connect(level, &QPushButton::clicked, this, &CropPanel::levelLineRequested);
+    auto* levelRow = new QHBoxLayout;
+    levelRow->addWidget(level);
+    levelRow->addStretch();
+    straighten->addLayout(levelRow);
     return straighten;
 }
 
@@ -288,6 +308,68 @@ void CropPanel::chooseRatio(const QString& name)
     }
 }
 
+void CropPanel::askCustomRatio()
+{
+    // "Custom asks for numbers" (mock crop.html): width and height, in a small sheet.
+    QDialog sheet(this);
+    sheet.setWindowTitle(tr("Custom ratio"));
+    auto* width = new QSpinBox(&sheet);
+    auto* height = new QSpinBox(&sheet);
+    for (QSpinBox* box : {width, height}) {
+        box->setRange(1, 1000);
+    }
+    width->setValue(m_customWidth);
+    height->setValue(m_customHeight);
+    width->setAccessibleName(tr("Width"));
+    height->setAccessibleName(tr("Height"));
+    auto* buttons = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, &sheet);
+    buttons->button(QDialogButtonBox::Ok)->setText(tr("Use ratio"));
+    buttons->button(QDialogButtonBox::Ok)->setObjectName(u"primary"_s);
+    connect(buttons, &QDialogButtonBox::accepted, &sheet, &QDialog::accept);
+    connect(buttons, &QDialogButtonBox::rejected, &sheet, &QDialog::reject);
+    auto* row = new QHBoxLayout;
+    row->addWidget(width);
+    row->addWidget(new QLabel(u":"_s, &sheet));
+    row->addWidget(height);
+    auto* column = new QVBoxLayout(&sheet);
+    column->addLayout(row);
+    column->addWidget(buttons);
+    if (sheet.exec() == QDialog::Accepted) {
+        setCustomRatio(width->value(), height->value());
+    } else {
+        refreshControls();
+    }
+}
+
+void CropPanel::setCustomRatio(int width, int height)
+{
+    if (width <= 0 || height <= 0) {
+        return;
+    }
+    m_customWidth = width;
+    m_customHeight = height;
+    const double ratio = static_cast<double>(width) / height;
+    core::setCrop(m_settings, core::fitRatio(core::cropOf(m_settings), uncropped(), ratio));
+    setRatio(ratio);
+    changed();
+}
+
+void CropPanel::levelTo(double lineDegrees)
+{
+    // The line is drawn on the photo as shown (already straightened by the current angle). A
+    // line within 45 degrees of upright is made vertical, otherwise horizontal.
+    double tilt = std::fmod(lineDegrees, 180.0);
+    if (tilt > 90.0) {
+        tilt -= 180.0;
+    } else if (tilt < -90.0) {
+        tilt += 180.0;
+    }
+    if (std::abs(tilt) > 45.0) {
+        tilt -= std::copysign(90.0, tilt);
+    }
+    setAngle(std::clamp(m_settings.number("geometry.angle", 0.0) - tilt, -45.0, 45.0));
+}
+
 void CropPanel::setRatio(double ratio)
 {
     if (ratio != m_ratio) {
@@ -357,7 +439,8 @@ void CropPanel::refreshControls()
     // The chip of the current ratio; none when the ratio came from a turn of an unlisted one.
     const QSize size = uncropped();
     const double original = static_cast<double>(size.width()) / std::max(1, size.height());
-    const QList<QAbstractButton*> chips = m_ratios->buttons();
+    QList<QAbstractButton*> chips = m_ratios->buttons();
+    chips.removeOne(m_customChip);
     m_ratios->setExclusive(false);
     for (qsizetype i = 0; i < chips.size(); ++i) {
         const RatioChip& r = kRatios.at(static_cast<std::size_t>(i));
@@ -374,6 +457,7 @@ void CropPanel::refreshControls()
             seen = true;
         }
     }
+    m_customChip->setChecked(!seen && m_ratio > 0.0); // a ratio no chip names: the user's own
     m_ratios->setExclusive(true);
     const QRectF crop = core::cropOf(m_settings);
     const bool portrait =

@@ -3,6 +3,7 @@
 #include "ui/canvas.h"
 #include "ui/crop_panel.h"
 #include "ui/main_window.h"
+#include "ui/straighten_dial.h"
 #include "ui/style.h"
 
 #include <QApplication>
@@ -11,6 +12,8 @@
 #include <QTemporaryDir>
 #include <QTest>
 
+#include <cmath>
+#include <numbers>
 #include <pfx/io.h>
 
 using namespace Qt::StringLiterals;
@@ -93,6 +96,16 @@ private Q_SLOTS:
         QVERIFY(!window.isCropping());
         QCOMPARE(window.document().outputSize(), QSize(320, 200));
         QTest::keyClick(&window, Qt::Key_C);
+        // Draw a level line: a press and a release 10 degrees down to the right turn it back.
+        window.canvas()->startLevelLine();
+        const QPoint from = window.canvas()->rect().center() - QPoint(100, 0);
+        const QPoint to =
+            from + QPoint(200, static_cast<int>(std::lround(200 * std::tan(10 * std::numbers::pi / 180))));
+        QTest::mousePress(window.canvas(), Qt::LeftButton, {}, from);
+        QTest::mouseRelease(window.canvas(), Qt::LeftButton, {}, to);
+        QVERIFY(std::abs(window.cropPanel()->settings().number("geometry.angle", 0) + 10.0) < 0.3);
+        QVERIFY(std::abs(window.canvas()->dial()->angle() + 10.0) < 0.3);
+        window.cropPanel()->setAngle(0);
         window.cropPanel()->chooseRatio(u"1:1"_s);
         QTest::keyClick(&window, Qt::Key_Return);
         QVERIFY(!window.isCropping());

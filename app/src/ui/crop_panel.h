@@ -46,6 +46,11 @@ public:
     void turn(bool clockwise);
     void flip(Qt::Orientation orientation);
     void setAngle(double degrees);
+    /// A ratio of the user's own (the Custom chip asks for it).
+    void setCustomRatio(int width, int height);
+    /// Straightens so that a line drawn at `lineDegrees` on the shown photo (0 is level,
+    /// positive is clockwise) becomes level, or upright when it is closer to upright.
+    void levelTo(double lineDegrees);
     /// Clears turn, flips, straightening and crop; the other settings stay.
     void reset();
 
@@ -55,6 +60,8 @@ Q_SIGNALS:
     void overlayChanged(pixelfx::ui::CropOverlay overlay);
     /// Done (`apply` true) or Cancel.
     void finished(bool apply);
+    /// "Draw a level line": the canvas takes the next drag as the line.
+    void levelLineRequested();
 
 private:
     QWidget* buildRatios();
@@ -63,6 +70,7 @@ private:
     QWidget* buildOverlays();
     QLayout* buildFoot();
     void changed();
+    void askCustomRatio();
     void setRatio(double ratio);
     void refreshControls();
     [[nodiscard]] QSize uncropped() const;
@@ -75,6 +83,9 @@ private:
     QButtonGroup* m_orientation = nullptr;
     QButtonGroup* m_overlays = nullptr;
     AdjustSlider* m_angle = nullptr;
+    QPushButton* m_customChip = nullptr;
+    int m_customWidth = 7;
+    int m_customHeight = 5;
 };
 
 } // namespace pixelfx::ui

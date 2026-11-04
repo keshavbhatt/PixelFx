@@ -112,8 +112,8 @@ preview and export use resolution-independent parameters so they match (v1 defec
 
 | # | Feature | v1 | Decision | Status / class |
 |---|---|---|---|---|
-| G1 | Crop mode with handles, dimmed outside, ratio chips (Free, Original, 1:1, 4:5, 5:7, 3:2, 16:9, 9:16, Custom), orientation swap, overlays | dialog, shapes, destructive | KEEP (non-destructive, in place) | wip: Crop mode done (`CropPanel`, `Canvas`, `core::crop_geometry`); Custom ratio todo |
-| G2 | Straighten: dial, slider, drawn level line | none | KEEP | wip: slider in tenths of a degree done; dial and drawn level line todo |
+| G1 | Crop mode with handles, dimmed outside, ratio chips (Free, Original, 1:1, 4:5, 5:7, 3:2, 16:9, 9:16, Custom), orientation swap, overlays | dialog, shapes, destructive | KEEP (non-destructive, in place) | done: Crop mode with every ratio chip (Custom asks for numbers), orientation, overlays (`CropPanel`, `Canvas`, `core::crop_geometry`) |
+| G2 | Straighten: dial, slider, drawn level line | none | KEEP | done: dial under the photo, slider in tenths of a degree, drawn level line (horizontal or upright); Auto straighten later (mock: LATER if unreliable) |
 | G3 | Auto straighten (horizon detection) | none | LATER | |
 | G4 | Rotate 90 left and right, flip horizontal and vertical | rotate right only, flips stuck | KEEP | done: turns and flips act on the photo as shown, crop included |
 | G5 | Perspective: vertical, horizontal sliders and four-corner keystone | none | KEEP | todo |

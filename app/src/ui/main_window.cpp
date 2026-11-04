@@ -8,6 +8,7 @@
 #include "ui/crop_panel.h"
 #include "ui/export_sheet.h"
 #include "ui/icons.h"
+#include "ui/straighten_dial.h"
 #include "ui/style.h"
 #include "ui/welcome_page.h"
 
@@ -631,6 +632,12 @@ void MainWindow::connectCrop()
     connect(m_cropPanel, &CropPanel::overlayChanged, m_canvas, &Canvas::setCropOverlay);
     connect(m_cropPanel, &CropPanel::finished, this, &MainWindow::leaveCrop);
     connect(m_canvas, &Canvas::cropEdited, m_cropPanel, &CropPanel::setCrop);
+    connect(m_canvas->dial(), &StraightenDial::angleChanged, m_cropPanel, &CropPanel::setAngle);
+    connect(m_cropPanel, &CropPanel::settingsChanged, this, [this](const pfx::Settings& settings) {
+        m_canvas->dial()->setAngle(settings.number("geometry.angle", 0.0));
+    });
+    connect(m_cropPanel, &CropPanel::levelLineRequested, m_canvas, &Canvas::startLevelLine);
+    connect(m_canvas, &Canvas::levelLineDrawn, m_cropPanel, &CropPanel::levelTo);
 }
 
 bool MainWindow::isCropping() const
@@ -658,6 +665,7 @@ void MainWindow::enterCrop()
     m_canvas->setCropRatio(m_cropPanel->ratio());
     m_canvas->setCropOverlay(m_cropPanel->overlay());
     m_canvas->setCropMode(true);
+    m_canvas->dial()->setAngle(m_cropStart.number("geometry.angle", 0.0));
     m_canvas->setImage(m_document.preview(), m_document.displaySize());
     m_panels->setCurrentWidget(m_cropPanel);
     m_cropStrip->show();

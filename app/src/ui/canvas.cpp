@@ -1,6 +1,7 @@
 #include "ui/canvas.h"
 
 #include "ui/icons.h"
+#include "ui/straighten_dial.h"
 #include "ui/style.h"
 
 #include <QHBoxLayout>
@@ -15,6 +16,7 @@
 #include <algorithm>
 #include <array>
 #include <cmath>
+#include <numbers>
 #include <ranges>
 
 using namespace Qt::StringLiterals;
@@ -59,10 +61,20 @@ Qt::CursorShape cursorFor(core::CropHandle handle)
 
 Canvas::Canvas(QWidget* parent)
     : QWidget(parent)
+    , m_dial(new StraightenDial(this))
 {
     setAttribute(Qt::WA_OpaquePaintEvent);
     setAccessibleName(tr("Photo"));
     buildZoomBar();
+    m_dial->hide();
+}
+
+void Canvas::startLevelLine()
+{
+    if (m_cropping) {
+        m_levelLine = true;
+        setCursor(Qt::CrossCursor);
+    }
 }
 
 void Canvas::buildZoomBar()
@@ -125,6 +137,10 @@ void Canvas::updateZoomBar()
     m_zoomBar->adjustSize();
     m_zoomBar->move((width() - m_zoomBar->width()) / 2, height() - m_zoomBar->height() - 12);
     m_zoomBar->raise();
+    // Mock crop.html: the ruler sits just above the zoom bar while cropping.
+    m_dial->setVisible(m_cropping && !m_image.isNull());
+    m_dial->move((width() - m_dial->width()) / 2, m_zoomBar->y() - m_dial->height() - 8);
+    m_dial->raise();
 }
 
 void Canvas::resizeEvent(QResizeEvent* event)
@@ -364,6 +380,8 @@ void Canvas::setCropMode(bool on)
         m_detail = QImage();
     }
     m_cropping = on;
+    m_levelLine = false;
+    m_drawingLine = false;
     updateZoomBar();
     m_handle = core::CropHandle::None;
     setMouseTracking(on);
@@ -437,6 +455,12 @@ core::CropHandle Canvas::cropHandleAt(QPointF pos) const
 
 void Canvas::mousePressEvent(QMouseEvent* event)
 {
+    if (m_cropping && m_levelLine && event->button() == Qt::LeftButton) {
+        m_drawingLine = true;
+        m_lineStart = event->position();
+        m_lineEnd = m_lineStart;
+        return;
+    }
     if (m_cropping) {
         if (event->button() == Qt::LeftButton) {
             m_handle = cropHandleAt(event->position());
@@ -462,6 +486,11 @@ void Canvas::mousePressEvent(QMouseEvent* event)
 
 void Canvas::mouseMoveEvent(QMouseEvent* event)
 {
+    if (m_drawingLine) {
+        m_lineEnd = event->position();
+        update();
+        return;
+    }
     if (m_cropping) {
         if (m_handle == core::CropHandle::None) {
             setCursor(cursorFor(cropHandleAt(event->position())));
@@ -498,10 +527,24 @@ void Canvas::mouseMoveEvent(QMouseEvent* event)
     }
 }
 
-void Canvas::mouseReleaseEvent(QMouseEvent* /*event*/)
+void Canvas::mouseReleaseEvent(QMouseEvent* event)
 {
+    if (m_drawingLine) {
+        m_lineEnd = event->position(); // the release decides where the line ends
+    }
     m_dragging = false;
     m_handle = core::CropHandle::None;
+    if (m_drawingLine) {
+        m_drawingLine = false;
+        m_levelLine = false;
+        setCursor(Qt::ArrowCursor);
+        const QPointF d = m_lineEnd - m_lineStart;
+        update();
+        if (std::hypot(d.x(), d.y()) >= 12.0) { // a click is not a line
+            Q_EMIT levelLineDrawn(std::atan2(d.y(), d.x()) * 180.0 / std::numbers::pi);
+        }
+        return;
+    }
     if (m_panning) {
         m_panning = false;
         setCursor(Qt::OpenHandCursor);
@@ -601,7 +644,9 @@ QRect Canvas::fitRect() const
     if (m_image.isNull()) {
         return {};
     }
-    const QRect area = rect().adjusted(kMargin, kMargin, -kMargin, -kMargin);
+    // While cropping, the ruler and the zoom bar sit below the photo, not over it.
+    const int below = m_cropping ? m_zoomBar->sizeHint().height() + m_dial->sizeHint().height() + 20 : 0;
+    const QRect area = rect().adjusted(kMargin, kMargin, -kMargin, -kMargin - below);
     QSize size = m_image.size();
     size.scale(area.size(), Qt::KeepAspectRatio);
     if (size.width() > m_fullSize.width()) { // never enlarge past 100% of the photo at fit
@@ -643,6 +688,13 @@ void Canvas::paintEvent(QPaintEvent* /*event*/)
         painter.drawImage(visible, shown, source);
         if (m_cropping) {
             paintCrop(painter, target);
+            if (m_drawingLine) {
+                painter.setRenderHint(QPainter::Antialiasing);
+                painter.setPen(QPen(QColor(0, 0, 0, 160), 4));
+                painter.drawLine(m_lineStart, m_lineEnd);
+                painter.setPen(QPen(Qt::white, 2));
+                painter.drawLine(m_lineStart, m_lineEnd);
+            }
         } else if (m_compare && !m_original.isNull()) {
             paintCompare(painter, target);
         }

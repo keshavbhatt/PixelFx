@@ -91,6 +91,38 @@ private Q_SLOTS:
         QCOMPARE(panel.settings().keys(), std::vector<std::string>{"light.exposure"});
     }
 
+    void customRatio()
+    {
+        CropPanel panel;
+        panel.begin({}, QSize(600, 400));
+        panel.setCustomRatio(7, 5);
+        QCOMPARE(panel.ratio(), 1.4);
+        QVERIFY(std::abs(pixelRatio(panel.settings(), QSize(600, 400)) - 1.4) < 0.01);
+        bool customOn = false;
+        for (QPushButton* b : panel.findChildren<QPushButton*>(u"chip"_s)) {
+            if (b->text() == u"Custom"_s) {
+                customOn = b->isChecked();
+            }
+        }
+        QVERIFY(customOn);
+    }
+
+    void levelLineStraightens()
+    {
+        CropPanel panel;
+        panel.begin({}, QSize(600, 400));
+        panel.levelTo(10); // a horizon tilting down to the right: turn the photo back
+        QCOMPARE(panel.settings().number("geometry.angle", 0), -10.0);
+        panel.levelTo(0);
+        QCOMPARE(panel.settings().number("geometry.angle", 0), -10.0);
+        panel.setAngle(0);
+        panel.levelTo(80); // nearly upright: made vertical
+        QCOMPARE(panel.settings().number("geometry.angle", 0), 10.0);
+        panel.setAngle(0);
+        panel.levelTo(-170); // drawn right to left
+        QCOMPARE(panel.settings().number("geometry.angle", 0), -10.0);
+    }
+
     void doneAndCancel()
     {
         CropPanel panel;

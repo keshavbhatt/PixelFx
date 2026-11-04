@@ -73,10 +73,18 @@ public:
     void setDetail(const QImage& detail);
     [[nodiscard]] bool needsDetail() const;
 
+    /// The straighten ruler under the photo, shown in Crop mode.
+    [[nodiscard]] class StraightenDial* dial() const { return m_dial; }
+    /// The next drag draws a line instead of moving the crop box (Draw a level line).
+    void startLevelLine();
+    [[nodiscard]] bool isDrawingLevelLine() const { return m_levelLine; }
+
 Q_SIGNALS:
     /// The crop box was dragged to `crop` (fractions of the shown photo).
     void cropEdited(const QRectF& crop);
     void zoomChanged();
+    /// A level line was drawn; `degrees` is its tilt on screen, positive clockwise.
+    void levelLineDrawn(double degrees);
     void fullScreenRequested();
 
 protected:
@@ -94,6 +102,11 @@ private:
     void clampCentre();
     void buildZoomBar();
     void updateZoomBar();
+    class StraightenDial* m_dial = nullptr;
+    bool m_levelLine = false;
+    bool m_drawingLine = false;
+    QPointF m_lineStart;
+    QPointF m_lineEnd;
     double m_zoom = 0.0;        // 0: Fit
     QPointF m_centre{0.5, 0.5}; // the photo point at the middle of the widget, as fractions
     bool m_panning = false;
