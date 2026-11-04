@@ -48,3 +48,6 @@ Thumbs.db
 
 # Business notes and keyword research (kept local, never published)
 /DOCS/private/
+
+# Logs written by tools run in the repository
+aqtinstall.log
