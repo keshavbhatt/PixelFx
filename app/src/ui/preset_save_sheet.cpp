@@ -106,6 +106,26 @@ QHBoxLayout* PresetSaveSheet::buildButtons()
     return buttons;
 }
 
+QLabel* PresetSaveSheet::unitNote(const QString& unit, const pfx::Settings& settings, int changed)
+{
+    QString text;
+    if (unit == u"wb"_s) {
+        text = tr("relative to the photo");
+    } else if (unit == u"look"_s && settings.contains("look.id")) {
+        // Mock preset-save.html: "Look  Golden hour 72".
+        const QString name = core::lookName(QString::fromStdString(settings.text("look.id", "")));
+        text = u"%1 %2"_s.arg(name.isEmpty() ? tr("A look") : name)
+                   .arg(std::lround(settings.number("look.strength", 100.0)));
+    } else if (changed > 0) {
+        text = tr("%n changed", nullptr, changed);
+    } else {
+        return nullptr;
+    }
+    auto* note = new QLabel(text, this);
+    note->setObjectName(u"faint"_s);
+    return note;
+}
+
 void PresetSaveSheet::buildInclude(QFormLayout* form, const pfx::Settings& settings)
 {
     // Include: Changed only, All, None, then one box per part with how much changed.
@@ -137,21 +157,7 @@ void PresetSaveSheet::buildInclude(QFormLayout* form, const pfx::Settings& setti
         auto* row = new QHBoxLayout;
         row->addWidget(box);
         row->addStretch();
-        if (unit.id == u"wb"_s) {
-            auto* note = new QLabel(tr("relative to the photo"), this);
-            note->setObjectName(u"faint"_s);
-            row->addWidget(note);
-        } else if (unit.id == u"look"_s && settings.contains("look.id")) {
-            // Mock preset-save.html: "Look  Golden hour 72".
-            const QString name = core::lookName(QString::fromStdString(settings.text("look.id", "")));
-            auto* note = new QLabel(u"%1 %2"_s.arg(name.isEmpty() ? tr("A look") : name)
-                                        .arg(std::lround(settings.number("look.strength", 100.0))),
-                                    this);
-            note->setObjectName(u"faint"_s);
-            row->addWidget(note);
-        } else if (changed > 0) {
-            auto* note = new QLabel(tr("%n changed", nullptr, changed), this);
-            note->setObjectName(u"faint"_s);
+        if (QLabel* note = unitNote(unit.id, settings, changed)) {
             row->addWidget(note);
         }
         boxes->addLayout(row);

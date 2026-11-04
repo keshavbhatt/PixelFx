@@ -136,6 +136,34 @@ int changedCount(const pfx::Settings& settings, const QString& unitId)
     return n;
 }
 
+namespace {
+
+// Every registry setting of the unit, the photo's value or the default; false when none.
+bool addUnit(pfx::Settings& out, const pfx::Settings& settings, const UnitRule& rule)
+{
+    bool any = false;
+    for (const pfx::OpSpec& op : pfx::registry().ops()) {
+        for (const pfx::ParamSpec& p : op.params) {
+            if (!matches(rule, p.key)) {
+                continue;
+            }
+            if (const pfx::Value* v = settings.find(p.key)) {
+                out.set(p.key, *v);
+            } else if (p.type == pfx::ParamType::Number) {
+                out.set(p.key, p.defaultValue);
+            } else if (p.type == pfx::ParamType::Boolean) {
+                out.set(p.key, false);
+            } else {
+                continue;
+            }
+            any = true;
+        }
+    }
+    return any;
+}
+
+} // namespace
+
 pfx::Settings presetFrom(const pfx::Settings& settings, const QStringList& units)
 {
     pfx::Settings out;
@@ -144,24 +172,7 @@ pfx::Settings presetFrom(const pfx::Settings& settings, const QStringList& units
         if (rule == nullptr) {
             continue;
         }
-        bool any = false;
-        for (const pfx::OpSpec& op : pfx::registry().ops()) {
-            for (const pfx::ParamSpec& p : op.params) {
-                if (!matches(*rule, p.key)) {
-                    continue;
-                }
-                if (const pfx::Value* v = settings.find(p.key)) {
-                    out.set(p.key, *v);
-                    any = true;
-                } else if (p.type == pfx::ParamType::Number) {
-                    out.set(p.key, p.defaultValue);
-                    any = true;
-                } else if (p.type == pfx::ParamType::Boolean) {
-                    out.set(p.key, false);
-                    any = true;
-                }
-            }
-        }
+        const bool any = addUnit(out, settings, *rule);
         if (id == u"look"_s) {
             // Not registry settings: the look's id and strength, when the photo has a look.
             for (const char* key : {"look.id", "look.strength"}) {

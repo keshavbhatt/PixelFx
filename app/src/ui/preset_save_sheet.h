@@ -13,6 +13,8 @@ class QHBoxLayout;
 class QLineEdit;
 class QPushButton;
 
+class QLabel;
+
 namespace pixelfx::ui {
 
 /// Save as preset (mock preset-save.html): a name, a group, and which parts of the settings the
@@ -40,6 +42,7 @@ public:
 
 private:
     void buildInclude(QFormLayout* form, const pfx::Settings& settings);
+    [[nodiscard]] QLabel* unitNote(const QString& unit, const pfx::Settings& settings, int changed);
     QHBoxLayout* buildButtons();
     void refreshSave();
     QLineEdit* m_name = nullptr;
