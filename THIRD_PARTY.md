@@ -19,6 +19,13 @@ Every dependency, why it is here, and its licence. A new dependency needs an ADR
 | Qt | 6.11 | LGPL-3.0 (and GPL-3.0 for some tools), linked dynamically | The UI | `kde-qt6-core24-sdk` snap (dev), the KDE runtimes (packages), install-qt-action (CI) | ADR-000 |
 | Lucide icons | snapshot ba6751ac (2026-09-18) | ISC | UI glyphs in `app/src/resources/icons/ui` (notice alongside) | Pulled from the rewrite kit's vendored set | ADR-000 |
 | libvips | 8.18.7 for dev builds | LGPL-2.1-or-later | As for the library; dev builds compile it against the snap SDK | `scripts/build-deps.sh` (pinned, SHA-256) | ADR-008 |
+| libheif | 1.23.7 for dev builds | LGPL-3.0-or-later, linked dynamically | HEIC and AVIF reading in dev libvips (no encoders, no plugin loading) | `scripts/build-deps.sh` (pinned, SHA-256) | ADR-003, ADR-008 |
+| libde265 | 1.1.3 for dev builds | LGPL-3.0-or-later, static inside libheif | HEVC decoding for HEIC | `scripts/build-deps.sh` (pinned, SHA-256) | ADR-003, ADR-008 |
+| dav1d | 1.5.4 for dev builds | BSD-2-Clause, static inside libheif | AV1 decoding for AVIF | `scripts/build-deps.sh` (pinned, SHA-256) | ADR-008 |
+| libjxl | 0.12.0 for dev builds | BSD-3-Clause, linked dynamically | JPEG XL reading and writing in dev libvips | `scripts/build-deps.sh` (pinned, SHA-256) | ADR-003, ADR-008 |
+| highway | 1.4.0 for dev builds | Apache-2.0 or BSD-3-Clause, static inside libjxl | SIMD for libjxl | `scripts/build-deps.sh` (pinned, SHA-256) | ADR-008 |
+| brotli | 1.1.0 (the SDK's) | MIT, linked dynamically | Compressed boxes in libjxl | `kde-qt6-core24-sdk` and `kf6-core24` snaps | ADR-008 |
+| LibRaw | 0.22.3 for dev builds | LGPL-2.1-only or CDDL-1.0, linked dynamically | Camera RAW reading in dev libvips | `scripts/build-deps.sh` (pinned, SHA-256) | ADR-003, ADR-008 |
 
 ## Mocks (`DOCS/mocks`, not shipped)
 
