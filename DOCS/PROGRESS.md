@@ -24,6 +24,16 @@
 
 ## Sessions (newest first)
 
+### 2026-11-04 (publishing)
+
+- The rewrite is published in github.com/keshavbhatt/PixelFx (PLAN D20, owner's intent: a clean
+  history for Flathub): PixelFx 1 kept on the `legacy-v1` branch and the `v1-final` tag (at
+  `568c142`), `main` replaced by the new history (force-push with lease), description updated.
+  github.com/keshavbhatt/pixel got an archive note and is archived.
+- Before publishing: business notes and keyword research moved to `DOCS/private/` (git-ignored);
+  `LICENSING.md`, `REUSE.toml`, `LICENSE` and `LICENSES/` added (`reuse lint` passes); a fresh
+  clone builds and passes all tests.
+
 ### 2026-11-04 (M1)
 
 - libpixelfx 0.1.0 in `libs/pixelfx-core`: float RGBA image in linear Rec.2020, colour maths,
