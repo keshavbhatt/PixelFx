@@ -3,6 +3,7 @@
 // Debug hooks for headless checks (documented, not hidden; rewrite kit R-ADR-010):
 //   PIXELFX_DEBUG_OPEN=<file>          open this photo at start
 //   PIXELFX_DEBUG_WINDOW_SIZE=<w>x<h>  window size
+//   PIXELFX_DEBUG_PRESET=<file>        apply this preset or recipe once the photo is open
 //   PIXELFX_DEBUG_GRAB=<file.png>      grab the window once the photo is shown (or after 2 s
 //                                      with nothing to show) and quit
 #include "app/application.h"
@@ -12,6 +13,8 @@
 
 #include <QFileInfo>
 #include <QTimer>
+
+#include <pfx/document.h>
 
 using namespace Qt::StringLiterals;
 
@@ -25,6 +28,15 @@ void applyDebugHooks(pixelfx::ui::MainWindow& window, QStringList& files)
     if (const QString size = qEnvironmentVariable("PIXELFX_DEBUG_WINDOW_SIZE"); size.contains(u'x')) {
         window.resize(size.section(u'x', 0, 0).toInt(), size.section(u'x', 1, 1).toInt());
     }
+    if (const QString preset = qEnvironmentVariable("PIXELFX_DEBUG_PRESET"); !preset.isEmpty()) {
+        QObject::connect(
+            &window.document(), &pixelfx::services::Document::opened, &window, [&window, preset] {
+                const auto doc = pfx::loadDocument(preset.toStdString());
+                if (doc) {
+                    window.document().apply(doc.value().settings, QFileInfo(preset).completeBaseName());
+                }
+            });
+    }
     const QString grab = qEnvironmentVariable("PIXELFX_DEBUG_GRAB");
     if (grab.isEmpty()) {
         return;
@@ -33,8 +45,15 @@ void applyDebugHooks(pixelfx::ui::MainWindow& window, QStringList& files)
         window.grab().save(grab);
         QCoreApplication::quit();
     };
+    // Grab once rendering has settled (a preset re-renders after the first preview).
     QObject::connect(&window.document(), &pixelfx::services::Document::previewReady, &window,
-                     [save] { QTimer::singleShot(300, save); });
+                     [save, &window] {
+                         QTimer::singleShot(400, &window, [save, &window] {
+                             if (!window.document().isBusy()) {
+                                 save();
+                             }
+                         });
+                     });
     QObject::connect(&window.document(), &pixelfx::services::Document::failed, &window,
                      [save] { QTimer::singleShot(300, save); });
     if (files.isEmpty()) {

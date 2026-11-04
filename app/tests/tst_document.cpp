@@ -52,6 +52,78 @@ private Q_SLOTS:
         QVERIFY(!doc.isBusy());
     }
 
+    void editsRenderAndUndo()
+    {
+        QTemporaryDir dir;
+        const QString path = writePhoto(dir, u"photo.png"_s, 160, 120);
+        Document doc;
+        QSignalSpy ready(&doc, &Document::previewReady);
+        doc.open(path, 200);
+        QVERIFY(ready.wait(10000));
+        const QRgb before = doc.preview().pixel(80, 60);
+
+        pfx::Settings brighter;
+        brighter.set("light.exposure", 1.0);
+        doc.setSettings(brighter);
+        doc.commit(u"Exposure +1"_s);
+        QTRY_VERIFY_WITH_TIMEOUT(!doc.isBusy(), 10000);
+        QVERIFY(qGray(doc.preview().pixel(80, 60)) > qGray(before));
+        QVERIFY(doc.history().canUndo());
+
+        QSignalSpy replaced(&doc, &Document::settingsReplaced);
+        doc.undo();
+        QCOMPARE(replaced.count(), 1);
+        QVERIFY(doc.settings().isEmpty());
+        QTRY_VERIFY_WITH_TIMEOUT(!doc.isBusy(), 10000);
+        QCOMPARE(doc.preview().pixel(80, 60), before);
+        doc.redo();
+        QCOMPARE(doc.settings().number("light.exposure", 0), 1.0);
+    }
+
+    void manyQuickChangesRenderTheLastOne()
+    {
+        QTemporaryDir dir;
+        const QString path = writePhoto(dir, u"photo.png"_s, 400, 300);
+        Document doc;
+        QSignalSpy ready(&doc, &Document::previewReady);
+        doc.open(path, 400);
+        QVERIFY(ready.wait(10000));
+        ready.clear();
+        for (int i = 1; i <= 30; ++i) {
+            pfx::Settings s;
+            s.set("light.exposure", i / 30.0);
+            doc.setSettings(s);
+        }
+        QTRY_VERIFY_WITH_TIMEOUT(!doc.isBusy(), 15000);
+        QVERIFY(ready.count() < 30); // coalesced, not one render per change
+        pfx::Settings last;
+        last.set("light.exposure", 1.0);
+        Document reference;
+        QSignalSpy refReady(&reference, &Document::previewReady);
+        reference.open(path, 400);
+        QVERIFY(refReady.wait(10000));
+        reference.setSettings(last);
+        QTRY_VERIFY_WITH_TIMEOUT(!reference.isBusy(), 10000);
+        QCOMPARE(doc.preview(), reference.preview());
+    }
+
+    void applyIsOneStep()
+    {
+        QTemporaryDir dir;
+        const QString path = writePhoto(dir, u"photo.png"_s, 64, 48);
+        Document doc;
+        QSignalSpy ready(&doc, &Document::previewReady);
+        doc.open(path, 64);
+        QVERIFY(ready.wait(10000));
+        pfx::Settings preset;
+        preset.set("light.contrast", 30.0);
+        preset.set("color.vibrance", 20.0);
+        doc.apply(preset, u"Moody"_s);
+        QCOMPARE(doc.history().undoLabel(), u"Moody"_s);
+        doc.undo();
+        QVERIFY(doc.settings().isEmpty());
+    }
+
     void failureSaysWhy()
     {
         Document doc;

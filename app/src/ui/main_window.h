@@ -6,6 +6,7 @@
 
 class QLabel;
 class QStackedWidget;
+class QToolButton;
 
 namespace pixelfx::core {
 class Settings;
@@ -13,6 +14,7 @@ class Settings;
 
 namespace pixelfx::ui {
 
+class AdjustPanel;
 class Canvas;
 class WelcomePage;
 
@@ -33,6 +35,9 @@ public:
 
     [[nodiscard]] services::Document& document() { return m_document; }
     [[nodiscard]] Canvas* canvas() const { return m_canvas; }
+    [[nodiscard]] AdjustPanel* adjustPanel() const { return m_adjust; }
+    /// Shows the photo without its settings while `on` (the eye button, or Space held).
+    void showOriginal(bool on);
 
     /// Whether `path` has an extension PixelFx opens.
     [[nodiscard]] static bool isSupported(const QString& path);
@@ -42,10 +47,15 @@ protected:
     void dragEnterEvent(QDragEnterEvent* event) override;
     void dragLeaveEvent(QDragLeaveEvent* event) override;
     void dropEvent(QDropEvent* event) override;
+    void keyPressEvent(QKeyEvent* event) override;
+    void keyReleaseEvent(QKeyEvent* event) override;
 
 private:
     void setupUi();
+    void buildHeader();
     void setupActions();
+    void connectDocument();
+    void updateHistoryButtons();
     void showOpened(const services::DocumentInfo& info);
     void showFailed(const QString& path, const QString& message);
     [[nodiscard]] int previewLongEdge() const;
@@ -55,6 +65,11 @@ private:
     QStackedWidget* m_stack = nullptr;
     WelcomePage* m_welcome = nullptr;
     Canvas* m_canvas = nullptr;
+    AdjustPanel* m_adjust = nullptr;
+    QToolButton* m_undo = nullptr;
+    QToolButton* m_redo = nullptr;
+    QToolButton* m_original = nullptr;
+    bool m_showingOriginal = false;
     QLabel* m_docName = nullptr;
     QLabel* m_docMeta = nullptr;
     QWidget* m_header = nullptr;

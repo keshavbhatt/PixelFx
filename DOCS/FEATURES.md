@@ -68,12 +68,12 @@ preview and export use resolution-independent parameters so they match (v1 defec
 | E8 | Split toning / color grading (shadows, midtones, highlights wheels) | Colorize | KEEP (as a step in looks and a Color group sub-panel) | todo |
 | E9 | Creative operations from v1: Sepia, Threshold, Colorize, Pixelate, Blur, Invert, Grayscale, Emboss, Edge, Sobel | some in UI, some only in Go | KEEP as look steps, not sliders | todo |
 | E10 | Auto: one click sets Light and Color from the image statistics | none | KEEP | todo |
-| E11 | Live preview while dragging (no apply on release), 60 fps target on the preview size | apply on release, one process per apply | KEEP | todo |
+| E11 | Live preview while dragging (no apply on release), 60 fps target on the preview size | apply on release, one process per apply | KEEP | wip: live while dragging, newest request first (`RenderScheduler`); speed work (tiles, SIMD) in M3 |
 | E12 | Histogram (RGB, luminance), clipping warnings (J), camera line | RGB on GUI thread | KEEP | todo |
-| E13 | Before and after: split with divider, side by side, hold Space for the original | hold button | KEEP | todo |
-| E14 | Undo and redo for every change; History list; named snapshots | none | KEEP | todo |
+| E13 | Before and after: split with divider, side by side, hold Space for the original | hold button | KEEP | wip: hold Space or the eye button done (`MainWindow::showOriginal`); split and side by side in M3 |
+| E14 | Undo and redo for every change; History list; named snapshots | none | KEEP | wip: undo and redo with named steps done (`core::History`, `Document`); the History list and snapshots in M3 |
 | E15 | Copy and paste settings between photos, choose groups | none | KEEP | todo |
-| E16 | Reset a slider (double-click), a group, or everything | per row, global | KEEP | todo |
+| E16 | Reset a slider (double-click), a group, or everything | per row, global | KEEP | done (`AdjustPanel`) |
 | E17 | Edits remembered per photo in a sidecar (app library by default, or next to the photo) | none | KEEP | todo |
 | E18 | GPU-accelerated preview with automatic CPU fallback | none | KEEP 2.1 (PLAN D14) | |
 | E19 | Local adjustments: brush, linear and radial gradient masks | none | LATER | |

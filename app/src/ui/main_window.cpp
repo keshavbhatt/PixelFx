@@ -1,6 +1,7 @@
 #include "ui/main_window.h"
 
 #include "core/settings/settings.h"
+#include "ui/adjust_panel.h"
 #include "ui/canvas.h"
 #include "ui/icons.h"
 #include "ui/style.h"
@@ -13,6 +14,7 @@
 #include <QFileDialog>
 #include <QFileInfo>
 #include <QHBoxLayout>
+#include <QKeyEvent>
 #include <QLabel>
 #include <QLocale>
 #include <QMenu>
@@ -100,19 +102,53 @@ MainWindow::MainWindow(core::Settings& settings, QWidget* parent)
     }
     restoreState(m_settings.windowState());
 
+    connectDocument();
+}
+
+void MainWindow::connectDocument()
+{
     connect(&m_document, &services::Document::openStarted, this, [this](const QString& path) {
         m_stack->setCurrentWidget(m_canvas);
         m_canvas->setStatus(tr("Opening %1").arg(QFileInfo(path).fileName()));
     });
     connect(&m_document, &services::Document::opened, this, &MainWindow::showOpened);
-    connect(&m_document, &services::Document::previewReady, this,
-            [this](const QImage& image) { m_canvas->setImage(image, m_document.info().size); });
+    connect(&m_document, &services::Document::opened, this,
+            [this] { m_canvas->setImage(m_document.preview(), m_document.info().size); });
+    connect(&m_document, &services::Document::previewReady, this, [this](const QImage& image) {
+        if (!m_showingOriginal) {
+            m_canvas->showImage(image);
+        }
+    });
     connect(&m_document, &services::Document::failed, this, &MainWindow::showFailed);
+    connect(&m_document, &services::Document::settingsReplaced, m_adjust, &AdjustPanel::setSettings);
+    connect(&m_document, &services::Document::historyChanged, this, &MainWindow::updateHistoryButtons);
+    connect(m_adjust, &AdjustPanel::settingsChanged, &m_document, &services::Document::setSettings);
+    connect(m_adjust, &AdjustPanel::editFinished, &m_document, &services::Document::commit);
+}
+
+void MainWindow::updateHistoryButtons()
+{
+    const core::History& h = m_document.history();
+    m_undo->setEnabled(h.canUndo());
+    m_redo->setEnabled(h.canRedo());
+    m_undo->setToolTip(h.canUndo() ? tr("Undo %1 (Ctrl+Z)").arg(h.undoLabel()) : tr("Undo (Ctrl+Z)"));
+    m_redo->setToolTip(h.canRedo() ? tr("Redo %1 (Ctrl+Shift+Z)").arg(h.redoLabel())
+                                   : tr("Redo (Ctrl+Shift+Z)"));
+}
+
+void MainWindow::showOriginal(bool on)
+{
+    if (!m_document.isOpen() || on == m_showingOriginal) {
+        return;
+    }
+    m_showingOriginal = on;
+    m_canvas->showImage(on ? m_document.original() : m_document.preview());
+    m_original->setDown(on);
 }
 
 MainWindow::~MainWindow() = default;
 
-void MainWindow::setupUi()
+void MainWindow::buildHeader()
 {
     m_header = new QWidget(this);
     m_header->setObjectName(u"header"_s);
@@ -128,6 +164,16 @@ void MainWindow::setupUi()
     doc->setSpacing(0);
     doc->addWidget(m_docName);
     doc->addWidget(m_docMeta);
+    m_undo = headerButton(m_header, u"undo"_s, tr("Undo (Ctrl+Z)"));
+    m_redo = headerButton(m_header, u"redo"_s, tr("Redo (Ctrl+Shift+Z)"));
+    m_original = headerButton(m_header, u"original"_s, tr("Show the original while held (Space)"));
+    connect(m_undo, &QToolButton::clicked, &m_document, &services::Document::undo);
+    connect(m_redo, &QToolButton::clicked, &m_document, &services::Document::redo);
+    connect(m_original, &QToolButton::pressed, this, [this] { showOriginal(true); });
+    connect(m_original, &QToolButton::released, this, [this] { showOriginal(false); });
+    m_undo->setEnabled(false);
+    m_redo->setEnabled(false);
+    m_original->setEnabled(false);
     auto* menuButton = headerButton(m_header, u"menu"_s, tr("Main menu (F10)"));
     menuButton->setPopupMode(QToolButton::InstantPopup);
     auto* menu = new QMenu(menuButton);
@@ -147,7 +193,17 @@ void MainWindow::setupUi()
     header->addSpacing(4);
     header->addLayout(doc);
     header->addStretch();
+    header->addWidget(m_undo);
+    header->addWidget(m_redo);
+    header->addSpacing(8);
+    header->addWidget(m_original);
+    header->addSpacing(8);
     header->addWidget(menuButton);
+}
+
+void MainWindow::setupUi()
+{
+    buildHeader();
 
     m_welcome = new WelcomePage(this);
     connect(m_welcome, &WelcomePage::openRequested, this, &MainWindow::chooseFiles);
@@ -156,12 +212,20 @@ void MainWindow::setupUi()
     m_stack->addWidget(m_welcome);
     m_stack->addWidget(m_canvas);
 
+    m_adjust = new AdjustPanel(this);
+    m_adjust->hide();
+    auto* body = new QHBoxLayout;
+    body->setContentsMargins(0, 0, 0, 0);
+    body->setSpacing(0);
+    body->addWidget(m_stack, 1);
+    body->addWidget(m_adjust);
+
     auto* central = new QWidget(this);
     auto* column = new QVBoxLayout(central);
     column->setContentsMargins(0, 0, 0, 0);
     column->setSpacing(0);
     column->addWidget(m_header);
-    column->addWidget(m_stack, 1);
+    column->addLayout(body, 1);
     setCentralWidget(central);
     setWindowTitle(QString());
 }
@@ -180,7 +244,20 @@ void MainWindow::setupActions()
     fullScreen->setShortcut(QKeySequence(Qt::Key_F11));
     connect(fullScreen, &QAction::triggered, this,
             [this] { isFullScreen() ? showNormal() : showFullScreen(); });
-    addActions({openAction, quitAction, fullScreen});
+    auto* undo = new QAction(tr("Undo"), this);
+    undo->setShortcut(QKeySequence::Undo);
+    connect(undo, &QAction::triggered, &m_document, &services::Document::undo);
+    auto* redo = new QAction(tr("Redo"), this);
+    redo->setShortcuts({QKeySequence(u"Ctrl+Shift+Z"_s), QKeySequence(u"Ctrl+Y"_s)});
+    connect(redo, &QAction::triggered, &m_document, &services::Document::redo);
+    auto* resetAll = new QAction(tr("Reset all"), this);
+    resetAll->setShortcut(QKeySequence(u"Ctrl+R"_s));
+    connect(resetAll, &QAction::triggered, this, [this] {
+        if (m_document.isOpen()) {
+            m_adjust->resetAll();
+        }
+    });
+    addActions({openAction, quitAction, fullScreen, undo, redo, resetAll});
 }
 
 bool MainWindow::isSupported(const QString& path)
@@ -223,6 +300,9 @@ void MainWindow::showOpened(const services::DocumentInfo& info)
     m_docMeta->setText(describe(info));
     setWindowTitle(name);
     m_settings.addRecentFile(info.path);
+    m_adjust->show();
+    m_original->setEnabled(true);
+    m_showingOriginal = false;
 }
 
 void MainWindow::showFailed(const QString& path, const QString& message)
@@ -266,6 +346,24 @@ void MainWindow::dragLeaveEvent(QDragLeaveEvent* event)
 {
     m_welcome->setDragActive(false);
     QMainWindow::dragLeaveEvent(event);
+}
+
+void MainWindow::keyPressEvent(QKeyEvent* event)
+{
+    if (event->key() == Qt::Key_Space && !event->isAutoRepeat()) {
+        showOriginal(true);
+        return;
+    }
+    QMainWindow::keyPressEvent(event);
+}
+
+void MainWindow::keyReleaseEvent(QKeyEvent* event)
+{
+    if (event->key() == Qt::Key_Space && !event->isAutoRepeat()) {
+        showOriginal(false);
+        return;
+    }
+    QMainWindow::keyReleaseEvent(event);
 }
 
 void MainWindow::dropEvent(QDropEvent* event)

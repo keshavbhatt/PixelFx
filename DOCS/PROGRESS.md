@@ -7,7 +7,7 @@
 | M0 Analysis and contract | done |
 | M1 Library core | done (2026-11-04), performance carried into M3 |
 | M2 App skeleton | done locally (2026-11-04); Windows and macOS CI written, first run after the next push |
-| M3 Editor | todo |
+| M3 Editor | wip (live editing, undo, before and after started 2026-11-05) |
 | M4 Looks and presets | todo |
 | M5 Batch | todo |
 | M6 Polish and text | todo |
@@ -23,6 +23,22 @@
 | `batch-compress.html` | 2026-11-04 (`mocks/reviews/batch-compress.md`) | approved 2026-11-04 |
 
 ## Sessions (newest first)
+
+### 2026-11-05 (M3, part 1)
+
+- Live editing: `RenderScheduler` renders previews on a worker, one at a time, with only the
+  newest request waiting; `Document` keeps the decoded source, the settings and their history,
+  with `setSettings` (live), `commit` (a step), `apply` (a preset as one step), `undo`, `redo`;
+  `core::History` holds named settings snapshots (200 steps).
+- The adjust panel from `editor.html`: Light, Color and Detail groups built from the registry,
+  changed values in the accent, group dots and reset, double-click resets a slider, Reset all
+  (Ctrl+R), meaningful tracks for temperature, tint and saturation. Undo, Redo and hold Space
+  (or the eye button) for the original in the header.
+- Verified: 12 suites pass against the snap runtime (new: history, adjust panel, document
+  editing including 30 quick changes rendering fewer times with the last one winning); clang-tidy
+  clean; a grab with the example preset applied matches the mock.
+- Found and fixed: opening rendered the photo twice; changed values were not in the accent.
+- CI: Linux and macOS green after the fixes; Windows still building its vcpkg packages.
 
 ### 2026-11-04 (M2)
 

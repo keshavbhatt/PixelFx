@@ -19,6 +19,8 @@ public:
 
     /// `fullSize` is the photo's real size: the fit view never enlarges past 100% of it.
     void setImage(const QImage& image, const QSize& fullSize);
+    /// Swaps the shown pixels (same photo: original or edited) without touching the full size.
+    void showImage(const QImage& image);
     void setStatus(const QString& text);
     void setError(const QString& text);
     [[nodiscard]] const QImage& image() const { return m_image; }

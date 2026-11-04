@@ -15,9 +15,7 @@ QColor hex(const char* value)
     return {QString::fromLatin1(value)};
 }
 
-QString sheet(const Tokens& t)
-{
-    QString s = uR"(
+const QString kSheet = uR"(
         #header { background: {{bar}}; border-bottom: 1px solid {{border}}; }
         #docName { font-weight: 600; }
         #docMeta { color: {{muted}}; font-size: 11px; }
@@ -35,11 +33,34 @@ QString sheet(const Tokens& t)
         #welcomeTitle { font-size: 20px; font-weight: 600; }
         #welcomeHint, #muted { color: {{muted}}; }
         #faint { color: {{faint}}; font-size: 12px; }
+        #adjustPanel { background: {{panel}}; border-left: 1px solid {{border}}; }
+        #adjustScroll, #adjustContent { background: {{panel}}; }
+        #adjustGroup { border-top: 1px solid {{border}}; }
+        QToolButton#groupToggle { border: 0; background: transparent; font-weight: 600; padding: 2px; }
+        QToolButton#groupReset { border: 0; border-radius: 6px; padding: 3px; background: transparent; }
+        QToolButton#groupReset:hover { background: {{hover}}; }
+        #changedDot { background: {{accent}}; border-radius: 3px; }
+        #adjustName { color: {{muted}}; font-size: 12px; }
+        #adjustName[changed="true"] { color: {{text}}; }
+        #adjustValue { color: {{text}}; font-size: 12px; }
+        #adjustValue[changed="true"] { color: {{accent}}; }
+        QPushButton#small { padding: 4px 10px; font-size: 12px; }
+        QSlider { min-height: 24px; }
+        QSlider::groove:horizontal { height: 3px; border-radius: 1px; background: {{track}}; }
+        QSlider::handle:horizontal { width: 13px; height: 13px; margin: -5px 0; border-radius: 6px; background: {{text}}; }
+        QSlider::handle:horizontal:focus { background: {{accent}}; }
+        QSlider#temperatureTrack::groove:horizontal { background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #4F86E8, stop:0.5 #DDDDDD, stop:1 #F0B040); }
+        QSlider#tintTrack::groove:horizontal { background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #4CB060, stop:0.5 #DDDDDD, stop:1 #D050C0); }
+        QSlider#saturationTrack::groove:horizontal { background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #888888, stop:0.2 #E04F4F, stop:0.4 #E0C04F, stop:0.6 #4FE070, stop:0.8 #4F9CE0, stop:1 #B04FE0); }
         QMenu { background: {{elevated}}; border: 1px solid {{border}}; border-radius: 10px; padding: 5px; }
         QMenu::item { padding: 6px 28px 6px 10px; border-radius: 6px; }
         QMenu::item:selected { background: {{hover}}; }
         QMenu::separator { height: 1px; background: {{border}}; margin: 5px 4px; }
     )"_s;
+
+QString sheet(const Tokens& t)
+{
+    QString s = kSheet;
     const auto put = [&s](const QString& name, const QColor& c) {
         s.replace(u"{{"_s + name + u"}}"_s, c.name());
     };
@@ -54,6 +75,8 @@ QString sheet(const Tokens& t)
     put(u"hover"_s, t.hover);
     put(u"border"_s, t.border);
     put(u"muted"_s, t.muted);
+    put(u"text"_s, t.text);
+    put(u"track"_s, t.track);
     put(u"faint"_s, t.faint);
     return s;
 }

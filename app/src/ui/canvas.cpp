@@ -28,6 +28,12 @@ void Canvas::setImage(const QImage& image, const QSize& fullSize)
     update();
 }
 
+void Canvas::showImage(const QImage& image)
+{
+    m_image = image;
+    update();
+}
+
 void Canvas::setStatus(const QString& text)
 {
     m_status = text;
