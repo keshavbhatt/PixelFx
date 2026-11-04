@@ -69,7 +69,7 @@ preview and export use resolution-independent parameters so they match (v1 defec
 | E9 | Creative operations from v1: Sepia, Threshold, Colorize, Pixelate, Blur, Invert, Grayscale, Emboss, Edge, Sobel | some in UI, some only in Go | KEEP as look steps, not sliders | todo |
 | E10 | Auto: one click sets Light and Color from the image statistics | none | KEEP | todo |
 | E11 | Live preview while dragging (no apply on release), 60 fps target on the preview size | apply on release, one process per apply | KEEP | wip: live while dragging, newest request first (`RenderScheduler`); speed work (tiles, SIMD) in M3 |
-| E12 | Histogram (RGB, luminance), clipping warnings (J), camera line | RGB on GUI thread | KEEP | todo |
+| E12 | Histogram (RGB, luminance), clipping warnings (J), camera line | RGB on GUI thread | KEEP | wip: RGB histogram computed on the render worker (`core::Histogram`, `HistogramView`); clipping counts computed, the J overlay and the camera line later in M3 |
 | E13 | Before and after: split with divider, side by side, hold Space for the original | hold button | KEEP | wip: hold Space or the eye button done (`MainWindow::showOriginal`); split and side by side in M3 |
 | E14 | Undo and redo for every change; History list; named snapshots | none | KEEP | wip: undo and redo with named steps done (`core::History`, `Document`); the History list and snapshots in M3 |
 | E15 | Copy and paste settings between photos, choose groups | none | KEEP | todo |

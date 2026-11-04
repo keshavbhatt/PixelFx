@@ -1,5 +1,6 @@
 #include "ui/adjust_panel.h"
 
+#include "ui/histogram_view.h"
 #include "ui/icons.h"
 #include "ui/style.h"
 
@@ -269,6 +270,7 @@ bool AdjustSlider::eventFilter(QObject* watched, QEvent* event)
 
 AdjustPanel::AdjustPanel(QWidget* parent)
     : QWidget(parent)
+    , m_histogram(new HistogramView(this))
 {
     setObjectName(u"adjustPanel"_s);
     setAttribute(Qt::WA_StyledBackground);
@@ -277,9 +279,12 @@ AdjustPanel::AdjustPanel(QWidget* parent)
     resetAll->setToolTip(tr("Reset all adjustments (Ctrl+R)"));
     connect(resetAll, &QPushButton::clicked, this, &AdjustPanel::resetAll);
     auto* top = new QHBoxLayout;
-    top->setContentsMargins(12, 10, 12, 8);
+    top->setContentsMargins(12, 6, 12, 8);
     top->addStretch();
     top->addWidget(resetAll);
+    auto* histogramBox = new QVBoxLayout;
+    histogramBox->setContentsMargins(12, 10, 12, 0);
+    histogramBox->addWidget(m_histogram);
 
     auto* content = new QWidget(this);
     content->setObjectName(u"adjustContent"_s);
@@ -313,6 +318,7 @@ AdjustPanel::AdjustPanel(QWidget* parent)
     auto* column = new QVBoxLayout(this);
     column->setContentsMargins(0, 0, 0, 0);
     column->setSpacing(0);
+    column->addLayout(histogramBox);
     column->addLayout(top);
     column->addWidget(scroll, 1);
     setFixedWidth(316);
@@ -320,6 +326,11 @@ AdjustPanel::AdjustPanel(QWidget* parent)
 }
 
 AdjustPanel::~AdjustPanel() = default;
+
+void AdjustPanel::setHistogram(const core::Histogram& histogram)
+{
+    m_histogram->setHistogram(histogram);
+}
 
 AdjustSlider* AdjustPanel::slider(const QString& key) const
 {

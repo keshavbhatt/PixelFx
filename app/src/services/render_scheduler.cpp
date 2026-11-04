@@ -17,6 +17,7 @@ struct Job
     quint64 generation = 0;
     pfx::Settings settings;
     QImage image;
+    core::Histogram histogram;
     QString error;
 };
 
@@ -34,6 +35,7 @@ Job renderJob(const std::shared_ptr<const pfx::Image>& source,
         return job;
     }
     job.image = toQImage(display.value());
+    job.histogram = core::histogramOf(job.image);
     return job;
 }
 
@@ -68,7 +70,7 @@ void RenderScheduler::startNext()
     if (!m_pending || !m_source) {
         return;
     }
-    Job job{m_sourceGeneration, std::move(*m_pending), {}, {}};
+    Job job{m_sourceGeneration, std::move(*m_pending), {}, {}, {}};
     m_pending.reset();
     m_running = true;
     auto* watcher = new QFutureWatcher<Job>(this);
@@ -78,7 +80,7 @@ void RenderScheduler::startNext()
         m_running = false;
         if (done.generation == m_sourceGeneration) {
             if (done.error.isEmpty()) {
-                Q_EMIT rendered(done.image, done.settings);
+                Q_EMIT rendered(done.image, done.settings, done.histogram);
             } else {
                 Q_EMIT failed(done.error);
             }

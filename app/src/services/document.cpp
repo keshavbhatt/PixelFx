@@ -20,6 +20,7 @@ struct Document::Result
     DocumentInfo info;
     std::shared_ptr<const pfx::Image> source;
     QImage original;
+    core::Histogram histogram;
     QString error;
 };
 
@@ -36,10 +37,13 @@ Document::Document(QObject* parent)
     : QObject(parent)
     , m_scheduler(new RenderScheduler(this))
 {
-    connect(m_scheduler, &RenderScheduler::rendered, this, [this](const QImage& image, const pfx::Settings&) {
-        m_preview = image;
-        Q_EMIT previewReady(m_preview);
-    });
+    connect(m_scheduler, &RenderScheduler::rendered, this,
+            [this](const QImage& image, const pfx::Settings&, const core::Histogram& histogram) {
+                m_preview = image;
+                m_histogram = histogram;
+                Q_EMIT previewReady(m_preview);
+                Q_EMIT histogramReady(m_histogram);
+            });
     connect(m_scheduler, &RenderScheduler::failed, this,
             [this](const QString& message) { Q_EMIT failed(m_info.path, message); });
 }
@@ -74,6 +78,7 @@ Document::Result Document::openOnWorker(Result result,
         return result;
     }
     result.original = toQImage(display.value());
+    result.histogram = core::histogramOf(result.original);
     result.source = std::make_shared<const pfx::Image>(std::move(loaded).value().image);
     return result;
 }
@@ -108,12 +113,14 @@ void Document::deliver(const Result& result)
     m_info = result.info;
     m_original = result.original;
     m_preview = result.original;
+    m_histogram = result.histogram;
     m_scheduler->setSource(result.source);
     m_history.reset({}, tr("Opened"));
     replaceSettings({}, false); // the original is already the render of no settings
     qCInfo(lcDocument) << "opened" << m_info.path << m_info.size << m_info.format;
     Q_EMIT opened(m_info);
     Q_EMIT previewReady(m_preview);
+    Q_EMIT histogramReady(m_histogram);
     Q_EMIT historyChanged();
 }
 

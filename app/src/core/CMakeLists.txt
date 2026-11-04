@@ -4,6 +4,8 @@ qt_add_library(pixelfx_core STATIC
     changelog.h
     export_options.cpp
     export_options.h
+    histogram.cpp
+    histogram.h
     history.cpp
     history.h
     log_sink.cpp
@@ -16,4 +18,4 @@ qt_add_library(pixelfx_core STATIC
 )
 pixelfx_set_warnings(pixelfx_core)
 target_include_directories(pixelfx_core PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/..")
-target_link_libraries(pixelfx_core PUBLIC Qt6::Core pfx::core)
+target_link_libraries(pixelfx_core PUBLIC Qt6::Core Qt6::Gui pfx::core)

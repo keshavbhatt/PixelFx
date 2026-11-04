@@ -1,5 +1,6 @@
 #pragma once
 
+#include "core/histogram.h"
 #include "core/history.h"
 
 #include <QImage>
@@ -45,6 +46,7 @@ public:
     [[nodiscard]] const QImage& preview() const { return m_preview; }
     [[nodiscard]] const QImage& original() const { return m_original; }
     [[nodiscard]] bool isBusy() const;
+    [[nodiscard]] const core::Histogram& histogram() const { return m_histogram; }
 
     [[nodiscard]] const pfx::Settings& settings() const { return m_settings; }
     /// Changes the settings and re-renders, without a history step (live slider moves).
@@ -61,6 +63,7 @@ Q_SIGNALS:
     void openStarted(const QString& path);
     void opened(const pixelfx::services::DocumentInfo& info);
     void previewReady(const QImage& image);
+    void histogramReady(const pixelfx::core::Histogram& histogram);
     /// The settings changed from outside the editing controls (open, undo, redo).
     void settingsReplaced(const pfx::Settings& settings);
     void historyChanged();
@@ -77,6 +80,7 @@ private:
     DocumentInfo m_info;
     QImage m_preview;
     QImage m_original;
+    core::Histogram m_histogram;
     pfx::Settings m_settings;
     core::History m_history;
     RenderScheduler* m_scheduler = nullptr;

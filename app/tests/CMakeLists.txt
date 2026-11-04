@@ -17,6 +17,7 @@ endfunction()
 pixelfx_add_test(tst_settings        tst_settings.cpp        pixelfx_core)
 pixelfx_add_test(tst_history         tst_history.cpp         pixelfx_core)
 pixelfx_add_test(tst_export_options  tst_export_options.cpp  pixelfx_core)
+pixelfx_add_test(tst_histogram       tst_histogram.cpp       pixelfx_core)
 pixelfx_add_test(tst_log_sink        tst_log_sink.cpp        pixelfx_core)
 pixelfx_add_test(tst_changelog       tst_changelog.cpp       pixelfx_core)
 target_compile_definitions(tst_changelog PRIVATE

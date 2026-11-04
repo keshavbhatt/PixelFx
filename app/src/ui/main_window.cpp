@@ -125,6 +125,7 @@ void MainWindow::connectDocument()
     connect(&m_document, &services::Document::failed, this, &MainWindow::showFailed);
     connect(&m_document, &services::Document::settingsReplaced, m_adjust, &AdjustPanel::setSettings);
     connect(&m_document, &services::Document::historyChanged, this, &MainWindow::updateHistoryButtons);
+    connect(&m_document, &services::Document::histogramReady, m_adjust, &AdjustPanel::setHistogram);
     connect(m_adjust, &AdjustPanel::settingsChanged, &m_document, &services::Document::setSettings);
     connect(m_adjust, &AdjustPanel::editFinished, &m_document, &services::Document::commit);
     connect(&m_exporter, &services::Exporter::finished, this,

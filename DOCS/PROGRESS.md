@@ -45,6 +45,7 @@
   Ctrl+Shift+E; choices remembered in settings; `core::exportTarget` never picks the original by
   accident. libpixelfx gained `fitLongEdge` (Lanczos 3 in linear light) and `writableExtensions`.
   15 app suites and 43 library tests pass; clang-tidy clean.
+- Histogram at the top of the adjust panel, computed with each render on the worker; 16 suites pass.
 
 ### 2026-11-04 (M2)
 

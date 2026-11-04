@@ -1,5 +1,7 @@
 #pragma once
 
+#include "core/histogram.h"
+
 #include <QWidget>
 
 #include <pfx/settings.h>
@@ -12,6 +14,7 @@ namespace pixelfx::ui {
 
 class AdjustGroup;
 class AdjustSlider;
+class HistogramView;
 
 /// The adjustments panel (mock editor.html, right side): groups in a photographer's order,
 /// built from the library's operation registry (ADR-005). It edits a copy of the photo's
@@ -29,6 +32,7 @@ public:
     void setSettings(const pfx::Settings& settings);
     [[nodiscard]] const pfx::Settings& settings() const { return m_settings; }
     [[nodiscard]] AdjustSlider* slider(const QString& key) const;
+    void setHistogram(const core::Histogram& histogram);
     /// Clears every setting (Ctrl+R) and reports it as one step.
     void resetAll();
 
@@ -44,6 +48,7 @@ private:
     void refreshGroups();
 
     pfx::Settings m_settings;
+    HistogramView* m_histogram = nullptr;
     std::vector<AdjustGroup*> m_groups;
     std::vector<AdjustSlider*> m_sliders;
 };

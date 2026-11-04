@@ -6,6 +6,8 @@ qt_add_library(pixelfx_ui STATIC
     canvas.h
     export_sheet.cpp
     export_sheet.h
+    histogram_view.cpp
+    histogram_view.h
     icons.cpp
     icons.h
     main_window.cpp

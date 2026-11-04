@@ -1,5 +1,7 @@
 #pragma once
 
+#include "core/histogram.h"
+
 #include <QImage>
 #include <QObject>
 
@@ -28,7 +30,8 @@ public:
 
 Q_SIGNALS:
     /// The display image for `settings`, in sRGB.
-    void rendered(const QImage& image, const pfx::Settings& settings);
+    void rendered(const QImage& image, const pfx::Settings& settings,
+                  const pixelfx::core::Histogram& histogram);
     void failed(const QString& message);
 
 private:
