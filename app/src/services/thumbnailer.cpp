@@ -1,5 +1,6 @@
 #include "services/thumbnailer.h"
 
+#include "core/looks.h"
 #include "core/sidecar_store.h"
 #include "services/qt_image_bridge.h"
 
@@ -44,7 +45,7 @@ Thumbnail Thumbnailer::make(const QString& path, int longEdge, const QString& si
         }
     }
     const auto rendered = settings.isEmpty() ? pfx::Result<pfx::Image>(std::move(loaded).value().image)
-                                             : pfx::render(loaded.value().image, settings);
+                                             : core::renderPhoto(loaded.value().image, settings);
     if (!rendered) {
         return thumb;
     }
@@ -66,7 +67,7 @@ void Thumbnailer::requestRender(int key, std::shared_ptr<const pfx::Image> sourc
         if (!source) {
             return {};
         }
-        const auto out = pfx::render(*source, settings, {1, nullptr}); // tiny: one thread each
+        const auto out = core::renderPhoto(*source, settings, {1, nullptr}); // tiny: one thread each
         if (!out) {
             return {};
         }

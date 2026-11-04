@@ -1,5 +1,6 @@
 #include "services/exporter.h"
 
+#include "core/looks.h"
 #include "core/watermark.h"
 #include "services/logging.h"
 #include "services/qt_image_bridge.h"
@@ -82,7 +83,7 @@ PreparedExport prepareExport(const QString& source,
     }
     out.metadata = std::move(loaded.value().metadata);
     const pfx::Settings settings = settingsFor(loaded.value().image);
-    auto rendered = pfx::render(std::move(loaded.value().image), settings);
+    auto rendered = core::renderPhoto(std::move(loaded.value().image), settings);
     if (!rendered) {
         out.error = QString::fromStdString(rendered.error().message);
         return out;

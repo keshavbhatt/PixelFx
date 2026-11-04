@@ -13,6 +13,8 @@ qt_add_library(pixelfx_core STATIC
     log_sink.cpp
     log_sink.h
     logging.cpp
+    looks.cpp
+    looks.h
     logging.h
     photo_details.cpp
     photo_details.h

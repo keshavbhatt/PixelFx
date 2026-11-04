@@ -1,5 +1,6 @@
 #include "services/render_scheduler.h"
 
+#include "core/looks.h"
 #include "services/qt_image_bridge.h"
 
 #include <QFutureWatcher>
@@ -24,7 +25,7 @@ struct Job
 Job renderJob(const std::shared_ptr<const pfx::Image>& source,
               Job job) // NOLINT(performance-unnecessary-value-param)
 {
-    const auto rendered = pfx::render(*source, job.settings);
+    const auto rendered = core::renderPhoto(*source, job.settings);
     if (!rendered) {
         job.error = QString::fromStdString(rendered.error().message);
         return job;
