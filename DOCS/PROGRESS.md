@@ -57,8 +57,12 @@
 - Auto (`pfx::autoAdjust`): exposure toward middle grey, blacks and whites stretched, a little
   contrast and vibrance when needed, a half-strength grey-world white balance for strong casts;
   the Auto button keeps curves and detail; `pfx apply --auto`. 48 library tests pass.
-- CI Windows: vcpkg and Qt now install; the first compile error (an iterator spelled as a
-  pointer, which MSVC rejects) fixed.
+- CI Windows: vcpkg and Qt install; the build compiles with MSVC after one fix (an iterator
+  spelled as a pointer). 13 of 17 suites passed on the first Windows run; the end-to-end
+  single-instance test passed there. The four failures were test assumptions, now fixed: Unix
+  paths in the command line and export tests, a /proc path in the log sink test, and a
+  single-instance test sending from the primary's own thread (on Windows a local socket is a
+  named pipe, which needs the other side to accept).
 
 ### 2026-11-04 (M2)
 
