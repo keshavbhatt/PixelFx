@@ -7,10 +7,12 @@
 #include "core/parallel.h"
 
 #include <algorithm>
+#include <array>
 #include <cctype>
 #include <lcms2.h>
 #include <memory>
 #include <mutex>
+#include <string_view>
 #include <vips/vips8>
 
 namespace pfx {
@@ -353,6 +355,54 @@ std::vector<std::string> writableExtensions()
         }
     }
     return out;
+}
+
+namespace {
+
+struct LoaderScan
+{
+    std::vector<std::string> extensions;
+};
+
+void* collectLoader(VipsForeignClass* foreign, void* data) // NOLINT(readability-non-const-parameter)
+{
+    auto* scan = static_cast<LoaderScan*>(data);
+    const std::string_view name = VIPS_OBJECT_CLASS(foreign)->nickname;
+    // The file loaders of photo formats; "_source" and "_buffer" variants share the suffixes.
+    static constexpr std::array kPhotoLoaders = {"jpegload", "pngload",  "tiffload", "webpload",
+                                                 "gifload",  "heifload", "jxlload",  "dcrawload"};
+    if (name == "magickload") {
+        scan->extensions.emplace_back(".bmp"); // the one format PixelFx takes from ImageMagick
+        return nullptr;
+    }
+    if (std::ranges::find(kPhotoLoaders, name) == kPhotoLoaders.end() || foreign->suffs == nullptr) {
+        return nullptr;
+    }
+    for (const char* const* suffix = foreign->suffs; *suffix != nullptr; ++suffix) {
+        std::string ext(*suffix);
+        std::ranges::transform(ext, ext.begin(),
+                               [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+        scan->extensions.push_back(std::move(ext));
+    }
+    return nullptr;
+}
+
+} // namespace
+
+std::vector<std::string> readableExtensions()
+{
+    ensureVips();
+    LoaderScan scan;
+    vips_foreign_map(
+        "VipsForeignLoad",
+        [](void* foreign, void* data, void* /*unused*/) -> void* {
+            return collectLoader(static_cast<VipsForeignClass*>(foreign), data);
+        },
+        &scan, nullptr);
+    std::ranges::sort(scan.extensions);
+    const auto [first, last] = std::ranges::unique(scan.extensions);
+    scan.extensions.erase(first, last);
+    return scan.extensions;
 }
 
 } // namespace pfx

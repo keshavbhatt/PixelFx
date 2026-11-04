@@ -176,3 +176,18 @@ TEST_CASE("the common formats are always writable")
         CHECK(std::find(exts.begin(), exts.end(), ext) != exts.end());
     }
 }
+
+TEST_CASE("readable extensions: the common photo formats, and no documents")
+{
+    const auto exts = pfx::readableExtensions();
+    for (const char* ext : {".jpg", ".jpeg", ".png", ".tif", ".tiff", ".webp", ".gif"}) {
+        CAPTURE(ext);
+        CHECK(std::find(exts.begin(), exts.end(), ext) != exts.end());
+    }
+    for (const char* ext : {".pdf", ".svg", ".csv", ".v", ".mat"}) {
+        CAPTURE(ext);
+        CHECK(std::find(exts.begin(), exts.end(), ext) == exts.end());
+    }
+    CHECK(std::is_sorted(exts.begin(), exts.end()));
+    CHECK(std::adjacent_find(exts.begin(), exts.end()) == exts.end());
+}

@@ -30,16 +30,24 @@
 #include <QToolButton>
 #include <QVBoxLayout>
 
+#include <pfx/io.h>
+
 using namespace Qt::StringLiterals;
 
 namespace pixelfx::ui {
 
 namespace {
 
+/// What the image library in this build reads (HEIC, JPEG XL, RAW only where it has them).
 const QStringList& supportedSuffixes()
 {
-    static const QStringList suffixes = {u"jpg"_s,  u"jpeg"_s, u"png"_s, u"tif"_s,
-                                         u"tiff"_s, u"webp"_s, u"gif"_s, u"bmp"_s};
+    static const QStringList suffixes = [] {
+        QStringList out;
+        for (const std::string& ext : pfx::readableExtensions()) {
+            out << QString::fromStdString(ext).mid(1);
+        }
+        return out;
+    }();
     return suffixes;
 }
 
@@ -605,7 +613,8 @@ void MainWindow::chooseFiles()
 {
     QStringList patterns;
     for (const QString& suffix : supportedSuffixes()) {
-        patterns << u"*."_s + suffix;
+        // Portal dialogs match case-sensitively, and cameras write IMG_0001.JPG.
+        patterns << u"*."_s + suffix << u"*."_s + suffix.toUpper();
     }
     const QStringList files = QFileDialog::getOpenFileNames(
         this, tr("Open images"), m_settings.lastOpenFolder(), tr("Images (%1)").arg(patterns.join(u' ')));
