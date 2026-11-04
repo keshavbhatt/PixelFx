@@ -2,6 +2,7 @@
 
 #include "core/watermark.h"
 #include "services/logging.h"
+#include "services/qt_image_bridge.h"
 
 #include <QDir>
 #include <QFileInfo>
@@ -69,34 +70,44 @@ std::string resize(pfx::Image& image, const core::ExportOptions& options)
 
 } // namespace
 
+PreparedExport prepareExport(const QString& source,
+                             const std::function<pfx::Settings(const pfx::Image&)>& settingsFor,
+                             const core::ExportOptions& options)
+{
+    PreparedExport out;
+    auto loaded = pfx::load(QFileInfo(source).absoluteFilePath().toStdString());
+    if (!loaded) {
+        out.error = QString::fromStdString(loaded.error().message);
+        return out;
+    }
+    out.metadata = std::move(loaded.value().metadata);
+    const pfx::Settings settings = settingsFor(loaded.value().image);
+    auto rendered = pfx::render(std::move(loaded.value().image), settings);
+    if (!rendered) {
+        out.error = QString::fromStdString(rendered.error().message);
+        return out;
+    }
+    out.image = std::move(rendered).value();
+    if (const std::string error = resize(out.image, options); !error.empty()) {
+        out.error = QString::fromStdString(error);
+        return out;
+    }
+    // The watermark goes on last, on the final pixels, so its size is right for them.
+    out.error = applyWatermark(out.image, options.watermark, out.metadata);
+    return out;
+}
+
 ExportOutcome exportFile(const QString& source,
                          const std::function<pfx::Settings(const pfx::Image&)>& settingsFor,
                          const core::ExportOptions& options)
 {
     ExportOutcome out{source, {}, {}, false};
-    const auto fail = [&out](const std::string& message) {
-        out.error = QString::fromStdString(message);
-        return out;
-    };
-    auto loaded = pfx::load(QFileInfo(source).absoluteFilePath().toStdString());
-    if (!loaded) {
-        return fail(loaded.error().message);
-    }
-    const pfx::Settings settings = settingsFor(loaded.value().image);
-    auto rendered = pfx::render(std::move(loaded.value().image), settings);
-    if (!rendered) {
-        return fail(rendered.error().message);
-    }
-    pfx::Image image = std::move(rendered).value();
-    if (const std::string error = resize(image, options); !error.empty()) {
-        return fail(error);
-    }
-    // The watermark goes on last, on the final pixels, so its size is right for them.
-    if (const QString error = applyWatermark(image, options.watermark, loaded.value().metadata);
-        !error.isEmpty()) {
-        out.error = error;
+    const PreparedExport prepared = prepareExport(source, settingsFor, options);
+    if (!prepared.error.isEmpty()) {
+        out.error = prepared.error;
         return out;
     }
+    const pfx::Image& image = prepared.image;
     out.target =
         core::exportTarget(source, options, QSize(image.width(), image.height()), QDate::currentDate());
     if (out.target.isEmpty()) {
@@ -113,9 +124,9 @@ ExportOutcome exportFile(const QString& source,
     save.bitsPerSample = options.bitsPerSample;
     save.keepMetadata = options.keepMetadata;
     save.keepLocation = options.keepLocation;
-    const auto saved = pfx::save(image, out.target.toStdString(), save, &loaded.value().metadata);
+    const auto saved = pfx::save(image, out.target.toStdString(), save, &prepared.metadata);
     if (!saved) {
-        return fail(saved.error().message);
+        out.error = QString::fromStdString(saved.error().message);
     }
     return out;
 }
@@ -125,6 +136,36 @@ Exporter::Exporter(QObject* parent)
 {}
 
 Exporter::~Exporter() = default;
+
+void Exporter::startCopy(const QString& source, const pfx::Settings& settings,
+                         const core::ExportOptions& options)
+{
+    m_busy = true;
+    using Copy = std::pair<QImage, QString>;
+    auto* watcher = new QFutureWatcher<Copy>(this);
+    connect(watcher, &QFutureWatcher<Copy>::finished, this, [this, watcher, source] {
+        const Copy c = watcher->result();
+        watcher->deleteLater();
+        m_busy = false;
+        if (c.first.isNull()) {
+            Q_EMIT failed(source, c.second);
+        } else {
+            Q_EMIT copied(c.first);
+        }
+    });
+    watcher->setFuture(QtConcurrent::run([source, settings, options]() -> Copy {
+        const PreparedExport prepared =
+            prepareExport(source, [&settings](const pfx::Image&) { return settings; }, options);
+        if (!prepared.error.isEmpty()) {
+            return {QImage(), prepared.error};
+        }
+        const auto pixels = pfx::toSrgb8(prepared.image);
+        if (!pixels) {
+            return {QImage(), QString::fromStdString(pixels.error().message)};
+        }
+        return {toQImage(pixels.value()), QString()};
+    }));
+}
 
 void Exporter::start(const QString& source, const pfx::Settings& settings, const core::ExportOptions& options)
 {

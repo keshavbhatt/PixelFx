@@ -207,9 +207,19 @@ void MainWindow::connectDocument()
     });
     connect(&m_exporter, &services::Exporter::failed, this,
             [this](const QString& source, const QString& message) {
+                if (m_copying) {
+                    m_copying = false;
+                    showToast(tr("Not copied. %1").arg(message));
+                    return;
+                }
                 showToast(tr("%1 not saved. %2").arg(QFileInfo(source).fileName(), message));
                 exportNext();
             });
+    connect(&m_exporter, &services::Exporter::copied, this, [this](const QImage& image) {
+        m_copying = false;
+        QGuiApplication::clipboard()->setImage(image);
+        showToast(tr("Copied to the clipboard, %1 x %2").arg(image.width()).arg(image.height()));
+    });
 }
 
 void MainWindow::exportPhoto()
@@ -241,7 +251,14 @@ void MainWindow::exportPhoto()
     ExportSheet sheet(m_document.info().path, m_document.outputSize(), m_settings.exportOptions(), this);
     sheet.setPhotoCount(static_cast<int>(jobs.size()));
     sheet.setPreview(m_document.preview());
-    if (sheet.exec() != QDialog::Accepted) {
+    const int result = sheet.exec();
+    if (result == ExportSheet::kCopyToClipboard) {
+        m_settings.setExportOptions(sheet.options());
+        m_copying = true;
+        m_exporter.startCopy(m_document.info().path, m_document.settings(), sheet.options());
+        return;
+    }
+    if (result != QDialog::Accepted) {
         return;
     }
     m_exportOptions = sheet.options();

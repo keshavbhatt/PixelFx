@@ -63,6 +63,21 @@ private Q_SLOTS:
         QVERIFY(sheet.options().watermark.isEmpty());
     }
 
+    void copyToClipboardIsForOnePhoto()
+    {
+        ExportSheet sheet(u"/p/photo.jpg"_s, QSize(6000, 4000), {});
+        QPushButton* copy = nullptr;
+        for (auto* b : sheet.findChildren<QPushButton*>()) {
+            if (b->text() == u"Copy to clipboard"_s) {
+                copy = b;
+            }
+        }
+        QVERIFY(copy);
+        QVERIFY(!copy->isHidden());
+        sheet.setPhotoCount(3);
+        QVERIFY(copy->isHidden());
+    }
+
     void locationIsOffByDefaultAndFollowsMetadata()
     {
         const ExportSheet sheet(u"/p/photo.jpg"_s, QSize(600, 400), ExportOptions{});

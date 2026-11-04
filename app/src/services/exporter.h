@@ -2,11 +2,13 @@
 
 #include "core/export_options.h"
 
+#include <QImage>
 #include <QObject>
 #include <QString>
 
 #include <functional>
 #include <pfx/image.h>
+#include <pfx/io.h>
 #include <pfx/settings.h>
 
 namespace pixelfx::services {
@@ -19,6 +21,20 @@ struct ExportOutcome
     QString error;
     bool skipped = false;
 };
+
+/// A photo rendered for export, not yet written: what Export writes and Copy to clipboard copies.
+struct PreparedExport
+{
+    pfx::Image image;
+    pfx::Metadata metadata;
+    QString error; ///< user-facing; empty on success
+};
+
+/// Decodes `source`, renders the settings `settingsFor` works out from the decoded photo, then
+/// resizes and lays the watermark under `options`. Blocking: call on a worker.
+[[nodiscard]] PreparedExport prepareExport(const QString& source,
+                                           const std::function<pfx::Settings(const pfx::Image&)>& settingsFor,
+                                           const core::ExportOptions& options);
 
 /// Decodes `source`, renders the settings `settingsFor` works out from the decoded photo (Auto
 /// enhance needs it), resizes and writes it under `options`. Blocking: call on a worker.
@@ -38,10 +54,14 @@ public:
     ~Exporter() override;
 
     void start(const QString& source, const pfx::Settings& settings, const core::ExportOptions& options);
+    /// The same pixels as an export, onto `copied` instead of a file (Copy to clipboard).
+    void startCopy(const QString& source, const pfx::Settings& settings, const core::ExportOptions& options);
     [[nodiscard]] bool isBusy() const { return m_busy; }
 
 Q_SIGNALS:
     void finished(const QString& target);
+    /// Copy to clipboard: the exported pixels, 8-bit sRGB.
+    void copied(const QImage& image);
     /// The file already existed and the policy is Skip.
     void skipped(const QString& source);
     /// `message` is user-facing and says why.

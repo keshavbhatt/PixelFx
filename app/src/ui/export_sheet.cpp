@@ -138,7 +138,12 @@ void ExportSheet::addFooter(QVBoxLayout* column)
     exportButton->setDefault(true);
     connect(cancel, &QPushButton::clicked, this, &QDialog::reject);
     connect(exportButton, &QPushButton::clicked, this, &QDialog::accept);
+    // Mock export.html: the same pixels onto the clipboard, for pasting into a chat or a document.
+    m_copyButton = new QPushButton(tr("Copy to clipboard"), this);
+    m_copyButton->setToolTip(tr("Copy the photo at this size, with the watermark, instead of saving a file"));
+    connect(m_copyButton, &QPushButton::clicked, this, [this] { done(kCopyToClipboard); });
     auto* buttons = new QHBoxLayout;
+    buttons->addWidget(m_copyButton);
     buttons->addStretch();
     buttons->addWidget(cancel);
     buttons->addWidget(exportButton);
@@ -375,6 +380,7 @@ void ExportSheet::setPhotoCount(int count)
     if (count < 2) {
         return;
     }
+    m_copyButton->setVisible(count <= 1); // one picture fits on the clipboard
     const QString text = tr("Export %n photos", nullptr, count);
     m_title->setText(text);
     m_exportButton->setText(text);

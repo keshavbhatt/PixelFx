@@ -188,6 +188,7 @@ private:
     QWidget* m_stripDock = nullptr;
     QAction* m_hidePanels = nullptr;
     bool m_showingOriginal = false;
+    bool m_copying = false; ///< the exporter is copying to the clipboard, not saving
     QLabel* m_docName = nullptr;
     QLabel* m_docMeta = nullptr;
     QWidget* m_header = nullptr;

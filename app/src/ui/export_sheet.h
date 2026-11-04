@@ -26,6 +26,9 @@ class ExportSheet : public QDialog
     Q_DISABLE_COPY_MOVE(ExportSheet)
 
 public:
+    /// The result of exec() when Copy to clipboard was pressed (Accepted is Export).
+    static constexpr int kCopyToClipboard = 2;
+
     ExportSheet(const QString& source, const QSize& photoSize, const core::ExportOptions& options,
                 QWidget* parent = nullptr);
     ~ExportSheet() override;
@@ -43,6 +46,7 @@ private:
     class QLabel* m_title = nullptr;
     class QLabel* m_file = nullptr;
     class QPushButton* m_exportButton = nullptr;
+    class QPushButton* m_copyButton = nullptr;
     void chooseFolder();
     [[nodiscard]] QWidget* formatRow(const QString& current);
     [[nodiscard]] QWidget* qualityRow(int quality);

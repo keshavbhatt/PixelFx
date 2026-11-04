@@ -199,6 +199,10 @@
   1: params under the operation's group, LUTs as base64 half floats in the `srgb-gamma`
   domain, unknown steps kept and skipped, bad resources left out with a warning). The document
   fuzzer ran 2.2 million inputs with a look seed, clean. 102 library tests pass.
+- Copy to clipboard (X8) in the Export sheet footer, as `export.html` has it: the same pixels as
+  an export (size, watermark) rendered on a worker (`Exporter::startCopy`, sharing
+  `prepareExport` with Export), nothing written to disk; shown for one photo only. 27 app suites
+  pass.
 
 ### 2026-11-04 (M2)
 

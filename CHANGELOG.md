@@ -35,6 +35,8 @@ PixelFx 2 is rebuilt from scratch: a new editor, a new image engine, and a new l
 - The camera's settings (ISO, aperture, shutter speed, focal length) under the histogram.
 - The start page lists recent photos as they were left; click one to carry on.
 - Export leaves out where a photo was taken unless you tick Keep location.
+- Copy to clipboard in Export: the finished photo, at the chosen size, ready to paste into a
+  chat or a document.
 - Watermarks on export and in Batch: your name, the year or the camera, or a logo; placed in a
   corner or anywhere you drag it, or repeated across the photo for proofs. The colour can follow
   the photo, light on dark areas and dark on light ones, and the size follows the photo, so a

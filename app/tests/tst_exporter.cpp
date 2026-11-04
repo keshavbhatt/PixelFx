@@ -2,6 +2,8 @@
 #include "services/exporter.h"
 
 #include <QFile>
+#include <QFileInfo>
+#include <QImage>
 #include <QSignalSpy>
 #include <QTemporaryDir>
 #include <QTest>
@@ -114,6 +116,30 @@ private Q_SLOTS:
         QVERIFY(QFile::remove(o.watermark));
         QSignalSpy failed(&exporter, &Exporter::failed);
         exporter.start(source, {}, o);
+        QVERIFY(failed.wait(15000));
+    }
+
+    void copyGivesTheExportedPixels()
+    {
+        QTemporaryDir dir;
+        pfx::Image img(600, 400);
+        img.fill(0.2F, 0.2F, 0.2F);
+        const QString source = dir.filePath(u"photo.png"_s);
+        QVERIFY(pfx::save(img, source.toStdString()).ok());
+        ExportOptions o;
+        o.longEdge = 300;
+        o.folder = dir.filePath(u"never"_s);
+        Exporter exporter;
+        QSignalSpy copied(&exporter, &Exporter::copied);
+        exporter.startCopy(source, {}, o);
+        QVERIFY(copied.wait(15000));
+        const auto image = copied.first().first().value<QImage>();
+        QCOMPARE(image.size(), QSize(300, 200));
+        QVERIFY(!QFileInfo::exists(o.folder)); // nothing written
+        // Linear 0.2 is about 124 in sRGB.
+        QVERIFY(std::abs(qGreen(image.pixel(10, 10)) - 124) <= 2);
+        QSignalSpy failed(&exporter, &Exporter::failed);
+        exporter.startCopy(dir.filePath(u"missing.png"_s), {}, o);
         QVERIFY(failed.wait(15000));
     }
 
