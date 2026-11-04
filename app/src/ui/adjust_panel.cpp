@@ -305,15 +305,22 @@ bool AdjustSlider::eventFilter(QObject* watched, QEvent* event)
 
 // ---------------------------------------------------------------------------------------------
 
-AdjustPanel::AdjustPanel(QWidget* parent)
-    : QWidget(parent)
-    , m_histogram(new HistogramView(this))
+QHBoxLayout* AdjustPanel::buildTopRow()
 {
-    setObjectName(u"adjustPanel"_s);
-    setAttribute(Qt::WA_StyledBackground);
-    auto* resetAll = new QPushButton(icons::themed(u"reset"_s, tokens().text), tr("Reset all"), this);
+    // Mock editor.html: Auto takes the room, then Copy, Paste and an icon-only Reset all.
+    auto* resetAll = new QPushButton(icons::themed(u"reset"_s, tokens().text), QString(), this);
     resetAll->setObjectName(u"small"_s);
     resetAll->setToolTip(tr("Reset all adjustments (Ctrl+R)"));
+    resetAll->setAccessibleName(tr("Reset all"));
+    auto* copy = new QPushButton(icons::themed(u"copy"_s, tokens().text), tr("Copy"), this);
+    copy->setObjectName(u"small"_s);
+    copy->setToolTip(tr("Copy these settings, crop excepted (Ctrl+Shift+C)"));
+    connect(copy, &QPushButton::clicked, this, &AdjustPanel::copyRequested);
+    m_paste = new QPushButton(tr("Paste"), this);
+    m_paste->setObjectName(u"small"_s);
+    m_paste->setToolTip(tr("Paste copied settings onto this photo (Ctrl+Shift+V)"));
+    m_paste->setEnabled(false);
+    connect(m_paste, &QPushButton::clicked, this, &AdjustPanel::pasteRequested);
     connect(resetAll, &QPushButton::clicked, this, &AdjustPanel::resetAll);
     auto* autoButton = new QPushButton(icons::themed(u"auto"_s, tokens().text), tr("Auto"), this);
     autoButton->setObjectName(u"small"_s);
@@ -321,8 +328,21 @@ AdjustPanel::AdjustPanel(QWidget* parent)
     connect(autoButton, &QPushButton::clicked, this, &AdjustPanel::autoRequested);
     auto* top = new QHBoxLayout;
     top->setContentsMargins(12, 6, 12, 8);
+    top->setSpacing(6);
     top->addWidget(autoButton, 1);
+    top->addWidget(copy);
+    top->addWidget(m_paste);
     top->addWidget(resetAll);
+    return top;
+}
+
+AdjustPanel::AdjustPanel(QWidget* parent)
+    : QWidget(parent)
+    , m_histogram(new HistogramView(this))
+{
+    setObjectName(u"adjustPanel"_s);
+    setAttribute(Qt::WA_StyledBackground);
+    QHBoxLayout* top = buildTopRow();
     auto* histogramBox = new QVBoxLayout;
     histogramBox->setContentsMargins(12, 10, 12, 0);
     histogramBox->addWidget(m_histogram);
@@ -371,6 +391,11 @@ AdjustPanel::AdjustPanel(QWidget* parent)
 }
 
 AdjustPanel::~AdjustPanel() = default;
+
+void AdjustPanel::setPasteEnabled(bool enabled)
+{
+    m_paste->setEnabled(enabled);
+}
 
 namespace {
 

@@ -55,6 +55,10 @@ public:
     /// Before and after on or off (the \\ key and the header button).
     void setCompare(bool on);
 
+    /// Copies the photo's settings (crop excepted) to the clipboard; pastes them as one step.
+    void copySettings();
+    void pasteSettings();
+
     /// Whether `path` has an extension PixelFx opens.
     [[nodiscard]] static bool isSupported(const QString& path);
 
@@ -79,6 +83,7 @@ private:
     void setupCropActions();
     void setupZoomActions();
     void connectZoom();
+    void connectClipboard();
     void connectDocument();
     void updateHistoryButtons();
     void showToast(const QString& text);

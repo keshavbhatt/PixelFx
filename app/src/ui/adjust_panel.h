@@ -8,7 +8,9 @@
 #include <vector>
 
 class QButtonGroup;
+class QHBoxLayout;
 class QLabel;
+class QPushButton;
 class QVBoxLayout;
 class QSlider;
 
@@ -46,6 +48,8 @@ public:
     void setHistogram(const core::Histogram& histogram);
     /// Clears every setting (Ctrl+R) and reports it as one step.
     void resetAll();
+    /// Paste is available when the clipboard holds PixelFx settings.
+    void setPasteEnabled(bool enabled);
 
 Q_SIGNALS:
     /// Every change, live while a slider moves.
@@ -53,6 +57,8 @@ Q_SIGNALS:
     /// A change is complete (slider released, a reset): a history step named `label`.
     void editFinished(const QString& label);
     void autoRequested();
+    void copyRequested();
+    void pasteRequested();
 
 private:
     void setValue(const QString& key, double value, bool finished);
@@ -60,11 +66,13 @@ private:
     void refreshGroups();
     void buildCurvesGroup(QWidget* content, QVBoxLayout* groups);
     void buildMixerGroup(QWidget* content, QVBoxLayout* groups);
+    QHBoxLayout* buildTopRow();
     void showMixerSlider();
     void curveEdited(const pfx::Curve& curve);
 
     pfx::Settings m_settings;
     HistogramView* m_histogram = nullptr;
+    QPushButton* m_paste = nullptr;
     AdjustGroup* m_curvesGroup = nullptr;
     CurveEditor* m_curve = nullptr;
     QButtonGroup* m_curveChannels = nullptr;

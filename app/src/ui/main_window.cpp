@@ -2,6 +2,7 @@
 
 #include "core/crop_geometry.h"
 #include "core/settings/settings.h"
+#include "core/settings_clipboard.h"
 #include "ui/adjust_panel.h"
 #include "ui/canvas.h"
 #include "ui/crop_panel.h"
@@ -11,11 +12,13 @@
 #include "ui/welcome_page.h"
 
 #include <QAction>
+#include <QClipboard>
 #include <QCloseEvent>
 #include <QConicalGradient>
 #include <QDragEnterEvent>
 #include <QFileDialog>
 #include <QFileInfo>
+#include <QGuiApplication>
 #include <QHBoxLayout>
 #include <QKeyEvent>
 #include <QLabel>
@@ -125,6 +128,7 @@ MainWindow::MainWindow(core::Settings& settings, QWidget* parent)
     connectDocument();
     connectCrop();
     connectZoom();
+    connectClipboard();
 }
 
 void MainWindow::connectDocument()
@@ -556,6 +560,46 @@ QWidget* MainWindow::buildCanvasPage()
     column->addWidget(m_canvas, 1);
     column->addWidget(m_cropStrip);
     return page;
+}
+
+void MainWindow::copySettings()
+{
+    if (m_document.isOpen() && !isCropping()) {
+        QGuiApplication::clipboard()->setText(core::settingsToClipboard(m_document.settings()));
+        showToast(tr("Settings copied"));
+    }
+}
+
+void MainWindow::pasteSettings()
+{
+    if (!m_document.isOpen() || isCropping()) {
+        return;
+    }
+    const auto copied = core::settingsFromClipboard(QGuiApplication::clipboard()->text());
+    if (!copied) {
+        showToast(tr("Nothing to paste: copy a photo's settings first."));
+        return;
+    }
+    m_document.apply(core::pasted(m_document.settings(), *copied), tr("Paste settings"));
+}
+
+void MainWindow::connectClipboard()
+{
+    const auto refresh = [this] {
+        m_adjust->setPasteEnabled(
+            core::settingsFromClipboard(QGuiApplication::clipboard()->text()).has_value());
+    };
+    connect(QGuiApplication::clipboard(), &QClipboard::dataChanged, this, refresh);
+    refresh();
+    connect(m_adjust, &AdjustPanel::copyRequested, this, &MainWindow::copySettings);
+    connect(m_adjust, &AdjustPanel::pasteRequested, this, &MainWindow::pasteSettings);
+    auto* copy = new QAction(tr("Copy settings"), this);
+    copy->setShortcut(QKeySequence(u"Ctrl+Shift+C"_s));
+    connect(copy, &QAction::triggered, this, &MainWindow::copySettings);
+    auto* paste = new QAction(tr("Paste settings"), this);
+    paste->setShortcut(QKeySequence(u"Ctrl+Shift+V"_s));
+    connect(paste, &QAction::triggered, this, &MainWindow::pasteSettings);
+    addActions({copy, paste});
 }
 
 void MainWindow::connectZoom()

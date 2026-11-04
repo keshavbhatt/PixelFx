@@ -17,6 +17,8 @@ qt_add_library(pixelfx_core STATIC
     sidecar_store.cpp
     sidecar_store.h
     settings/settings.cpp
+    settings_clipboard.cpp
+    settings_clipboard.h
     settings/settings.h
     settings/settings_keys.h
 )

@@ -72,7 +72,7 @@ preview and export use resolution-independent parameters so they match (v1 defec
 | E12 | Histogram (RGB, luminance), clipping warnings (J), camera line | RGB on GUI thread | KEEP | wip: RGB histogram computed on the render worker (`core::Histogram`, `HistogramView`); clipping counts computed, the J overlay and the camera line later in M3 |
 | E13 | Before and after: split with divider, side by side, hold Space for the original | hold button | KEEP | wip: the split with a draggable divider (\\) and holding Space done (`Canvas`, `MainWindow`); side by side in M3 |
 | E14 | Undo and redo for every change; History list; named snapshots | none | KEEP | wip: undo, redo and the History popup (H) with jump to any step done (`core::History`, `MainWindow::showHistory`); named snapshots in M3 |
-| E15 | Copy and paste settings between photos, choose groups | none | KEEP | todo |
+| E15 | Copy and paste settings between photos, choose groups | none | KEEP | wip: copy and paste of all settings but geometry, through the clipboard as a preset document (`core::settings_clipboard`); choosing groups with the filmstrip (M4) |
 | E16 | Reset a slider (double-click), a group, or everything | per row, global | KEEP | done (`AdjustPanel`) |
 | E17 | Edits remembered per photo in a sidecar (app library by default, or next to the photo) | none | KEEP | wip: app library by default, keyed by a file fingerprint so renames and moves keep the edit, written off the GUI thread (`core::SidecarStore`, `Document`); next to the photo and the setting in M3 |
 | E18 | GPU-accelerated preview with automatic CPU fallback | none | KEEP 2.1 (PLAN D14) | |

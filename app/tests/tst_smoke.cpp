@@ -51,6 +51,22 @@ private Q_SLOTS:
         QTest::keyClick(&window, Qt::Key_Backslash);
         QVERIFY(!window.canvas()->isComparing());
 
+        // Copy and paste: the settings travel, the crop stays with its photo.
+        pfx::Settings look;
+        look.set("light.exposure", 0.7);
+        look.set("geometry.angle", 4.0);
+        window.document().apply(look, u"Look"_s);
+        window.copySettings();
+        pfx::Settings other;
+        other.set("color.vibrance", 30.0);
+        window.document().apply(other, u"Other"_s);
+        window.pasteSettings();
+        QCOMPARE(window.document().settings().number("light.exposure", 0), 0.7);
+        QVERIFY(!window.document().settings().contains("color.vibrance"));
+        QVERIFY(!window.document().settings().contains("geometry.angle"));
+        QCOMPARE(window.document().history().undoLabel(), u"Paste settings"_s);
+        window.document().apply({}, u"Clear"_s);
+
         // Zoom: in from Fit, back with Ctrl+0; Crop mode always fits.
         QVERIFY(window.canvas()->isFit());
         QCOMPARE(window.canvas()->zoomText(), u"Fit"_s);
