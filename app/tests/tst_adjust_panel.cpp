@@ -89,7 +89,8 @@ private Q_SLOTS:
         QTest::mouseRelease(editor, Qt::LeftButton, {}, up);
         QCOMPARE(editor->curve().size(), std::size_t{3});
         QVERIFY(panel.settings().contains("curves.rgb"));
-        QCOMPARE(panel.settings().curve("curves.rgb").at(1).y > 0.55, true); // dragged up
+        const pfx::CurvePoint dragged = panel.settings().curve("curves.rgb").at(1);
+        QVERIFY2(dragged.y > dragged.x, "dragged up, above the diagonal"); // how far depends on the layout
         QCOMPARE(finished.last().first().toString(), u"Curve"_s);
         QTest::mouseDClick(editor, Qt::LeftButton, {}, up);
         QCOMPARE(editor->curve().size(), std::size_t{2});
