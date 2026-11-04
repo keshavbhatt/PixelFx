@@ -10,6 +10,8 @@ qt_add_library(pixelfx_services STATIC
     qt_image_bridge.h
     render_scheduler.cpp
     render_scheduler.h
+    thumbnailer.cpp
+    thumbnailer.h
 )
 pixelfx_set_warnings(pixelfx_services)
 target_link_libraries(pixelfx_services PUBLIC pixelfx_core pfx::core Qt6::Gui Qt6::Concurrent)

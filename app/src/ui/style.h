@@ -27,6 +27,7 @@ struct Tokens
     QColor muted;
     QColor faint;
     QColor danger;
+    QColor link;
 };
 
 [[nodiscard]] const Tokens& darkTokens();

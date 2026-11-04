@@ -42,11 +42,11 @@ look; a **batch recipe** is a preset plus resize and save options.
 
 | # | Feature | v1 | Decision | Status / class |
 |---|---|---|---|---|
-| O1 | Open images (many at once), Open folder (with subfolders), Recent list | one file | KEEP | wip: Open images (first photo shown) and the recent list in settings done; filmstrip, Open folder, Recent on the welcome page in M3 |
-| O2 | Formats in: JPEG, PNG, WebP, TIFF (8/16/32 bit), BMP, GIF (first frame), AVIF, HEIC/HEIF, JPEG XL | png, jpg, bmp, tiff, webp (broken in snap) | KEEP | todo |
+| O1 | Open images (many at once), Open folder (with subfolders), Recent list | one file | KEEP | wip: Open images (first photo shown) done; Recent on the welcome page with thumbnails of the remembered edits done (`WelcomePage`, `services::Thumbnailer`); filmstrip and Open folder with Batch |
+| O2 | Formats in: JPEG, PNG, WebP, TIFF (8/16/32 bit), BMP, GIF (first frame), AVIF, HEIC/HEIF, JPEG XL | png, jpg, bmp, tiff, webp (broken in snap) | KEEP | wip: the app opens whatever the libvips build reads (`pfx::readableExtensions`); HEIC, AVIF, JPEG XL in dev builds in progress |
 | O3 | Camera RAW (DNG and the common makes) with a sensible default rendering | none | KEEP (LibRaw, PLAN D15) | todo |
-| O4 | EXIF orientation applied on open | ignored | KEEP | todo |
-| O5 | Embedded ICC profile honoured; working space is linear and wide gamut | dropped | KEEP | todo |
+| O4 | EXIF orientation applied on open | ignored | KEEP | done: the library applies the orientation tag on load (M1) |
+| O5 | Embedded ICC profile honoured; working space is linear and wide gamut | dropped | KEEP | done for input: embedded profiles converted to linear Rec.2020 through lcms2 (M1); display profile todo |
 | O6 | Decoding off the GUI thread, a fast embedded or downscaled preview first, full quality after | GUI thread, decoded twice | KEEP | wip: off the GUI thread at screen size done (`Document`); progressive refinement in M3 |
 | O7 | Image information: size, format, bit depth, colour profile, camera, lens, exposure, date, GPS (behind a click) | Info dialog | KEEP (panel, not a dialog) | todo |
 | O8 | Temp PNG copies of every opened file | yes | DROP | |
@@ -64,7 +64,7 @@ preview and export use resolution-independent parameters so they match (v1 defec
 | E4 | Curves: RGB and per channel, points, double-click removes | none | KEEP | done (`CurveEditor`, `AdjustPanel`; drawn with `pfx::sampleCurve`) |
 | E5 | Levels (black, mid, white point per channel) | none | LATER | |
 | E6 | Detail: Clarity (local contrast), Sharpen (amount, radius, masking), Noise reduction (luminance, colour), Dehaze | Sharpen, Blur, Mean, Median | KEEP | wip: clarity, sharpen, noise reduction in the library; dehaze moved to M3; UI M3 |
-| E7 | Effects: Vignette (amount, midpoint, roundness), Grain (amount, size), Fade | none | KEEP | todo |
+| E7 | Effects: Vignette (amount, midpoint, roundness), Grain (amount, size), Fade | none | KEEP | done: library (vignette amount, midpoint, roundness; grain amount, size; fade) and the Effects group with the three sliders of `editor.html` |
 | E8 | Split toning / color grading (shadows, midtones, highlights wheels) | Colorize | KEEP (as a step in looks and a Color group sub-panel) | todo |
 | E9 | Creative operations from v1: Sepia, Threshold, Colorize, Pixelate, Blur, Invert, Grayscale, Emboss, Edge, Sobel | some in UI, some only in Go | KEEP as look steps, not sliders | todo |
 | E10 | Auto: one click sets Light and Color from the image statistics | none | KEEP | done (`pfx::autoAdjust`; the Auto button and Ctrl+Shift+A; `pfx apply --auto`) |
@@ -112,10 +112,10 @@ preview and export use resolution-independent parameters so they match (v1 defec
 
 | # | Feature | v1 | Decision | Status / class |
 |---|---|---|---|---|
-| G1 | Crop mode with handles, dimmed outside, ratio chips (Free, Original, 1:1, 4:5, 5:7, 3:2, 16:9, 9:16, Custom), orientation swap, overlays | dialog, shapes, destructive | KEEP (non-destructive, in place) | todo |
-| G2 | Straighten: dial, slider, drawn level line | none | KEEP | todo |
+| G1 | Crop mode with handles, dimmed outside, ratio chips (Free, Original, 1:1, 4:5, 5:7, 3:2, 16:9, 9:16, Custom), orientation swap, overlays | dialog, shapes, destructive | KEEP (non-destructive, in place) | wip: Crop mode done (`CropPanel`, `Canvas`, `core::crop_geometry`); Custom ratio todo |
+| G2 | Straighten: dial, slider, drawn level line | none | KEEP | wip: slider in tenths of a degree done; dial and drawn level line todo |
 | G3 | Auto straighten (horizon detection) | none | LATER | |
-| G4 | Rotate 90 left and right, flip horizontal and vertical | rotate right only, flips stuck | KEEP | todo |
+| G4 | Rotate 90 left and right, flip horizontal and vertical | rotate right only, flips stuck | KEEP | done: turns and flips act on the photo as shown, crop included |
 | G5 | Perspective: vertical, horizontal sliders and four-corner keystone | none | KEEP | todo |
 | G6 | Lens corrections (distortion, chromatic aberration, vignetting by profile) | none | LATER | |
 | G7 | Elliptical and circular crops with transparent corners | yes | KEEP as an Export option "Round crop" for PNG/WebP | todo |

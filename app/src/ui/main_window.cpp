@@ -312,6 +312,15 @@ void MainWindow::setupUi()
 
     m_welcome = new WelcomePage(this);
     connect(m_welcome, &WelcomePage::openRequested, this, &MainWindow::chooseFiles);
+    connect(m_welcome, &WelcomePage::recentOpened, this, [this](const QString& path) { openFiles({path}); });
+    connect(m_welcome, &WelcomePage::clearRecentRequested, this, [this] { m_settings.clearRecentFiles(); });
+    connect(&m_settings, &core::Settings::recentFilesChanged, this, [this](const QStringList& files) {
+        if (m_stack->currentWidget() == m_welcome) { // nothing decoded behind the editor
+            m_welcome->setRecentFiles(files);
+        }
+    });
+    m_welcome->setSidecarFolder(core::SidecarStore::defaultFolder());
+    m_welcome->setRecentFiles(m_settings.recentFiles());
     m_canvasPage = buildCanvasPage();
     connect(m_compare, &QToolButton::toggled, m_canvas, &Canvas::setCompare);
     m_toast = new QLabel(m_canvas);

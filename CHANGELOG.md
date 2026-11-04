@@ -15,3 +15,4 @@ PixelFx 2 is rebuilt from scratch: a new editor, a new image engine, and a new l
 - Crop and rotate (C): crop freely or to a ratio with thirds, grid, golden or diagonal guides,
   straighten in tenths of a degree, turn and flip. The crop stays editable later.
 - Effects: vignette, film grain and fade.
+- The start page lists recent photos as they were left; click one to carry on.

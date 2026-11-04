@@ -33,6 +33,9 @@ const QString kSheet = uR"(
         #welcomeTitle { font-size: 20px; font-weight: 600; }
         #welcomeHint, #muted { color: {{muted}}; }
         #faint { color: {{faint}}; font-size: 12px; }
+        #recentTitle { font-size: 13px; font-weight: 600; }
+        QPushButton#link { border: 0; background: transparent; color: {{link}}; font-size: 12px; padding: 2px 4px; }
+        QPushButton#link:hover { text-decoration: underline; }
         #adjustPanel { background: {{panel}}; border-left: 1px solid {{border}}; }
         #cropPanel { background: {{panel}}; border-left: 1px solid {{border}}; }
         #section { color: {{muted}}; font-size: 11px; font-weight: 700; }
@@ -97,6 +100,7 @@ QString sheet(const Tokens& t)
     put(u"text"_s, t.text);
     put(u"track"_s, t.track);
     put(u"faint"_s, t.faint);
+    put(u"link"_s, t.link);
     return s;
 }
 
@@ -107,7 +111,7 @@ const Tokens& darkTokens()
     static const Tokens t{hex("#6EA8FE"), hex("#2F6FE0"), hex("#3B7CF0"), hex("#1D2A40"), hex("#161616"),
                           hex("#0F0F0F"), hex("#1C1C1C"), hex("#1E1E1E"), hex("#282828"), hex("#2C2C2C"),
                           hex("#141414"), hex("#303030"), hex("#696969"), hex("#ECECEC"), hex("#A8A8A8"),
-                          hex("#8E8E8E"), hex("#FF6B6B")};
+                          hex("#8E8E8E"), hex("#FF6B6B"), hex("#8AB8FF")};
     return t;
 }
 
@@ -116,7 +120,7 @@ const Tokens& lightTokens()
     static const Tokens t{hex("#2560CC"), hex("#2560CC"), hex("#1F52B0"), hex("#E3ECFC"), hex("#EDEDED"),
                           hex("#D6D6D6"), hex("#FAFAFA"), hex("#F5F5F5"), hex("#FFFFFF"), hex("#E6E6E6"),
                           hex("#FFFFFF"), hex("#D4D4D4"), hex("#8E8E8E"), hex("#1A1A1A"), hex("#555555"),
-                          hex("#676767"), hex("#C01C28")};
+                          hex("#676767"), hex("#C01C28"), hex("#2560CC")};
     return t;
 }
 

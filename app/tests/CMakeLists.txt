@@ -35,6 +35,7 @@ pixelfx_add_test(tst_single_instance tst_single_instance.cpp pixelfx_app)
 pixelfx_add_test(tst_adjust_panel    tst_adjust_panel.cpp    pixelfx_ui GUI)
 pixelfx_add_test(tst_crop_panel      tst_crop_panel.cpp      pixelfx_ui GUI)
 pixelfx_add_test(tst_export_sheet    tst_export_sheet.cpp    pixelfx_ui GUI)
+pixelfx_add_test(tst_welcome_page    tst_welcome_page.cpp    pixelfx_ui GUI)
 pixelfx_add_test(tst_smoke           tst_smoke.cpp           pixelfx_ui GUI)
 pixelfx_add_test(tst_instance        tst_instance.cpp        Qt6::Core GUI)
 target_compile_definitions(tst_instance PRIVATE
