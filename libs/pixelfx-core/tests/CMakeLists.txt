@@ -10,6 +10,7 @@ FetchContent_MakeAvailable(doctest)
 add_executable(pfx_tests
     test_main.cpp
     fixtures.cpp
+    test_auto.cpp
     test_color.cpp
     test_document.cpp
     test_registry.cpp

@@ -54,6 +54,9 @@
 - Curves group (`CurveEditor`): RGB, R, G, B; click to add, drag, double-click to remove; drawn
   with the library's own sampler (`pfx::sampleCurve`) so the drawing is what renders.
 - History popup (H) that jumps to any step; before and after split (\\) with a draggable divider.
+- Auto (`pfx::autoAdjust`): exposure toward middle grey, blacks and whites stretched, a little
+  contrast and vibrance when needed, a half-strength grey-world white balance for strong casts;
+  the Auto button keeps curves and detail; `pfx apply --auto`. 48 library tests pass.
 - CI Windows: vcpkg and Qt now install; the first compile error (an iterator spelled as a
   pointer, which MSVC rejects) fixed.
 

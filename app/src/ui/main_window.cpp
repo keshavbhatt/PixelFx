@@ -129,6 +129,7 @@ void MainWindow::connectDocument()
     connect(&m_document, &services::Document::histogramReady, m_adjust, &AdjustPanel::setHistogram);
     connect(m_adjust, &AdjustPanel::settingsChanged, &m_document, &services::Document::setSettings);
     connect(m_adjust, &AdjustPanel::editFinished, &m_document, &services::Document::commit);
+    connect(m_adjust, &AdjustPanel::autoRequested, &m_document, &services::Document::autoAdjust);
     connect(&m_exporter, &services::Exporter::finished, this,
             [this](const QString& target) { showToast(tr("Saved %1").arg(QFileInfo(target).fileName())); });
     connect(&m_exporter, &services::Exporter::skipped, this,
@@ -353,6 +354,10 @@ void MainWindow::setupActions()
             showHistory();
         }
     });
+    auto* autoAction = new QAction(tr("Auto"), this);
+    autoAction->setShortcut(QKeySequence(u"Ctrl+Shift+A"_s));
+    connect(autoAction, &QAction::triggered, &m_document, &services::Document::autoAdjust);
+    addAction(autoAction);
     auto* compare = new QAction(tr("Before and after"), this);
     compare->setShortcut(QKeySequence(Qt::Key_Backslash));
     connect(compare, &QAction::triggered, this, [this] {

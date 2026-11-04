@@ -152,6 +152,38 @@ private Q_SLOTS:
         QVERIFY(QDir(edits).entryList(QDir::Files).isEmpty()); // nothing left to remember
     }
 
+    void autoBrightensADarkPhotoAndKeepsCurves()
+    {
+        QTemporaryDir dir;
+        pfx::Image dark(120, 80);
+        for (int y = 0; y < 80; ++y) {
+            for (int x = 0; x < 120; ++x) {
+                const float v = 0.004F + 0.03F * static_cast<float>(x) / 120.0F;
+                float* p = dark.pixel(x, y);
+                p[0] = v;
+                p[1] = v;
+                p[2] = v;
+                p[3] = 1.0F;
+            }
+        }
+        const QString path = dir.filePath(u"dark.png"_s);
+        pfx::SaveOptions sixteen;
+        sixteen.bitsPerSample = 16;
+        QVERIFY(pfx::save(dark, path.toStdString(), sixteen).ok());
+        Document doc;
+        QSignalSpy ready(&doc, &Document::previewReady);
+        doc.open(path, 120);
+        QVERIFY(ready.wait(10000));
+        pfx::Settings withCurve;
+        withCurve.set("curves.rgb", pfx::Curve{{0, 0}, {0.5, 0.6}, {1, 1}});
+        withCurve.set("light.exposure", -1.0);
+        doc.apply(withCurve, u"Setup"_s);
+        doc.autoAdjust();
+        QVERIFY(doc.settings().number("light.exposure", 0) > 0.5);
+        QVERIFY(doc.settings().contains("curves.rgb"));
+        QCOMPARE(doc.history().undoLabel(), u"Auto"_s);
+    }
+
     void failureSaysWhy()
     {
         Document doc;

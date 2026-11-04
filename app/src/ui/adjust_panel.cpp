@@ -286,9 +286,13 @@ AdjustPanel::AdjustPanel(QWidget* parent)
     resetAll->setObjectName(u"small"_s);
     resetAll->setToolTip(tr("Reset all adjustments (Ctrl+R)"));
     connect(resetAll, &QPushButton::clicked, this, &AdjustPanel::resetAll);
+    auto* autoButton = new QPushButton(icons::themed(u"auto"_s, tokens().text), tr("Auto"), this);
+    autoButton->setObjectName(u"small"_s);
+    autoButton->setToolTip(tr("Set light and color from the photo (Ctrl+Shift+A)"));
+    connect(autoButton, &QPushButton::clicked, this, &AdjustPanel::autoRequested);
     auto* top = new QHBoxLayout;
     top->setContentsMargins(12, 6, 12, 8);
-    top->addStretch();
+    top->addWidget(autoButton, 1);
     top->addWidget(resetAll);
     auto* histogramBox = new QVBoxLayout;
     histogramBox->setContentsMargins(12, 10, 12, 0);

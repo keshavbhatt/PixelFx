@@ -10,6 +10,7 @@
 #include <QTimer>
 #include <QtConcurrent/QtConcurrentRun>
 
+#include <pfx/auto.h>
 #include <pfx/io.h>
 
 using namespace Qt::StringLiterals;
@@ -177,6 +178,7 @@ void Document::deliver(const Result& result)
     m_preview = result.original;
     m_histogram = result.histogram;
     m_fingerprint = result.fingerprint;
+    m_source = result.source;
     m_scheduler->setSource(result.source);
     // As it was left (FEATURES E17): the remembered edits are the starting point of the history.
     m_history.reset(result.stored, tr("Opened"));
@@ -239,6 +241,21 @@ void Document::goToStep(int index)
         scheduleSave();
         Q_EMIT historyChanged();
     }
+}
+
+void Document::autoAdjust()
+{
+    if (!isOpen() || !m_source) {
+        return;
+    }
+    pfx::Settings next;
+    for (const std::string& key : m_settings.keys()) {
+        const std::string_view group = pfx::groupOf(key);
+        if (group != "light" && group != "color") {
+            next.set(key, *m_settings.find(key));
+        }
+    }
+    apply(next.overlaidWith(pfx::autoAdjust(*m_source)), tr("Auto"));
 }
 
 void Document::replaceSettings(const pfx::Settings& settings, bool render)

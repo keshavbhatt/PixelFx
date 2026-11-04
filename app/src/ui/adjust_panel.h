@@ -47,6 +47,7 @@ Q_SIGNALS:
     void settingsChanged(const pfx::Settings& settings);
     /// A change is complete (slider released, a reset): a history step named `label`.
     void editFinished(const QString& label);
+    void autoRequested();
 
 private:
     void setValue(const QString& key, double value, bool finished);

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 // pfx: the libpixelfx command line tool. Lists the operations, describes images, and applies
 // presets and recipes to files.
+#include "pfx/auto.h"
 #include "pfx/document.h"
 #include "pfx/io.h"
 #include "pfx/log.h"
@@ -28,6 +29,7 @@ constexpr const char* kUsage = R"(Usage:
 
 Options for apply:
   --preset FILE      apply a .pfxpreset or .pfx recipe (repeatable, later ones win)
+  --auto             start each photo from Auto (light and colour from its statistics)
   --set KEY=NUMBER   set one value, for example --set light.exposure=0.5 (repeatable)
   -o, --output PATH  output folder (created if missing), or a file name for one input
   --format EXT       output format by extension: jpg, png, tif, webp, avif, jxl (default: same as input)
@@ -105,6 +107,7 @@ struct ApplyArgs
     std::string format;
     pfx::SaveOptions save;
     int longEdge = 0;
+    bool autoFirst = false;
     std::vector<std::string> files;
 };
 
@@ -195,6 +198,8 @@ std::optional<std::string> parseApply(int argc, char* const* argv, ApplyArgs& ar
             if (auto error = it->second(argv[++i], args)) {
                 return error;
             }
+        } else if (option == "--auto") {
+            args.autoFirst = true;
         } else if (!option.empty() && option[0] == '-') {
             return "unknown option " + option;
         } else {
@@ -241,7 +246,10 @@ int apply(int argc, char* const* argv)
             status = 1;
             continue;
         }
-        const auto rendered = pfx::render(loaded.value().image, args.settings);
+        const pfx::Settings settings = args.autoFirst
+                                           ? pfx::autoAdjust(loaded.value().image).overlaidWith(args.settings)
+                                           : args.settings;
+        const auto rendered = pfx::render(loaded.value().image, settings);
         if (!rendered) {
             std::cerr << file << ": " << rendered.error().message << "\n";
             status = 1;

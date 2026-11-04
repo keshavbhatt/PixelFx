@@ -39,6 +39,7 @@ add_library(pfx_core
     src/recipe/settings.cpp
     src/recipe/document.cpp
     src/ops/registry.cpp
+    src/ops/auto.cpp
     src/ops/curve.cpp
     src/ops/curve_public.cpp
     src/ops/light.cpp

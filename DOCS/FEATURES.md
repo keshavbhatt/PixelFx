@@ -67,7 +67,7 @@ preview and export use resolution-independent parameters so they match (v1 defec
 | E7 | Effects: Vignette (amount, midpoint, roundness), Grain (amount, size), Fade | none | KEEP | todo |
 | E8 | Split toning / color grading (shadows, midtones, highlights wheels) | Colorize | KEEP (as a step in looks and a Color group sub-panel) | todo |
 | E9 | Creative operations from v1: Sepia, Threshold, Colorize, Pixelate, Blur, Invert, Grayscale, Emboss, Edge, Sobel | some in UI, some only in Go | KEEP as look steps, not sliders | todo |
-| E10 | Auto: one click sets Light and Color from the image statistics | none | KEEP | todo |
+| E10 | Auto: one click sets Light and Color from the image statistics | none | KEEP | done (`pfx::autoAdjust`; the Auto button and Ctrl+Shift+A; `pfx apply --auto`) |
 | E11 | Live preview while dragging (no apply on release), 60 fps target on the preview size | apply on release, one process per apply | KEEP | wip: live while dragging, newest request first (`RenderScheduler`); speed work (tiles, SIMD) in M3 |
 | E12 | Histogram (RGB, luminance), clipping warnings (J), camera line | RGB on GUI thread | KEEP | wip: RGB histogram computed on the render worker (`core::Histogram`, `HistogramView`); clipping counts computed, the J overlay and the camera line later in M3 |
 | E13 | Before and after: split with divider, side by side, hold Space for the original | hold button | KEEP | wip: the split with a draggable divider (\\) and holding Space done (`Canvas`, `MainWindow`); side by side in M3 |

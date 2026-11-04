@@ -69,6 +69,9 @@ public:
     void redo();
     /// Jumps to a history step (the History popup).
     void goToStep(int index);
+    /// Light and Color from the photo's statistics (the Auto button), as one step. Curves and
+    /// Detail stay as they are.
+    void autoAdjust();
     [[nodiscard]] const core::History& history() const { return m_history; }
 
 Q_SIGNALS:
@@ -98,6 +101,7 @@ private:
     pfx::Settings m_settings;
     core::History m_history;
     RenderScheduler* m_scheduler = nullptr;
+    std::shared_ptr<const pfx::Image> m_source;
     std::optional<core::SidecarStore> m_sidecars;
     QString m_fingerprint;
     QTimer* m_saveTimer = nullptr;
