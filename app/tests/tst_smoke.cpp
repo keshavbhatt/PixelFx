@@ -16,6 +16,9 @@
 #include <QDir>
 #include <QFile>
 #include <QFileInfo>
+#include <QLineEdit>
+#include <QMenu>
+#include <QToolButton>
 #include <QSignalSpy>
 #include <QStandardPaths>
 #include <QTemporaryDir>
@@ -63,6 +66,33 @@ private Q_SLOTS:
         QVERIFY(window.canvas()->isComparing());
         QTest::keyClick(&window, Qt::Key_Backslash);
         QVERIFY(!window.canvas()->isComparing());
+        // Tab hides the panels while the photo has the focus, and brings them back.
+        window.canvas()->setFocus();
+        QVERIFY(window.adjustPanel()->isVisible());
+        QTest::keyClick(window.canvas(), Qt::Key_Tab);
+        QVERIFY(window.panelsHidden());
+        QVERIFY(!window.adjustPanel()->isVisible());
+        QVERIFY(!window.filmstrip()->isVisible());
+        QTest::keyClick(window.canvas(), Qt::Key_Tab);
+        QVERIFY(!window.panelsHidden());
+        QVERIFY(window.adjustPanel()->isVisible());
+        // ...but not while a field has it: there Tab moves the focus.
+        auto* field = window.presetsPanel()->findChild<QLineEdit*>();
+        QVERIFY(field);
+        field->setFocus();
+        QTest::keyClick(field, Qt::Key_Tab);
+        QVERIFY(!window.panelsHidden());
+        // The main menu lists the window's own actions, with their shortcuts (menu.html).
+        QStringList entries;
+        for (auto* button : window.findChildren<QToolButton*>()) {
+            if (button->menu() != nullptr) {
+                for (QAction* a : button->menu()->actions()) {
+                    entries << a->text();
+                }
+            }
+        }
+        QVERIFY2(entries.contains(u"Open recent"_s) && entries.contains(u"View"_s),
+                 qPrintable(entries.join(u'|')));
 
         // Copy and paste: the settings travel, the crop stays with its photo.
         pfx::Settings look;

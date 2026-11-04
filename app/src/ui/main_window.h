@@ -85,6 +85,9 @@ public:
     void openSettings();
     /// Opens the picture on the clipboard, if there is one (Ctrl+V).
     void pasteImage();
+    /// Tab: hides or shows the side panels and the filmstrip (menu.html, "Hide panels").
+    void setPanelsHidden(bool hidden);
+    [[nodiscard]] bool panelsHidden() const;
 
     /// Whether `path` has an extension PixelFx opens.
     [[nodiscard]] static bool isSupported(const QString& path);
@@ -108,6 +111,9 @@ private:
     void connectCrop();
     void updateCropStrip();
     void setupActions();
+    void buildMainMenu();
+    void setupPanelActions();
+    [[nodiscard]] QAction* namedAction(const QString& name) const;
     void setupEditActions();
     void setupCropActions();
     void setupZoomActions();
@@ -175,6 +181,11 @@ private:
     QToolButton* m_original = nullptr;
     QToolButton* m_history = nullptr;
     QToolButton* m_compare = nullptr;
+    QToolButton* m_menuButton = nullptr;
+    QWidget* m_leftDock = nullptr;
+    QWidget* m_rightDock = nullptr;
+    QWidget* m_stripDock = nullptr;
+    QAction* m_hidePanels = nullptr;
     bool m_showingOriginal = false;
     QLabel* m_docName = nullptr;
     QLabel* m_docMeta = nullptr;

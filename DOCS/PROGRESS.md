@@ -165,6 +165,13 @@
   `heifload`, `jxlload`, `jxlsave` and `dcrawload` present; a host-made HEIC, 8 and 10-bit AVIF,
   a JPEG XL written by the dev libvips and a synthetic DNG all decode to the expected values.
   No AVIF or HEIC writing (no encoders). 19 app suites pass.
+- Main menu from `menu.html` (F10): Open, Open folder, Open recent, Paste image; Edit, View and
+  Photo submenus built from the window's own actions, so each shows the shortcut that works;
+  Export, Import presets, Show presets folder, Settings, Keyboard shortcuts, Report a bug, Quit.
+  Tab hides the side panels and the filmstrip (S12), only while the photo (a click on it) or
+  nothing has the focus, so Tab still walks through sliders and fields. Left out until they
+  exist: Save edit with the file, Copy to clipboard (Ctrl+Shift+C is Copy settings, so the mock's
+  key clashes), What's new, Online guide, About. 26 app suites pass.
 
 ### 2026-11-04 (M2)
 

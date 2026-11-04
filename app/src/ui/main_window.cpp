@@ -20,6 +20,7 @@
 #include "ui/welcome_page.h"
 
 #include <QAction>
+#include <QApplication>
 #include <QClipboard>
 #include <QCloseEvent>
 #include <QConicalGradient>
@@ -155,6 +156,7 @@ MainWindow::MainWindow(core::Settings& settings, QWidget* parent)
     connectZoom();
     connectClipboard();
     connectWhiteBalance();
+    buildMainMenu(); // last: it lists the actions made above
 }
 
 void MainWindow::connectDocument()
@@ -389,21 +391,8 @@ void MainWindow::buildHeader()
     doc->addWidget(m_docName);
     doc->addWidget(m_docMeta);
     buildEditButtons();
-    auto* menuButton = headerButton(m_header, u"menu"_s, tr("Main menu (F10)"));
-    menuButton->setPopupMode(QToolButton::InstantPopup);
-    auto* menu = new QMenu(menuButton);
-    menu->addAction(icons::themed(u"open"_s, tokens().muted), tr("Open images..."), QKeySequence::Open, this,
-                    &MainWindow::chooseFiles);
-    menu->addSeparator();
-    menu->addAction(tr("Settings..."), QKeySequence(u"Ctrl+,"_s), this, &MainWindow::openSettings);
-    menu->addAction(tr("Keyboard shortcuts"), QKeySequence(Qt::Key_F1), this, [this] {
-        ShortcutsSheet sheet(this);
-        sheet.exec();
-    });
-    menu->addSeparator();
-    menu->addAction(icons::themed(u"quit"_s, tokens().muted), tr("Quit"), QKeySequence(u"Ctrl+Q"_s), this,
-                    &MainWindow::close);
-    menuButton->setMenu(menu);
+    m_menuButton = headerButton(m_header, u"menu"_s, tr("Main menu (F10)"));
+    m_menuButton->setPopupMode(QToolButton::InstantPopup);
 
     auto* header = new QHBoxLayout(m_header);
     header->setContentsMargins(12, 0, 10, 0);
@@ -422,7 +411,7 @@ void MainWindow::buildHeader()
     header->addWidget(m_original);
     header->addSpacing(8);
     header->addWidget(m_export);
-    header->addWidget(menuButton);
+    header->addWidget(m_menuButton);
 }
 
 void MainWindow::buildBatch()
@@ -498,10 +487,20 @@ void MainWindow::setupUi()
     auto* body = new QHBoxLayout;
     body->setContentsMargins(0, 0, 0, 0);
     body->setSpacing(0);
+    // Docks around the panels, so Tab can hide them without touching what each mode shows.
+    const auto dock = [this](QWidget* inside) {
+        auto* d = new QWidget(this);
+        auto* l = new QHBoxLayout(d);
+        l->setContentsMargins(0, 0, 0, 0);
+        l->addWidget(inside);
+        return d;
+    };
+    m_leftDock = dock(m_presets);
+    m_rightDock = dock(m_panels);
     body->addWidget(m_rail);
-    body->addWidget(m_presets);
+    body->addWidget(m_leftDock);
     body->addWidget(m_stack, 1);
-    body->addWidget(m_panels);
+    body->addWidget(m_rightDock);
 
     auto* central = new QWidget(this);
     auto* column = new QVBoxLayout(central);
@@ -516,34 +515,42 @@ void MainWindow::setupUi()
 void MainWindow::setupActions()
 {
     auto* openAction = new QAction(tr("Open images"), this);
+    openAction->setObjectName(u"open"_s);
     openAction->setShortcut(QKeySequence::Open);
     connect(openAction, &QAction::triggered, this, &MainWindow::chooseFiles);
     auto* quitAction = new QAction(tr("Quit"), this);
+    quitAction->setObjectName(u"quit"_s);
     quitAction->setShortcut(QKeySequence(u"Ctrl+Q"_s));
     connect(quitAction, &QAction::triggered, this, &MainWindow::close);
     // F11 explicitly: under the KDE platform theme QKeySequence::FullScreen is Ctrl+Shift+F
     // (rewrite kit, rules learned).
     auto* fullScreen = new QAction(tr("Full screen"), this);
+    fullScreen->setObjectName(u"fullScreen"_s);
     fullScreen->setShortcut(QKeySequence(Qt::Key_F11));
     connect(fullScreen, &QAction::triggered, this,
             [this] { isFullScreen() ? showNormal() : showFullScreen(); });
     auto* exportAction = new QAction(tr("Export"), this);
+    exportAction->setObjectName(u"export"_s);
     exportAction->setShortcut(QKeySequence(u"Ctrl+Shift+E"_s));
     connect(exportAction, &QAction::triggered, this, &MainWindow::exportPhoto);
     auto* shortcuts = new QAction(tr("Keyboard shortcuts"), this);
+    shortcuts->setObjectName(u"shortcuts"_s);
     shortcuts->setShortcuts({QKeySequence(Qt::Key_F1), QKeySequence(u"Ctrl+/"_s)});
     connect(shortcuts, &QAction::triggered, this, [this] {
         ShortcutsSheet sheet(this);
         sheet.exec();
     });
     auto* openFolder = new QAction(tr("Open folder"), this);
+    openFolder->setObjectName(u"openFolder"_s);
     openFolder->setShortcut(QKeySequence(u"Ctrl+Shift+O"_s));
     connect(openFolder, &QAction::triggered, m_welcome, &WelcomePage::openFolderRequested);
     addActions({shortcuts, openFolder});
     auto* settingsAction = new QAction(tr("Settings"), this);
+    settingsAction->setObjectName(u"settings"_s);
     settingsAction->setShortcut(QKeySequence(u"Ctrl+,"_s));
     connect(settingsAction, &QAction::triggered, this, &MainWindow::openSettings);
     auto* clipping = new QAction(tr("Clipping warnings"), this);
+    clipping->setObjectName(u"clipping"_s);
     clipping->setShortcut(QKeySequence(Qt::Key_J));
     connect(clipping, &QAction::triggered, this,
             [this] { m_settings.setClippingWarnings(!m_settings.clippingWarnings()); });
@@ -556,6 +563,7 @@ void MainWindow::setupActions()
 void MainWindow::setupEditActions()
 {
     auto* undo = new QAction(tr("Undo"), this);
+    undo->setObjectName(u"undo"_s);
     undo->setShortcut(QKeySequence::Undo);
     connect(undo, &QAction::triggered, this, [this] {
         if (!isCropping()) {
@@ -563,6 +571,7 @@ void MainWindow::setupEditActions()
         }
     });
     auto* redo = new QAction(tr("Redo"), this);
+    redo->setObjectName(u"redo"_s);
     redo->setShortcuts({QKeySequence(u"Ctrl+Shift+Z"_s), QKeySequence(u"Ctrl+Y"_s)});
     connect(redo, &QAction::triggered, this, [this] {
         if (!isCropping()) {
@@ -570,6 +579,7 @@ void MainWindow::setupEditActions()
         }
     });
     auto* resetAll = new QAction(tr("Reset all"), this);
+    resetAll->setObjectName(u"resetAll"_s);
     resetAll->setShortcut(QKeySequence(u"Ctrl+R"_s));
     connect(resetAll, &QAction::triggered, this, [this] {
         if (m_document.isOpen() && !isCropping()) {
@@ -577,6 +587,7 @@ void MainWindow::setupEditActions()
         }
     });
     auto* history = new QAction(tr("History"), this);
+    history->setObjectName(u"history"_s);
     history->setShortcut(QKeySequence(Qt::Key_H));
     connect(history, &QAction::triggered, this, [this] {
         if (m_document.isOpen() && !isCropping()) {
@@ -584,6 +595,7 @@ void MainWindow::setupEditActions()
         }
     });
     auto* autoAction = new QAction(tr("Auto"), this);
+    autoAction->setObjectName(u"auto"_s);
     autoAction->setShortcut(QKeySequence(u"Ctrl+Shift+A"_s));
     connect(autoAction, &QAction::triggered, this, [this] {
         if (!isCropping()) {
@@ -592,6 +604,7 @@ void MainWindow::setupEditActions()
     });
     addAction(autoAction);
     auto* compare = new QAction(tr("Before and after"), this);
+    compare->setObjectName(u"compare"_s);
     compare->setShortcut(QKeySequence(Qt::Key_Backslash));
     connect(compare, &QAction::triggered, this, [this] {
         if (m_document.isOpen() && !isCropping()) {
@@ -604,8 +617,10 @@ void MainWindow::setupEditActions()
 void MainWindow::setupZoomActions()
 {
     // Shortcuts as in the shortcuts sheet: Ctrl+0 fit, Ctrl+1 100%, Ctrl+Plus and Ctrl+Minus.
-    const auto add = [this](const QString& name, const QList<QKeySequence>& keys, auto slot) {
+    const auto add = [this](const QString& id, const QString& name, const QList<QKeySequence>& keys,
+                           auto slot) {
         auto* a = new QAction(name, this);
+        a->setObjectName(id);
         a->setShortcuts(keys);
         connect(a, &QAction::triggered, this, [this, slot] {
             if (m_document.isOpen() && !isCropping()) {
@@ -614,26 +629,30 @@ void MainWindow::setupZoomActions()
         });
         addAction(a);
     };
-    add(tr("Fit"), {QKeySequence(u"Ctrl+0"_s)}, [this] { m_canvas->zoomToFit(); });
-    add(tr("100%"), {QKeySequence(u"Ctrl+1"_s)}, [this] { m_canvas->setZoom(1.0); });
-    add(tr("Zoom in"), {QKeySequence::ZoomIn, QKeySequence(u"Ctrl+="_s)}, [this] { m_canvas->zoomIn(); });
-    add(tr("Zoom out"), {QKeySequence::ZoomOut}, [this] { m_canvas->zoomOut(); });
+    add(u"fit"_s, tr("Fit"), {QKeySequence(u"Ctrl+0"_s)}, [this] { m_canvas->zoomToFit(); });
+    add(u"actualSize"_s, tr("Actual size"), {QKeySequence(u"Ctrl+1"_s)}, [this] { m_canvas->setZoom(1.0); });
+    add(u"zoomIn"_s, tr("Zoom in"), {QKeySequence::ZoomIn, QKeySequence(u"Ctrl+="_s)}, [this] { m_canvas->zoomIn(); });
+    add(u"zoomOut"_s, tr("Zoom out"), {QKeySequence::ZoomOut}, [this] { m_canvas->zoomOut(); });
 }
 
 void MainWindow::setupCropActions()
 {
-    auto* edit = new QAction(tr("Edit"), this); // mode keys of the shortcuts sheet: E and C
+    // Mode keys of the shortcuts sheet: E and C.
+    auto* edit = new QAction(tr("Edit"), this);
+    edit->setObjectName(u"edit"_s);
     edit->setShortcut(QKeySequence(Qt::Key_E));
     connect(edit, &QAction::triggered, this, [this] {
         leaveCrop(true);
         leaveBatch();
     });
     auto* batch = new QAction(tr("Batch"), this);
+    batch->setObjectName(u"batch"_s);
     batch->setShortcut(QKeySequence(Qt::Key_B));
     connect(batch, &QAction::triggered, this, &MainWindow::enterBatch);
     addAction(batch);
     addAction(edit);
     auto* crop = new QAction(tr("Crop"), this);
+    crop->setObjectName(u"crop"_s);
     crop->setShortcut(QKeySequence(Qt::Key_C));
     connect(crop, &QAction::triggered, this, [this] { isCropping() ? leaveCrop(true) : enterCrop(); });
     auto* cropDone = new QAction(tr("Apply the crop"), this);
@@ -705,6 +724,7 @@ QWidget* MainWindow::buildCanvasPage()
 {
     auto* page = new QWidget(this);
     m_canvas = new Canvas(page);
+    m_canvas->setFocusPolicy(Qt::ClickFocus); // a click on the photo lets Tab hide the panels
     m_cropStrip = new QWidget(page);
     m_cropStrip->setObjectName(u"strip"_s);
     m_cropStrip->setAttribute(Qt::WA_StyledBackground);
@@ -728,9 +748,13 @@ QWidget* MainWindow::buildCanvasPage()
     column->setSpacing(0);
     column->addWidget(m_canvas, 1);
     column->addWidget(m_cropStrip);
-    m_strip = new Filmstrip(page);
+    m_stripDock = new QWidget(page);
+    auto* stripRow = new QVBoxLayout(m_stripDock);
+    stripRow->setContentsMargins(0, 0, 0, 0);
+    m_strip = new Filmstrip(m_stripDock);
     m_strip->hide();
-    column->addWidget(m_strip);
+    stripRow->addWidget(m_strip);
+    column->addWidget(m_stripDock);
     return page;
 }
 
@@ -799,12 +823,15 @@ void MainWindow::connectClipboard()
     connect(m_adjust, &AdjustPanel::copyRequested, this, &MainWindow::copySettings);
     connect(m_adjust, &AdjustPanel::pasteRequested, this, &MainWindow::pasteSettings);
     auto* copy = new QAction(tr("Copy settings"), this);
+    copy->setObjectName(u"copySettings"_s);
     copy->setShortcut(QKeySequence(u"Ctrl+Shift+C"_s));
     connect(copy, &QAction::triggered, this, &MainWindow::copySettings);
     auto* paste = new QAction(tr("Paste settings"), this);
+    paste->setObjectName(u"pasteSettings"_s);
     paste->setShortcut(QKeySequence(u"Ctrl+Shift+V"_s));
     connect(paste, &QAction::triggered, this, &MainWindow::pasteSettings);
     auto* pasteImageAction = new QAction(tr("Paste image"), this);
+    pasteImageAction->setObjectName(u"pasteImage"_s);
     pasteImageAction->setShortcut(QKeySequence::Paste);
     connect(pasteImageAction, &QAction::triggered, this, &MainWindow::pasteImage);
     addActions({copy, paste, pasteImageAction});
@@ -1396,6 +1423,128 @@ void MainWindow::dragLeaveEvent(QDragLeaveEvent* event)
 {
     m_welcome->setDragActive(false);
     QMainWindow::dragLeaveEvent(event);
+}
+
+QAction* MainWindow::namedAction(const QString& name) const
+{
+    auto* a = findChild<QAction*>(name, Qt::FindDirectChildrenOnly);
+    Q_ASSERT_X(a, "namedAction", qPrintable(name));
+    return a;
+}
+
+void MainWindow::setPanelsHidden(bool hidden)
+{
+    m_leftDock->setVisible(!hidden);
+    m_rightDock->setVisible(!hidden);
+    m_stripDock->setVisible(!hidden);
+    m_hidePanels->setChecked(hidden);
+}
+
+bool MainWindow::panelsHidden() const
+{
+    return m_hidePanels->isChecked();
+}
+
+void MainWindow::setupPanelActions()
+{
+    m_hidePanels = new QAction(tr("Hide panels"), this);
+    m_hidePanels->setObjectName(u"hidePanels"_s);
+    m_hidePanels->setCheckable(true);
+    connect(m_hidePanels, &QAction::triggered, this, [this](bool on) { setPanelsHidden(on); });
+    // Tab hides the panels only while the photo or nothing has the focus, so Tab still walks
+    // through sliders and fields for keyboard users.
+    auto* tab = new QAction(this);
+    tab->setShortcut(QKeySequence(Qt::Key_Tab));
+    connect(tab, &QAction::triggered, this, [this] {
+        if (m_document.isOpen()) {
+            setPanelsHidden(!panelsHidden());
+        }
+    });
+    const auto followFocus = [this, tab](QWidget*, QWidget* now) {
+        tab->setEnabled(now == nullptr || now == this || now == m_canvas || m_canvas->isAncestorOf(now));
+    };
+    connect(qApp, &QApplication::focusChanged, this, followFocus);
+    followFocus(nullptr, QApplication::focusWidget());
+    // F10 opens the main menu, as its tooltip says.
+    auto* menu = new QAction(this);
+    menu->setShortcut(QKeySequence(Qt::Key_F10));
+    connect(menu, &QAction::triggered, m_menuButton, &QToolButton::showMenu);
+    addActions({m_hidePanels, tab, menu});
+}
+
+void MainWindow::buildMainMenu()
+{
+    // The entries of menu.html that exist; each one is the window's own action, so the
+    // shortcut shown is the one that works.
+    setupPanelActions();
+    auto* menu = new QMenu(m_menuButton);
+    QAction* open = namedAction(u"open"_s);
+    open->setIcon(icons::themed(u"open"_s, tokens().muted));
+    menu->addAction(open);
+    menu->addAction(namedAction(u"openFolder"_s));
+    QMenu* recent = menu->addMenu(tr("Open recent"));
+    connect(recent, &QMenu::aboutToShow, this, [this, recent] {
+        recent->clear();
+        const QStringList files = m_settings.recentFiles();
+        for (const QString& file : files) {
+            QAction* a = recent->addAction(QFileInfo(file).fileName());
+            a->setToolTip(QDir::toNativeSeparators(file));
+            connect(a, &QAction::triggered, this, [this, file] { openFiles({file}); });
+        }
+        if (files.isEmpty()) {
+            recent->addAction(tr("No recent photos"))->setEnabled(false);
+        } else {
+            recent->addSeparator();
+            connect(recent->addAction(tr("Clear recent")), &QAction::triggered, this,
+                    [this] { m_settings.clearRecentFiles(); });
+        }
+    });
+    menu->addAction(namedAction(u"pasteImage"_s));
+    menu->addSeparator();
+
+    QMenu* edit = menu->addMenu(tr("Edit"));
+    edit->addActions({namedAction(u"undo"_s), namedAction(u"redo"_s), namedAction(u"history"_s)});
+    edit->addSeparator();
+    edit->addActions({namedAction(u"copySettings"_s), namedAction(u"pasteSettings"_s)});
+    edit->addSeparator();
+    edit->addAction(namedAction(u"resetAll"_s));
+    QMenu* view = menu->addMenu(tr("View"));
+    view->addAction(namedAction(u"compare"_s));
+    QAction* clipping = namedAction(u"clipping"_s);
+    clipping->setCheckable(true);
+    clipping->setChecked(m_settings.clippingWarnings());
+    connect(&m_settings, &core::Settings::clippingWarningsChanged, clipping, &QAction::setChecked);
+    view->addAction(clipping);
+    view->addSeparator();
+    view->addActions({namedAction(u"fit"_s), namedAction(u"zoomIn"_s), namedAction(u"zoomOut"_s),
+                      namedAction(u"actualSize"_s)});
+    view->addSeparator();
+    view->addAction(m_hidePanels);
+    view->addAction(namedAction(u"fullScreen"_s));
+    QMenu* photo = menu->addMenu(tr("Photo"));
+    photo->addAction(namedAction(u"auto"_s));
+    photo->addAction(namedAction(u"crop"_s));
+    photo->addSeparator();
+    photo->addActions({namedAction(u"edit"_s), namedAction(u"batch"_s)});
+    menu->addSeparator();
+    menu->addAction(namedAction(u"export"_s));
+    menu->addSeparator();
+    connect(menu->addAction(tr("Import presets...")), &QAction::triggered, this, &MainWindow::importPresets);
+    connect(menu->addAction(tr("Show presets folder")), &QAction::triggered, this, [this] {
+        QDir().mkpath(m_library.folder());
+        QDesktopServices::openUrl(QUrl::fromLocalFile(m_library.folder()));
+    });
+    menu->addSeparator();
+    menu->addAction(namedAction(u"settings"_s));
+    menu->addAction(namedAction(u"shortcuts"_s));
+    connect(menu->addAction(tr("Report a bug")), &QAction::triggered, this, [] {
+        QDesktopServices::openUrl(QUrl(u"https://github.com/keshavbhatt/PixelFx/issues"_s));
+    });
+    menu->addSeparator();
+    QAction* quit = namedAction(u"quit"_s);
+    quit->setIcon(icons::themed(u"quit"_s, tokens().muted));
+    menu->addAction(quit);
+    m_menuButton->setMenu(menu);
 }
 
 void MainWindow::keyPressEvent(QKeyEvent* event)

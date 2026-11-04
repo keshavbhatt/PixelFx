@@ -55,6 +55,8 @@ const std::array<Section, 4>& sections()
           {QT_TRANSLATE_NOOP("ShortcutsSheet", "Fit / 100%"), "Ctrl+0 / Ctrl+1"},
           {QT_TRANSLATE_NOOP("ShortcutsSheet", "Zoom"), "Ctrl+Plus / Minus"},
           {QT_TRANSLATE_NOOP("ShortcutsSheet", "Full screen"), "F11"},
+          {QT_TRANSLATE_NOOP("ShortcutsSheet", "Hide panels"), "Tab"},
+          {QT_TRANSLATE_NOOP("ShortcutsSheet", "Main menu"), "F10"},
           {QT_TRANSLATE_NOOP("ShortcutsSheet", "Clipping"), "J"}}},
         {QT_TRANSLATE_NOOP("ShortcutsSheet", "Modes"),
          {{QT_TRANSLATE_NOOP("ShortcutsSheet", "Edit"), "E"},

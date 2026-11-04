@@ -36,7 +36,8 @@ PixelFx 2 is rebuilt from scratch: a new editor, a new image engine, and a new l
 - Export leaves out where a photo was taken unless you tick Keep location.
 - Export sizes named for where the photo is going: Instagram portrait, square and story, X,
   web, email, a 4K wallpaper, prints at 300 dpi; crop to fill or fit inside with a border.
-- A sheet of every keyboard shortcut (F1).
+- A sheet of every keyboard shortcut (F1), and a main menu (F10) that reaches every command.
+- Tab hides the panels to see only the photo; F11 for full screen.
 - Settings (Ctrl+,): light or dark theme, the colour around the photo, whether edits are
   remembered, and clipping warnings (J) that show blown highlights in red and blocked shadows
   in blue.
