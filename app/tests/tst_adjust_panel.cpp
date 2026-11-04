@@ -77,18 +77,21 @@ private Q_SLOTS:
         panel.show();
         QVERIFY(QTest::qWaitForWindowExposed(&panel));
         auto* editor = panel.curveEditor();
-        editor->resize(280, 180);
+        // Points from the editor's laid-out size: the layout, not this test, decides it, and the
+        // style's metrics differ between platforms.
+        QVERIFY(editor->height() > 60);
         QSignalSpy finished(&panel, &AdjustPanel::editFinished);
-        const QPoint middle(140, 90);
+        const QPoint middle = editor->rect().center();
+        const QPoint up = middle - QPoint(0, editor->height() / 5);
         // No QTest::mouseMove: on macOS it moves the real cursor. A release ends the drag where it
         // happens, so press and release are enough.
         QTest::mousePress(editor, Qt::LeftButton, {}, middle);
-        QTest::mouseRelease(editor, Qt::LeftButton, {}, QPoint(140, 60));
+        QTest::mouseRelease(editor, Qt::LeftButton, {}, up);
         QCOMPARE(editor->curve().size(), std::size_t{3});
         QVERIFY(panel.settings().contains("curves.rgb"));
         QCOMPARE(panel.settings().curve("curves.rgb").at(1).y > 0.55, true); // dragged up
         QCOMPARE(finished.last().first().toString(), u"Curve"_s);
-        QTest::mouseDClick(editor, Qt::LeftButton, {}, QPoint(140, 60));
+        QTest::mouseDClick(editor, Qt::LeftButton, {}, up);
         QCOMPARE(editor->curve().size(), std::size_t{2});
         QVERIFY(!panel.settings().contains("curves.rgb")); // back to identity: not stored
     }
