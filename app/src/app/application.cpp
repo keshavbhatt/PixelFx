@@ -84,7 +84,7 @@ core::Settings& Application::settings()
     return *m_settings;
 }
 
-void Application::setupLogging()
+void Application::setupLogging() const
 {
     core::LogSink::install();
     if (m_cli.noLogFile) {
@@ -110,7 +110,8 @@ void Application::dispatchCommand(const QJsonObject& command)
     const QString cmd = command.value(u"cmd"_s).toString();
     if (cmd == u"open"_s) {
         QStringList files;
-        for (const QJsonValue& v : command.value(u"files"_s).toArray()) {
+        const QJsonArray list = command.value(u"files"_s).toArray();
+        for (const auto& v : list) {
             files << v.toString();
         }
         Q_EMIT openRequested(files);

@@ -18,12 +18,16 @@ void parallelFor(int count, int threads, const std::function<void(int, int)>& bo
         body(0, count);
         return;
     }
-    std::vector<std::jthread> pool;
+    // std::thread with explicit joins: Apple's libc++ has no std::jthread.
+    std::vector<std::thread> pool;
     pool.reserve(static_cast<std::size_t>(workers));
     const int chunk = (count + workers - 1) / workers;
     for (int begin = 0; begin < count; begin += chunk) {
         const int end = std::min(count, begin + chunk);
         pool.emplace_back([&body, begin, end] { body(begin, end); });
+    }
+    for (std::thread& worker : pool) {
+        worker.join();
     }
 }
 

@@ -17,6 +17,8 @@ Canvas::Canvas(QWidget* parent)
     setAccessibleName(tr("Photo"));
 }
 
+Canvas::~Canvas() = default;
+
 void Canvas::setImage(const QImage& image, const QSize& fullSize)
 {
     m_image = image;

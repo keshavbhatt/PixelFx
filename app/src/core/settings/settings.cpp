@@ -64,12 +64,13 @@ void Settings::setWindowState(const QByteArray& state)
 
 QString Settings::lastOpenFolder() const
 {
-    const QString stored = m_settings->value(key(keys::kLastOpenFolder)).toString();
+    QString stored = m_settings->value(key(keys::kLastOpenFolder)).toString();
     if (!stored.isEmpty() && QFileInfo(stored).isDir()) {
         return stored;
     }
+    // Pictures only when it exists (a fresh account or a CI machine may have none).
     const QString pictures = QStandardPaths::writableLocation(QStandardPaths::PicturesLocation);
-    return pictures.isEmpty() ? QDir::homePath() : pictures;
+    return !pictures.isEmpty() && QFileInfo(pictures).isDir() ? pictures : QDir::homePath();
 }
 
 void Settings::setLastOpenFolder(const QString& folder)

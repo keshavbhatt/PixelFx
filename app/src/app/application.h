@@ -41,7 +41,7 @@ Q_SIGNALS:
     void quitRequested();
 
 private:
-    void setupLogging();
+    void setupLogging() const;
     [[nodiscard]] bool forwardToPrimary();
 
     CliOptions m_cli;

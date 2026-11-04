@@ -15,6 +15,7 @@ class Canvas : public QWidget
 
 public:
     explicit Canvas(QWidget* parent = nullptr);
+    ~Canvas() override;
 
     /// `fullSize` is the photo's real size: the fit view never enlarges past 100% of it.
     void setImage(const QImage& image, const QSize& fullSize);

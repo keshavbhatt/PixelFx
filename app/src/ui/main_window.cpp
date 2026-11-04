@@ -254,9 +254,8 @@ void MainWindow::closeEvent(QCloseEvent* event)
 void MainWindow::dragEnterEvent(QDragEnterEvent* event)
 {
     const QList<QUrl> urls = event->mimeData()->urls();
-    const bool any = std::any_of(urls.begin(), urls.end(), [](const QUrl& url) {
-        return url.isLocalFile() && isSupported(url.toLocalFile());
-    });
+    const bool any = std::ranges::any_of(
+        urls, [](const QUrl& url) { return url.isLocalFile() && isSupported(url.toLocalFile()); });
     if (any) {
         event->acceptProposedAction();
         m_welcome->setDragActive(true);

@@ -15,6 +15,7 @@ class WelcomePage : public QWidget
 
 public:
     explicit WelcomePage(QWidget* parent = nullptr);
+    ~WelcomePage() override;
     /// Highlights the drop zone while files are dragged over the window.
     void setDragActive(bool active);
 

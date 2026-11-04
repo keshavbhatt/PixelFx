@@ -6,6 +6,8 @@
 #include <QLocalServer>
 #include <QLocalSocket>
 
+#include <utility>
+
 #ifdef Q_OS_UNIX
 #include <unistd.h>
 #endif
@@ -31,9 +33,9 @@ QString instanceKeyFor(const QString& profile)
     return u"pixelfx-%1-%2"_s.arg(name, suffix);
 }
 
-SingleInstance::SingleInstance(const QString& key, QObject* parent)
+SingleInstance::SingleInstance(QString key, QObject* parent)
     : QObject(parent)
-    , m_key(key) // NOLINT(modernize-pass-by-value): small, and callers keep their copy
+    , m_key(std::move(key))
 {
     if (primaryIsAlive(m_key, 500)) {
         m_primary = false;

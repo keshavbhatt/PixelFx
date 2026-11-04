@@ -314,10 +314,9 @@ Result<Rgba8Image> toSrgb8(const Image& image)
     }
     const ProfilePtr working = workingProfile();
     const ProfilePtr srgb = srgbProfile();
-    const TransformPtr transform{cmsCreateTransform(working.get(), TYPE_RGBA_FLT, srgb.get(), TYPE_RGBA_8,
-                                                    INTENT_PERCEPTUAL,
-                                                    cmsFLAGS_NOCACHE | cmsFLAGS_COPY_ALPHA),
-                                 &cmsDeleteTransform};
+    // Float to float, then rounded here exactly as save() does: LittleCMS's own float-to-8-bit
+    // path rounds differently between versions (up to 3 levels with 2.14).
+    const TransformPtr transform = makeTransform(working.get(), srgb.get());
     if (!transform) {
         return Error{ErrorCode::ColorManagement, "Could not prepare the sRGB conversion."};
     }
@@ -325,12 +324,17 @@ Result<Rgba8Image> toSrgb8(const Image& image)
     out.width = image.width();
     out.height = image.height();
     out.pixels.resize(image.pixelCount() * 4);
-    const auto rowBytes = static_cast<std::size_t>(image.width()) * 4;
+    const auto rowValues = static_cast<std::size_t>(image.width()) * 4;
     detail::parallelFor(image.height(), 0, [&](int y0, int y1) {
+        std::vector<float> row(rowValues);
         for (int y = y0; y < y1; ++y) {
-            cmsDoTransform(transform.get(), image.row(y),
-                           out.pixels.data() + static_cast<std::size_t>(y) * rowBytes,
+            cmsDoTransform(transform.get(), image.row(y), row.data(),
                            static_cast<cmsUInt32Number>(image.width()));
+            std::uint8_t* dst = out.pixels.data() + static_cast<std::size_t>(y) * rowValues;
+            for (std::size_t i = 0; i < rowValues; ++i) {
+                const auto v = double{std::clamp(row[i], 0.0F, 1.0F)};
+                dst[i] = static_cast<std::uint8_t>(std::lround(v * 255.0));
+            }
         }
     });
     return out;

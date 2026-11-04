@@ -81,7 +81,7 @@ void handler(QtMsgType type, const QMessageLogContext& context, const QString& m
     State& s = state();
     const QString line = formatLine(type, context, message);
     {
-        QMutexLocker lock(&s.mutex);
+        const QMutexLocker lock(&s.mutex);
         s.ring.push_back(line);
         while (s.ring.size() > kRingCapacity) {
             s.ring.pop_front();
@@ -103,7 +103,7 @@ void handler(QtMsgType type, const QMessageLogContext& context, const QString& m
 void LogSink::install()
 {
     State& s = state();
-    QMutexLocker lock(&s.mutex);
+    const QMutexLocker lock(&s.mutex);
     if (s.installed) {
         return;
     }
@@ -114,7 +114,7 @@ void LogSink::install()
 void LogSink::setLogFile(const QString& path, qint64 maxBytes)
 {
     State& s = state();
-    QMutexLocker lock(&s.mutex);
+    const QMutexLocker lock(&s.mutex);
     if (s.file.isOpen()) {
         s.file.close();
     }
@@ -135,7 +135,7 @@ void LogSink::setLogFile(const QString& path, qint64 maxBytes)
 QString LogSink::logFilePath()
 {
     State& s = state();
-    QMutexLocker lock(&s.mutex);
+    const QMutexLocker lock(&s.mutex);
     return s.filePath;
 }
 
@@ -147,7 +147,7 @@ QString LogSink::defaultLogFilePath()
 QStringList LogSink::recentLines()
 {
     State& s = state();
-    QMutexLocker lock(&s.mutex);
+    const QMutexLocker lock(&s.mutex);
     QStringList lines;
     lines.reserve(static_cast<qsizetype>(s.ring.size()));
     for (const QString& line : s.ring) {

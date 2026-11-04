@@ -1,0 +1,36 @@
+2026-11-04 23:44:47,406 - aqt.helper - DEBUG - helper 140148610329536 Attempt to download checksum at https://download.qt.io/online/qtsdkrepository/windows_x86/desktop/qt6_6113/qt6_6113/Updates.xml.sha256
+2026-11-04 23:44:50,490 - aqt.helper - DEBUG - helper 140148610329536 Attempt to download checksum at https://download.qt.io/online/qtsdkrepository/windows_x86/desktop/qt6_6113/qt6_6113/Updates.xml.sha256
+2026-11-04 23:44:51,435 - aqt.helper - DEBUG - helper 140148610329536 Attempt to download checksum at https://download.qt.io/online/qtsdkrepository/windows_x86/desktop/qt6_6113/qt6_6113/Updates.xml.sha256
+2026-11-04 23:44:52,491 - aqt.helper - DEBUG - helper 140148610329536 Attempt to download checksum at https://download.qt.io/online/qtsdkrepository/windows_x86/desktop/qt6_6113/qt6_6113/Updates.xml.sha256
+2026-11-04 23:44:53,534 - aqt.helper - DEBUG - helper 140148610329536 Attempt to download checksum at https://download.qt.io/online/qtsdkrepository/windows_x86/desktop/qt6_6113/qt6_6113/Updates.xml.sha256
+2026-11-04 23:44:54,515 - aqt.main - ERROR - installer 140148610329536 Failed to download checksum for the file 'Updates.xml' from mirrors '['https://download.qt.io']
+==============================Suggested follow-up:==============================
+* Check your internet connection
+* Consider modifying `requests.max_retries_to_retrieve_hash` in settings.ini
+* Consider modifying `mirrors.trusted_mirrors` in settings.ini (see https://aqtinstall.readthedocs.io/en/stable/configuration.html#configuration)
+* Please use 'aqt list-qt windows desktop' to show versions of Qt available.
+2026-11-04 23:44:54,668 - aqt.helper - DEBUG - helper 140037350255552 Attempt to download checksum at https://download.qt.io/online/qtsdkrepository/windows_x86/desktop/qt6_6113/qt6_6113/Updates.xml.sha256
+2026-11-04 23:44:55,786 - aqt.helper - DEBUG - helper 140037350255552 Attempt to download checksum at https://download.qt.io/online/qtsdkrepository/windows_x86/desktop/qt6_6113/qt6_6113/Updates.xml.sha256
+2026-11-04 23:44:56,786 - aqt.helper - DEBUG - helper 140037350255552 Attempt to download checksum at https://download.qt.io/online/qtsdkrepository/windows_x86/desktop/qt6_6113/qt6_6113/Updates.xml.sha256
+2026-11-04 23:44:57,741 - aqt.helper - DEBUG - helper 140037350255552 Attempt to download checksum at https://download.qt.io/online/qtsdkrepository/windows_x86/desktop/qt6_6113/qt6_6113/Updates.xml.sha256
+2026-11-04 23:44:58,696 - aqt.helper - DEBUG - helper 140037350255552 Attempt to download checksum at https://download.qt.io/online/qtsdkrepository/windows_x86/desktop/qt6_6113/qt6_6113/Updates.xml.sha256
+2026-11-04 23:44:59,677 - aqt.main - ERROR - installer 140037350255552 Failed to download checksum for the file 'Updates.xml' from mirrors '['https://download.qt.io']
+==============================Suggested follow-up:==============================
+* Check your internet connection
+* Consider modifying `requests.max_retries_to_retrieve_hash` in settings.ini
+* Consider modifying `mirrors.trusted_mirrors` in settings.ini (see https://aqtinstall.readthedocs.io/en/stable/configuration.html#configuration)
+* Please use 'aqt list-qt windows desktop' to show versions of Qt available.
+* Please use 'aqt list-qt windows desktop --arch <QT_VERSION>' to list valid architectures.
+2026-11-04 23:45:03,454 - aqt.helper - DEBUG - helper 140131453729728 Attempt to download checksum at https://download.qt.io/online/qtsdkrepository/windows_x86/desktop/qt6_6113/qt6_6113/Updates.xml.sha256
+2026-11-04 23:45:04,351 - aqt.helper - DEBUG - helper 140131453729728 Attempt to download checksum at https://download.qt.io/online/qtsdkrepository/windows_x86/desktop/qt6_6113/qt6_6113/Updates.xml.sha256
+2026-11-04 23:45:05,302 - aqt.helper - DEBUG - helper 140131453729728 Attempt to download checksum at https://download.qt.io/online/qtsdkrepository/windows_x86/desktop/qt6_6113/qt6_6113/Updates.xml.sha256
+2026-11-04 23:45:06,288 - aqt.helper - DEBUG - helper 140131453729728 Attempt to download checksum at https://download.qt.io/online/qtsdkrepository/windows_x86/desktop/qt6_6113/qt6_6113/Updates.xml.sha256
+2026-11-04 23:45:07,271 - aqt.helper - DEBUG - helper 140131453729728 Attempt to download checksum at https://download.qt.io/online/qtsdkrepository/windows_x86/desktop/qt6_6113/qt6_6113/Updates.xml.sha256
+2026-11-04 23:45:08,211 - aqt.main - ERROR - installer 140131453729728 Failed to download checksum for the file 'Updates.xml' from mirrors '['https://download.qt.io']
+==============================Suggested follow-up:==============================
+* Check your internet connection
+* Consider modifying `requests.max_retries_to_retrieve_hash` in settings.ini
+* Consider modifying `mirrors.trusted_mirrors` in settings.ini (see https://aqtinstall.readthedocs.io/en/stable/configuration.html#configuration)
+* Please use 'aqt list-qt windows desktop' to show versions of Qt available.
+2026-11-04 23:45:08,368 - aqt.main - INFO - installer 139784437636032 aqtinstall(aqt) v3.3.0 on Python 3.12.10 [CPython Clang 20.1.0 ]
+2026-11-04 23:45:17,213 - aqt.helper - DEBUG - helper 139982430096320 Attempt to download checksum at https://download.qt.io/online/qtsdkrepository/linux_x64/desktop/qt6_6113/qt6_6113/Updates.xml.sha256

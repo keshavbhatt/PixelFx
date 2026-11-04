@@ -12,7 +12,7 @@ namespace {
 
 QColor hex(const char* value)
 {
-    return QColor(QString::fromLatin1(value));
+    return {QString::fromLatin1(value)};
 }
 
 QString sheet(const Tokens& t)
@@ -86,7 +86,7 @@ const Tokens& tokens()
 void applyStyle(QApplication& app)
 {
     const Tokens& t = tokens();
-    app.setStyle(QStyleFactory::create(u"Fusion"_s));
+    QApplication::setStyle(QStyleFactory::create(u"Fusion"_s));
     QPalette p;
     p.setColor(QPalette::Window, t.bg);
     p.setColor(QPalette::WindowText, t.text);
@@ -104,7 +104,7 @@ void applyStyle(QApplication& app)
     p.setColor(QPalette::Disabled, QPalette::Text, t.faint);
     p.setColor(QPalette::Disabled, QPalette::ButtonText, t.faint);
     p.setColor(QPalette::Disabled, QPalette::WindowText, t.faint);
-    app.setPalette(p);
+    QApplication::setPalette(p);
     app.setStyleSheet(sheet(t));
 }
 

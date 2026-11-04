@@ -12,8 +12,10 @@
 #include <filesystem>
 #include <functional>
 #include <iostream>
+#include <locale>
 #include <map>
 #include <optional>
+#include <sstream>
 #include <string>
 #include <vector>
 
@@ -132,10 +134,11 @@ std::optional<std::string> addSetting(const std::string& keyValue, ApplyArgs& ar
     if (eq == std::string::npos) {
         return "--set needs KEY=NUMBER";
     }
+    // A stream in the classic locale: Apple's libc++ has no floating-point std::from_chars.
     double value = 0.0;
-    const std::string number = keyValue.substr(eq + 1);
-    const auto* end = number.data() + number.size();
-    if (std::from_chars(number.data(), end, value).ptr != end) {
+    std::istringstream number(keyValue.substr(eq + 1));
+    number.imbue(std::locale::classic());
+    if (!(number >> value) || !number.eof()) {
         return "--set needs a number after =";
     }
     args.settings.set(keyValue.substr(0, eq), value);

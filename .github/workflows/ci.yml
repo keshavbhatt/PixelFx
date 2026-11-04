@@ -53,12 +53,16 @@ jobs:
           script: |
             core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
             core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
-      - uses: jurplel/install-qt-action@v4
-        with:
-          version: ${{ env.QT_VERSION }}
-          arch: win64_msvc2022_64
-          modules: qtimageformats
-          cache: true
+      # aqtinstall (behind install-qt-action) cannot read Qt 6.11's per-compiler Windows
+      # repository yet; scripts/ci/fetch-qt.py reads it and checks every archive's SHA-1.
+      - name: Qt
+        shell: pwsh
+        run: |
+          $prefix = python scripts/ci/fetch-qt.py --host windows_x86 --version $env:QT_VERSION `
+            --compiler msvc2022_64 --modules qtbase qtsvg qtimageformats --dest C:/Qt
+          "Qt6_DIR=$prefix/lib/cmake/Qt6" | Out-File -FilePath $env:GITHUB_ENV -Append
+          "CMAKE_PREFIX_PATH=$prefix" | Out-File -FilePath $env:GITHUB_ENV -Append
+          "$prefix/bin" | Out-File -FilePath $env:GITHUB_PATH -Append
       - uses: ilammy/msvc-dev-cmd@v1
       - name: Configure
         shell: pwsh

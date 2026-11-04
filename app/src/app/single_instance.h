@@ -19,7 +19,7 @@ class SingleInstance : public QObject
     Q_DISABLE_COPY_MOVE(SingleInstance)
 
 public:
-    explicit SingleInstance(const QString& key, QObject* parent = nullptr);
+    explicit SingleInstance(QString key, QObject* parent = nullptr);
     ~SingleInstance() override;
 
     [[nodiscard]] bool isPrimary() const { return m_primary; }

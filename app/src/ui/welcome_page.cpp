@@ -60,6 +60,8 @@ WelcomePage::WelcomePage(QWidget* parent)
     m_dropZone->setMinimumWidth(520);
 }
 
+WelcomePage::~WelcomePage() = default;
+
 void WelcomePage::setDragActive(bool active)
 {
     m_dropZone->setProperty("dragActive", active);
