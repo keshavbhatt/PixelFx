@@ -74,7 +74,9 @@ ExportSheet::ExportSheet(const QString& source, const QSize& photoSize, const co
 
     auto* title = new QLabel(tr("Export"), this);
     title->setObjectName(u"sheetTitle"_s);
+    m_title = title;
     auto* file = new QLabel(QFileInfo(source).fileName(), this);
+    m_file = file;
     file->setObjectName(u"muted"_s);
     auto* heading = new QHBoxLayout;
     heading->addWidget(title);
@@ -134,6 +136,7 @@ void ExportSheet::addFooter(QVBoxLayout* column)
 
     auto* cancel = new QPushButton(tr("Cancel"), this);
     auto* exportButton = new QPushButton(tr("Export"), this);
+    m_exportButton = exportButton;
     exportButton->setObjectName(u"primary"_s);
     exportButton->setDefault(true);
     connect(cancel, &QPushButton::clicked, this, &QDialog::reject);
@@ -282,6 +285,17 @@ void ExportSheet::chooseFolder()
         m_folder->setText(shortPath(folder));
         m_folder->setToolTip(folder);
     }
+}
+
+void ExportSheet::setPhotoCount(int count)
+{
+    if (count < 2) {
+        return;
+    }
+    const QString text = tr("Export %n photos", nullptr, count);
+    m_title->setText(text);
+    m_exportButton->setText(text);
+    m_file->setText(tr("each with its own settings; the size and name apply to all"));
 }
 
 core::ExportOptions ExportSheet::options() const

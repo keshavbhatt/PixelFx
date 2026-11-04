@@ -30,9 +30,14 @@ public:
     ~ExportSheet() override;
 
     [[nodiscard]] core::ExportOptions options() const;
+    /// Several photos at once: the title and button say "Export 4 photos" (apply-to-selected.html).
+    void setPhotoCount(int count);
 
 private:
     void updateForFormat();
+    class QLabel* m_title = nullptr;
+    class QLabel* m_file = nullptr;
+    class QPushButton* m_exportButton = nullptr;
     void chooseFolder();
     [[nodiscard]] QWidget* formatRow(const QString& current);
     [[nodiscard]] QWidget* qualityRow(int quality);

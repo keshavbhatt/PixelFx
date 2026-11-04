@@ -107,6 +107,7 @@ private:
     void connectClipboard();
     void connectWhiteBalance();
     void applyGeneralSettings();
+    void exportNext();
     void connectPresets();
     void connectFilmstrip();
     /// `change` on the current photo as one step, and on every other selected photo's
@@ -135,6 +136,15 @@ private:
     AdjustPanel* m_adjust = nullptr;
     CropPanel* m_cropPanel = nullptr;
     PresetsPanel* m_presets = nullptr;
+    struct ExportJob
+    {
+        QString path;
+        pfx::Settings settings;
+    };
+    QList<ExportJob> m_exportQueue;
+    core::ExportOptions m_exportOptions;
+    int m_exportTotal = 0;
+    int m_exportSaved = 0;
     Filmstrip* m_strip = nullptr;
     services::Thumbnailer* m_stripThumbnails = nullptr;
     core::PresetLibrary m_library{core::PresetLibrary::defaultFolder()};

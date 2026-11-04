@@ -11,12 +11,15 @@
 
 #include <QApplication>
 #include <QClipboard>
+#include <QDialog>
+#include <QDir>
 #include <QFile>
 #include <QFileInfo>
 #include <QSignalSpy>
 #include <QStandardPaths>
 #include <QTemporaryDir>
 #include <QTest>
+#include <QTimer>
 
 #include <cmath>
 #include <numbers>
@@ -219,6 +222,20 @@ private Q_SLOTS:
         const auto other = store.read(pixelfx::core::fileFingerprint(files.at(0)));
         QVERIFY(other.has_value());
         QCOMPARE(other->number("light.exposure", 0), 0.8);
+        // Export with the selection writes every photo, each with its own settings.
+        auto options = settings.exportOptions();
+        options.folder = dir.filePath(u"out"_s);
+        options.extension = u"png"_s;
+        settings.setExportOptions(options);
+        QTimer::singleShot(200, &window, [] {
+            for (QWidget* w : QApplication::topLevelWidgets()) {
+                if (auto* sheet = qobject_cast<QDialog*>(w); sheet != nullptr && sheet->isVisible()) {
+                    sheet->accept();
+                }
+            }
+        });
+        window.exportPhoto();
+        QTRY_COMPARE_WITH_TIMEOUT(QDir(dir.filePath(u"out"_s)).entryList({u"*.png"_s}).size(), 2, 20000);
         QVERIFY(QFile::remove(store.pathFor(pixelfx::core::fileFingerprint(files.at(0)))));
     }
 

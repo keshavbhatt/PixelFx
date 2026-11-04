@@ -184,12 +184,24 @@ void MainWindow::connectDocument()
     connect(m_adjust, &AdjustPanel::settingsChanged, &m_document, &services::Document::setSettings);
     connect(m_adjust, &AdjustPanel::editFinished, &m_document, &services::Document::commit);
     connect(m_adjust, &AdjustPanel::autoRequested, &m_document, &services::Document::autoAdjust);
-    connect(&m_exporter, &services::Exporter::finished, this,
-            [this](const QString& target) { showToast(tr("Saved %1").arg(QFileInfo(target).fileName())); });
-    connect(&m_exporter, &services::Exporter::skipped, this,
-            [this] { showToast(tr("Not saved: a file with that name exists, and Skip is chosen.")); });
+    connect(&m_exporter, &services::Exporter::finished, this, [this](const QString& target) {
+        ++m_exportSaved;
+        if (m_exportTotal <= 1) {
+            showToast(tr("Saved %1").arg(QFileInfo(target).fileName()));
+        }
+        exportNext();
+    });
+    connect(&m_exporter, &services::Exporter::skipped, this, [this] {
+        if (m_exportTotal <= 1) {
+            showToast(tr("Not saved: a file with that name exists, and Skip is chosen."));
+        }
+        exportNext();
+    });
     connect(&m_exporter, &services::Exporter::failed, this,
-            [this](const QString&, const QString& message) { showToast(tr("Not saved. %1").arg(message)); });
+            [this](const QString& source, const QString& message) {
+                showToast(tr("%1 not saved. %2").arg(QFileInfo(source).fileName(), message));
+                exportNext();
+            });
 }
 
 void MainWindow::exportPhoto()
@@ -200,14 +212,50 @@ void MainWindow::exportPhoto()
     if (isCropping()) {
         leaveCrop(true);
     }
+    // With a selection, every selected photo goes out with its own settings (the current one
+    // from the editor, the others from their remembered edits).
+    QList<ExportJob> jobs;
+    const QList<int> selected = m_strip->selection();
+    const core::SidecarStore store(core::SidecarStore::defaultFolder());
+    for (const int index : selected) {
+        const QString path = m_strip->files().at(index);
+        if (path == m_document.info().path) {
+            jobs.append({path, m_document.settings()});
+        } else {
+            jobs.append({path, m_settings.rememberEdits()
+                                   ? store.read(core::fileFingerprint(path)).value_or(pfx::Settings{})
+                                   : pfx::Settings{}});
+        }
+    }
+    if (jobs.isEmpty()) {
+        jobs.append({m_document.info().path, m_document.settings()});
+    }
     ExportSheet sheet(m_document.info().path, m_document.outputSize(), m_settings.exportOptions(), this);
+    sheet.setPhotoCount(static_cast<int>(jobs.size()));
     if (sheet.exec() != QDialog::Accepted) {
         return;
     }
-    const core::ExportOptions options = sheet.options();
-    m_settings.setExportOptions(options);
-    showToast(tr("Exporting %1").arg(QFileInfo(m_document.info().path).fileName()));
-    m_exporter.start(m_document.info().path, m_document.settings(), options);
+    m_exportOptions = sheet.options();
+    m_settings.setExportOptions(m_exportOptions);
+    m_exportQueue = jobs;
+    m_exportTotal = static_cast<int>(jobs.size());
+    m_exportSaved = 0;
+    exportNext();
+}
+
+void MainWindow::exportNext()
+{
+    if (m_exportQueue.isEmpty()) {
+        if (m_exportTotal > 1) {
+            showToast(tr("Saved %1 of %2 photos").arg(m_exportSaved).arg(m_exportTotal));
+        }
+        return;
+    }
+    const ExportJob job = m_exportQueue.takeFirst();
+    const int number = m_exportTotal - static_cast<int>(m_exportQueue.size());
+    showToast(m_exportTotal > 1 ? tr("Exporting %1 of %2").arg(number).arg(m_exportTotal)
+                                : tr("Exporting %1").arg(QFileInfo(job.path).fileName()));
+    m_exporter.start(job.path, job.settings, m_exportOptions);
 }
 
 void MainWindow::showToast(const QString& text)
@@ -1067,6 +1115,9 @@ void MainWindow::connectFilmstrip()
     connect(m_strip, &Filmstrip::currentRequested, this, &MainWindow::showPhoto);
     connect(m_strip, &Filmstrip::addRequested, this, &MainWindow::chooseFiles);
     connect(m_strip, &Filmstrip::selectionChanged, m_presets, &PresetsPanel::setTargetCount);
+    connect(m_strip, &Filmstrip::selectionChanged, this, [this](int count) {
+        m_export->setText(count > 1 ? tr("Export %n photos", nullptr, count) : tr("Export"));
+    });
     // The current photo's tile follows its edits, from the preview (no decoding).
     auto* tileTimer = new QTimer(this);
     tileTimer->setSingleShot(true);
