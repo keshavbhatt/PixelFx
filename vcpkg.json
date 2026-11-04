@@ -1,0 +1,15 @@
+{
+  "$comment": "Dependencies for Windows builds (CI and local). Linux uses the snap SDK (scripts/build-deps.sh); macOS uses Homebrew in CI.",
+  "name": "pixelfx",
+  "version": "2.0.0",
+  "dependencies": [
+    "lcms",
+    "pkgconf",
+    {
+      "name": "libvips",
+      "default-features": false,
+      "features": ["cplusplus", "exif", "jpeg", "lcms", "png", "tiff", "webp", "zlib"]
+    }
+  ],
+  "builtin-baseline": "9eec002df1cd109f8f104cd966a763daf9751489"
+}
