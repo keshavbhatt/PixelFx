@@ -153,7 +153,7 @@ preview and export use resolution-independent parameters so they match (v1 defec
 | X8 | Copy the result to the clipboard; share through the portal | none | KEEP (clipboard); LATER (share) | todo |
 | X9 | Export is off the GUI thread with progress; failures say why | use-after-free, silent | KEEP | wip: off the GUI thread, saved or the reason in a toast; a progress bar for large photos in M3 |
 | X10 | Watermark on export and in batch: text (font, colour, opacity) or a logo image (PNG with alpha), nine anchor positions plus margin, size relative to the image, optional tiling; saved watermarks reused by name; never applied to the editor view | none | KEEP | todo |
-| X11 | Size presets for where the photo is going: Instagram post (1080 by 1350) and square (1080), story (1080 by 1920), Facebook, X, web (2048 long edge), email (1600), 4K wallpaper, print sizes at 300 dpi; crop ratio follows when the photo is cropped for it; user-defined sizes | none | KEEP | todo |
+| X11 | Size presets for where the photo is going: Instagram post (1080 by 1350) and square (1080), story (1080 by 1920), Facebook, X, web (2048 long edge), email (1600), 4K wallpaper, print sizes at 300 dpi; crop ratio follows when the photo is cropped for it; user-defined sizes | none | KEEP | wip: the presets of `export-sizes.html` in the Export sheet with Crop to fill (centred) or Fit inside (white border); dragging the frame, Custom size and "Mine" todo, and Batch (needs a batch format version 2) |
 
 ## I. The core library (libpixelfx)
 

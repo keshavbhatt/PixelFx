@@ -41,7 +41,9 @@ private:
     void chooseFolder();
     [[nodiscard]] QWidget* formatRow(const QString& current);
     [[nodiscard]] QWidget* qualityRow(int quality);
-    [[nodiscard]] QWidget* sizeRow(const QSize& photoSize, int longEdge);
+    [[nodiscard]] QWidget* sizeRow(const QSize& photoSize, const core::ExportOptions& options);
+    [[nodiscard]] QWidget* fitRow(bool fitInside);
+    void refreshSize(const QSize& photoSize);
     [[nodiscard]] QWidget* folderRow();
     [[nodiscard]] QWidget* nameRow(const QString& nameTemplate);
     [[nodiscard]] QWidget* ifExistsBox(core::ExportOptions::IfExists ifExists);
@@ -55,6 +57,10 @@ private:
     QCheckBox* m_sixteen = nullptr;
     QComboBox* m_size = nullptr;
     QSpinBox* m_longEdge = nullptr;
+    QWidget* m_fitRow = nullptr;
+    class QLabel* m_fitNote = nullptr;
+    class QPushButton* m_fill = nullptr;
+    class QPushButton* m_fit = nullptr;
     QCheckBox* m_metadata = nullptr;
     QCheckBox* m_location = nullptr;
     QLabel* m_folder = nullptr;

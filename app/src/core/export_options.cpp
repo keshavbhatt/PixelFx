@@ -78,4 +78,57 @@ ExportOptions::IfExists ifExistsFromKey(const QString& key)
     return ExportOptions::IfExists::AddNumber;
 }
 
+const std::vector<SizePreset>& sizePresets()
+{
+    static const std::vector<SizePreset> list = {
+        {"instagram-portrait", QT_TRANSLATE_NOOP("SizePresets", "Social"),
+         QT_TRANSLATE_NOOP("SizePresets", "Instagram portrait"), 1080, 1350, 0, false},
+        {"instagram-square", QT_TRANSLATE_NOOP("SizePresets", "Social"),
+         QT_TRANSLATE_NOOP("SizePresets", "Instagram square"), 1080, 1080, 0, false},
+        {"story", QT_TRANSLATE_NOOP("SizePresets", "Social"),
+         QT_TRANSLATE_NOOP("SizePresets", "Instagram and Facebook story"), 1080, 1920, 0, false},
+        {"facebook-post", QT_TRANSLATE_NOOP("SizePresets", "Social"),
+         QT_TRANSLATE_NOOP("SizePresets", "Facebook post"), 0, 0, 2048, false},
+        {"x-post", QT_TRANSLATE_NOOP("SizePresets", "Social"), QT_TRANSLATE_NOOP("SizePresets", "X post"),
+         1600, 900, 0, false},
+        {"web", QT_TRANSLATE_NOOP("SizePresets", "Screen"), QT_TRANSLATE_NOOP("SizePresets", "Web"), 0, 0,
+         2048, false},
+        {"email", QT_TRANSLATE_NOOP("SizePresets", "Screen"), QT_TRANSLATE_NOOP("SizePresets", "Email"), 0, 0,
+         1600, false},
+        {"wallpaper-4k", QT_TRANSLATE_NOOP("SizePresets", "Screen"),
+         QT_TRANSLATE_NOOP("SizePresets", "4K wallpaper"), 3840, 2160, 0, false},
+        {"print-10x15", QT_TRANSLATE_NOOP("SizePresets", "Print at 300 dpi"),
+         QT_TRANSLATE_NOOP("SizePresets", "10 x 15 cm (4 x 6 in)"), 1800, 1200, 0, true},
+        {"print-13x18", QT_TRANSLATE_NOOP("SizePresets", "Print at 300 dpi"),
+         QT_TRANSLATE_NOOP("SizePresets", "13 x 18 cm (5 x 7 in)"), 2100, 1500, 0, true},
+        {"print-20x25", QT_TRANSLATE_NOOP("SizePresets", "Print at 300 dpi"),
+         QT_TRANSLATE_NOOP("SizePresets", "20 x 25 cm (8 x 10 in)"), 3000, 2400, 0, true},
+    };
+    return list;
+}
+
+const SizePreset* sizePreset(const QString& id)
+{
+    for (const SizePreset& p : sizePresets()) {
+        if (id == QLatin1StringView(p.id)) {
+            return &p;
+        }
+    }
+    return nullptr;
+}
+
+QSize exactSize(const SizePreset& preset, const QSize& photo)
+{
+    if (preset.width <= 0 || preset.height <= 0) {
+        return {};
+    }
+    QSize size(preset.width, preset.height);
+    const bool photoPortrait = photo.height() > photo.width();
+    const bool presetPortrait = preset.height > preset.width;
+    if (preset.followsPhoto && photoPortrait != presetPortrait) {
+        size.transpose();
+    }
+    return size;
+}
+
 } // namespace pixelfx::core

@@ -32,8 +32,22 @@ ExportOutcome exportFile(const QString& source,
         return fail(rendered.error().message);
     }
     pfx::Image image = std::move(rendered).value();
-    if (options.longEdge > 0 && image.longEdge() > options.longEdge) { // never enlarges
-        auto resized = pfx::fitLongEdge(image, options.longEdge);
+    // A size preset decides the size: an exact frame (filled or fitted) or a long edge.
+    int longEdge = options.longEdge;
+    if (const core::SizePreset* preset = core::sizePreset(options.sizePreset)) {
+        longEdge = preset->longEdge;
+        const QSize exact = core::exactSize(*preset, QSize(image.width(), image.height()));
+        if (exact.isValid()) {
+            auto framed = options.fitInside ? pfx::fitInside(image, exact.width(), exact.height(), 1.0F)
+                                            : pfx::fillSize(image, exact.width(), exact.height());
+            if (!framed) {
+                return fail(framed.error().message);
+            }
+            image = std::move(framed).value();
+        }
+    }
+    if (longEdge > 0 && image.longEdge() > longEdge) { // never enlarges
+        auto resized = pfx::fitLongEdge(image, longEdge);
         if (!resized) {
             return fail(resized.error().message);
         }

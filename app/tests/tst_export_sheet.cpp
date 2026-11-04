@@ -26,6 +26,9 @@ private Q_SLOTS:
         in.longEdge = 1600;
         in.keepMetadata = false;
         in.keepLocation = true;
+        in.sizePreset = u"instagram-portrait"_s;
+        in.longEdge = 0;
+        in.fitInside = true;
         in.folder = u"/tmp/out"_s;
         in.nameTemplate = u"{name}-web"_s;
         in.ifExists = ExportOptions::IfExists::Skip;

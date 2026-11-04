@@ -70,7 +70,7 @@ bool grabSheet(pixelfx::ui::MainWindow& window, const QString& grab, bool export
         sheet = new pixelfx::ui::ShortcutsSheet(&window);
     } else if (exportSheet && window.document().isOpen()) {
         sheet = new pixelfx::ui::ExportSheet(window.document().info().path, window.document().outputSize(),
-                                             pixelfx::core::ExportOptions{}, &window);
+                                             window.settings().exportOptions(), &window);
     }
     if (sheet == nullptr) {
         return false;

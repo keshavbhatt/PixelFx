@@ -73,6 +73,18 @@ private Q_SLOTS:
             QCOMPARE(ifExistsFromKey(ifExistsKey(v)), v);
         }
     }
+
+    void printSizesTurnWithThePhoto()
+    {
+        const pixelfx::core::SizePreset* print = pixelfx::core::sizePreset(u"print-10x15"_s);
+        QVERIFY(print != nullptr);
+        QCOMPARE(pixelfx::core::exactSize(*print, QSize(4000, 6000)), QSize(1200, 1800));
+        QCOMPARE(pixelfx::core::exactSize(*print, QSize(6000, 4000)), QSize(1800, 1200));
+        const pixelfx::core::SizePreset* story = pixelfx::core::sizePreset(u"story"_s);
+        QCOMPARE(pixelfx::core::exactSize(*story, QSize(6000, 4000)), QSize(1080, 1920)); // social stays
+        QVERIFY(!pixelfx::core::exactSize(*pixelfx::core::sizePreset(u"web"_s), QSize(10, 10)).isValid());
+        QVERIFY(pixelfx::core::sizePreset(u"nope"_s) == nullptr);
+    }
 };
 
 QTEST_GUILESS_MAIN(TestExportOptions)

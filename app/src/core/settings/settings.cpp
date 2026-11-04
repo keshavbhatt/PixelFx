@@ -116,6 +116,8 @@ ExportOptions Settings::exportOptions() const
     o.longEdge = std::max(0, m_settings->value(key(keys::kExportLongEdge), o.longEdge).toInt());
     o.keepMetadata = m_settings->value(key(keys::kExportKeepMetadata), o.keepMetadata).toBool();
     o.keepLocation = m_settings->value(key(keys::kExportKeepLocation), o.keepLocation).toBool();
+    o.sizePreset = m_settings->value(key(keys::kExportSizePreset)).toString();
+    o.fitInside = m_settings->value(key(keys::kExportFitInside), false).toBool();
     const QString pictures = QStandardPaths::writableLocation(QStandardPaths::PicturesLocation);
     const QString defaultFolder = (pictures.isEmpty() ? QDir::homePath() : pictures) + u"/PixelFx"_s;
     o.folder = m_settings->value(key(keys::kExportFolder), defaultFolder).toString();
@@ -132,6 +134,8 @@ void Settings::setExportOptions(const ExportOptions& options)
     m_settings->setValue(key(keys::kExportLongEdge), options.longEdge);
     m_settings->setValue(key(keys::kExportKeepMetadata), options.keepMetadata);
     m_settings->setValue(key(keys::kExportKeepLocation), options.keepLocation);
+    m_settings->setValue(key(keys::kExportSizePreset), options.sizePreset);
+    m_settings->setValue(key(keys::kExportFitInside), options.fitInside);
     m_settings->setValue(key(keys::kExportFolder), options.folder);
     m_settings->setValue(key(keys::kExportNameTemplate), options.nameTemplate);
     m_settings->setValue(key(keys::kExportIfExists), ifExistsKey(options.ifExists));

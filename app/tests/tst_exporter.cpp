@@ -41,6 +41,35 @@ private Q_SLOTS:
         QVERIFY(written.value().image.pixel(10, 10)[0] > 0.3F); // 0.1 * 4
     }
 
+    void sizePresetsGiveExactFrames()
+    {
+        QTemporaryDir dir;
+        pfx::Image img(600, 400); // 3:2 landscape
+        img.fill(0.3F, 0.3F, 0.3F);
+        const QString source = dir.filePath(u"photo.png"_s);
+        QVERIFY(pfx::save(img, source.toStdString()).ok());
+        const auto run = [&](const QString& preset, bool fit) {
+            ExportOptions o;
+            o.folder = dir.filePath(u"out"_s);
+            o.extension = u"png"_s;
+            o.sizePreset = preset;
+            o.fitInside = fit;
+            o.ifExists = ExportOptions::IfExists::Overwrite;
+            Exporter exporter;
+            QSignalSpy done(&exporter, &Exporter::finished);
+            exporter.start(source, {}, o);
+            if (!done.wait(15000)) {
+                return QSize();
+            }
+            const auto info = pfx::probe(done.first().first().toString().toStdString());
+            return info ? QSize(info.value().width, info.value().height) : QSize();
+        };
+        QCOMPARE(run(u"instagram-square"_s, false), QSize(1080, 1080));
+        QCOMPARE(run(u"instagram-portrait"_s, true), QSize(1080, 1350));
+        QCOMPARE(run(u"print-10x15"_s, false), QSize(1800, 1200)); // follows the landscape photo
+        QCOMPARE(run(u"email"_s, false), QSize(600, 400));         // a long edge never enlarges
+    }
+
     void failureSaysWhy()
     {
         Exporter exporter;
