@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>PixelFx mock: About</title><link rel="stylesheet" href="mock.css"><script src="mock.js"></script></head>
+<body>
+<div class="window">
+  <div class="titlebar"><div class="lights"><i></i><i></i><i></i></div><div class="title">sunset-lake.jpg - PixelFx</div><div class="wc"><span>&#x2212;</span><span>&#x25A1;</span><span>&#x2715;</span></div></div>
+  <div class="menubar"><b>PixelFx</b><span>File</span><span>Edit</span><span>Image</span><span>View</span><span>Window</span><span>Help</span></div>
+  <div class="header">
+    <div class="brand"><span class="mark"></span></div>
+    <button class="btn flat icon" title="Open images (Ctrl+O)"><svg class="ic "><use href="#i-open"/></svg></button>
+    <div class="doc"><b>sunset-lake.jpg</b><span>6000 x 4000 &middot; JPEG &middot; 8.4 MB</span></div>
+    <span class="grow"></span>
+    <button class="btn flat icon" title="Undo (Ctrl+Z)"><svg class="ic "><use href="#i-undo"/></svg></button>
+    <button class="btn flat icon" title="Redo (Ctrl+Shift+Z)"><svg class="ic "><use href="#i-redo"/></svg></button>
+    <button class="btn flat icon" title="History (H)"><svg class="ic "><use href="#i-history"/></svg></button>
+    <span class="sep"></span>
+    <button class="btn flat icon" title="Before and after (\)"><svg class="ic "><use href="#i-compare"/></svg></button>
+    <button class="btn flat icon" title="Show original while held (Space)"><svg class="ic "><use href="#i-eye"/></svg></button>
+    <span class="sep"></span>
+    <button class="btn" title="Save a copy with these settings (Ctrl+Shift+E)"><svg class="ic s"><use href="#i-export"/></svg>Export</button>
+    <button class="btn flat icon" title="Main menu (F10)"><svg class="ic "><use href="#i-menu"/></svg></button>
+  </div>
+  <div class="body ">
+    <div class="rail">
+      <div class="r on" title="Edit"><svg class="ic "><use href="#i-sliders"/></svg><span>Edit</span></div><div class="r" title="Crop"><svg class="ic "><use href="#i-crop"/></svg><span>Crop</span></div><div class="r" title="Heal"><svg class="ic "><use href="#i-bandage"/></svg><span>Heal</span></div><div class="r" title="Batch"><svg class="ic "><use href="#i-stack"/></svg><span>Batch</span></div>
+      <span class="spacer"></span>
+      <div class="r" title="Settings (Ctrl+,)"><svg class="ic "><use href="#i-settings"/></svg></div>
+    </div>
+    <div class="side">
+      <div class="tabs"><span class="on">Looks</span><span>Presets</span></div>
+      <div class="head"><div class="search grow"><svg class="ic s"><use href="#i-search"/></svg><input class="input" placeholder="Search looks"></div><button class="btn sm icon" title="New look (Ctrl+Shift+N)"><svg class="ic s"><use href="#i-plus"/></svg></button></div>
+      <div class="chips"><span class="on">All</span><span>Mine</span><span>Color</span><span>Film</span><span>B&amp;W</span><span>Favorites</span></div>
+      <div class="scroll">
+        <div class="sec">My looks <a class="more" href="filter-editor.html">New look</a></div>
+        <div class="looks"><div class="tile"><img src="sample-1.svg" data-look="dusk" alt=""><span>Dusk walk</span><span class="own pill accent" style="padding:0 6px">Mine</span></div><div class="tile"><img src="sample-1.svg" data-look="chrome" alt=""><span>Client brand</span><span class="own pill accent" style="padding:0 6px">Mine</span></div></div>
+        <div class="sec">Built in</div>
+        <div class="looks"><div class="tile"><img src="sample-1.svg" data-look="original" alt=""><span>Original</span></div><div class="tile"><img src="sample-1.svg" data-look="vivid" alt=""><span>Vivid</span></div><div class="tile"><img src="sample-1.svg" data-look="warm" alt=""><span>Warm</span></div><div class="tile"><img src="sample-1.svg" data-look="cool" alt=""><span>Cool</span></div><div class="tile"><img src="sample-1.svg" data-look="film" alt=""><span>Film</span></div><div class="tile"><img src="sample-1.svg" data-look="fade" alt=""><span>Faded</span></div><div class="tile selected"><img src="sample-1.svg" data-look="golden" alt=""><span>Golden hour</span></div><div class="tile"><img src="sample-1.svg" data-look="teal" alt=""><span>Teal and orange</span></div><div class="tile"><img src="sample-1.svg" data-look="matte" alt=""><span>Matte</span></div><div class="tile"><img src="sample-1.svg" data-look="dramatic" alt=""><span>Dramatic</span></div><div class="tile"><img src="sample-1.svg" data-look="mono" alt=""><span>Mono</span></div><div class="tile"><img src="sample-1.svg" data-look="noir" alt=""><span>Noir</span></div><div class="tile"><img src="sample-1.svg" data-look="sepia" alt=""><span>Sepia</span></div><div class="tile"><img src="sample-1.svg" data-look="pastel" alt=""><span>Pastel</span></div></div>
+      </div>
+      <div class="strength">
+        <div class="adj changed"><div class="lab"><span>Look strength</span><span class="val">72</span></div><input type="range" min="0" max="100" value="72"></div>
+      </div>
+    </div>
+    <div class="center">
+      <div class="canvas"><div class="photo"><img id="photo" src="sample-1.svg" data-look="golden" alt=""></div><div class="zoombar"><button class="btn sm icon flat"><svg class="ic s"><use href="#i-zoom-out"/></svg></button><span class="z">Fit</span><button class="btn sm icon flat"><svg class="ic s"><use href="#i-zoom-in"/></svg></button><span class="sep" style="width:1px;height:18px;background:var(--border);margin:0 4px"></span><button class="btn sm flat" title="100% (Ctrl+1)">1:1</button><button class="btn sm icon flat" title="Full screen (F11)"><svg class="ic s"><use href="#i-maximize"/></svg></button></div></div>
+      <div class="strip">
+        <div class="th cur"><img src="sample-1.svg" data-look="golden" alt=""><span class="mk" title="Edited"><svg class="ic s"><use href="#i-sliders"/></svg></span></div><div class="th"><img src="sample-2.svg" data-look="original" alt=""></div><div class="th"><img src="sample-3.svg" data-look="matte" alt=""><span class="mk" title="Edited"><svg class="ic s"><use href="#i-sliders"/></svg></span></div><div class="th"><img src="sample-2.svg" data-look="vivid" alt=""></div><div class="th"><img src="sample-1.svg" data-look="original" alt=""></div><div class="th"><img src="sample-3.svg" data-look="original" alt=""></div>
+        <div class="add" title="Add images (Ctrl+O)"><svg class="ic "><use href="#i-plus"/></svg></div>
+        <div class="info">1 of 6</div>
+      </div>
+    </div>
+    <div class="side right">
+      <div class="histo"><svg viewBox="0 0 256 92" preserveAspectRatio="none">
+  <path d="M0 92 L0 80 C20 70 30 40 50 46 C70 52 80 20 100 30 C120 40 130 60 150 50 C170 40 190 12 210 26 C230 40 245 70 256 76 L256 92Z" fill="#E05050" opacity=".45"/>
+  <path d="M0 92 L0 84 C25 74 35 50 55 40 C75 30 90 46 110 44 C130 42 150 22 170 30 C190 38 210 58 230 54 C245 52 250 70 256 80 L256 92Z" fill="#50C060" opacity=".45"/>
+  <path d="M0 92 L0 70 C15 50 30 30 50 34 C70 38 85 58 105 60 C125 62 145 50 165 56 C185 62 205 74 225 72 C240 70 250 80 256 86 L256 92Z" fill="#5080F0" opacity=".45"/>
+</svg><span class="meta">ISO 100 &middot; f/8 &middot; 1/250 s &middot; 24 mm</span></div>
+      <div class="row" style="padding:2px 12px 8px;gap:6px"><button class="btn sm grow" style="justify-content:center" title="Auto adjust light and color (Ctrl+Shift+A)"><svg class="ic s"><use href="#i-wand"/></svg>Auto</button><button class="btn sm" title="Copy settings (Ctrl+Shift+C)"><svg class="ic s"><use href="#i-copy"/></svg>Copy</button><button class="btn sm" title="Paste settings (Ctrl+Shift+V)">Paste</button><button class="btn sm icon" title="Reset all (Ctrl+R)"><svg class="ic s"><use href="#i-reset"/></svg></button></div>
+      <div class="scroll" style="border-top:1px solid var(--border)">
+        <div class="group"><div class="gh"><svg class="ic s"><use href="#i-down"/></svg><svg class="ic s"><use href="#i-sun"/></svg><span>Light</span><span class="dot" title="Changed"></span><span class="reset" title="Reset this group"><svg class="ic s"><use href="#i-reset"/></svg></span></div><div class="gb"><div class="adj  changed"><div class="lab"><span>Exposure</span><span class="val">+12</span></div><input type="range" min="-100" max="100" value="12" data-adj="exposure"></div><div class="adj  changed"><div class="lab"><span>Contrast</span><span class="val">+18</span></div><input type="range" min="-100" max="100" value="18" data-adj="contrast"></div><div class="adj  changed"><div class="lab"><span>Highlights</span><span class="val">-35</span></div><input type="range" min="-100" max="100" value="-35"></div><div class="adj  changed"><div class="lab"><span>Shadows</span><span class="val">+28</span></div><input type="range" min="-100" max="100" value="28"></div><div class="adj  changed"><div class="lab"><span>Whites</span><span class="val">+6</span></div><input type="range" min="-100" max="100" value="6"></div><div class="adj  changed"><div class="lab"><span>Blacks</span><span class="val">-10</span></div><input type="range" min="-100" max="100" value="-10"></div></div></div>
+        <div class="group"><div class="gh"><svg class="ic s"><use href="#i-down"/></svg><svg class="ic s"><use href="#i-droplet"/></svg><span>Color</span><span class="dot" title="Changed"></span><span class="reset" title="Reset this group"><svg class="ic s"><use href="#i-reset"/></svg></span></div><div class="gb"><div class="row small muted" style="justify-content:space-between;margin:4px 0"><span>White balance</span><span class="row" style="gap:4px"><select class="input" style="height:24px;font-size:12px"><option>As shot</option><option>Auto</option><option>Daylight</option><option>Cloudy</option><option>Shade</option><option>Tungsten</option><option>Custom</option></select><button class="btn sm icon" title="Pick a neutral point (W)"><svg class="ic s"><use href="#i-pipette"/></svg></button></span></div><div class="adj temp changed"><div class="lab"><span>Temperature</span><span class="val">+14</span></div><input type="range" min="-100" max="100" value="14" data-adj="temperature"></div><div class="adj tint"><div class="lab"><span>Tint</span><span class="val">0</span></div><input type="range" min="-100" max="100" value="0" data-adj="tint"></div><div class="adj  changed"><div class="lab"><span>Vibrance</span><span class="val">+22</span></div><input type="range" min="-100" max="100" value="22" data-adj="vibrance"></div><div class="adj sat"><div class="lab"><span>Saturation</span><span class="val">0</span></div><input type="range" min="-100" max="100" value="0" data-adj="saturation"></div></div></div>
+        <div class="group closed"><div class="gh"><svg class="ic s"><use href="#i-right"/></svg><svg class="ic s"><use href="#i-palette"/></svg><span>Color mixer</span><span class="dot" title="Changed"></span><span class="reset" title="Reset this group"><svg class="ic s"><use href="#i-reset"/></svg></span></div><div class="gb"><div class="seg full" style="margin:4px 0 8px"><span class="on">Hue</span><span>Saturation</span><span>Luminance</span></div><div class="swatches"><i style="background:#E04F4F"></i><i style="background:#E8904A"></i><i class="on" style="background:#E0C04F"></i><i style="background:#4FC060"></i><i style="background:#4FC0C0"></i><i style="background:#4F80E0"></i><i style="background:#A04FE0"></i><i style="background:#E04FB0"></i></div><div class="adj  changed"><div class="lab"><span>Yellows hue</span><span class="val">-8</span></div><input type="range" min="-100" max="100" value="-8"></div></div></div>
+        <div class="group closed"><div class="gh"><svg class="ic s"><use href="#i-right"/></svg><svg class="ic s"><use href="#i-spline"/></svg><span>Curves</span><span class="dot" title="Changed"></span><span class="reset" title="Reset this group"><svg class="ic s"><use href="#i-reset"/></svg></span></div><div class="gb"><div class="seg full" style="margin:4px 0"><span class="on">RGB</span><span style="color:#E05050">R</span><span style="color:#50C060">G</span><span style="color:#5080F0">B</span></div><div class="curve"><svg viewBox="0 0 100 100" preserveAspectRatio="none"><g stroke="var(--border)" stroke-width=".4"><line x1="25" y1="0" x2="25" y2="100"/><line x1="50" y1="0" x2="50" y2="100"/><line x1="75" y1="0" x2="75" y2="100"/><line y1="25" x1="0" y2="25" x2="100"/><line y1="50" x1="0" y2="50" x2="100"/><line y1="75" x1="0" y2="75" x2="100"/></g><line x1="0" y1="100" x2="100" y2="0" stroke="var(--faint)" stroke-width=".4" stroke-dasharray="1.5 1.5"/><path d="M0 100 C20 92 30 72 50 50 C70 28 82 10 100 0" stroke="var(--text)" stroke-width="1" fill="none" vector-effect="non-scaling-stroke"/><circle cx="28" cy="80" r="2" fill="var(--text)"/><circle cx="72" cy="24" r="2" fill="var(--text)"/></svg></div><div class="row small muted"><span>Double-click a point to remove it</span></div></div></div>
+        <div class="group"><div class="gh"><svg class="ic s"><use href="#i-down"/></svg><svg class="ic s"><use href="#i-aperture"/></svg><span>Detail</span><span class="dot" title="Changed"></span><span class="reset" title="Reset this group"><svg class="ic s"><use href="#i-reset"/></svg></span></div><div class="gb"><div class="adj  changed"><div class="lab"><span>Clarity</span><span class="val">+15</span></div><input type="range" min="-100" max="100" value="15"></div><div class="adj  changed"><div class="lab"><span>Sharpen</span><span class="val">+30</span></div><input type="range" min="0" max="100" value="30"></div><div class="adj "><div class="lab"><span>Noise reduction</span><span class="val">0</span></div><input type="range" min="0" max="100" value="0"></div><div class="adj "><div class="lab"><span>Dehaze</span><span class="val">0</span></div><input type="range" min="-100" max="100" value="0"></div></div></div>
+        <div class="group"><div class="gh"><svg class="ic s"><use href="#i-down"/></svg><svg class="ic s"><use href="#i-sparkles"/></svg><span>Effects</span><span class="dot" title="Changed"></span><span class="reset" title="Reset this group"><svg class="ic s"><use href="#i-reset"/></svg></span></div><div class="gb"><div class="adj  changed"><div class="lab"><span>Vignette</span><span class="val">-22</span></div><input type="range" min="-100" max="100" value="-22"></div><div class="adj "><div class="lab"><span>Grain</span><span class="val">0</span></div><input type="range" min="0" max="100" value="0"></div><div class="adj "><div class="lab"><span>Fade</span><span class="val">0</span></div><input type="range" min="0" max="100" value="0"></div></div></div>
+        <div class="group closed"><div class="gh"><svg class="ic s"><use href="#i-right"/></svg><svg class="ic s"><use href="#i-scaling"/></svg><span>Geometry</span></div><div class="gb"><div class="adj "><div class="lab"><span>Straighten</span><span class="val">0</span></div><input type="range" min="-45" max="45" value="0"></div><div class="row" style="margin-top:6px"><button class="btn sm"><svg class="ic s"><use href="#i-rotate-ccw"/></svg></button><button class="btn sm"><svg class="ic s"><use href="#i-rotate-cw"/></svg></button><button class="btn sm"><svg class="ic s"><use href="#i-flip-h"/></svg></button><button class="btn sm"><svg class="ic s"><use href="#i-flip-v"/></svg></button><span class="grow"></span><a href="crop.html" class="small">Crop and perspective</a></div></div></div>
+      </div>
+    </div>
+  </div>
+<div class="scrim"><div style="display:flex;gap:24px;align-items:flex-start">
+<div class="sheet" style="width:520px">
+  <div class="sh"><h2>About PixelFx</h2><button class="btn flat icon x" title="Close (Escape)"><svg class="ic "><use href="#i-x"/></svg></button></div>
+  <div class="seg full" style="margin:0 20px 4px"><span class="on">About</span><span>Open-source notices</span><span>Diagnostics</span></div>
+  <div class="sb stack" style="gap:10px;padding-top:14px">
+    <div class="row" style="gap:14px;align-items:center"><span style="width:56px;height:56px;border-radius:50%;flex:none;background:conic-gradient(#FF5A4E, #FFB84D, #F7E35A, #6CCB5F, #3FC1C9, #3B82F6, #8B5CF6, #E04FA0, #FF5A4E)"></span><div class="stack" style="gap:2px"><b style="font-size:18px">PixelFx 2.0.0</b><span class="muted">A quick photo editor: sliders, looks, presets and batch.</span><span class="small muted">Development build, 5 November 2026</span></div></div>
+    <div class="row" style="gap:6px;flex-wrap:wrap"><button class="btn sm">What's new</button><button class="btn sm">Online guide</button><button class="btn sm">Source code</button><button class="btn sm">Report a bug</button></div>
+    <div class="divider"></div>
+    <div class="small muted">Made by Keshav Bhatt and contributors. PixelFx is free software under the GPL, version 3 or later; its image library, libpixelfx, is Apache-2.0. It is built on Qt, libvips, Little CMS, libheif, libjxl, LibRaw and more: see Open-source notices.</div>
+  </div>
+  <div class="sf"><span class="grow"></span><button class="btn">Close</button></div>
+</div>
+<div class="sheet" style="width:520px">
+  <div class="sh"><h2>About PixelFx</h2><button class="btn flat icon x" title="Close (Escape)"><svg class="ic "><use href="#i-x"/></svg></button></div>
+  <div class="seg full" style="margin:0 20px 4px"><span>About</span><span>Open-source notices</span><span class="on">Diagnostics</span></div>
+  <div class="sb stack" style="gap:8px;padding-top:14px">
+    <div class="small muted">Paste this into a bug report. It holds no photo names and no personal data.</div>
+    <pre class="mono" style="margin:0;padding:10px;background:var(--input);border:1px solid var(--border);border-radius:8px;font-size:12px;line-height:1.5;white-space:pre-wrap">PixelFx 2.0.0 (7d9d2da), libpixelfx 0.1.0
+Qt 6.11.0, libvips 8.18.7, Little CMS 2.16
+Linux 6.8 (KDE Plasma, Wayland), snap
+Reads: JPEG, PNG, WebP, TIFF, HEIC, AVIF, JPEG XL, RAW
+Writes: JPEG, PNG, WebP, TIFF, JPEG XL
+Threads: 14, memory for previews: 2 GB</pre>
+    <div class="row" style="gap:6px"><button class="btn sm">Copy</button><button class="btn sm">Open the log folder</button></div>
+  </div>
+  <div class="sf"><span class="grow"></span><button class="btn">Close</button></div>
+</div>
+</div></div>
+<span class="pin" style="left:20%;top:24%">1</span><span class="pin" style="left:57%;top:24%">2</span>
+</div>
+<ol class="notes"><li><b>About</b> (main menu, About PixelFx): the version and its date, one line on what PixelFx is, and the four ways out: What's new, the online guide, the source, a bug report. The credit line names the licences in plain words; Open-source notices lists every component with its licence text (from THIRD_PARTY.md, built in).</li><li><b>Diagnostics</b> is text to paste into a bug report: versions, the platform, what this build reads and writes, threads and memory. No file names, no account or licence details. Copy puts it on the clipboard; Open the log folder shows the logs in the file manager.</li></ol>
+</body></html>
