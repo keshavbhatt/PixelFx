@@ -86,6 +86,19 @@ void addMixer(std::vector<OpSpec>& ops)
     ops.push_back({"mixer", "mixer", 1, 80, true, std::move(params)});
 }
 
+void addGrading(std::vector<OpSpec>& ops)
+{
+    ops.push_back(
+        {"grading",
+         "grading",
+         1,
+         90,
+         true,
+         {number("grading.shadows.hue", 0, 360, 0, "degrees"), number("grading.shadows.amount", 0, 100),
+          number("grading.highlights.hue", 0, 360, 0, "degrees"), number("grading.highlights.amount", 0, 100),
+          number("grading.balance", -100, 100)}});
+}
+
 void addEffects(std::vector<OpSpec>& ops)
 {
     ops.push_back(
@@ -155,6 +168,7 @@ std::vector<OpSpec> builtInOps()
          {number("detail.sharpen.amount", 0, 150), relative("detail.sharpen.radius", 0.0001, 0.003, 0.0004),
           number("detail.sharpen.masking", 0, 100)}});
     addMixer(ops);
+    addGrading(ops);
     addEffects(ops);
     std::ranges::sort(ops, [](const OpSpec& a, const OpSpec& b) { return a.stage < b.stage; });
     return ops;

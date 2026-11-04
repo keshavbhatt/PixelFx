@@ -16,6 +16,7 @@ add_executable(pfx_tests
     test_geometry.cpp
     test_effects.cpp
     test_mixer.cpp
+    test_grading.cpp
     test_registry.cpp
     test_ops.cpp
     test_pipeline.cpp

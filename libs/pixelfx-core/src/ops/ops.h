@@ -44,6 +44,8 @@ bool sharpenActive(const Settings& s);
 void sharpenApply(Image& image, const Settings& s, const OpContext& ctx);
 bool mixerActive(const Settings& s);
 void mixerApply(Image& image, const Settings& s, const OpContext& ctx);
+bool gradingActive(const Settings& s);
+void gradingApply(Image& image, const Settings& s, const OpContext& ctx);
 bool vignetteActive(const Settings& s);
 void vignetteApply(Image& image, const Settings& s, const OpContext& ctx);
 bool grainActive(const Settings& s);

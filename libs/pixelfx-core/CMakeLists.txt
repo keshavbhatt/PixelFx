@@ -49,6 +49,7 @@ add_library(pfx_core
     src/ops/geometry.cpp
     src/ops/effects.cpp
     src/ops/mixer.cpp
+    src/ops/grading.cpp
     src/pipeline/pipeline.cpp
     src/io/io.cpp
 )

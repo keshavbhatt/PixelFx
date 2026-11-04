@@ -13,6 +13,8 @@ Semantic Versioning (the API may change before 1.0).
   image so a preview shows the same grain) and fade.
 - Colour mixer: hue, saturation and luminance for eight colour bands, blended between
   neighbouring bands and fading out toward grey.
+- Colour grading in the split-toning form: a shadow colour, a highlight colour, their amounts
+  and a balance; lightness is kept and pure black and white stay neutral.
 
 ## [0.1.0] - 2026-11-04
 
