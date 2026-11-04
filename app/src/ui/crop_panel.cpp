@@ -133,6 +133,8 @@ CropPanel::CropPanel(QWidget* parent)
     column->addWidget(buildOrientation());
     column->addWidget(section(tr("Straighten and rotate"), this));
     column->addLayout(buildStraighten());
+    column->addWidget(section(tr("Perspective"), this));
+    column->addLayout(buildPerspective());
     column->addWidget(section(tr("Overlay"), this));
     column->addWidget(buildOverlays());
     column->addStretch();
@@ -226,6 +228,34 @@ QLayout* CropPanel::buildStraighten()
     levelRow->addStretch();
     straighten->addLayout(levelRow);
     return straighten;
+}
+
+QLayout* CropPanel::buildPerspective()
+{
+    auto* box = new QVBoxLayout;
+    box->setContentsMargins(kSide, 0, kSide, 0);
+    box->setSpacing(0);
+    const std::array<std::pair<const char*, QString>, 2> sliders = {
+        std::pair{"geometry.perspective.vertical", tr("Vertical")},
+        std::pair{"geometry.perspective.horizontal", tr("Horizontal")}};
+    for (const auto& [key, label] : sliders) {
+        auto* s = new AdjustSlider(QString::fromLatin1(key), label, this);
+        s->setToolTip(tr("Straighten lines that lean together, such as a building shot from below"));
+        connect(s, &AdjustSlider::moved, this, [this, s](double v) { setPerspective(s->key(), v); });
+        box->addWidget(s);
+        m_perspective.push_back(s);
+    }
+    return box;
+}
+
+void CropPanel::setPerspective(const QString& key, double value)
+{
+    if (value == 0.0) {
+        m_settings.erase(key.toStdString());
+    } else {
+        m_settings.set(key.toStdString(), value);
+    }
+    changed();
 }
 
 QWidget* CropPanel::buildOverlays()
@@ -436,6 +466,9 @@ void CropPanel::changed()
 void CropPanel::refreshControls()
 {
     m_angle->setValue(m_settings.number("geometry.angle", 0.0));
+    for (AdjustSlider* s : m_perspective) {
+        s->setValue(m_settings.number(s->key().toStdString(), 0.0));
+    }
     // The chip of the current ratio; none when the ratio came from a turn of an unlisted one.
     const QSize size = uncropped();
     const double original = static_cast<double>(size.width()) / std::max(1, size.height());

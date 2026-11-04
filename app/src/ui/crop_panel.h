@@ -7,6 +7,7 @@
 #include <QWidget>
 
 #include <pfx/settings.h>
+#include <vector>
 
 class QAbstractButton;
 class QButtonGroup;
@@ -46,6 +47,8 @@ public:
     void turn(bool clockwise);
     void flip(Qt::Orientation orientation);
     void setAngle(double degrees);
+    /// Keystone correction, -100 to 100 (`geometry.perspective.vertical` or `.horizontal`).
+    void setPerspective(const QString& key, double value);
     /// A ratio of the user's own (the Custom chip asks for it).
     void setCustomRatio(int width, int height);
     /// Straightens so that a line drawn at `lineDegrees` on the shown photo (0 is level,
@@ -67,6 +70,7 @@ private:
     QWidget* buildRatios();
     QWidget* buildOrientation();
     QLayout* buildStraighten();
+    QLayout* buildPerspective();
     QWidget* buildOverlays();
     QLayout* buildFoot();
     void changed();
@@ -83,6 +87,7 @@ private:
     QButtonGroup* m_orientation = nullptr;
     QButtonGroup* m_overlays = nullptr;
     AdjustSlider* m_angle = nullptr;
+    std::vector<AdjustSlider*> m_perspective;
     QPushButton* m_customChip = nullptr;
     int m_customWidth = 7;
     int m_customHeight = 5;

@@ -16,6 +16,17 @@ constexpr const char* kCropX = "geometry.crop.x";
 constexpr const char* kCropY = "geometry.crop.y";
 constexpr const char* kCropW = "geometry.crop.w";
 constexpr const char* kCropH = "geometry.crop.h";
+constexpr const char* kVertical = "geometry.perspective.vertical";
+constexpr const char* kHorizontal = "geometry.perspective.horizontal";
+
+void setOrEraseNumber(pfx::Settings& settings, const char* key, double value)
+{
+    if (value == 0.0) {
+        settings.erase(key);
+    } else {
+        settings.set(key, value);
+    }
+}
 constexpr double kEpsilon = 1e-9;
 
 void setOrErase(pfx::Settings& settings, const char* key, bool on)
@@ -104,6 +115,11 @@ void turn(pfx::Settings& settings, bool clockwise)
     const QRectF c = cropOf(settings);
     setCrop(settings, clockwise ? QRectF(1 - c.bottom(), c.x(), c.height(), c.width())
                                 : QRectF(c.y(), 1 - c.right(), c.height(), c.width()));
+    // Perspective turns with the photo: what narrowed the top now narrows the right (clockwise).
+    const double vertical = settings.number(kVertical, 0.0);
+    const double horizontal = settings.number(kHorizontal, 0.0);
+    setOrEraseNumber(settings, kVertical, clockwise ? horizontal : -horizontal);
+    setOrEraseNumber(settings, kHorizontal, clockwise ? -vertical : vertical);
 }
 
 void flip(pfx::Settings& settings, Qt::Orientation orientation)
@@ -116,6 +132,9 @@ void flip(pfx::Settings& settings, Qt::Orientation orientation)
     const QRectF c = cropOf(settings);
     setCrop(settings, horizontal ? QRectF(1 - c.right(), c.y(), c.width(), c.height())
                                  : QRectF(c.x(), 1 - c.bottom(), c.width(), c.height()));
+    // A mirror swaps the sides a keystone narrows.
+    const char* mirrored = horizontal ? kHorizontal : kVertical;
+    setOrEraseNumber(settings, mirrored, -settings.number(mirrored, 0.0));
 }
 
 void setAngle(pfx::Settings& settings, double degrees)

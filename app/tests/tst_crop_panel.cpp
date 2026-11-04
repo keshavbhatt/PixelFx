@@ -123,6 +123,18 @@ private Q_SLOTS:
         QCOMPARE(panel.settings().number("geometry.angle", 0), -10.0);
     }
 
+    void perspectiveSliders()
+    {
+        CropPanel panel;
+        QSignalSpy changed(&panel, &CropPanel::settingsChanged);
+        panel.begin({}, QSize(600, 400));
+        panel.setPerspective(u"geometry.perspective.vertical"_s, 30);
+        QCOMPARE(panel.settings().number("geometry.perspective.vertical", 0), 30.0);
+        panel.setPerspective(u"geometry.perspective.vertical"_s, 0);
+        QVERIFY(panel.settings().isEmpty());
+        QCOMPARE(changed.count(), 2);
+    }
+
     void doneAndCancel()
     {
         CropPanel panel;

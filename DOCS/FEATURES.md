@@ -116,7 +116,7 @@ preview and export use resolution-independent parameters so they match (v1 defec
 | G2 | Straighten: dial, slider, drawn level line | none | KEEP | done: dial under the photo, slider in tenths of a degree, drawn level line (horizontal or upright); Auto straighten later (mock: LATER if unreliable) |
 | G3 | Auto straighten (horizon detection) | none | LATER | |
 | G4 | Rotate 90 left and right, flip horizontal and vertical | rotate right only, flips stuck | KEEP | done: turns and flips act on the photo as shown, crop included |
-| G5 | Perspective: vertical, horizontal sliders and four-corner keystone | none | KEEP | todo |
+| G5 | Perspective: vertical, horizontal sliders and four-corner keystone | none | KEEP | wip: vertical and horizontal keystone in the library and Crop mode; four-corner fix todo |
 | G6 | Lens corrections (distortion, chromatic aberration, vignetting by profile) | none | LATER | |
 | G7 | Elliptical and circular crops with transparent corners | yes | KEEP as an Export option "Round crop" for PNG/WebP | todo |
 | G8 | Resize as an edit (as opposed to on export) | none | DROP (resize lives in Export and Batch) | |

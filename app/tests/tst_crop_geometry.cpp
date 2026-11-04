@@ -82,6 +82,21 @@ private Q_SLOTS:
         QVERIFY(near(cropOf(s), QRectF(0.1, 0.4, 0.3, 0.4)));
     }
 
+    void perspectiveTurnsAndMirrorsWithThePhoto()
+    {
+        pfx::Settings s;
+        s.set("geometry.perspective.vertical", 40.0); // the top widened
+        turn(s, true);                                // the top is now on the right
+        QCOMPARE(s.number("geometry.perspective.horizontal", 0), -40.0);
+        QVERIFY(!s.contains("geometry.perspective.vertical"));
+        turn(s, false);
+        QCOMPARE(s.number("geometry.perspective.vertical", 0), 40.0);
+        flip(s, Qt::Vertical);
+        QCOMPARE(s.number("geometry.perspective.vertical", 0), -40.0);
+        flip(s, Qt::Horizontal);
+        QCOMPARE(s.number("geometry.perspective.vertical", 0), -40.0);
+    }
+
     void sizesFollowTheLibrary()
     {
         pfx::Settings s;
