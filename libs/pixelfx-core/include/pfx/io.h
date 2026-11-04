@@ -54,6 +54,21 @@ struct SaveOptions
 [[nodiscard]] Metadata withoutLocation(const Metadata& metadata);
 [[nodiscard]] std::vector<std::uint8_t> exifWithoutLocation(std::vector<std::uint8_t> exif);
 
+// What the camera wrote in Exif, for the photo's details and watermark tokens. Fields the block
+// does not have stay empty or zero; a malformed block gives an empty summary.
+struct ExifSummary
+{
+    std::string make;
+    std::string model;
+    std::string lens;
+    std::string dateTaken; // as written: "YYYY:MM:DD HH:MM:SS"
+    int iso = 0;
+    double exposureTime = 0.0; // seconds
+    double fNumber = 0.0;
+    double focalLength = 0.0; // millimetres
+};
+[[nodiscard]] ExifSummary readExif(const std::vector<std::uint8_t>& exif);
+
 // 8-bit sRGB pixels with straight alpha, interleaved R, G, B, A, for display.
 struct Rgba8Image
 {

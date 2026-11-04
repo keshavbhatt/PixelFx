@@ -24,9 +24,16 @@ Semantic Versioning (the API may change before 1.0).
   kept broken; setting names that are empty or contain a dot, and a value that is also the name
   of a group, are dropped with a reason. Every document PixelFx writes reads back the same.
 
+### Added
+
+- `blendOverlay` lays an 8-bit sRGB picture with premultiplied alpha (a watermark drawn by the
+  caller) over an image in linear light; `meanLuminance` of a rectangle.
+- `readExif` reads the camera, lens, date taken, ISO, aperture, shutter speed and focal length
+  from an Exif block, without a metadata library.
+
 ### Added (tooling)
 
-- libFuzzer targets for the document parser and the image loader (`make fuzz`).
+- libFuzzer targets for the document parser, the image loader and the Exif reader (`make fuzz`).
 
 ### Added
 

@@ -73,6 +73,12 @@ public:
         m_bytes[p + 1] = m_little ? b : a;
     }
 
+    [[nodiscard]] std::optional<std::uint8_t> byte(std::size_t at) const
+    {
+        const std::size_t p = m_base + at;
+        return p < m_bytes.size() ? std::optional<std::uint8_t>{m_bytes[p]} : std::nullopt;
+    }
+
     bool zero(std::size_t at, std::size_t count)
     {
         const std::size_t p = m_base + at;
@@ -136,7 +142,113 @@ void zeroGpsDirectory(Tiff& tiff, std::uint32_t offset)
     tiff.zero(offset, 2 + (12 * static_cast<std::size_t>(*count)));
 }
 
+// One directory's entries by tag: type, count, and the value field's offset (values of four
+// bytes or fewer sit in the field itself, longer ones at the offset it holds).
+struct Entry
+{
+    std::uint32_t type = 0;
+    std::uint32_t count = 0;
+    std::size_t field = 0;
+};
+
+std::optional<Entry> findEntry(const Tiff& tiff, std::uint32_t directory, std::uint32_t tag)
+{
+    const auto count = tiff.read16(directory);
+    if (!count || *count > 1024) {
+        return std::nullopt;
+    }
+    for (std::uint32_t i = 0; i < *count; ++i) {
+        const std::size_t entry = directory + 2 + (12 * static_cast<std::size_t>(i));
+        if (tiff.read16(entry) == std::optional<std::uint32_t>{tag}) {
+            const auto type = tiff.read16(entry + 2);
+            const auto n = tiff.read32(entry + 4);
+            if (!type || !n) {
+                return std::nullopt;
+            }
+            return Entry{*type, *n, entry + 8};
+        }
+    }
+    return std::nullopt;
+}
+
+std::size_t valueAt(const Tiff& tiff, const Entry& e)
+{
+    if (typeSize(e.type) * e.count <= 4) {
+        return e.field;
+    }
+    return tiff.read32(e.field).value_or(0);
+}
+
+std::string readText(const Tiff& tiff, std::uint32_t directory, std::uint32_t tag)
+{
+    const auto e = findEntry(tiff, directory, tag);
+    if (!e || e->type != 2 || e->count > 256) {
+        return {};
+    }
+    std::string text;
+    const std::size_t at = valueAt(tiff, *e);
+    for (std::uint32_t i = 0; i < e->count; ++i) {
+        const auto c = tiff.byte(at + i);
+        if (!c || *c == 0) {
+            break;
+        }
+        text.push_back(static_cast<char>(*c));
+    }
+    while (!text.empty() && text.back() == ' ') { // cameras pad with spaces
+        text.pop_back();
+    }
+    return text;
+}
+
+double readNumber(const Tiff& tiff, std::uint32_t directory, std::uint32_t tag)
+{
+    const auto e = findEntry(tiff, directory, tag);
+    if (!e || e->count == 0) {
+        return 0.0;
+    }
+    switch (e->type) {
+    case 3: // short
+        return tiff.read16(e->field).value_or(0);
+    case 4: // long
+        return tiff.read32(e->field).value_or(0);
+    case 5: { // rational
+        const std::size_t at = tiff.read32(e->field).value_or(0);
+        const auto num = tiff.read32(at);
+        const auto den = tiff.read32(at + 4);
+        return num && den && *den != 0 ? static_cast<double>(*num) / static_cast<double>(*den) : 0.0;
+    }
+    default:
+        return 0.0;
+    }
+}
+
 } // namespace
+
+ExifSummary readExif(const std::vector<std::uint8_t>& exif)
+{
+    std::vector<std::uint8_t> bytes = exif;
+    const Tiff tiff(bytes);
+    ExifSummary out;
+    const auto ifd0 = tiff.valid() ? tiff.read32(4) : std::nullopt;
+    if (!ifd0) {
+        return out;
+    }
+    out.make = readText(tiff, *ifd0, 0x010F);
+    out.model = readText(tiff, *ifd0, 0x0110);
+    out.dateTaken = readText(tiff, *ifd0, 0x0132); // DateTime, unless the Exif IFD has better
+    const auto sub = findEntry(tiff, *ifd0, 0x8769);
+    if (const auto at = sub ? tiff.read32(sub->field) : std::nullopt) {
+        if (std::string original = readText(tiff, *at, 0x9003); !original.empty()) {
+            out.dateTaken = std::move(original);
+        }
+        out.lens = readText(tiff, *at, 0xA434);
+        out.iso = static_cast<int>(readNumber(tiff, *at, 0x8827));
+        out.exposureTime = readNumber(tiff, *at, 0x829A);
+        out.fNumber = readNumber(tiff, *at, 0x829D);
+        out.focalLength = readNumber(tiff, *at, 0x920A);
+    }
+    return out;
+}
 
 std::vector<std::uint8_t> exifWithoutLocation(std::vector<std::uint8_t> exif)
 {

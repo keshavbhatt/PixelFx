@@ -332,6 +332,65 @@ TEST_CASE("location is removed from Exif: unlinked, zeroed, the rest kept")
     CHECK(pfx::exifWithoutLocation(cut).size() == 40);
 }
 
+TEST_CASE("the camera, the date and the exposure are read from Exif")
+{
+    // Big-endian this time: IFD0 with Make, Model and the Exif pointer; the Exif IFD with
+    // DateTimeOriginal, ISO, FNumber and ExposureTime.
+    std::vector<std::uint8_t> b = {'E', 'x', 'i', 'f', 0, 0, 'M', 'M', 0, 42, 0, 0, 0, 8};
+    const auto put16 = [&b](std::size_t at, unsigned v) {
+        b.resize(std::max(b.size(), 6 + at + 2));
+        b[6 + at] = static_cast<std::uint8_t>(v >> 8U);
+        b[6 + at + 1] = static_cast<std::uint8_t>(v & 0xFFU);
+    };
+    const auto put32 = [&put16](std::size_t at, unsigned v) {
+        put16(at, v >> 16U);
+        put16(at + 2, v & 0xFFFFU);
+    };
+    const auto text = [&b](std::size_t at, const std::string& s) {
+        b.resize(std::max(b.size(), 6 + at + s.size() + 1));
+        std::copy(s.begin(), s.end(), b.begin() + static_cast<std::ptrdiff_t>(6 + at));
+    };
+    const auto entry = [&](std::size_t at, unsigned tag, unsigned type, unsigned count, unsigned value) {
+        put16(at, tag);
+        put16(at + 2, type);
+        put32(at + 4, count);
+        put32(at + 8, value);
+    };
+    put16(8, 3);
+    entry(10, 0x010F, 2, 6, 100); // Make "Nikon "
+    entry(22, 0x0110, 2, 4, 0);   // Model "Z6" inline
+    text(30, "Z6");
+    entry(34, 0x8769, 4, 1, 120); // Exif IFD
+    put32(46, 0);
+    text(100, "Nikon ");
+    put16(120, 4);
+    entry(122, 0x9003, 2, 20, 200); // DateTimeOriginal
+    entry(134, 0x8827, 3, 1, 0);    // ISO 400, a short in the first half of the field
+    put16(142, 400);
+    entry(146, 0x829D, 5, 1, 240); // f/2.8
+    entry(158, 0x829A, 5, 1, 248); // 1/250 s
+    put32(170, 0);
+    text(200, "2026:11:05 07:30:00");
+    put32(240, 28);
+    put32(244, 10);
+    put32(248, 1);
+    put32(252, 250);
+    const pfx::ExifSummary e = pfx::readExif(b);
+    CHECK(e.make == "Nikon");
+    CHECK(e.model == "Z6");
+    CHECK(e.dateTaken == "2026:11:05 07:30:00");
+    CHECK(e.iso == 400);
+    CHECK(e.fNumber == doctest::Approx(2.8));
+    CHECK(e.exposureTime == doctest::Approx(0.004));
+    CHECK(e.lens.empty());
+    // Damaged or not Exif: an empty summary, no crash.
+    CHECK(pfx::readExif({1, 2, 3}).make.empty());
+    std::vector<std::uint8_t> cut = b;
+    cut.resize(60);
+    CHECK(pfx::readExif(cut).dateTaken.empty());
+    CHECK(pfx::readExif(exifWithGps()).make == "ABC");
+}
+
 TEST_CASE("location is removed from XMP, the rest kept")
 {
     const std::string xmp =

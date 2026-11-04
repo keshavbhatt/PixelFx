@@ -44,6 +44,7 @@ add_library(pfx_core
     src/image/image.cpp
     src/image/filters.cpp
     src/image/resample.cpp
+    src/image/composite.cpp
     src/recipe/settings.cpp
     src/recipe/document.cpp
     src/recipe/xmp_import.cpp

@@ -32,3 +32,4 @@ fuzz:
 	cp libs/pixelfx-core/tests/golden/exposure.png $(BUILD)/fuzz/corpus-load/
 	$(BUILD)/fuzz/fuzz/fuzz_document -max_total_time=$(FUZZ_SECONDS) -artifact_prefix=$(BUILD)/fuzz/crashes/ $(BUILD)/fuzz/corpus-document
 	$(BUILD)/fuzz/fuzz/fuzz_load -max_total_time=$(FUZZ_SECONDS) -max_len=65536 -artifact_prefix=$(BUILD)/fuzz/crashes/ $(BUILD)/fuzz/corpus-load
+	$(BUILD)/fuzz/fuzz/fuzz_exif -max_total_time=$(FUZZ_SECONDS) -max_len=4096 -artifact_prefix=$(BUILD)/fuzz/crashes/
