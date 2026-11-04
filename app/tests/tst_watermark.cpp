@@ -1,3 +1,4 @@
+#include "core/photo_details.h"
 #include "core/watermark.h"
 
 #include <QFile>
@@ -32,6 +33,24 @@ private Q_SLOTS:
         const auto u = pixelfx::core::tokensFrom(exif, QDate(2026, 1, 1));
         QCOMPARE(u.camera, u"NIKON CORPORATION Z 6"_s);
         QCOMPARE(u.date, QDate(2026, 1, 1)); // no date in the photo: the fallback
+    }
+
+    void exposureLineReadsLikeAPhotographer()
+    {
+        pfx::ExifSummary exif;
+        QVERIFY(pixelfx::core::exposureLine(exif).isEmpty());
+        exif.iso = 100;
+        exif.fNumber = 8.0;
+        exif.exposureTime = 0.004;
+        exif.focalLength = 24.2;
+        QCOMPARE(pixelfx::core::exposureLine(exif), u"ISO 100 \u00B7 f/8 \u00B7 1/250 s \u00B7 24 mm"_s);
+        exif.fNumber = 2.8;
+        exif.exposureTime = 2.5;
+        exif.iso = 0;
+        exif.focalLength = 0;
+        QCOMPARE(pixelfx::core::exposureLine(exif), u"f/2.8 \u00B7 2.5 s"_s);
+        exif.exposureTime = 1.0 / 3;
+        QCOMPARE(pixelfx::core::exposureLine(exif), u"f/2.8 \u00B7 0.3 s"_s);
     }
 
     void placementIsRelativeToTheLongEdge()

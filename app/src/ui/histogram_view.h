@@ -19,12 +19,16 @@ public:
 
     void setHistogram(const core::Histogram& histogram);
     [[nodiscard]] const core::Histogram& histogram() const { return m_histogram; }
+    /// The small line at the bottom left (the exposure, as the mock shows).
+    void setCaption(const QString& caption);
+    [[nodiscard]] const QString& caption() const { return m_caption; }
 
 protected:
     void paintEvent(QPaintEvent* event) override;
 
 private:
     core::Histogram m_histogram;
+    QString m_caption;
 };
 
 } // namespace pixelfx::ui

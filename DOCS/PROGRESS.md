@@ -184,6 +184,9 @@
   of leaving the mark off. Not yet: Preview on the batch's photos, keeping the watermark in a
   `.pfxbatch` (needs batch format version 2, an owner decision). 27 app suites and 90 library
   tests pass.
+- The exposure line of `editor.html` under the histogram ("ISO 400 · f/2.8 · 1/250 s · 35 mm",
+  `core::exposureLine`), the camera and lens as its tooltip; checked on a scratch JPEG with a
+  hand-made Exif block. Photos without exposure data show nothing there.
 
 ### 2026-11-04 (M2)
 

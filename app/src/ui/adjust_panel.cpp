@@ -685,6 +685,12 @@ void AdjustPanel::curveEdited(const pfx::Curve& curve)
     Q_EMIT settingsChanged(m_settings);
 }
 
+void AdjustPanel::setPhotoDetails(const QString& exposure, const QString& cameraAndLens)
+{
+    m_histogram->setCaption(exposure);
+    m_histogram->setToolTip(cameraAndLens);
+}
+
 void AdjustPanel::setHistogram(const core::Histogram& histogram)
 {
     m_histogram->setHistogram(histogram);

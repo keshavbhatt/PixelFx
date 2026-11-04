@@ -1360,6 +1360,7 @@ void MainWindow::showOpened(const services::DocumentInfo& info)
     m_docMeta->setText(describe(info));
     setWindowTitle(name);
     m_settings.addRecentFile(info.path);
+    m_adjust->setPhotoDetails(info.exposure, QStringList{info.camera, info.lens}.join(u'\n').trimmed());
     m_panels->show();
     m_rail->show();
     m_presets->setVisible(!isCropping());

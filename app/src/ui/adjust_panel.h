@@ -48,6 +48,8 @@ public:
     /// The colour mixer slider on show.
     [[nodiscard]] AdjustSlider* mixerSlider() const;
     void setHistogram(const core::Histogram& histogram);
+    /// The exposure line under the histogram, and the camera and lens as its tooltip.
+    void setPhotoDetails(const QString& exposure, const QString& cameraAndLens);
     /// Clears every setting (Ctrl+R) and reports it as one step.
     void resetAll();
     /// White balance shows "Auto" until a slider moves it.

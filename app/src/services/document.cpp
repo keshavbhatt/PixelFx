@@ -1,6 +1,7 @@
 #include "services/document.h"
 
 #include "core/crop_geometry.h"
+#include "core/photo_details.h"
 #include "services/logging.h"
 #include "services/qt_image_bridge.h"
 #include "services/render_scheduler.h"
@@ -158,6 +159,10 @@ Document::Result Document::openOnWorker(Result result,
         result.error = fromStd(loaded.error().message);
         return result;
     }
+    const pfx::ExifSummary exif = pfx::readExif(loaded.value().metadata.exif);
+    result.info.camera = core::cameraName(exif);
+    result.info.lens = QString::fromStdString(exif.lens).trimmed();
+    result.info.exposure = core::exposureLine(exif);
     const auto display = pfx::toSrgb8(loaded.value().image);
     if (!display) {
         result.error = fromStd(display.error().message);

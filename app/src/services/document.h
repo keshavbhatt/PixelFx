@@ -29,6 +29,9 @@ struct DocumentInfo
     QSize size;     ///< full size, upright
     QString format; ///< loader name, for example "jpegload"
     int bitsPerSample = 8;
+    QString camera;   ///< "Canon EOS R5", empty when the photo does not say
+    QString lens;
+    QString exposure; ///< "ISO 100 · f/8 · 1/250 s · 24 mm"
 };
 
 /// One open photo (PLAN section 6): its decoded preview-size source, its settings and their

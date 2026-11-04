@@ -1,5 +1,7 @@
 #include "core/watermark.h"
 
+#include "core/photo_details.h"
+
 #include <QCoreApplication>
 #include <QDir>
 #include <QFile>
@@ -114,14 +116,7 @@ WatermarkTokens tokensFrom(const pfx::ExifSummary& exif, const QDate& fallback)
     if (!t.date.isValid()) {
         t.date = fallback;
     }
-    QString make = QString::fromStdString(exif.make).trimmed();
-    const QString model = QString::fromStdString(exif.model).trimmed();
-    // Cameras often repeat the make in the model ("Canon" + "Canon EOS R5").
-    const QString firstWord = make.section(u' ', 0, 0);
-    if (!firstWord.isEmpty() && model.startsWith(firstWord, Qt::CaseInsensitive)) {
-        make.clear();
-    }
-    t.camera = QStringList{make, model}.join(u' ').trimmed();
+    t.camera = cameraName(exif);
     return t;
 }
 

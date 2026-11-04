@@ -32,6 +32,7 @@ PixelFx 2 is rebuilt from scratch: a new editor, a new image engine, and a new l
 - Color mixer: hue, saturation and luminance for eight colour ranges.
 - Dehaze clears distance haze from landscapes and city views, or adds a little mist.
 - Effects: vignette, film grain and fade.
+- The camera's settings (ISO, aperture, shutter speed, focal length) under the histogram.
 - The start page lists recent photos as they were left; click one to carry on.
 - Export leaves out where a photo was taken unless you tick Keep location.
 - Watermarks on export and in Batch: your name, the year or the camera, or a logo; placed in a

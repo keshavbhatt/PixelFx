@@ -24,6 +24,12 @@ void HistogramView::setHistogram(const core::Histogram& histogram)
     update();
 }
 
+void HistogramView::setCaption(const QString& caption)
+{
+    m_caption = caption;
+    update();
+}
+
 void HistogramView::paintEvent(QPaintEvent* /*event*/)
 {
     const Tokens& t = tokens();
@@ -60,6 +66,15 @@ void HistogramView::paintEvent(QPaintEvent* /*event*/)
         }
         p.setBrush(colour);
         p.drawPath(path);
+    }
+    if (!m_caption.isEmpty()) {
+        // Mock .histo .meta: 10 px, muted, 8 px from the left, 4 px from the bottom.
+        p.setCompositionMode(QPainter::CompositionMode_SourceOver);
+        QFont small = font();
+        small.setPixelSize(10);
+        p.setFont(small);
+        p.setPen(t.muted);
+        p.drawText(well.adjusted(8, 0, -8, -4), Qt::AlignLeft | Qt::AlignBottom, m_caption);
     }
 }
 
