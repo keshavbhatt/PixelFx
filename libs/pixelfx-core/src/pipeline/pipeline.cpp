@@ -12,7 +12,8 @@ namespace pfx {
 namespace {
 
 // Implementations in pipeline order; every id must be in the registry (checked by a test).
-constexpr std::array<detail::OpImpl, 8> kImpls = {{
+constexpr std::array<detail::OpImpl, 9> kImpls = {{
+    {"geometry", detail::geometryActive, detail::geometryApply},
     {"denoise", detail::denoiseActive, detail::denoiseApply},
     {"white_balance", detail::whiteBalanceActive, detail::whiteBalanceApply},
     {"exposure", detail::exposureActive, detail::exposureApply},

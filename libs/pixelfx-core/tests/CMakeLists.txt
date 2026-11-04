@@ -13,6 +13,7 @@ add_executable(pfx_tests
     test_auto.cpp
     test_color.cpp
     test_document.cpp
+    test_geometry.cpp
     test_registry.cpp
     test_ops.cpp
     test_pipeline.cpp

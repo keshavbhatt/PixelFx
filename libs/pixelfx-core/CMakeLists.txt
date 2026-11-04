@@ -46,6 +46,7 @@ add_library(pfx_core
     src/ops/color_ops.cpp
     src/ops/curves_op.cpp
     src/ops/detail.cpp
+    src/ops/geometry.cpp
     src/pipeline/pipeline.cpp
     src/io/io.cpp
 )

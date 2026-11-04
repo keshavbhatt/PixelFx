@@ -49,9 +49,9 @@ TEST_CASE("default values render as the identity")
         }
     }
     for (const auto& impl :
-         {pfx::detail::exposureActive, pfx::detail::toneActive, pfx::detail::whiteBalanceActive,
-          pfx::detail::vibranceSaturationActive, pfx::detail::curvesActive, pfx::detail::denoiseActive,
-          pfx::detail::clarityActive, pfx::detail::sharpenActive}) {
+         {pfx::detail::geometryActive, pfx::detail::exposureActive, pfx::detail::toneActive,
+          pfx::detail::whiteBalanceActive, pfx::detail::vibranceSaturationActive, pfx::detail::curvesActive,
+          pfx::detail::denoiseActive, pfx::detail::clarityActive, pfx::detail::sharpenActive}) {
         CHECK_FALSE(impl(defaults));
     }
 }

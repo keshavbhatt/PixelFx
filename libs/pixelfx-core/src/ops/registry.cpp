@@ -38,6 +38,21 @@ ParamSpec curve(std::string key)
     return p;
 }
 
+ParamSpec boolean(std::string key)
+{
+    ParamSpec p;
+    p.key = std::move(key);
+    p.type = ParamType::Boolean;
+    return p;
+}
+
+ParamSpec fraction(std::string key, double def)
+{
+    ParamSpec p = number(std::move(key), 0.0, 1.0, def, "fraction");
+    p.relative = true;
+    return p;
+}
+
 ParamSpec choice(std::string key, std::vector<std::string> choices)
 {
     ParamSpec p;
@@ -52,6 +67,15 @@ ParamSpec choice(std::string key, std::vector<std::string> choices)
 std::vector<OpSpec> builtInOps()
 {
     std::vector<OpSpec> ops;
+    ops.push_back({"geometry",
+                   "geometry",
+                   1,
+                   10,
+                   false,
+                   {number("geometry.rotate90", 0, 3), boolean("geometry.flipH"), boolean("geometry.flipV"),
+                    number("geometry.angle", -45, 45, 0, "degrees"), fraction("geometry.crop.x", 0.0),
+                    fraction("geometry.crop.y", 0.0), fraction("geometry.crop.w", 1.0),
+                    fraction("geometry.crop.h", 1.0)}});
     ops.push_back({"denoise",
                    "detail",
                    1,

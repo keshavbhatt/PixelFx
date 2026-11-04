@@ -5,6 +5,11 @@ Semantic Versioning (the API may change before 1.0).
 
 ## [Unreleased]
 
+### Added
+
+- Geometry: quarter turns, flips, straightening with an automatic inscribed crop, and crop by
+  fractions of the image; `pfx::outputSize` gives the rendered size without rendering.
+
 ## [0.1.0] - 2026-11-04
 
 ### Added
