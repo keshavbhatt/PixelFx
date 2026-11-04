@@ -475,7 +475,7 @@ Status save(const Image& image, const std::filesystem::path& path, const SaveOpt
         const auto icc = profileBytes(srgb.get());
         vips_image_set_blob_copy(img.get_image(), VIPS_META_ICC_NAME, icc.data(), icc.size());
         if (metadata != nullptr && options.keepMetadata) {
-            attachMetadata(img, *metadata);
+            attachMetadata(img, options.keepLocation ? *metadata : withoutLocation(*metadata));
         }
         img.set(VIPS_META_ORIENTATION, 1); // pixels are already upright
         img.write_to_file(path.string().c_str(), saverOptions(ext, options));

@@ -36,6 +36,8 @@ Semantic Versioning (the API may change before 1.0).
   neighbouring bands and fading out toward grey.
 - Colour grading in the split-toning form: a shadow colour, a highlight colour, their amounts
   and a balance; lightness is kept and pure black and white stay neutral.
+- Saving without the location (`SaveOptions::keepLocation`, `withoutLocation`): the Exif GPS
+  block is unlinked and zeroed, XMP GPS properties removed, without a metadata library.
 - `neutralWhiteBalance`: the temperature and tint that make a picked colour grey.
 - Perspective: vertical and horizontal keystone correction (`geometry.perspective.*`), with no
   empty corners and no change of size.

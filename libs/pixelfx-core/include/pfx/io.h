@@ -45,7 +45,14 @@ struct SaveOptions
     int quality = 90;      // JPEG, WebP, AVIF, HEIC, JPEG XL
     int bitsPerSample = 8; // 8 or 16 where the format allows
     bool keepMetadata = true;
+    bool keepLocation = true; // with keepMetadata: false strips GPS from Exif and XMP
 };
+
+// Metadata with the location taken out: the Exif GPS block unlinked and zeroed (no trace of the
+// coordinates left in the bytes), XMP's exif:GPS properties removed. IPTC (city and country
+// written by people) is kept. Malformed blocks are returned as they are.
+[[nodiscard]] Metadata withoutLocation(const Metadata& metadata);
+[[nodiscard]] std::vector<std::uint8_t> exifWithoutLocation(std::vector<std::uint8_t> exif);
 
 // 8-bit sRGB pixels with straight alpha, interleaved R, G, B, A, for display.
 struct Rgba8Image

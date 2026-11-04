@@ -61,6 +61,7 @@ add_library(pfx_core
     src/ops/dehaze.cpp
     src/pipeline/pipeline.cpp
     src/io/io.cpp
+    src/io/metadata.cpp
 )
 add_library(pfx::core ALIAS pfx_core)
 target_include_directories(pfx_core

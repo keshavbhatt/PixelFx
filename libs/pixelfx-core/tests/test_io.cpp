@@ -262,3 +262,109 @@ TEST_CASE("a header claiming a huge image is refused, not allocated")
     // Downscaled on load it fits the limit and is read (or fails on the missing data, but sanely).
     (void)pfx::load(path, {512});
 }
+
+namespace {
+
+// A little-endian Exif block: IFD0 with Make and the GPS pointer, then IFD1 at 200, and a GPS
+// directory with latitude "N" and a rational latitude stored out of line.
+std::vector<std::uint8_t> exifWithGps()
+{
+    std::vector<std::uint8_t> b = {'E', 'x', 'i', 'f', 0, 0, 'I', 'I', 42, 0, 8, 0, 0, 0};
+    const auto put16 = [&b](std::size_t at, unsigned v) {
+        b.resize(std::max(b.size(), 6 + at + 2));
+        b[6 + at] = static_cast<std::uint8_t>(v & 0xFFU);
+        b[6 + at + 1] = static_cast<std::uint8_t>(v >> 8U);
+    };
+    const auto put32 = [&put16](std::size_t at, unsigned v) {
+        put16(at, v & 0xFFFFU);
+        put16(at + 2, v >> 16U);
+    };
+    put16(8, 2); // IFD0: two entries
+    put16(10, 0x010F);
+    put16(12, 2);
+    put32(14, 4);
+    put32(18, 0x00434241); // Make "ABC"
+    put16(22, 0x8825);
+    put16(24, 4);
+    put32(26, 1);
+    put32(30, 100); // GPS IFD at 100
+    put32(34, 200); // next IFD: IFD1 at 200
+    put16(100, 2);  // GPS: two entries
+    put16(102, 0x0001);
+    put16(104, 2);
+    put32(106, 2);
+    put32(110, 'N'); // GPSLatitudeRef "N"
+    put16(114, 0x0002);
+    put16(116, 5);
+    put32(118, 3);
+    put32(122, 150); // GPSLatitude at 150
+    for (unsigned i = 0; i < 6; ++i) {
+        put32(150 + (4 * i), 51 + i); // the coordinates
+    }
+    put16(200, 0); // IFD1: empty
+    put32(202, 0);
+    return b;
+}
+
+} // namespace
+
+TEST_CASE("location is removed from Exif: unlinked, zeroed, the rest kept")
+{
+    const std::vector<std::uint8_t> before = exifWithGps();
+    const std::vector<std::uint8_t> after = pfx::exifWithoutLocation(before);
+    REQUIRE(after.size() == before.size());
+    CHECK(after[6 + 8] == 1);     // one entry left in IFD0
+    CHECK(after[6 + 10] == 0x0F); // Make kept, first
+    CHECK(after[6 + 22] == 200);  // the next-IFD pointer moved up a slot
+    CHECK(after[6 + 102] == 0);   // GPS entries zeroed
+    for (std::size_t i = 150; i < 174; ++i) {
+        CHECK(after[6 + i] == 0); // the coordinates are gone from the bytes
+    }
+    // Not Exif, or damaged: returned as is.
+    const std::vector<std::uint8_t> junk = {1, 2, 3};
+    CHECK(pfx::exifWithoutLocation(junk) == junk);
+    std::vector<std::uint8_t> cut = before;
+    cut.resize(40);
+    CHECK(pfx::exifWithoutLocation(cut).size() == 40);
+}
+
+TEST_CASE("location is removed from XMP, the rest kept")
+{
+    const std::string xmp =
+        R"(<rdf:Description exif:GPSLatitude="51,30N" dc:creator="Me" exif:GPSLongitude='0,7W'>)"
+        R"(<exif:GPSAltitude>12/1</exif:GPSAltitude><dc:rights>Mine</dc:rights></rdf:Description>)";
+    pfx::Metadata m;
+    m.xmp.assign(xmp.begin(), xmp.end());
+    const pfx::Metadata out = pfx::withoutLocation(m);
+    const std::string text(out.xmp.begin(), out.xmp.end());
+    CHECK(text.find("GPS") == std::string::npos);
+    CHECK(text.find("dc:creator=\"Me\"") != std::string::npos);
+    CHECK(text.find("<dc:rights>Mine</dc:rights>") != std::string::npos);
+}
+
+TEST_CASE("a JPEG saved without location has no GPS block; with it, keeps it")
+{
+    const fixtures::TempDir dir;
+    pfx::Metadata m;
+    m.exif = exifWithGps();
+    const pfx::Image img = fixtures::flat(0.4F, 0.4F, 0.4F, 16, 16);
+    const auto hasGps = [](const std::vector<std::uint8_t>& exif) {
+        for (std::size_t i = 0; i + 1 < exif.size(); ++i) {
+            if ((exif[i] == 0x25 && exif[i + 1] == 0x88) || (exif[i] == 0x88 && exif[i + 1] == 0x25)) {
+                return true;
+            }
+        }
+        return false;
+    };
+    pfx::SaveOptions keep;
+    REQUIRE(pfx::save(img, dir.path() / "keep.jpg", keep, &m).ok());
+    pfx::SaveOptions drop;
+    drop.keepLocation = false;
+    REQUIRE(pfx::save(img, dir.path() / "drop.jpg", drop, &m).ok());
+    const auto kept = pfx::load(dir.path() / "keep.jpg");
+    const auto dropped = pfx::load(dir.path() / "drop.jpg");
+    REQUIRE(kept.ok());
+    REQUIRE(dropped.ok());
+    CHECK(hasGps(kept.value().metadata.exif));
+    CHECK_FALSE(hasGps(dropped.value().metadata.exif));
+}
