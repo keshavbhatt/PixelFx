@@ -100,3 +100,25 @@ TEST_CASE("everything together, and the size is known before rendering")
         }
     }
 }
+
+TEST_CASE("perspective: the leaning edge widens, nothing empty shows, the size stays")
+{
+    const pfx::Image img = coordinates();
+    const pfx::Image fixed = run(img, {{"geometry.perspective.vertical", 100.0}});
+    CHECK(fixed.width() == img.width());
+    CHECK(fixed.height() == img.height());
+    // Top row: the left edge now shows a point further in (red, the x coordinate, is larger).
+    CHECK(fixed.pixel(0, 0)[0] > img.pixel(0, 0)[0] + 0.1F);
+    // Bottom row: untouched at full strength (only the top narrows).
+    CHECK(fixed.pixel(0, img.height() - 1)[0] ==
+          doctest::Approx(img.pixel(0, img.height() - 1)[0]).epsilon(0.01));
+    // Every pixel comes from inside the photo: alpha stays 1.
+    for (int y = 0; y < fixed.height(); ++y) {
+        for (int x = 0; x < fixed.width(); ++x) {
+            CHECK(fixed.pixel(x, y)[3] == doctest::Approx(1.0));
+        }
+    }
+    const pfx::Image sideways = run(img, {{"geometry.perspective.horizontal", -100.0}});
+    CHECK(sideways.pixel(img.width() - 1, 0)[1] >
+          img.pixel(img.width() - 1, 0)[1] + 0.1F); // right edge narrows
+}

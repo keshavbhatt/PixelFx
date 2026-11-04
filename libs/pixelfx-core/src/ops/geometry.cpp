@@ -4,6 +4,7 @@
 // share of the straightened image, so it means the same at any resolution (ADR-004).
 #include "pfx/geometry.h"
 
+#include "core/parallel.h"
 #include "ops/ops.h"
 
 #include <algorithm>
@@ -21,7 +22,9 @@ struct Geometry
     int quarterTurns = 0; // clockwise
     bool flipH = false;
     bool flipV = false;
-    double angle = 0.0; // degrees, positive turns the photo clockwise
+    double angle = 0.0;      // degrees, positive turns the photo clockwise
+    double vertical = 0.0;   // -1..1: positive widens the top (converging verticals fixed)
+    double horizontal = 0.0; // -1..1: positive widens the left side
     double x = 0.0;
     double y = 0.0;
     double w = 1.0;
@@ -35,6 +38,8 @@ Geometry geometryOf(const Settings& s)
     g.flipH = s.boolean("geometry.flipH", false);
     g.flipV = s.boolean("geometry.flipV", false);
     g.angle = s.number("geometry.angle", 0.0);
+    g.vertical = std::clamp(s.number("geometry.perspective.vertical", 0.0) / 100.0, -1.0, 1.0);
+    g.horizontal = std::clamp(s.number("geometry.perspective.horizontal", 0.0) / 100.0, -1.0, 1.0);
     g.x = std::clamp(s.number("geometry.crop.x", 0.0), 0.0, 1.0);
     g.y = std::clamp(s.number("geometry.crop.y", 0.0), 0.0, 1.0);
     g.w = std::clamp(s.number("geometry.crop.w", 1.0), 0.0, 1.0 - g.x);
@@ -82,6 +87,55 @@ void ensureVips()
 {
     static std::once_flag once;
     std::call_once(once, [] { VIPS_INIT("pixelfx"); });
+}
+
+// Keystone correction. Each output row (vertical) or column (horizontal) samples a centred
+// stretch of the input that narrows toward one edge, so the side that leaned away widens. Only
+// ever narrower than the input: no empty corners and no extra crop. Lines stay straight.
+constexpr double kKeystoneReach = 0.4; // the narrowed edge samples 60% of the width at 100
+
+Image keystone(const Image& in, double vertical, double horizontal, int threads)
+{
+    Image out(in.width(), in.height());
+    const double cx = in.width() / 2.0;
+    const double cy = in.height() / 2.0;
+    const double topScale = 1.0 - (kKeystoneReach * std::max(0.0, vertical));
+    const double bottomScale = 1.0 - (kKeystoneReach * std::max(0.0, -vertical));
+    const double leftScale = 1.0 - (kKeystoneReach * std::max(0.0, horizontal));
+    const double rightScale = 1.0 - (kKeystoneReach * std::max(0.0, -horizontal));
+    const auto sample = [&in](double x, double y, float* dst) {
+        x = std::clamp(x, 0.0, in.width() - 1.0);
+        y = std::clamp(y, 0.0, in.height() - 1.0);
+        const auto x0 = static_cast<int>(x);
+        const auto y0 = static_cast<int>(y);
+        const int x1 = std::min(x0 + 1, in.width() - 1);
+        const int y1 = std::min(y0 + 1, in.height() - 1);
+        const double fx = x - x0;
+        const double fy = y - y0;
+        const float* a = in.pixel(x0, y0);
+        const float* b = in.pixel(x1, y0);
+        const float* c = in.pixel(x0, y1);
+        const float* d = in.pixel(x1, y1);
+        for (int k = 0; k < 4; ++k) {
+            const double top = double{a[k]} + (fx * (double{b[k]} - double{a[k]}));
+            const double bottom = double{c[k]} + (fx * (double{d[k]} - double{c[k]}));
+            dst[k] = static_cast<float>(top + (fy * (bottom - top)));
+        }
+    };
+    detail::parallelFor(in.height(), threads, [&](int y0, int y1) {
+        for (int y = y0; y < y1; ++y) {
+            const double ty = (y + 0.5) / in.height();
+            const double rowScale = topScale + (ty * (bottomScale - topScale));
+            for (int x = 0; x < in.width(); ++x) {
+                const double tx = (x + 0.5) / in.width();
+                const double columnScale = leftScale + (tx * (rightScale - leftScale));
+                const double sx = cx + (((x + 0.5) - cx) * rowScale) - 0.5;
+                const double sy = cy + (((y + 0.5) - cy) * columnScale) - 0.5;
+                sample(sx, sy, out.pixel(x, y));
+            }
+        }
+    });
+    return out;
 }
 
 vips::VImage toVips(const Image& image)
@@ -134,10 +188,11 @@ namespace detail {
 bool geometryActive(const Settings& s)
 {
     const Geometry g = geometryOf(s);
-    return g.quarterTurns != 0 || g.flipH || g.flipV || g.angle != 0.0 || hasCrop(g);
+    return g.quarterTurns != 0 || g.flipH || g.flipV || g.angle != 0.0 || g.vertical != 0.0 ||
+           g.horizontal != 0.0 || hasCrop(g);
 }
 
-void geometryApply(Image& image, const Settings& s, const OpContext& /*ctx*/)
+void geometryApply(Image& image, const Settings& s, const OpContext& ctx)
 {
     ensureVips();
     const Geometry g = geometryOf(s);
@@ -151,6 +206,11 @@ void geometryApply(Image& image, const Settings& s, const OpContext& /*ctx*/)
     }
     if (g.flipV) {
         v = v.flip(VIPS_DIRECTION_VERTICAL);
+    }
+    Image warped; // lives until the end: libvips reads it in place
+    if (g.vertical != 0.0 || g.horizontal != 0.0) {
+        warped = keystone(fromVips(v), g.vertical, g.horizontal, ctx.threads);
+        v = toVips(warped);
     }
     if (g.angle != 0.0) {
         const Size turned{v.width(), v.height()};

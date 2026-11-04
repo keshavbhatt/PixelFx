@@ -72,7 +72,8 @@ void addGeometry(std::vector<OpSpec>& ops)
                    {number("geometry.rotate90", 0, 3), boolean("geometry.flipH"), boolean("geometry.flipV"),
                     number("geometry.angle", -45, 45, 0, "degrees"), fraction("geometry.crop.x", 0.0),
                     fraction("geometry.crop.y", 0.0), fraction("geometry.crop.w", 1.0),
-                    fraction("geometry.crop.h", 1.0)}});
+                    fraction("geometry.crop.h", 1.0), number("geometry.perspective.vertical", -100, 100),
+                    number("geometry.perspective.horizontal", -100, 100)}});
 }
 
 void addMixer(std::vector<OpSpec>& ops)
