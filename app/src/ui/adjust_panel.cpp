@@ -66,6 +66,11 @@ const std::vector<GroupSpec>& groupSpecs()
           {"detail.sharpen.amount", QT_TRANSLATE_NOOP("AdjustPanel", "Sharpen"), ""},
           {"detail.denoise.luminance", QT_TRANSLATE_NOOP("AdjustPanel", "Noise reduction"), ""},
           {"detail.denoise.color", QT_TRANSLATE_NOOP("AdjustPanel", "Color noise"), ""}}},
+        {QT_TRANSLATE_NOOP("AdjustPanel", "Effects"),
+         "sparkles",
+         {{"effects.vignette.amount", QT_TRANSLATE_NOOP("AdjustPanel", "Vignette"), ""},
+          {"effects.grain.amount", QT_TRANSLATE_NOOP("AdjustPanel", "Grain"), ""},
+          {"effects.fade", QT_TRANSLATE_NOOP("AdjustPanel", "Fade"), ""}}},
     };
     return specs;
 }
