@@ -1,0 +1,190 @@
+# FEATURES: the scope contract
+
+Decision legend: KEEP (in 2.0), KEEP 2.1 (the first update after 2.0), LATER (after that),
+DROP (never), OWNER (waits for the owner).
+Status legend: `todo`, `wip`, `done (class)`, `verified` (exercised live on the owner's desktop).
+
+Sources: `reference/analysis-pixelfx-v1.md` (the old app, "v1" below), the rewrite kit's Red
+FEATURES for the desktop-shell features that proved themselves, and the owner's brief.
+
+The owner's brief (2026-11-04): rewrite PixelFx from scratch; quick, cross-platform (Linux,
+Windows, macOS), powerful image retouching and manipulation; the image logic becomes a
+reusable open-source core library that replaces the Go `pixel` tool; presets, filters, the
+ability to create custom filters and presets, and to apply them to many images at once; the
+same stack as the other ktechpit apps; Snap Store and Flathub first. The design may be
+completely new (owner, 2026-11-04).
+
+Vocabulary (also in `PLAN.md` section 4): an **adjustment** is one slider or control; a
+**recipe** is every setting of one photo; a **look** (the user's "filter") is a stack of
+steps with one strength slider; a **preset** is a saved part of a recipe, optionally with a
+look; a **batch recipe** is a preset plus resize and save options.
+
+## A. Shell (window, identity, desktop)
+
+| # | Feature | v1 | Decision | Status / class |
+|---|---|---|---|---|
+| S1 | One main window: header bar, mode rail (Edit, Crop, Batch), side panels, filmstrip | toolbar + dock | KEEP | todo |
+| S2 | Persist window geometry and state, panel widths, last mode | geometry only | KEEP | todo |
+| S3 | Single instance; a second launch forwards its files to the running window | refuses with a dialog | KEEP | todo |
+| S4 | Open files from the command line and the desktop file (`%F`), MIME types declared | argv ignored | KEEP | todo |
+| S5 | Drag and drop of files and folders anywhere in the window; paste an image from the clipboard | none | KEEP | todo |
+| S6 | Native notifications through the portal or freedesktop (batch finished) | none | KEEP | todo |
+| S7 | Crash handler, log file, diagnostics copy, Report a bug sheet | none | KEEP | todo |
+| S8 | What's new once per version from the bundled changelog, Version picker, link in About; Online guide | none | KEEP | todo |
+| S9 | Keyboard shortcuts sheet (F1, Ctrl+/); every action shows its shortcut in its tooltip | 3 shortcuts | KEEP | todo |
+| S10 | Theme: System, Dark (default), Light; neutral grey chrome | dark only | KEEP | todo |
+| S11 | About with version, links, open-source notices, diagnostics | wrong source link | KEEP | todo |
+| S12 | Full screen (F11) and a distraction-free view (Tab hides the panels) | none | KEEP | todo |
+| S13 | Translations | none | LATER | |
+| S14 | Native macOS menu bar; header menu elsewhere | none | KEEP (macOS with M7) | todo |
+
+## B. Opening photos
+
+| # | Feature | v1 | Decision | Status / class |
+|---|---|---|---|---|
+| O1 | Open images (many at once), Open folder (with subfolders), Recent list | one file | KEEP | todo |
+| O2 | Formats in: JPEG, PNG, WebP, TIFF (8/16/32 bit), BMP, GIF (first frame), AVIF, HEIC/HEIF, JPEG XL | png, jpg, bmp, tiff, webp (broken in snap) | KEEP | todo |
+| O3 | Camera RAW (DNG and the common makes) with a sensible default rendering | none | KEEP (LibRaw, PLAN D15) | todo |
+| O4 | EXIF orientation applied on open | ignored | KEEP | todo |
+| O5 | Embedded ICC profile honoured; working space is linear and wide gamut | dropped | KEEP | todo |
+| O6 | Decoding off the GUI thread, a fast embedded or downscaled preview first, full quality after | GUI thread, decoded twice | KEEP | todo |
+| O7 | Image information: size, format, bit depth, colour profile, camera, lens, exposure, date, GPS (behind a click) | Info dialog | KEEP (panel, not a dialog) | todo |
+| O8 | Temp PNG copies of every opened file | yes | DROP | |
+
+## C. Editing (adjustments)
+
+All adjustments are non-destructive settings in the recipe, rendered by the library;
+preview and export use resolution-independent parameters so they match (v1 defect 3).
+
+| # | Feature | v1 | Decision | Status / class |
+|---|---|---|---|---|
+| E1 | Light: Exposure (stops), Contrast, Highlights, Shadows, Whites, Blacks | Brightness, Contrast, Sigmoidal contrast, Gamma | KEEP | wip: library done (tone v1 is a global curve; a local version may follow as v2); UI M3 |
+| E2 | Color: White balance (As shot, Auto, presets, Temperature, Tint, picker), Vibrance, Saturation | Saturation, Color balance R/G/B | KEEP | wip: relative temperature and tint, vibrance, saturation in the library; Auto, presets, picker and Kelvin in M3 |
+| E3 | Color mixer: hue, saturation, luminance for 8 colour bands | Hue shift | KEEP | todo |
+| E4 | Curves: RGB and per channel, points, double-click removes | none | KEEP | wip: library done (monotone curves); UI M3 |
+| E5 | Levels (black, mid, white point per channel) | none | LATER | |
+| E6 | Detail: Clarity (local contrast), Sharpen (amount, radius, masking), Noise reduction (luminance, colour), Dehaze | Sharpen, Blur, Mean, Median | KEEP | wip: clarity, sharpen, noise reduction in the library; dehaze moved to M3; UI M3 |
+| E7 | Effects: Vignette (amount, midpoint, roundness), Grain (amount, size), Fade | none | KEEP | todo |
+| E8 | Split toning / color grading (shadows, midtones, highlights wheels) | Colorize | KEEP (as a step in looks and a Color group sub-panel) | todo |
+| E9 | Creative operations from v1: Sepia, Threshold, Colorize, Pixelate, Blur, Invert, Grayscale, Emboss, Edge, Sobel | some in UI, some only in Go | KEEP as look steps, not sliders | todo |
+| E10 | Auto: one click sets Light and Color from the image statistics | none | KEEP | todo |
+| E11 | Live preview while dragging (no apply on release), 60 fps target on the preview size | apply on release, one process per apply | KEEP | todo |
+| E12 | Histogram (RGB, luminance), clipping warnings (J), camera line | RGB on GUI thread | KEEP | todo |
+| E13 | Before and after: split with divider, side by side, hold Space for the original | hold button | KEEP | todo |
+| E14 | Undo and redo for every change; History list; named snapshots | none | KEEP | todo |
+| E15 | Copy and paste settings between photos, choose groups | none | KEEP | todo |
+| E16 | Reset a slider (double-click), a group, or everything | per row, global | KEEP | todo |
+| E17 | Edits remembered per photo in a sidecar (app library by default, or next to the photo) | none | KEEP | todo |
+| E18 | GPU-accelerated preview with automatic CPU fallback | none | KEEP 2.1 (PLAN D14) | |
+| E19 | Local adjustments: brush, linear and radial gradient masks | none | LATER | |
+| E20 | Spot heal: click or brush over a blemish, dust spot or small object; the patch is found automatically and blended; spots are stored in the recipe (relative coordinates), editable and removable | none | KEEP (sells: the app is a "retouching" app, owner 2026-11-04) | todo |
+| E20b | Clone brush, red eye removal | none | LATER | |
+| E21 | Layers, text, drawing, compositing | none | DROP (not a raster editor; Krita and GIMP own that) | |
+| E22 | Remove background (subject cut-out to transparent PNG or WebP, or onto a colour), on the user's machine, model downloaded once on first use | none | KEEP 2.1 (sells: product photos, online sellers; an ADR on the model and its licence first) | |
+| E22b | AI noise reduction | none | KEEP 2.1 or LATER (after E22, same runtime) | |
+| E22c | Subject and sky select for masks, upscaling | none | LATER (needs E19) | |
+
+## D. Looks (filters), built in and custom
+
+| # | Feature | v1 | Decision | Status / class |
+|---|---|---|---|---|
+| L1 | Looks panel: tiles render the current photo, categories, search, favourites | none | KEEP | todo |
+| L2 | One strength slider per applied look (0 to 100), stored in the recipe | none | KEEP | todo |
+| L3 | About 30 built-in looks (colour, film, black and white, creative), made from library operations, shipped as files | none | KEEP | todo |
+| L4 | Custom look editor: ordered steps from the operation registry, enable, reorder, duplicate, parameters, preview on test images | none | KEEP | todo |
+| L5 | LUT steps: import `.cube` (1D and 3D) and HaldCLUT PNG | none | KEEP | todo |
+| L6 | Export a look as `.pfxlook`; bake the colour-only steps to a `.cube` | none | KEEP | todo |
+| L7 | Apply a look to the selection in the filmstrip | none | KEEP | todo |
+
+## E. Presets
+
+| # | Feature | v1 | Decision | Status / class |
+|---|---|---|---|---|
+| P1 | Save the current settings as a preset, choosing which groups it contains | none | KEEP | todo |
+| P2 | Preset library with groups: My presets, Imported, Built in; search; hover preview | none | KEEP | todo |
+| P3 | Preset row menu: apply to selected, rename, update with current, duplicate, export, show file, delete | none | KEEP | todo |
+| P4 | `.pfxpreset` JSON format, versioned, documented in `DOCS/presets.md`, readable by the library and the CLI | none | KEEP | todo |
+| P5 | Import Lightroom / Camera Raw `.xmp` presets: map the settings PixelFx has, report what was skipped. A headline feature: "use your Lightroom presets without a subscription" (owner, 2026-11-04) | none | KEEP | todo |
+| P6 | Import darktable styles | none | LATER | |
+| P7 | Built-in presets including "Auto enhance" (per-image analysis) | none | KEEP | todo |
+
+## F. Crop and geometry
+
+| # | Feature | v1 | Decision | Status / class |
+|---|---|---|---|---|
+| G1 | Crop mode with handles, dimmed outside, ratio chips (Free, Original, 1:1, 4:5, 5:7, 3:2, 16:9, 9:16, Custom), orientation swap, overlays | dialog, shapes, destructive | KEEP (non-destructive, in place) | todo |
+| G2 | Straighten: dial, slider, drawn level line | none | KEEP | todo |
+| G3 | Auto straighten (horizon detection) | none | LATER | |
+| G4 | Rotate 90 left and right, flip horizontal and vertical | rotate right only, flips stuck | KEEP | todo |
+| G5 | Perspective: vertical, horizontal sliders and four-corner keystone | none | KEEP | todo |
+| G6 | Lens corrections (distortion, chromatic aberration, vignetting by profile) | none | LATER | |
+| G7 | Elliptical and circular crops with transparent corners | yes | KEEP as an Export option "Round crop" for PNG/WebP | todo |
+| G8 | Resize as an edit (as opposed to on export) | none | DROP (resize lives in Export and Batch) | |
+
+## G. Many photos at once
+
+| # | Feature | v1 | Decision | Status / class |
+|---|---|---|---|---|
+| M1 | Filmstrip of every open photo; Ctrl and Shift selection; Ctrl+A | none | KEEP | todo |
+| M2 | With a selection, applying a look or preset, pasting settings, and Export act on all selected | none | KEEP | todo |
+| M3 | Batch page: add files and folders, recipe (looks and presets stacked, or settings from a photo), optional Auto first, resize, format, folder, name tokens | none | KEEP | todo |
+| M4 | Batch runs on all cores in the background with a memory cap; pause, stop, per-file status and reason, retry failed, notification | none | KEEP | todo |
+| M5 | Save and reuse batch recipes (`.pfxbatch`) | none | KEEP | todo |
+| M6 | Command line batch: `pixelfx --batch recipe.pfxbatch files...` and the library's own `pfx` CLI | none | KEEP | todo |
+| M7 | Watch folder (process new files automatically) | none | LATER | |
+| M8 | Convert and resize only: a Batch recipe with no edits, for jobs like HEIC to JPG or "shrink 300 photos for email"; one click from the welcome page | none | KEEP | todo |
+| M9 | Rename in batch with tokens and a live preview of the first names | none | KEEP | todo |
+| M10 | Optimise only (PixelBatch parity, PLAN D24; capability only, nothing from PixelBatch's interface or code, and no external tools: every step through linked libraries, ADR-002): shrink files without visible change. JPEG lossless (Huffman optimisation, progressive, strip metadata, through libjpeg-turbo's transform API) or to a target quality; PNG lossless (filter and deflate search with libpng and zopfli, Apache-2.0) or lossy palette quantisation (libimagequant-compatible, through libvips with the MIT `quantizr`, never the GPL libimagequant in the library); WebP and AVIF re-encode; GIF through cgif | PixelBatch: jpegoptim, pngquant, gifsicle | KEEP | todo |
+| M11 | Per-file results: original size, new size, saving in bytes and percent, totals; re-process with other settings; a before-and-after compare of any row at 100% (mock `batch-compress.html`) | PixelBatch | KEEP | todo |
+| M12 | Concurrent task limit, output folder or in place (asks once), name prefix or suffix, remember last folders | PixelBatch | KEEP (part of M3, M4) | todo |
+| M13 | SVG optimisation | PixelBatch (SVGO, Node) | DROP: not a photo format, would need a Node runtime; named in PixelBatch's farewell note | |
+
+## H. Export
+
+| # | Feature | v1 | Decision | Status / class |
+|---|---|---|---|---|
+| X1 | Export sheet: JPEG, PNG, WebP, AVIF, TIFF, JPEG XL, HEIC (where the platform allows); per-format options with correct semantics | Qt writers, inverted PNG slider | KEEP | todo |
+| X2 | Resize on export: long edge, width, height, megapixels, percent; never enlarge | none | KEEP | todo |
+| X3 | Output sharpening for screen or print | none | KEEP | todo |
+| X4 | Colour space: sRGB (default), Display P3, Adobe RGB, same as original; ICC embedded | dropped | KEEP | todo |
+| X5 | Metadata: keep camera details and copyright (default on), keep location (default off), strip all | dropped | KEEP | todo |
+| X6 | Folder, name tokens ({name}, {n}, {date}, {preset}, {w}, {h}), if-exists policy (number, overwrite with one confirmation, skip) | no overwrite check | KEEP | todo |
+| X7 | Estimated file size; options remembered | none | KEEP | todo |
+| X8 | Copy the result to the clipboard; share through the portal | none | KEEP (clipboard); LATER (share) | todo |
+| X9 | Export is off the GUI thread with progress; failures say why | use-after-free, silent | KEEP | todo |
+| X10 | Watermark on export and in batch: text (font, colour, opacity) or a logo image (PNG with alpha), nine anchor positions plus margin, size relative to the image, optional tiling; saved watermarks reused by name; never applied to the editor view | none | KEEP | todo |
+| X11 | Size presets for where the photo is going: Instagram post (1080 by 1350) and square (1080), story (1080 by 1920), Facebook, X, web (2048 long edge), email (1600), 4K wallpaper, print sizes at 300 dpi; crop ratio follows when the photo is cropped for it; user-defined sizes | none | KEEP | todo |
+
+## I. The core library (libpixelfx)
+
+| # | Feature | v1 | Decision | Status / class |
+|---|---|---|---|---|
+| C1 | Standalone C++20 library, no Qt, own CMake project in `libs/pixelfx-core`, Apache-2.0 (PLAN D13) | Go CLI, MIT | KEEP | done (libpixelfx 0.1.0) |
+| C2 | Float32 linear-light pipeline, tiled, resolution-independent parameters, deterministic output | 8-bit sRGB | KEEP | wip: float linear Rec.2020, relative radii, deterministic across thread counts done (`pfx::render`); tiled rendering inside libvips is M3 |
+| C3 | Operation registry with typed parameter schemas (id, range, default, unit, version); drives the UI, presets and look steps | flags | KEEP | done (`pfx::Registry`) |
+| C4 | Recipe, preset, look and batch formats with JSON (de)serialisation and migration by version | none | KEEP | wip: recipe and preset done (`pfx::Document`), unknown keys kept, newer versions refused; looks M4, batch M5; the first migration comes with format version 2 |
+| C5 | Codecs and metadata behind interfaces; dependencies per ADR-003 | Go stdlib png/jpeg | KEEP | wip: load and save through libvips with lcms2, orientation, Exif/XMP/IPTC kept (`pfx::load`, `pfx::save`); RAW, HEIC, AVIF, JPEG XL verified in M3 |
+| C6 | Batch engine (thread pool, memory budget, cancellation, progress callbacks) | none | KEEP | todo |
+| C7 | `pfx` command line tool (apply preset/look/recipe, convert, resize) | `pixel` | KEEP | wip: `pfx ops`, `pfx info`, `pfx apply` (presets, `--set`, format, quality, bits, long edge) done; batch recipes M5, LUT baking M4 |
+| C8 | Golden-image tests per operation with tolerances; fuzzed decoders and preset parsers | none | KEEP | wip: golden and scale tests per operation done; fuzzing M3 |
+| C9 | Python bindings | none | LATER | |
+| C10 | Public repository split (git subtree) | separate repo | LATER (owner decides when) | |
+
+## J. Settings surface
+
+| # | Feature | v1 | Decision | Status / class |
+|---|---|---|---|---|
+| T1 | Settings sheet with sidebar (General, Editor, Export, Batch, Presets and looks, Performance, Advanced), writes straight to settings | one checkbox | KEEP | todo |
+| T2 | Native or Qt file dialogs | yes | DROP (portal dialogs always; the kit's rule) | |
+| T3 | Canvas background (dark grey, middle grey, black, white) | none | KEEP | todo |
+| T4 | Display colour management (monitor profile) | none | KEEP | todo |
+| T5 | Sidecar location (app library by default, next to the photo as an option, PLAN D18) and "on open" behaviour | none | KEEP | todo |
+| T6 | Batch thread count, preview backend | none | KEEP | todo |
+
+## K. Accounts and licensing (never in user-facing release text)
+
+| # | Feature | v1 | Decision | Status / class |
+|---|---|---|---|---|
+| K1 | Shared AccountAndLicense module under its own licence (Model B), path reserved | none | KEEP (module) | todo |
+| K2 | What the module gates: decided by the owner, recorded in the private notes (`DOCS/private/business.md`) | none | KEEP | |
+| K3 | Old users: no account existed in v1, nothing to migrate | none | DROP | |
