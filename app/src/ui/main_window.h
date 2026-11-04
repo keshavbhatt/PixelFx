@@ -43,6 +43,8 @@ public:
     [[nodiscard]] AdjustPanel* adjustPanel() const { return m_adjust; }
     /// Shows the photo without its settings while `on` (the eye button, or Space held).
     void showOriginal(bool on);
+    /// Before and after on or off (the \\ key and the header button).
+    void setCompare(bool on);
 
     /// Whether `path` has an extension PixelFx opens.
     [[nodiscard]] static bool isSupported(const QString& path);
@@ -58,6 +60,7 @@ protected:
 private:
     void setupUi();
     void buildHeader();
+    void buildEditButtons();
     void setupActions();
     void connectDocument();
     void updateHistoryButtons();
@@ -80,6 +83,7 @@ private:
     QToolButton* m_redo = nullptr;
     QToolButton* m_original = nullptr;
     QToolButton* m_history = nullptr;
+    QToolButton* m_compare = nullptr;
     bool m_showingOriginal = false;
     QLabel* m_docName = nullptr;
     QLabel* m_docMeta = nullptr;

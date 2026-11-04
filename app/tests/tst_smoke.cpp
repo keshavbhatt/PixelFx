@@ -43,6 +43,11 @@ private Q_SLOTS:
         QVERIFY(window.canvas()->photoRect().isValid());
         QCOMPARE(window.windowTitle(), u"photo.jpg"_s);
         QCOMPARE(settings.recentFiles().first(), path);
+        // Before and after: the backslash toggles the split, Space shows the original while held.
+        QTest::keyClick(&window, Qt::Key_Backslash);
+        QVERIFY(window.canvas()->isComparing());
+        QTest::keyClick(&window, Qt::Key_Backslash);
+        QVERIFY(!window.canvas()->isComparing());
         window.close();
     }
 

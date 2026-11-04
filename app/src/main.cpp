@@ -4,6 +4,7 @@
 //   PIXELFX_DEBUG_OPEN=<file>          open this photo at start
 //   PIXELFX_DEBUG_WINDOW_SIZE=<w>x<h>  window size
 //   PIXELFX_DEBUG_PRESET=<file>        apply this preset or recipe once the photo is open
+//   PIXELFX_DEBUG_COMPARE=1            turn on before and after once the photo is open
 //   PIXELFX_DEBUG_SHEET=export         with GRAB: grab the Export sheet instead of the window
 //   PIXELFX_DEBUG_GRAB=<file.png>      grab the window once the photo is shown (or after 2 s
 //                                      with nothing to show) and quit
@@ -38,6 +39,10 @@ void applyDebugHooks(pixelfx::ui::MainWindow& window, QStringList& files)
                     window.document().apply(doc.value().settings, QFileInfo(preset).completeBaseName());
                 }
             });
+    }
+    if (qEnvironmentVariableIsSet("PIXELFX_DEBUG_COMPARE")) {
+        QObject::connect(&window.document(), &pixelfx::services::Document::opened, &window,
+                         [&window] { window.setCompare(true); });
     }
     const QString grab = qEnvironmentVariable("PIXELFX_DEBUG_GRAB");
     if (grab.isEmpty()) {

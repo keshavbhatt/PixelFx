@@ -177,6 +177,13 @@ void MainWindow::updateHistoryButtons()
                                    : tr("Redo (Ctrl+Shift+Z)"));
 }
 
+void MainWindow::setCompare(bool on)
+{
+    if (m_document.isOpen()) {
+        m_compare->setChecked(on);
+    }
+}
+
 void MainWindow::showHistory()
 {
     const core::History& h = m_document.history();
@@ -204,6 +211,30 @@ void MainWindow::showOriginal(bool on)
 
 MainWindow::~MainWindow() = default;
 
+void MainWindow::buildEditButtons()
+{
+    m_undo = headerButton(m_header, u"undo"_s, tr("Undo (Ctrl+Z)"));
+    m_redo = headerButton(m_header, u"redo"_s, tr("Redo (Ctrl+Shift+Z)"));
+    m_history = headerButton(m_header, u"history"_s, tr("History (H)"));
+    m_history->setEnabled(false);
+    connect(m_history, &QToolButton::clicked, this, &MainWindow::showHistory);
+    m_compare = headerButton(m_header, u"compare"_s, tr("Before and after (\\)"));
+    m_compare->setCheckable(true);
+    m_compare->setEnabled(false);
+    m_original = headerButton(m_header, u"original"_s, tr("Show the original while held (Space)"));
+    connect(m_undo, &QToolButton::clicked, &m_document, &services::Document::undo);
+    connect(m_redo, &QToolButton::clicked, &m_document, &services::Document::redo);
+    connect(m_original, &QToolButton::pressed, this, [this] { showOriginal(true); });
+    connect(m_original, &QToolButton::released, this, [this] { showOriginal(false); });
+    m_undo->setEnabled(false);
+    m_redo->setEnabled(false);
+    m_original->setEnabled(false);
+    m_export = new QPushButton(icons::themed(u"export"_s, tokens().text), tr("Export"), m_header);
+    m_export->setToolTip(tr("Save a copy with these settings (Ctrl+Shift+E)"));
+    m_export->setEnabled(false);
+    connect(m_export, &QPushButton::clicked, this, &MainWindow::exportPhoto);
+}
+
 void MainWindow::buildHeader()
 {
     m_header = new QWidget(this);
@@ -220,23 +251,7 @@ void MainWindow::buildHeader()
     doc->setSpacing(0);
     doc->addWidget(m_docName);
     doc->addWidget(m_docMeta);
-    m_undo = headerButton(m_header, u"undo"_s, tr("Undo (Ctrl+Z)"));
-    m_redo = headerButton(m_header, u"redo"_s, tr("Redo (Ctrl+Shift+Z)"));
-    m_history = headerButton(m_header, u"history"_s, tr("History (H)"));
-    m_history->setEnabled(false);
-    connect(m_history, &QToolButton::clicked, this, &MainWindow::showHistory);
-    m_original = headerButton(m_header, u"original"_s, tr("Show the original while held (Space)"));
-    connect(m_undo, &QToolButton::clicked, &m_document, &services::Document::undo);
-    connect(m_redo, &QToolButton::clicked, &m_document, &services::Document::redo);
-    connect(m_original, &QToolButton::pressed, this, [this] { showOriginal(true); });
-    connect(m_original, &QToolButton::released, this, [this] { showOriginal(false); });
-    m_undo->setEnabled(false);
-    m_redo->setEnabled(false);
-    m_original->setEnabled(false);
-    m_export = new QPushButton(icons::themed(u"export"_s, tokens().text), tr("Export"), m_header);
-    m_export->setToolTip(tr("Save a copy with these settings (Ctrl+Shift+E)"));
-    m_export->setEnabled(false);
-    connect(m_export, &QPushButton::clicked, this, &MainWindow::exportPhoto);
+    buildEditButtons();
     auto* menuButton = headerButton(m_header, u"menu"_s, tr("Main menu (F10)"));
     menuButton->setPopupMode(QToolButton::InstantPopup);
     auto* menu = new QMenu(menuButton);
@@ -260,6 +275,7 @@ void MainWindow::buildHeader()
     header->addWidget(m_redo);
     header->addWidget(m_history);
     header->addSpacing(8);
+    header->addWidget(m_compare);
     header->addWidget(m_original);
     header->addSpacing(8);
     header->addWidget(m_export);
@@ -273,6 +289,7 @@ void MainWindow::setupUi()
     m_welcome = new WelcomePage(this);
     connect(m_welcome, &WelcomePage::openRequested, this, &MainWindow::chooseFiles);
     m_canvas = new Canvas(this);
+    connect(m_compare, &QToolButton::toggled, m_canvas, &Canvas::setCompare);
     m_toast = new QLabel(m_canvas);
     m_toast->setObjectName(u"toast"_s);
     m_toast->setAttribute(Qt::WA_StyledBackground);
@@ -336,7 +353,14 @@ void MainWindow::setupActions()
             showHistory();
         }
     });
-    addActions({openAction, quitAction, fullScreen, undo, redo, resetAll, exportAction, history});
+    auto* compare = new QAction(tr("Before and after"), this);
+    compare->setShortcut(QKeySequence(Qt::Key_Backslash));
+    connect(compare, &QAction::triggered, this, [this] {
+        if (m_document.isOpen()) {
+            m_compare->toggle();
+        }
+    });
+    addActions({openAction, quitAction, fullScreen, undo, redo, resetAll, exportAction, history, compare});
 }
 
 bool MainWindow::isSupported(const QString& path)
@@ -381,7 +405,9 @@ void MainWindow::showOpened(const services::DocumentInfo& info)
     m_settings.addRecentFile(info.path);
     m_adjust->show();
     m_original->setEnabled(true);
+    m_compare->setEnabled(true);
     m_export->setEnabled(true);
+    m_canvas->setOriginal(m_document.original());
     m_showingOriginal = false;
 }
 

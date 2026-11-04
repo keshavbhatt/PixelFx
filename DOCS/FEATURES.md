@@ -70,7 +70,7 @@ preview and export use resolution-independent parameters so they match (v1 defec
 | E10 | Auto: one click sets Light and Color from the image statistics | none | KEEP | todo |
 | E11 | Live preview while dragging (no apply on release), 60 fps target on the preview size | apply on release, one process per apply | KEEP | wip: live while dragging, newest request first (`RenderScheduler`); speed work (tiles, SIMD) in M3 |
 | E12 | Histogram (RGB, luminance), clipping warnings (J), camera line | RGB on GUI thread | KEEP | wip: RGB histogram computed on the render worker (`core::Histogram`, `HistogramView`); clipping counts computed, the J overlay and the camera line later in M3 |
-| E13 | Before and after: split with divider, side by side, hold Space for the original | hold button | KEEP | wip: hold Space or the eye button done (`MainWindow::showOriginal`); split and side by side in M3 |
+| E13 | Before and after: split with divider, side by side, hold Space for the original | hold button | KEEP | wip: the split with a draggable divider (\\) and holding Space done (`Canvas`, `MainWindow`); side by side in M3 |
 | E14 | Undo and redo for every change; History list; named snapshots | none | KEEP | wip: undo, redo and the History popup (H) with jump to any step done (`core::History`, `MainWindow::showHistory`); named snapshots in M3 |
 | E15 | Copy and paste settings between photos, choose groups | none | KEEP | todo |
 | E16 | Reset a slider (double-click), a group, or everything | per row, global | KEEP | done (`AdjustPanel`) |

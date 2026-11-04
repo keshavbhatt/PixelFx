@@ -21,6 +21,13 @@ public:
     void setImage(const QImage& image, const QSize& fullSize);
     /// Swaps the shown pixels (same photo: original or edited) without touching the full size.
     void showImage(const QImage& image);
+    /// Before and after: the original left of a draggable divider, the edit to the right.
+    void setCompare(bool on);
+    [[nodiscard]] bool isComparing() const { return m_compare; }
+    void setOriginal(const QImage& original);
+    /// Divider position, 0 (all edited) to 1 (all original); starts in the middle.
+    [[nodiscard]] double split() const { return m_split; }
+    void setSplit(double split);
     void setStatus(const QString& text);
     void setError(const QString& text);
     [[nodiscard]] const QImage& image() const { return m_image; }
@@ -29,8 +36,16 @@ public:
 
 protected:
     void paintEvent(QPaintEvent* event) override;
+    void mousePressEvent(QMouseEvent* event) override;
+    void mouseMoveEvent(QMouseEvent* event) override;
+    void mouseReleaseEvent(QMouseEvent* event) override;
 
 private:
+    void paintCompare(class QPainter& painter, const QRect& target);
+    QImage m_original;
+    bool m_compare = false;
+    bool m_dragging = false;
+    double m_split = 0.5;
     QImage m_image;
     QSize m_fullSize;
     QString m_status;
