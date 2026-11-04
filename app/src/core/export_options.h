@@ -20,6 +20,7 @@ struct ExportOptions
     int bitsPerSample = 8;
     int longEdge = 0; ///< 0: original size
     bool keepMetadata = true;
+    bool keepLocation = false; ///< off by default for privacy (mock export.html)
     QString folder;
     QString nameTemplate = QStringLiteral("{name}-edit");
     IfExists ifExists = IfExists::AddNumber;

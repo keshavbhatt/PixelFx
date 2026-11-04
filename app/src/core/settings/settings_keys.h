@@ -12,6 +12,7 @@ inline constexpr auto kExportQuality = "export/quality";
 inline constexpr auto kExportBits = "export/bitsPerSample";
 inline constexpr auto kExportLongEdge = "export/longEdge";
 inline constexpr auto kExportKeepMetadata = "export/keepMetadata";
+inline constexpr auto kExportKeepLocation = "export/keepLocation";
 inline constexpr auto kExportFolder = "export/folder";
 inline constexpr auto kExportNameTemplate = "export/nameTemplate";
 inline constexpr auto kExportIfExists = "export/ifExists";

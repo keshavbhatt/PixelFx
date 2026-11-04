@@ -98,7 +98,16 @@ ExportSheet::ExportSheet(const QString& source, const QSize& photoSize, const co
 
     m_metadata = new QCheckBox(tr("Keep camera details and copyright"), this);
     m_metadata->setChecked(options.keepMetadata);
-    form->addRow(tr("Metadata"), m_metadata);
+    m_location = new QCheckBox(tr("Keep location"), this);
+    m_location->setChecked(options.keepLocation);
+    m_location->setToolTip(tr("Where the photo was taken (GPS). Off unless you choose to share it."));
+    m_location->setEnabled(options.keepMetadata);
+    connect(m_metadata, &QCheckBox::toggled, m_location, &QWidget::setEnabled);
+    auto* metadata = new QVBoxLayout;
+    metadata->setSpacing(4);
+    metadata->addWidget(m_metadata);
+    metadata->addWidget(m_location);
+    form->addRow(tr("Metadata"), metadata);
 
     form->addRow(tr("Save to"), folderRow());
 
@@ -283,6 +292,7 @@ core::ExportOptions ExportSheet::options() const
     o.bitsPerSample = (formatFor(o.extension)->deep && m_sixteen->isChecked()) ? 16 : 8;
     o.longEdge = m_size->currentIndex() == 1 ? m_longEdge->value() : 0;
     o.keepMetadata = m_metadata->isChecked();
+    o.keepLocation = m_location->isChecked();
     o.folder = m_folderPath;
     o.nameTemplate = m_name->text();
     o.ifExists = static_cast<core::ExportOptions::IfExists>(m_ifExists->currentData().toInt());

@@ -51,6 +51,7 @@ private:
     QComboBox* m_size = nullptr;
     QSpinBox* m_longEdge = nullptr;
     QCheckBox* m_metadata = nullptr;
+    QCheckBox* m_location = nullptr;
     QLabel* m_folder = nullptr;
     QLineEdit* m_name = nullptr;
     QLabel* m_extension = nullptr;

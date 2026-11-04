@@ -62,6 +62,7 @@ Outcome exportOnWorker(const QString& source, const pfx::Settings& settings,
     save.quality = options.quality;
     save.bitsPerSample = options.bitsPerSample;
     save.keepMetadata = options.keepMetadata;
+    save.keepLocation = options.keepLocation;
     const auto saved = pfx::save(image, out.target.toStdString(), save, &loaded.value().metadata);
     if (!saved) {
         return fail(saved.error().message);

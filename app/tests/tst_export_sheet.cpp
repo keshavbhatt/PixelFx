@@ -25,11 +25,27 @@ private Q_SLOTS:
         in.bitsPerSample = 16;
         in.longEdge = 1600;
         in.keepMetadata = false;
+        in.keepLocation = true;
         in.folder = u"/tmp/out"_s;
         in.nameTemplate = u"{name}-web"_s;
         in.ifExists = ExportOptions::IfExists::Skip;
         const ExportSheet sheet(u"/p/photo.jpg"_s, QSize(6000, 4000), in);
         QCOMPARE(sheet.options(), in);
+    }
+
+    void locationIsOffByDefaultAndFollowsMetadata()
+    {
+        const ExportSheet sheet(u"/p/photo.jpg"_s, QSize(600, 400), ExportOptions{});
+        QVERIFY(!sheet.options().keepLocation);
+        auto boxes = sheet.findChildren<QCheckBox*>();
+        QCheckBox* metadata = nullptr;
+        QCheckBox* location = nullptr;
+        for (QCheckBox* b : boxes) {
+            (b->text() == u"Keep location"_s ? location : metadata) = b;
+        }
+        QVERIFY(metadata && location);
+        metadata->setChecked(false);
+        QVERIFY(!location->isEnabled());
     }
 
     void switchingToJpegDropsSixteenBits()
