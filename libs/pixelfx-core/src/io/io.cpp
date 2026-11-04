@@ -5,13 +5,18 @@
 
 #include "core/log_internal.h"
 #include "core/parallel.h"
+#include "ops/value_table.h"
+#include "pfx/color.h"
 
 #include <algorithm>
 #include <array>
+#include <atomic>
 #include <cctype>
+#include <cmath>
 #include <lcms2.h>
 #include <memory>
 #include <mutex>
+#include <optional>
 #include <string_view>
 #include <vips/vips8>
 
@@ -19,7 +24,6 @@ namespace pfx {
 namespace {
 
 using ProfilePtr = std::unique_ptr<void, decltype(&cmsCloseProfile)>;
-using TransformPtr = std::unique_ptr<void, decltype(&cmsDeleteTransform)>;
 
 void ensureVips()
 {
@@ -57,23 +61,111 @@ std::vector<std::uint8_t> profileBytes(cmsHPROFILE profile)
     return bytes;
 }
 
-// Runs a float RGBA transform over the image in place, in parallel. The transform is created
-// with cmsFLAGS_NOCACHE so it is safe to share between threads.
-void transformInPlace(cmsHTRANSFORM transform, Image& image)
+// Converts RGBA float rows between two RGB profiles, in place. When both profiles are
+// matrix-shapers with no lookup tables (sRGB, Display P3, Adobe RGB, the working space: nearly
+// every photo), that is three tone curves, a 3 by 3 matrix and three more curves, read from the
+// profiles themselves and tabulated, several times faster than LittleCMS's float path. Other
+// profiles go through LittleCMS.
+class RowConverter
+{
+public:
+    static std::optional<RowConverter> create(cmsHPROFILE from, cmsHPROFILE to)
+    {
+        RowConverter c;
+        if (matrixShaper(from, cmsSigAToB0Tag) && matrixShaper(to, cmsSigBToA0Tag)) {
+            c.m_matrix = color::multiply(color::inverse(colorants(to)), colorants(from));
+            for (std::size_t i = 0; i < 3; ++i) {
+                c.m_decode.at(i) = curveTable(from, kTrcTags.at(i), false);
+                c.m_encode.at(i) = curveTable(to, kTrcTags.at(i), true);
+            }
+            return c;
+        }
+        c.m_lcms = makeTransform(from, to);
+        if (!c.m_lcms) {
+            return std::nullopt;
+        }
+        return c;
+    }
+
+    void operator()(float* row, int width) const
+    {
+        if (m_lcms) {
+            cmsDoTransform(m_lcms.get(), row, row, static_cast<cmsUInt32Number>(width));
+            return;
+        }
+        for (int x = 0; x < width; ++x, row += 4) {
+            color::Vec3 v{};
+            for (std::size_t c = 0; c < 3; ++c) {
+                v.at(c) = m_decode.at(c) ? (*m_decode.at(c))(double{row[c]}) : double{row[c]};
+            }
+            v = color::transform(m_matrix, v);
+            for (std::size_t c = 0; c < 3; ++c) {
+                row[c] = static_cast<float>(m_encode.at(c) ? (*m_encode.at(c))(v.at(c)) : v.at(c));
+            }
+        }
+    }
+
+private:
+    static constexpr std::array<cmsTagSignature, 3> kTrcTags = {cmsSigRedTRCTag, cmsSigGreenTRCTag,
+                                                                cmsSigBlueTRCTag};
+
+    static bool matrixShaper(cmsHPROFILE profile, cmsTagSignature lut)
+    {
+        return cmsIsMatrixShaper(profile) != 0 && cmsIsTag(profile, lut) == 0 &&
+               cmsGetColorSpace(profile) == cmsSigRgbData;
+    }
+
+    // RGB to the profile connection space (XYZ, D50): the colorant tags are its columns.
+    static color::Mat3 colorants(cmsHPROFILE profile)
+    {
+        const std::array<cmsTagSignature, 3> tags = {cmsSigRedColorantTag, cmsSigGreenColorantTag,
+                                                     cmsSigBlueColorantTag};
+        color::Mat3 m{};
+        for (std::size_t c = 0; c < 3; ++c) {
+            const auto* xyz = static_cast<const cmsCIEXYZ*>(cmsReadTag(profile, tags.at(c)));
+            m[0][c] = xyz->X;
+            m[1][c] = xyz->Y;
+            m[2][c] = xyz->Z;
+        }
+        return m;
+    }
+
+    // The profile's tone curve (decoding) or its inverse (encoding) as a table; none when it is
+    // linear. Negative values pass through the curve's start, as the clamp after does anyway.
+    static std::shared_ptr<detail::ValueTable> curveTable(cmsHPROFILE profile, cmsTagSignature tag,
+                                                          bool inverse)
+    {
+        const auto* curve = static_cast<const cmsToneCurve*>(cmsReadTag(profile, tag));
+        if (curve == nullptr || cmsIsToneCurveLinear(curve) != 0) {
+            return nullptr;
+        }
+        const std::shared_ptr<cmsToneCurve> owned(
+            inverse ? cmsReverseToneCurve(curve) : cmsDupToneCurve(curve), &cmsFreeToneCurve);
+        return std::make_shared<detail::ValueTable>([owned](double v) {
+            return double{cmsEvalToneCurveFloat(owned.get(), static_cast<cmsFloat32Number>(v))};
+        });
+    }
+
+    color::Mat3 m_matrix{};
+    std::array<std::shared_ptr<detail::ValueTable>, 3> m_decode;
+    std::array<std::shared_ptr<detail::ValueTable>, 3> m_encode;
+    std::shared_ptr<void> m_lcms;
+
+    static std::shared_ptr<void> makeTransform(cmsHPROFILE from, cmsHPROFILE to)
+    {
+        cmsHTRANSFORM t = cmsCreateTransform(from, TYPE_RGBA_FLT, to, TYPE_RGBA_FLT, INTENT_PERCEPTUAL,
+                                             cmsFLAGS_NOCACHE | cmsFLAGS_COPY_ALPHA);
+        return t == nullptr ? nullptr : std::shared_ptr<void>(t, &cmsDeleteTransform);
+    }
+};
+
+void convertInPlace(const RowConverter& convert, Image& image)
 {
     detail::parallelFor(image.height(), 0, [&](int y0, int y1) {
         for (int y = y0; y < y1; ++y) {
-            cmsDoTransform(transform, image.row(y), image.row(y),
-                           static_cast<cmsUInt32Number>(image.width()));
+            convert(image.row(y), image.width());
         }
     });
-}
-
-TransformPtr makeTransform(cmsHPROFILE from, cmsHPROFILE to)
-{
-    return {cmsCreateTransform(from, TYPE_RGBA_FLT, to, TYPE_RGBA_FLT, INTENT_PERCEPTUAL,
-                               cmsFLAGS_NOCACHE | cmsFLAGS_COPY_ALPHA),
-            &cmsDeleteTransform};
 }
 
 std::vector<std::uint8_t> blob(const vips::VImage& image, const char* name)
@@ -93,23 +185,6 @@ std::string lowerExtension(const std::filesystem::path& path)
     std::ranges::transform(ext, ext.begin(),
                            [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
     return ext;
-}
-
-// Clamps to 0..1 and scales to the output's integer range in place; reports whether every
-// pixel is fully opaque (the alpha band is then dropped).
-bool quantize(Image& image, double scale)
-{
-    bool opaque = true;
-    float* p = image.data();
-    const std::size_t count = image.pixelCount() * 4;
-    for (std::size_t i = 0; i < count; ++i) {
-        const auto v = double{std::clamp(p[i], 0.0F, 1.0F)};
-        if (i % 4 == 3 && v < 1.0) {
-            opaque = false;
-        }
-        p[i] = static_cast<float>(std::round(v * scale));
-    }
-    return opaque;
 }
 
 void attachMetadata(vips::VImage& img, const Metadata& metadata)
@@ -234,16 +309,19 @@ Result<LoadedImage> load(const std::filesystem::path& path, const LoadOptions& o
             in = in.resize(static_cast<double>(options.maxLongEdge) / std::max(in.width(), in.height()));
         }
         in = normalizeBands(in, scale);
+        if (scale != 1.0) {
+            in = in.linear(1.0 / scale, 0.0).cast(VIPS_FORMAT_FLOAT);
+        }
         result.info.width = in.width();
         result.info.height = in.height();
         result.image = Image(in.width(), in.height());
-        std::size_t size = 0;
-        void* memory = in.write_to_memory(&size);
-        const std::unique_ptr<void, decltype(&g_free)> guard(memory, &g_free);
-        const auto* src = static_cast<const float*>(memory);
-        const std::size_t count = size / sizeof(float);
-        const auto inv = static_cast<float>(1.0 / scale);
-        std::transform(src, src + count, result.image.data(), [inv](float v) { return v * inv; });
+        // libvips decodes and scales straight into the image's own buffer, in parallel.
+        const vips::VImage target =
+            vips::VImage::new_from_memory(result.image.data(), result.image.pixelCount() * 4 * sizeof(float),
+                                          in.width(), in.height(), 4, VIPS_FORMAT_FLOAT);
+        if (vips_image_write(in.get_image(), target.get_image()) != 0) {
+            throw vips::VError();
+        }
     } catch (const vips::VError& e) {
         return Error{ErrorCode::DecodeFailed, std::string("Could not read the image: ") + e.what()};
     }
@@ -259,13 +337,67 @@ Result<LoadedImage> load(const std::filesystem::path& path, const LoadOptions& o
         source = srgbProfile();
     }
     const ProfilePtr working = workingProfile();
-    const TransformPtr transform = makeTransform(source.get(), working.get());
-    if (!transform) {
+    const auto convert = RowConverter::create(source.get(), working.get());
+    if (!convert) {
         return Error{ErrorCode::ColorManagement, "The image's colour profile could not be used."};
     }
-    transformInPlace(transform.get(), result.image);
+    convertInPlace(*convert, result.image);
     return result;
 }
+
+namespace {
+
+// Whether any pixel is less than fully opaque.
+bool hasTranslucency(const Image& image)
+{
+    std::atomic<bool> translucent = false;
+    detail::parallelFor(image.height(), 0, [&](int y0, int y1) {
+        for (int y = y0; y < y1 && !translucent; ++y) {
+            const float* p = image.row(y);
+            for (int x = 0; x < image.width(); ++x) {
+                if (p[(x * 4) + 3] < 1.0F) {
+                    translucent = true;
+                    break;
+                }
+            }
+        }
+    });
+    return translucent;
+}
+
+// The image as sRGB samples of `bands` bands at 8 or 16 bits, ready for libvips: each row is
+// converted from a copy, clamped and rounded, in parallel, with no full-size float copy.
+std::vector<std::uint8_t> encodeRows(const Image& image, const RowConverter& convert, int bands, bool sixteen)
+{
+    const double range = sixteen ? 65535.0 : 255.0;
+    const auto width = static_cast<std::size_t>(image.width());
+    const auto stride = static_cast<std::size_t>(bands);
+    std::vector<std::uint8_t> bytes(image.pixelCount() * stride * (sixteen ? 2 : 1));
+    auto* wide =
+        reinterpret_cast<std::uint16_t*>(bytes.data()); // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
+    detail::parallelFor(image.height(), 0, [&](int y0, int y1) {
+        std::vector<float> row(width * 4);
+        for (int y = y0; y < y1; ++y) {
+            std::copy_n(image.row(y), row.size(), row.begin());
+            convert(row.data(), image.width());
+            const std::size_t base = static_cast<std::size_t>(y) * width * stride;
+            for (std::size_t x = 0; x < width; ++x) {
+                for (std::size_t c = 0; c < stride; ++c) {
+                    const auto level = std::lround(double{std::clamp(row[(x * 4) + c], 0.0F, 1.0F)} * range);
+                    const std::size_t at = base + (x * stride) + c;
+                    if (sixteen) {
+                        wide[at] = static_cast<std::uint16_t>(level);
+                    } else {
+                        bytes[at] = static_cast<std::uint8_t>(level);
+                    }
+                }
+            }
+        }
+    });
+    return bytes;
+}
+
+} // namespace
 
 Status save(const Image& image, const std::filesystem::path& path, const SaveOptions& options,
             const Metadata* metadata)
@@ -278,22 +410,19 @@ Status save(const Image& image, const std::filesystem::path& path, const SaveOpt
     const bool jpeg = ext == ".jpg" || ext == ".jpeg";
     const bool sixteen = options.bitsPerSample == 16 && (ext == ".png" || ext == ".tif" || ext == ".tiff");
 
-    Image out = image;
     const ProfilePtr working = workingProfile();
     const ProfilePtr srgb = srgbProfile();
-    const TransformPtr transform = makeTransform(working.get(), srgb.get());
-    if (!transform) {
+    const auto convert = RowConverter::create(working.get(), srgb.get());
+    if (!convert) {
         return Error{ErrorCode::ColorManagement, "Could not prepare the sRGB conversion."};
     }
-    transformInPlace(transform.get(), out);
-    const bool opaque = quantize(out, sixteen ? 65535.0 : 255.0);
+    // Alpha is kept only when some pixel is not fully opaque (and never in a JPEG).
+    const int bands = (!jpeg && hasTranslucency(image)) ? 4 : 3;
+    std::vector<std::uint8_t> bytes = encodeRows(image, *convert, bands, sixteen);
     try {
-        vips::VImage img = vips::VImage::new_from_memory(out.data(), out.pixelCount() * 4 * sizeof(float),
-                                                         out.width(), out.height(), 4, VIPS_FORMAT_FLOAT);
-        if (opaque || jpeg) {
-            img = img.extract_band(0, vips::VImage::option()->set("n", 3));
-        }
-        img = img.cast(sixteen ? VIPS_FORMAT_USHORT : VIPS_FORMAT_UCHAR);
+        vips::VImage img =
+            vips::VImage::new_from_memory(bytes.data(), bytes.size(), image.width(), image.height(), bands,
+                                          sixteen ? VIPS_FORMAT_USHORT : VIPS_FORMAT_UCHAR);
         img = img.copy(vips::VImage::option()->set("interpretation", sixteen ? VIPS_INTERPRETATION_RGB16
                                                                              : VIPS_INTERPRETATION_sRGB));
         const auto icc = profileBytes(srgb.get());
@@ -318,8 +447,8 @@ Result<Rgba8Image> toSrgb8(const Image& image)
     const ProfilePtr srgb = srgbProfile();
     // Float to float, then rounded here exactly as save() does: LittleCMS's own float-to-8-bit
     // path rounds differently between versions (up to 3 levels with 2.14).
-    const TransformPtr transform = makeTransform(working.get(), srgb.get());
-    if (!transform) {
+    const auto convert = RowConverter::create(working.get(), srgb.get());
+    if (!convert) {
         return Error{ErrorCode::ColorManagement, "Could not prepare the sRGB conversion."};
     }
     Rgba8Image out;
@@ -330,8 +459,8 @@ Result<Rgba8Image> toSrgb8(const Image& image)
     detail::parallelFor(image.height(), 0, [&](int y0, int y1) {
         std::vector<float> row(rowValues);
         for (int y = y0; y < y1; ++y) {
-            cmsDoTransform(transform.get(), image.row(y), row.data(),
-                           static_cast<cmsUInt32Number>(image.width()));
+            std::copy_n(image.row(y), rowValues, row.begin());
+            (*convert)(row.data(), image.width());
             std::uint8_t* dst = out.pixels.data() + static_cast<std::size_t>(y) * rowValues;
             for (std::size_t i = 0; i < rowValues; ++i) {
                 const auto v = double{std::clamp(row[i], 0.0F, 1.0F)};

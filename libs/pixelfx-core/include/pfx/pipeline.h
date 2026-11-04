@@ -20,5 +20,9 @@ struct RenderOptions
 // full-size export (ADR-004). Identity settings cost nothing.
 [[nodiscard]] Result<Image> render(const Image& input, const Settings& settings,
                                    const RenderOptions& options = {});
+// The same, working in `input`'s own memory: for a caller done with the source (an export),
+// it saves a full-size copy.
+[[nodiscard]] Result<Image> render(Image&& input, const Settings& settings,
+                                   const RenderOptions& options = {});
 
 } // namespace pfx

@@ -35,7 +35,7 @@ Outcome exportOnWorker(const QString& source, const pfx::Settings& settings,
     if (!loaded) {
         return fail(loaded.error().message);
     }
-    auto rendered = pfx::render(loaded.value().image, settings);
+    auto rendered = pfx::render(std::move(loaded.value().image), settings);
     if (!rendered) {
         return fail(rendered.error().message);
     }

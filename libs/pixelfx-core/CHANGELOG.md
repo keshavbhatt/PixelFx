@@ -5,6 +5,15 @@ Semantic Versioning (the API may change before 1.0).
 
 ## [Unreleased]
 
+### Changed
+
+- About three times faster on a 24 MP photo (3.4 s to 1.1 s for load, a typical edit and a
+  JPEG save on 14 threads), with a third less memory: pointwise steps read precomputed tables,
+  blurs walk memory along rows and run on every core, colour conversion between matrix-shaper
+  profiles is a matrix and tabulated curves (LittleCMS for the rest), loading decodes straight
+  into the image and saving converts row by row into the output buffer.
+- `render` takes the image by move when the caller is done with it.
+
 ### Added
 
 - Geometry: quarter turns, flips, straightening with an automatic inscribed crop, and crop by

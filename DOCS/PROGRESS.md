@@ -77,6 +77,20 @@
   nothing. Before and after now uses an original with the same geometry, so the halves line up.
   Not yet: the straighten dial under the photo, the level line, Auto straighten, Custom ratio
   and Perspective (the library has no perspective op yet). 19 app suites pass.
+- Effects (vignette, grain, fade), Color mixer (eight bands) and colour grading (split toning)
+  in the library; Effects and Color mixer groups in the panel from `editor.html`. Colour
+  grading has no approved panel yet: `mocks/editor-grading.html` and its review are waiting for
+  the owner (two questions in the review: a midtones wheel, own group or inside Color).
+- The app opens what the libvips build reads (`pfx::readableExtensions`); dev builds now build
+  libheif with libde265 and dav1d, libjxl 0.12 and LibRaw 0.22 (ADR-008 update), so HEIC,
+  AVIF, JPEG XL and camera RAW open in dev runs. The welcome page shows Recent photos with
+  their remembered edits.
+- Speed: a 24 MP JPEG with a typical edit (light, white balance, curves, clarity, sharpen,
+  vignette) loads, renders and saves in 1.1 s, down from 3.4 s (M3 target 1.5 s, met on a
+  14-thread machine); peak memory 0.98 GB, down from 1.33 GB. Measured with `pfx apply` and
+  per-step timing. Bounded memory (tiled rendering) is still open.
+- CI: Windows (MSVC, vcpkg) green for the first time; macOS failed on a test that used
+  QTest::mouseMove (it moves the real cursor there), fixed.
 - 2026-11-05: dev libvips reads HEIC, AVIF, JPEG XL and camera RAW (ADR-008 update):
   `build-deps.sh` builds libheif 1.23.7 (libde265 1.1.3, dav1d 1.5.4), libjxl 0.12.0 (highway
   1.4.0) and LibRaw 0.22.3 against the SDK overlay, about 2.5 minutes from scratch on 14 cores;

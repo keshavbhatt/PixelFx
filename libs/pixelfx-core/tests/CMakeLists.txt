@@ -24,7 +24,7 @@ add_executable(pfx_tests
     test_resample.cpp
 )
 target_include_directories(pfx_tests PRIVATE ${PROJECT_SOURCE_DIR}/src)
-target_link_libraries(pfx_tests PRIVATE pfx::core doctest::doctest PkgConfig::VIPS)
+target_link_libraries(pfx_tests PRIVATE pfx::core doctest::doctest PkgConfig::VIPS PkgConfig::LCMS2)
 target_compile_definitions(pfx_tests PRIVATE PFX_GOLDEN_DIR="${CMAKE_CURRENT_SOURCE_DIR}/golden")
 pfx_set_warnings(pfx_tests)
 

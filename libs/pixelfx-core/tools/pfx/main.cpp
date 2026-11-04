@@ -249,7 +249,7 @@ int apply(int argc, char* const* argv)
         const pfx::Settings settings = args.autoFirst
                                            ? pfx::autoAdjust(loaded.value().image).overlaidWith(args.settings)
                                            : args.settings;
-        const auto rendered = pfx::render(loaded.value().image, settings);
+        const auto rendered = pfx::render(std::move(loaded.value().image), settings);
         if (!rendered) {
             std::cerr << file << ": " << rendered.error().message << "\n";
             status = 1;

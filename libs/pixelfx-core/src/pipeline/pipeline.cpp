@@ -33,6 +33,11 @@ constexpr std::array<detail::OpImpl, 14> kImpls = {{
 
 Result<Image> render(const Image& input, const Settings& settings, const RenderOptions& options)
 {
+    return render(Image(input), settings, options);
+}
+
+Result<Image> render(Image&& input, const Settings& settings, const RenderOptions& options)
+{
     if (input.empty()) {
         return Error{ErrorCode::InvalidArgument, "Nothing to render: the image is empty."};
     }
@@ -40,7 +45,7 @@ Result<Image> render(const Image& input, const Settings& settings, const RenderO
     for (const std::string& line : registry().normalize(checked)) {
         detail::log(LogLevel::Debug, line);
     }
-    Image image = input;
+    Image image = std::move(input);
     const detail::OpContext ctx{options.threads};
     for (const OpSpec& spec : registry().ops()) {
         if (options.cancel != nullptr && options.cancel->load()) {

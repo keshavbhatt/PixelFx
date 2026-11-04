@@ -49,18 +49,28 @@ std::vector<float> gaussianKernel(double sigma)
 }
 
 // One 1D pass along rows (horizontal) or columns, with a kernel or a box of half-width r.
+// Edges clamp. Every pass walks memory along rows, so it stays in cache.
 void convolveRows(const Plane& in, Plane& out, const std::vector<float>& kernel, int threads)
 {
     const auto radius = static_cast<int>(kernel.size() / 2);
+    const int width = in.width;
     parallelFor(in.height, threads, [&](int y0, int y1) {
         for (int y = y0; y < y1; ++y) {
-            for (int x = 0; x < in.width; ++x) {
+            const float* row = &in.values[static_cast<std::size_t>(y) * static_cast<std::size_t>(width)];
+            float* dst = &out.values[static_cast<std::size_t>(y) * static_cast<std::size_t>(width)];
+            for (int x = 0; x < width; ++x) {
                 float acc = 0.0F;
-                for (std::size_t j = 0; j < kernel.size(); ++j) {
-                    const int sx = std::clamp(x + static_cast<int>(j) - radius, 0, in.width - 1);
-                    acc += kernel[j] * in.at(sx, y);
+                if (x >= radius && x + radius < width) { // interior: no clamping
+                    const float* src = row + (x - radius);
+                    for (std::size_t j = 0; j < kernel.size(); ++j) {
+                        acc += kernel[j] * src[j];
+                    }
+                } else {
+                    for (std::size_t j = 0; j < kernel.size(); ++j) {
+                        acc += kernel[j] * row[std::clamp(x + static_cast<int>(j) - radius, 0, width - 1)];
+                    }
                 }
-                out.at(x, y) = acc;
+                dst[x] = acc;
             }
         }
     });
@@ -69,15 +79,18 @@ void convolveRows(const Plane& in, Plane& out, const std::vector<float>& kernel,
 void convolveColumns(const Plane& in, Plane& out, const std::vector<float>& kernel, int threads)
 {
     const auto radius = static_cast<int>(kernel.size() / 2);
+    const auto width = static_cast<std::size_t>(in.width);
     parallelFor(in.height, threads, [&](int y0, int y1) {
         for (int y = y0; y < y1; ++y) {
-            for (int x = 0; x < in.width; ++x) {
-                float acc = 0.0F;
-                for (std::size_t j = 0; j < kernel.size(); ++j) {
-                    const int sy = std::clamp(y + static_cast<int>(j) - radius, 0, in.height - 1);
-                    acc += kernel[j] * in.at(x, sy);
+            float* dst = &out.values[static_cast<std::size_t>(y) * width];
+            std::fill(dst, dst + width, 0.0F);
+            for (std::size_t j = 0; j < kernel.size(); ++j) {
+                const int sy = std::clamp(y + static_cast<int>(j) - radius, 0, in.height - 1);
+                const float* src = &in.values[static_cast<std::size_t>(sy) * width];
+                const float w = kernel[j];
+                for (std::size_t x = 0; x < width; ++x) {
+                    dst[x] += w * src[x];
                 }
-                out.at(x, y) = acc;
             }
         }
     });
@@ -101,19 +114,32 @@ void boxRows(const Plane& in, Plane& out, int r, int threads)
     });
 }
 
+// A running sum per column, carried down the rows: each thread owns a band of columns and
+// reads each row's stretch of it in order.
 void boxColumns(const Plane& in, Plane& out, int r, int threads)
 {
     const auto norm = 1.0 / static_cast<double>(2 * r + 1);
+    const auto width = static_cast<std::size_t>(in.width);
+    const auto rowOf = [&in, width](int y) {
+        return &in.values[static_cast<std::size_t>(std::clamp(y, 0, in.height - 1)) * width];
+    };
     parallelFor(in.width, threads, [&](int x0, int x1) {
-        for (int x = x0; x < x1; ++x) {
-            double acc = 0.0;
-            for (int k = -r; k <= r; ++k) {
-                acc += double{in.at(x, std::clamp(k, 0, in.height - 1))};
+        const auto first = static_cast<std::size_t>(x0);
+        const auto count = static_cast<std::size_t>(x1 - x0);
+        std::vector<double> acc(count, 0.0);
+        for (int k = -r; k <= r; ++k) {
+            const float* src = rowOf(k) + first;
+            for (std::size_t i = 0; i < count; ++i) {
+                acc[i] += double{src[i]};
             }
-            for (int y = 0; y < in.height; ++y) {
-                out.at(x, y) = static_cast<float>(acc * norm);
-                acc += double{in.at(x, std::min(y + r + 1, in.height - 1))} -
-                       double{in.at(x, std::max(y - r, 0))};
+        }
+        for (int y = 0; y < in.height; ++y) {
+            float* dst = &out.values[static_cast<std::size_t>(y) * width] + first;
+            const float* add = rowOf(y + r + 1) + first;
+            const float* drop = rowOf(y - r) + first;
+            for (std::size_t i = 0; i < count; ++i) {
+                dst[i] = static_cast<float>(acc[i] * norm);
+                acc[i] += double{add[i]} - double{drop[i]};
             }
         }
     });

@@ -2,6 +2,7 @@
 // Effects, applied last (DOCS/presets.md section 5): vignette, grain, fade. Every distance is a
 // share of the image, so a preview and the full-size export look the same.
 #include "ops/ops.h"
+#include "ops/value_table.h"
 
 #include <algorithm>
 #include <cmath>
@@ -85,9 +86,15 @@ void vignetteApply(Image& image, const Settings& s, const OpContext& ctx)
         for (int y = y0; y < y1; ++y) {
             float* p = image.row(y);
             const double dy = std::abs((y + 0.5 - cy) / v.halfH);
+            const bool ellipse = v.power == 2.0; // the default shape: a square root, no pow()
+            const double dyPower = ellipse ? dy * dy : std::pow(dy, v.power);
             for (int x = 0; x < image.width(); ++x, p += 4) {
                 const double dx = std::abs((x + 0.5 - cx) / v.halfW);
-                const double d = std::pow(std::pow(dx, v.power) + std::pow(dy, v.power), 1.0 / v.power);
+                const double d = ellipse ? std::sqrt((dx * dx) + dyPower)
+                                         : std::pow(std::pow(dx, v.power) + dyPower, 1.0 / v.power);
+                if (d <= v.inner) {
+                    continue; // inside the untouched middle
+                }
                 const double f = smoothstep(v.inner, v.outer, d) * amount;
                 for (int c = 0; c < 3; ++c) {
                     const auto value = double{p[c]};
@@ -144,13 +151,15 @@ void fadeApply(Image& image, const Settings& s, const OpContext& ctx)
     const double f = s.number("effects.fade", 0.0) / 100.0;
     const double lift = 0.15 * f; // blacks rise to a matte grey
     const double drop = 0.04 * f; // whites soften a little
+    const ValueTable table([lift, drop](double linear) {
+        return color::perceptualDecode(lift + (color::perceptualEncode(linear) * (1.0 - lift - drop)));
+    });
     parallelFor(image.height(), ctx.threads, [&](int y0, int y1) {
         for (int y = y0; y < y1; ++y) {
             float* p = image.row(y);
             for (int x = 0; x < image.width(); ++x, p += 4) {
                 for (int c = 0; c < 3; ++c) {
-                    const double e = color::perceptualEncode(std::max(0.0, double{p[c]}));
-                    p[c] = static_cast<float>(color::perceptualDecode(lift + (e * (1.0 - lift - drop))));
+                    p[c] = static_cast<float>(table(std::max(0.0, double{p[c]})));
                 }
             }
         }

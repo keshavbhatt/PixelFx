@@ -3,6 +3,7 @@
 // read; the RGB curve applies to every channel, then each channel's own curve.
 #include "ops/curve.h"
 #include "ops/ops.h"
+#include "ops/value_table.h"
 
 #include <algorithm>
 #include <array>
@@ -41,19 +42,27 @@ void curvesApply(Image& image, const Settings& s, const OpContext& ctx)
     const auto rgb = lutFor(s, "curves.rgb");
     const std::optional<CurveLut> channel[3] = {lutFor(s, "curves.r"), lutFor(s, "curves.g"),
                                                 lutFor(s, "curves.b")};
+    // Each channel's whole path (encode, curves, decode) is one function of its value: tabulate it.
+    std::vector<ValueTable> tables;
+    tables.reserve(3);
+    for (const auto& own : channel) {
+        tables.emplace_back([&rgb, &own](double linear) {
+            double v = color::srgbEncode(linear);
+            if (rgb) {
+                v = (*rgb)(v);
+            }
+            if (own) {
+                v = (*own)(v);
+            }
+            return color::srgbDecode(std::max(0.0, v));
+        });
+    }
     parallelFor(image.height(), ctx.threads, [&](int y0, int y1) {
         for (int y = y0; y < y1; ++y) {
             float* p = image.row(y);
             for (int x = 0; x < image.width(); ++x, p += 4) {
-                for (int c = 0; c < 3; ++c) {
-                    double v = color::srgbEncode(double{std::max(0.0F, p[c])});
-                    if (rgb) {
-                        v = (*rgb)(v);
-                    }
-                    if (const auto& own = channel[c]) {
-                        v = (*own)(v);
-                    }
-                    p[c] = static_cast<float>(color::srgbDecode(std::max(0.0, v)));
+                for (std::size_t c = 0; c < 3; ++c) {
+                    p[c] = static_cast<float>(tables[c](double{std::max(0.0F, p[c])}));
                 }
             }
         }
