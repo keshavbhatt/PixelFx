@@ -46,6 +46,7 @@ add_library(pfx_core
     src/image/resample.cpp
     src/recipe/settings.cpp
     src/recipe/document.cpp
+    src/recipe/xmp_import.cpp
     src/ops/registry.cpp
     src/ops/auto.cpp
     src/ops/curve.cpp
