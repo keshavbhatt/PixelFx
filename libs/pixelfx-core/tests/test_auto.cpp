@@ -4,6 +4,7 @@
 #include "pfx/pipeline.h"
 #include "pfx/registry.h"
 
+#include <array>
 #include <doctest/doctest.h>
 
 namespace {
@@ -58,4 +59,24 @@ TEST_CASE("auto stays inside the registry's ranges and leaves a neutral grey ram
     CHECK_FALSE(ramp.contains("color.wb.tint"));
     CHECK(std::abs(ramp.number("light.exposure", 0)) < 0.3);
     CHECK(pfx::autoAdjust(pfx::Image()).isEmpty());
+}
+
+TEST_CASE("white balance picker: the picked colour comes out grey")
+{
+    const std::array<std::array<float, 3>, 4> casts = {
+        {{0.50F, 0.40F, 0.30F}, {0.30F, 0.40F, 0.55F}, {0.40F, 0.50F, 0.40F}, {0.45F, 0.38F, 0.45F}}};
+    for (const auto& c : casts) {
+        const pfx::Settings wb = pfx::neutralWhiteBalance(c[0], c[1], c[2]);
+        CAPTURE(c[0]);
+        CAPTURE(c[2]);
+        const auto out = pfx::render(fixtures::flat(c[0], c[1], c[2], 2, 2), wb);
+        REQUIRE(out.ok());
+        const float* p = out.value().pixel(0, 0);
+        const double mean = (double{p[0]} + double{p[1]} + double{p[2]}) / 3.0;
+        for (int ch = 0; ch < 3; ++ch) {
+            CHECK(double{p[ch]} == doctest::Approx(mean).epsilon(0.03));
+        }
+    }
+    CHECK(pfx::neutralWhiteBalance(0.3, 0.3, 0.3).isEmpty()); // already grey: nothing to change
+    CHECK(pfx::neutralWhiteBalance(0, 0, 0).isEmpty());
 }

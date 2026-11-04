@@ -132,4 +132,39 @@ Settings autoAdjust(const Image& image)
     return out;
 }
 
+Settings neutralWhiteBalance(double r, double g, double b)
+{
+    // The white balance adapts a "source white" to D65 (color_ops.cpp). For the picked colour to
+    // come out grey its chromaticity must be that source white: the temperature moves along the
+    // Planckian locus to match its x, the tint takes up what is left in y.
+    constexpr double kD65Kelvin = 6504.0;
+    constexpr std::array<double, 2> kD65 = {0.31271, 0.32902};
+    constexpr double kTintReach = 0.02;
+    const color::Vec3 xyz = color::transform(color::kRec2020ToXyz, {r, g, b});
+    const double sum = xyz[0] + xyz[1] + xyz[2];
+    Settings out;
+    if (sum <= 1e-9) {
+        return out;
+    }
+    const std::array<double, 2> target = {xyz[0] / sum, xyz[1] / sum};
+    const auto reference = color::planckianXy(kD65Kelvin);
+    const auto sourceX = [&](double temperature) {
+        return kD65[0] + (color::planckianXy(kD65Kelvin * std::exp2(temperature / 100.0))[0] - reference[0]);
+    };
+    // x falls as the temperature rises: bisect within the slider's range.
+    double low = -100.0;
+    double high = 100.0;
+    for (int i = 0; i < 60; ++i) {
+        const double mid = (low + high) / 2.0;
+        (sourceX(mid) > target[0] ? low : high) = mid;
+    }
+    const double temperature = std::clamp((low + high) / 2.0, -100.0, 100.0);
+    const auto shifted = color::planckianXy(kD65Kelvin * std::exp2(temperature / 100.0));
+    const double baseY = kD65[1] + (shifted[1] - reference[1]);
+    const double tint = std::clamp((target[1] - baseY) / kTintReach * 100.0, -100.0, 100.0);
+    put(out, "color.wb.temperature", temperature, 1.0);
+    put(out, "color.wb.tint", tint, 1.0);
+    return out;
+}
+
 } // namespace pfx

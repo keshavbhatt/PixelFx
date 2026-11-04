@@ -13,4 +13,9 @@ namespace pfx {
 // Values are rounded to what the sliders show; keys left at their default are not set.
 [[nodiscard]] Settings autoAdjust(const Image& image);
 
+// The white balance (color.wb.temperature and color.wb.tint) that makes a colour neutral grey:
+// the white balance picker. `r`, `g`, `b` are working-space values (linear Rec.2020) of the
+// photo before its own white balance. Clamped to the sliders' range; empty for black.
+[[nodiscard]] Settings neutralWhiteBalance(double r, double g, double b);
+
 } // namespace pfx
