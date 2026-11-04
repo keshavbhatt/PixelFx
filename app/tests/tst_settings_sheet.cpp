@@ -1,6 +1,7 @@
 #include "core/settings/settings.h"
 #include "ui/canvas.h"
 #include "ui/settings_sheet.h"
+#include "ui/shortcuts_sheet.h"
 #include "ui/style.h"
 
 #include <QApplication>
@@ -39,6 +40,15 @@ private Q_SLOTS:
         QVERIFY(settings.clippingWarnings());
         auto* onOpen = sheet.findChild<QComboBox*>();
         QVERIFY(!onOpen->isEnabled()); // nothing remembered: nothing to open as left
+    }
+
+    void shortcutsSheetFilters()
+    {
+        pixelfx::ui::ShortcutsSheet sheet;
+        const int all = sheet.filter(QString());
+        QVERIFY(all > 20);
+        QCOMPARE(sheet.filter(u"zoom"_s), 1);
+        QCOMPARE(sheet.filter(u"nothing like this"_s), 0);
     }
 
     void clippingOverlayMarksWhiteAndBlack()

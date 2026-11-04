@@ -63,6 +63,7 @@ const QString kSheet = uR"(
         #batchRow { background: {{panel}}; border-radius: 7px; }
         #batchState { color: {{muted}}; font-size: 12px; }
         #batchReason { color: {{danger}}; font-size: 12px; }
+        #kbd { font-size: 11px; color: {{text}}; background: {{panel}}; border: 1px solid {{border}}; border-bottom-width: 2px; border-radius: 5px; padding: 1px 6px; }
         #zoomBar { background: {{elevated}}; border: 1px solid {{border}}; border-radius: 10px; }
         #zoomDivider { background: {{border}}; }
         #zoomLevel { font-size: 12px; }

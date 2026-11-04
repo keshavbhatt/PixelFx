@@ -14,6 +14,7 @@
 #include "ui/preset_save_sheet.h"
 #include "ui/presets_panel.h"
 #include "ui/settings_sheet.h"
+#include "ui/shortcuts_sheet.h"
 #include "ui/straighten_dial.h"
 #include "ui/style.h"
 #include "ui/welcome_page.h"
@@ -375,6 +376,10 @@ void MainWindow::buildHeader()
                     &MainWindow::chooseFiles);
     menu->addSeparator();
     menu->addAction(tr("Settings..."), QKeySequence(u"Ctrl+,"_s), this, &MainWindow::openSettings);
+    menu->addAction(tr("Keyboard shortcuts"), QKeySequence(Qt::Key_F1), this, [this] {
+        ShortcutsSheet sheet(this);
+        sheet.exec();
+    });
     menu->addSeparator();
     menu->addAction(icons::themed(u"quit"_s, tokens().muted), tr("Quit"), QKeySequence(u"Ctrl+Q"_s), this,
                     &MainWindow::close);
@@ -419,10 +424,8 @@ void MainWindow::buildBatch()
     m_stack->addWidget(m_batch);
 }
 
-void MainWindow::setupUi()
+void MainWindow::buildWelcome()
 {
-    buildHeader();
-
     m_welcome = new WelcomePage(this);
     connect(m_welcome, &WelcomePage::openRequested, this, &MainWindow::chooseFiles);
     connect(m_welcome, &WelcomePage::batchRequested, this, [this] { enterBatch(); });
@@ -444,6 +447,13 @@ void MainWindow::setupUi()
     });
     m_welcome->setSidecarFolder(core::SidecarStore::defaultFolder());
     m_welcome->setRecentFiles(m_settings.recentFiles());
+}
+
+void MainWindow::setupUi()
+{
+    buildHeader();
+
+    buildWelcome();
     m_canvasPage = buildCanvasPage();
     connect(m_compare, &QToolButton::toggled, m_canvas, &Canvas::setCompare);
     m_toast = new QLabel(m_canvas);
@@ -500,6 +510,16 @@ void MainWindow::setupActions()
     auto* exportAction = new QAction(tr("Export"), this);
     exportAction->setShortcut(QKeySequence(u"Ctrl+Shift+E"_s));
     connect(exportAction, &QAction::triggered, this, &MainWindow::exportPhoto);
+    auto* shortcuts = new QAction(tr("Keyboard shortcuts"), this);
+    shortcuts->setShortcuts({QKeySequence(Qt::Key_F1), QKeySequence(u"Ctrl+/"_s)});
+    connect(shortcuts, &QAction::triggered, this, [this] {
+        ShortcutsSheet sheet(this);
+        sheet.exec();
+    });
+    auto* openFolder = new QAction(tr("Open folder"), this);
+    openFolder->setShortcut(QKeySequence(u"Ctrl+Shift+O"_s));
+    connect(openFolder, &QAction::triggered, m_welcome, &WelcomePage::openFolderRequested);
+    addActions({shortcuts, openFolder});
     auto* settingsAction = new QAction(tr("Settings"), this);
     settingsAction->setShortcut(QKeySequence(u"Ctrl+,"_s));
     connect(settingsAction, &QAction::triggered, this, &MainWindow::openSettings);

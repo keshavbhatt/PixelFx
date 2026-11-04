@@ -34,6 +34,7 @@ PixelFx 2 is rebuilt from scratch: a new editor, a new image engine, and a new l
 - Effects: vignette, film grain and fade.
 - The start page lists recent photos as they were left; click one to carry on.
 - Export leaves out where a photo was taken unless you tick Keep location.
+- A sheet of every keyboard shortcut (F1).
 - Settings (Ctrl+,): light or dark theme, the colour around the photo, whether edits are
   remembered, and clipping warnings (J) that show blown highlights in red and blocked shadows
   in blue.

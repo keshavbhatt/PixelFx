@@ -7,7 +7,7 @@
 //   PIXELFX_DEBUG_COMPARE=1            turn on before and after once the photo is open
 //   PIXELFX_DEBUG_CROP=<ratio>[,<deg>] enter Crop mode with a ratio chip ("Free", "3:2") and
 //                                      a straightening angle once the photo is open
-//   PIXELFX_DEBUG_SHEET=export|settings|preset with GRAB: grab that sheet instead of the window
+//   PIXELFX_DEBUG_SHEET=export|settings|preset|shortcuts with GRAB: grab that sheet instead of the window
 //   PIXELFX_DEBUG_ZOOM=<scale>         zoom to this scale (1 is 100%) once the photo is open; with
 //                                      GRAB, grab once the full-size render is shown
 //   PIXELFX_DEBUG_BATCH=<folder>       open Batch with this folder and process it; with GRAB, grab
@@ -26,6 +26,7 @@
 #include "ui/main_window.h"
 #include "ui/preset_save_sheet.h"
 #include "ui/settings_sheet.h"
+#include "ui/shortcuts_sheet.h"
 #include "ui/style.h"
 
 #include <QDialog>
@@ -65,6 +66,8 @@ bool grabSheet(pixelfx::ui::MainWindow& window, const QString& grab, bool export
         sheet = preset;
     } else if (settingsSheet) {
         sheet = new pixelfx::ui::SettingsSheet(window.settings(), &window);
+    } else if (qEnvironmentVariable("PIXELFX_DEBUG_SHEET") == u"shortcuts"_s) {
+        sheet = new pixelfx::ui::ShortcutsSheet(&window);
     } else if (exportSheet && window.document().isOpen()) {
         sheet = new pixelfx::ui::ExportSheet(window.document().info().path, window.document().outputSize(),
                                              pixelfx::core::ExportOptions{}, &window);

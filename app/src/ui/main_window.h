@@ -103,6 +103,7 @@ private:
     void buildEditButtons();
     void buildRail();
     void buildBatch();
+    void buildWelcome();
     QWidget* buildCanvasPage();
     void connectCrop();
     void updateCropStrip();

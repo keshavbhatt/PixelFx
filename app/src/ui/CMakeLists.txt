@@ -29,6 +29,8 @@ qt_add_library(pixelfx_ui STATIC
     preset_save_sheet.h
     settings_sheet.cpp
     settings_sheet.h
+    shortcuts_sheet.cpp
+    shortcuts_sheet.h
     style.cpp
     style.h
     straighten_dial.cpp
