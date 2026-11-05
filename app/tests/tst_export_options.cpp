@@ -22,6 +22,38 @@ private Q_SLOTS:
                  u"sunset.lake-2048x1365-2026-11-05.webp"_s);
     }
 
+    void numbersDaysAndCamerasFillIn()
+    {
+        ExportOptions o;
+        o.nameTemplate = u"trip-{n}-{taken}-{camera}"_s;
+        NameFacts facts;
+        facts.number = 7;
+        facts.count = 300;
+        facts.taken = QDate(2026, 8, 14);
+        facts.camera = u"iPhone 15"_s;
+        QCOMPARE(exportFileName(u"/p/IMG_0412.HEIC"_s, o, {}, QDate(2026, 11, 6), facts),
+                 u"trip-007-2026-08-14-iPhone 15.jpg"_s);
+        // No date in the photo: today; one photo: no padding.
+        o.nameTemplate = u"{taken}-{n}"_s;
+        QCOMPARE(exportFileName(u"a.jpg"_s, o, {}, QDate(2026, 11, 6), NameFacts{}), u"2026-11-06-1.jpg"_s);
+        QVERIFY(namesDiffer(u"{name}-small"_s));
+        QVERIFY(namesDiffer(u"trip-{n}"_s));
+        QVERIFY(!namesDiffer(u"holiday-{date}"_s));
+        QCOMPARE(nameTokens().first(), u"{name}"_s);
+    }
+
+    void theSavedSizeFollowsTheLongEdge()
+    {
+        ExportOptions o;
+        o.longEdge = 1600;
+        QCOMPARE(outputSize(o, QSize(4000, 3000)), QSize(1600, 1200));
+        QCOMPARE(outputSize(o, QSize(800, 600)), QSize(800, 600)); // never enlarged
+        o.noEnlarge = false;
+        QCOMPARE(outputSize(o, QSize(800, 600)), QSize(1600, 1200));
+        o.longEdge = 0;
+        QCOMPARE(outputSize(o, QSize(800, 600)), QSize(800, 600));
+    }
+
     void unsafeCharactersAndEmptyNames()
     {
         ExportOptions o;

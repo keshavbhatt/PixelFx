@@ -20,6 +20,7 @@ inline constexpr auto kExportFolder = "export/folder";
 inline constexpr auto kExportNameTemplate = "export/nameTemplate";
 inline constexpr auto kExportIfExists = "export/ifExists";
 inline constexpr auto kBatchCompressOnly = "batch/compressOnly";
+inline constexpr auto kBatchAtOnce = "batch/photosAtOnce";
 inline constexpr auto kCompressJpeg = "compress/jpeg";
 inline constexpr auto kCompressJpegQuality = "compress/jpegQuality";
 inline constexpr auto kCompressPng = "compress/png";

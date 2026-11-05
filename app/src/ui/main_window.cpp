@@ -605,6 +605,9 @@ void MainWindow::buildBatch()
             [this](const core::CompressJob& job) { m_settings.setCompressJob(job); });
     connect(m_batch, &BatchPage::compressOnlyChanged, this,
             [this](bool on) { m_settings.setBatchCompressOnly(on); });
+    m_batch->runner().setAtOnce(m_settings.batchAtOnce());
+    connect(&m_settings, &core::Settings::batchAtOnceChanged, this,
+            [this](int count) { m_batch->runner().setAtOnce(count); });
     connect(m_batch, &BatchPage::looksAdded, this, &MainWindow::refreshLooks);
     connect(m_batch, &BatchPage::summaryChanged, this, [this](const QString& summary) {
         if (isBatching()) {
@@ -629,6 +632,15 @@ void MainWindow::buildWelcome()
     m_welcome = new WelcomePage(this);
     connect(m_welcome, &WelcomePage::openRequested, this, &MainWindow::chooseFiles);
     connect(m_welcome, &WelcomePage::batchRequested, this, [this] { enterBatch(); });
+    connect(m_welcome, &WelcomePage::convertRequested, this, [this] {
+        enterBatch();
+        m_batch->setCompressOnly(false);
+        m_batch->chooseRecipe({});
+    });
+    connect(m_welcome, &WelcomePage::compressRequested, this, [this] {
+        enterBatch();
+        m_batch->setCompressOnly(true);
+    });
     connect(m_welcome, &WelcomePage::openFolderRequested, this, [this] {
         const QString folder =
             QFileDialog::getExistingDirectory(this, tr("Open folder"), m_settings.lastOpenFolder());

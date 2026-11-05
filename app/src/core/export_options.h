@@ -3,7 +3,9 @@
 #include <QDate>
 #include <QSize>
 #include <QString>
+#include <QStringList>
 
+#include <pfx/io.h>
 #include <vector>
 
 namespace pixelfx::core {
@@ -58,17 +60,40 @@ struct SizePreset
 /// invalid for long-edge presets.
 [[nodiscard]] QSize exactSize(const SizePreset& preset, const QSize& photo);
 
+/// The size a photo of `photo` is saved at under `options`' size preset or long edge.
+[[nodiscard]] QSize outputSize(const ExportOptions& options, QSize photo);
+
+/// What a file name's tokens know of a photo beyond its path: its place in the batch and what
+/// its Exif says.
+struct NameFacts
+{
+    int number = 1; ///< 1 for the first photo of the list
+    int count = 1;
+    QDate taken;    ///< invalid when the photo does not say
+    QString camera; ///< the model, else the make; empty when the photo does not say
+};
+
+/// The day taken and the camera, from Exif.
+[[nodiscard]] NameFacts nameFacts(const pfx::Metadata& metadata);
+
+/// The tokens a name can hold, in the order the + Token menu lists them.
+[[nodiscard]] QStringList nameTokens();
+
+/// Whether each photo gets a name of its own under `nameTemplate` ({name} or {n} in it).
+[[nodiscard]] bool namesDiffer(const QString& nameTemplate);
+
 /// The file name for `source` under `options`, before the if-exists policy: tokens {name}
-/// (the source's base name), {date} (yyyy-MM-dd), {w} and {h} (output size), {preset} (the
-/// recipe's name, "edit" when there is none). Characters that
+/// (the source's base name), {n} (its number in the batch, padded to the count's width), {date}
+/// (today, yyyy-MM-dd), {taken} (the day taken, today when unknown), {camera}, {w} and {h}
+/// (output size), {preset} (the recipe's name, "edit" when there is none). Characters that
 /// cannot be in a file name become "-"; an empty result falls back to {name}.
 [[nodiscard]] QString exportFileName(const QString& source, const ExportOptions& options,
-                                     const QSize& outputSize, const QDate& date);
+                                     const QSize& outputSize, const QDate& date, const NameFacts& facts = {});
 
 /// The path to write, applying the if-exists policy, or an empty string to skip. Never the
 /// source itself unless the policy is Overwrite and the template makes it so.
 [[nodiscard]] QString exportTarget(const QString& source, const ExportOptions& options,
-                                   const QSize& outputSize, const QDate& date);
+                                   const QSize& outputSize, const QDate& date, const NameFacts& facts = {});
 
 [[nodiscard]] QString ifExistsKey(ExportOptions::IfExists value);
 [[nodiscard]] ExportOptions::IfExists ifExistsFromKey(const QString& key);

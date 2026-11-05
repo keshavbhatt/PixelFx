@@ -66,6 +66,7 @@ struct Tokens
     QColor danger;
     QColor link;
     QColor success;
+    QColor warning;
     /// The red, green and blue of channels (histogram, curves), the same in both themes.
     QColor channelRed;
     QColor channelGreen;

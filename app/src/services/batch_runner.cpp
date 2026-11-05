@@ -64,7 +64,8 @@ QByteArray spotOf(const QString& source, const std::vector<std::uint8_t>& origin
 }
 
 // One file of Compress only, on a worker.
-CompressOutcome compressOne(const QString& source, const core::CompressJob& job, const QSet<QString>& ours)
+CompressOutcome compressOne(const QString& source, const core::CompressJob& job, const QSet<QString>& ours,
+                            core::NameFacts facts)
 {
     CompressOutcome o;
     QFile in(source);
@@ -87,7 +88,12 @@ CompressOutcome compressOne(const QString& source, const core::CompressJob& job,
     r.keptOriginal = job.keepIfNotSmaller && !c.value().smaller();
     const std::vector<std::uint8_t>& bytes = r.keptOriginal ? original : c.value().bytes;
     r.after = static_cast<qint64>(bytes.size());
-    o.target = core::compressTarget(source, job, ours, QDate::currentDate());
+    if (const auto metadata = pfx::readMetadata(source.toStdString())) {
+        const core::NameFacts exif = core::nameFacts(metadata.value());
+        facts.taken = exif.taken;
+        facts.camera = exif.camera;
+    }
+    o.target = core::compressTarget(source, job, ours, QDate::currentDate(), facts);
     if (o.target.isEmpty()) {
         o.error = BatchRunner::tr("No free file name was found in the folder.");
         return o;
@@ -192,7 +198,7 @@ BatchRunner::BatchRunner(QObject* parent)
     : QObject(parent)
     , m_pool(new QThreadPool(this))
 {
-    m_pool->setMaxThreadCount(kCompressAtOnce);
+    m_pool->setMaxThreadCount(kMaxAtOnce);
 }
 
 BatchRunner::~BatchRunner()
@@ -231,7 +237,12 @@ void BatchRunner::start(const QStringList& files, const BatchRecipe& recipe)
     m_reasons.assign(static_cast<std::size_t>(files.size()), QString());
     m_targets.assign(static_cast<std::size_t>(files.size()), QString());
     m_compressed.assign(static_cast<std::size_t>(files.size()), CompressResult{});
-    m_atOnce = recipe.compress ? std::clamp(QThread::idealThreadCount() / 2, 2, kCompressAtOnce) : kAtOnce;
+    if (m_limit > 0) {
+        m_atOnce = m_limit;
+    } else {
+        m_atOnce =
+            recipe.compress ? std::clamp(QThread::idealThreadCount() / 2, 2, kCompressAtOnce) : kAtOnce;
+    }
     m_queue.clear();
     for (int i = 0; i < files.size(); ++i) {
         m_queue.push_back(i);
@@ -331,7 +342,10 @@ void BatchRunner::startNext()
         }
         finishOne(index);
     });
-    watcher->setFuture(QtConcurrent::run(m_pool, [source, recipe, options] {
+    core::NameFacts facts;
+    facts.number = index + 1;
+    facts.count = total();
+    watcher->setFuture(QtConcurrent::run(m_pool, [source, recipe, options, facts] {
         pfx::Settings own;
         if (recipe.keepEdits && !recipe.sidecarFolder.isEmpty()) {
             own = core::SidecarStore(recipe.sidecarFolder)
@@ -339,7 +353,7 @@ void BatchRunner::startNext()
                       .value_or(pfx::Settings{});
         }
         return exportFile(
-            source, [&](const pfx::Image& photo) { return settingsFor(recipe, own, photo); }, options);
+            source, [&](const pfx::Image& photo) { return settingsFor(recipe, own, photo); }, options, facts);
     }));
 }
 
@@ -375,8 +389,11 @@ void BatchRunner::startCompress(int index, const core::CompressJob& job)
         m_compressed[i] = o.result;
         finishOne(index);
     });
-    watcher->setFuture(
-        QtConcurrent::run(m_pool, [source, job, ours] { return compressOne(source, job, ours); }));
+    core::NameFacts facts;
+    facts.number = index + 1;
+    facts.count = total();
+    watcher->setFuture(QtConcurrent::run(
+        m_pool, [source, job, ours, facts] { return compressOne(source, job, ours, facts); }));
 }
 
 } // namespace pixelfx::services

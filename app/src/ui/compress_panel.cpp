@@ -3,6 +3,7 @@
 #include "ui/elided_label.h"
 #include "ui/icon_text_button.h"
 #include "ui/icons.h"
+#include "ui/name_field.h"
 #include "ui/slider_row.h"
 #include "ui/style.h"
 
@@ -149,11 +150,10 @@ QWidget* CompressPanel::buildSave(QWidget* parent)
             Q_EMIT jobChanged(m_job);
         }
     });
-    m_name = new QLineEdit(m_folderRow);
-    m_name->setObjectName(u"monoField"_s);
-    m_name->setAccessibleName(tr("File name"));
-    m_name->setToolTip(tr("{name} the file's own name, {date} today; the format stays the same"));
-    connect(m_name, &QLineEdit::editingFinished, this, &CompressPanel::edited);
+    m_name = new NameField(m_folderRow);
+    // Compress only keeps each file's size and has no recipe.
+    m_name->setTokens({u"{name}"_s, u"{n}"_s, u"{taken}"_s, u"{date}"_s, u"{camera}"_s});
+    connect(m_name, &NameField::edited, this, &CompressPanel::edited);
     auto* folderLine = new QHBoxLayout;
     folderLine->setSpacing(kGapRelated);
     folderLine->addWidget(m_folder, 1);
@@ -204,7 +204,7 @@ void CompressPanel::showJob()
     m_pngQuality->setVisible(m_job.codec.png == pfx::PngCompression::FewerColours);
     m_extras->setChecked(m_job.codec.removeExtras);
     m_folder->setPath(m_job.folder);
-    m_name->setText(m_job.nameTemplate);
+    m_name->setTemplate(m_job.nameTemplate);
     m_folderRow->setVisible(!m_job.replaceOriginals);
     m_keep->setChecked(m_job.keepIfNotSmaller);
 }
@@ -219,10 +219,21 @@ void CompressPanel::edited()
     m_job.codec.pngQuality = m_pngQuality->ticks();
     m_job.codec.removeExtras = m_extras->isChecked();
     m_job.replaceOriginals = m_where->checkedId() == 1;
-    m_job.nameTemplate = m_name->text().trimmed().isEmpty() ? u"{name}"_s : m_name->text().trimmed();
+    m_job.nameTemplate = m_name->nameTemplate().isEmpty() ? u"{name}"_s : m_name->nameTemplate();
     m_job.keepIfNotSmaller = m_keep->isChecked();
     showJob();
     Q_EMIT jobChanged(m_job);
+}
+
+void CompressPanel::setFiles(const QStringList& files)
+{
+    const QDate today = QDate::currentDate();
+    m_name->setFiles(files, [this, today](const QString& nameTemplate, const QString& source,
+                                          const core::NameFacts& facts) {
+        core::CompressJob job = m_job;
+        job.nameTemplate = nameTemplate;
+        return core::compressFileName(source, job, today, facts);
+    });
 }
 
 void CompressPanel::setFileCount(int count)

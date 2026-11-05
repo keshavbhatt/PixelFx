@@ -59,6 +59,9 @@ public:
     /// Whether Batch opens in Compress only.
     [[nodiscard]] bool batchCompressOnly() const;
     void setBatchCompressOnly(bool on);
+    /// Photos Batch works on at once: 0 for automatic, else 1, 2, 4 or 8.
+    [[nodiscard]] int batchAtOnce() const;
+    void setBatchAtOnce(int count);
 
     /// Appearance. The theme applies when PixelFx starts.
     enum class Theme
@@ -124,6 +127,7 @@ Q_SIGNALS:
     void rememberEditsChanged(bool on);
     void openAsLeftChanged(bool on);
     void clippingWarningsChanged(bool on);
+    void batchAtOnceChanged(int count);
 
 private:
     std::unique_ptr<QSettings> m_settings;

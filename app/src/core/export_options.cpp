@@ -4,16 +4,61 @@
 #include <QFileInfo>
 #include <QRegularExpression>
 
+#include <algorithm>
+#include <cmath>
+
 using namespace Qt::StringLiterals;
 
 namespace pixelfx::core {
 
+QSize outputSize(const ExportOptions& options, QSize photo)
+{
+    int longEdge = options.longEdge;
+    if (const SizePreset* preset = sizePreset(options.sizePreset)) {
+        longEdge = preset->longEdge;
+        if (const QSize exact = exactSize(*preset, photo); exact.isValid()) {
+            photo = exact;
+        }
+    }
+    const int edge = std::max(photo.width(), photo.height());
+    if (edge > 0 && longEdge > 0 && (edge > longEdge || !options.noEnlarge)) {
+        const double scale = static_cast<double>(longEdge) / edge;
+        photo = QSize(std::max(1, static_cast<int>(std::lround(photo.width() * scale))),
+                      std::max(1, static_cast<int>(std::lround(photo.height() * scale))));
+    }
+    return photo;
+}
+
+NameFacts nameFacts(const pfx::Metadata& metadata)
+{
+    NameFacts facts;
+    const pfx::ExifSummary exif = pfx::readExif(metadata.exif);
+    // Exif writes "YYYY:MM:DD HH:MM:SS".
+    facts.taken = QDate::fromString(QString::fromStdString(exif.dateTaken).left(10), u"yyyy:MM:dd"_s);
+    facts.camera = QString::fromStdString(exif.model.empty() ? exif.make : exif.model).trimmed();
+    return facts;
+}
+
+QStringList nameTokens()
+{
+    return {u"{name}"_s, u"{n}"_s, u"{taken}"_s, u"{date}"_s, u"{camera}"_s, u"{w}x{h}"_s, u"{preset}"_s};
+}
+
+bool namesDiffer(const QString& nameTemplate)
+{
+    return nameTemplate.contains(u"{name}"_s) || nameTemplate.contains(u"{n}"_s);
+}
+
 QString exportFileName(const QString& source, const ExportOptions& options, const QSize& outputSize,
-                       const QDate& date)
+                       const QDate& date, const NameFacts& facts)
 {
     const QString base = QFileInfo(source).completeBaseName();
     QString name = options.nameTemplate;
     name.replace(u"{name}"_s, base);
+    const auto width = static_cast<int>(QString::number(std::max(1, facts.count)).size());
+    name.replace(u"{n}"_s, u"%1"_s.arg(facts.number, width, 10, QLatin1Char('0')));
+    name.replace(u"{taken}"_s, (facts.taken.isValid() ? facts.taken : date).toString(u"yyyy-MM-dd"_s));
+    name.replace(u"{camera}"_s, facts.camera);
     name.replace(u"{date}"_s, date.toString(u"yyyy-MM-dd"_s));
     name.replace(u"{w}"_s, QString::number(outputSize.width()));
     name.replace(u"{h}"_s, QString::number(outputSize.height()));
@@ -29,10 +74,10 @@ QString exportFileName(const QString& source, const ExportOptions& options, cons
 }
 
 QString exportTarget(const QString& source, const ExportOptions& options, const QSize& outputSize,
-                     const QDate& date)
+                     const QDate& date, const NameFacts& facts)
 {
     const QString folder = options.folder.isEmpty() ? QFileInfo(source).absolutePath() : options.folder;
-    const QString fileName = exportFileName(source, options, outputSize, date);
+    const QString fileName = exportFileName(source, options, outputSize, date, facts);
     const QDir dir(folder);
     QString target = dir.absoluteFilePath(fileName);
     if (!QFileInfo::exists(target)) {

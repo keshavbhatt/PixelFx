@@ -8,6 +8,7 @@
 #include "services/thumbnailer.h"
 
 #include <QElapsedTimer>
+#include <QHash>
 #include <QPixmap>
 #include <QStringList>
 #include <QWidget>
@@ -88,6 +89,8 @@ public:
     void setCompressOnly(bool on);
     [[nodiscard]] bool isCompressOnly() const { return m_compressOnly; }
     [[nodiscard]] class CompressPanel* compressPanel() const { return m_compressPanel; }
+    /// Edit and export's file name (Compress only has its own in compressPanel).
+    [[nodiscard]] class NameField* nameField() const { return m_name; }
     [[nodiscard]] class CompressList* compressList() const { return m_compressList; }
     [[nodiscard]] class CompressCompare* compressCompare() const { return m_compare; }
     /// Writes the page as a batch recipe (.pfxbatch) to `path`; false when it cannot.
@@ -169,6 +172,8 @@ private:
     void showRecipeMenu(QWidget* anchor, bool second);
     void editSaveOptions();
     void outputEdited();
+    /// The name previews follow the list and the options.
+    void refreshNames();
     [[nodiscard]] QString recipeTitle() const;
 
     QStringList m_files;
@@ -223,7 +228,8 @@ private:
     QCheckBox* m_noEnlarge = nullptr;
     QComboBox* m_format = nullptr;
     PathLabel* m_folder = nullptr;
-    QLineEdit* m_name = nullptr;
+    class NameField* m_name = nullptr;
+    QHash<QString, QSize> m_photoSizes; ///< each photo's size, for {w}x{h} in the name preview
     QCheckBox* m_beside = nullptr;
     class WatermarkPicker* m_watermark = nullptr;
     core::CompressJob m_job;

@@ -189,6 +189,20 @@ void Settings::setBatchCompressOnly(bool on)
     m_settings->setValue(key(keys::kBatchCompressOnly), on);
 }
 
+int Settings::batchAtOnce() const
+{
+    const int n = m_settings->value(key(keys::kBatchAtOnce), 0).toInt();
+    return (n == 1 || n == 2 || n == 4 || n == 8) ? n : 0;
+}
+
+void Settings::setBatchAtOnce(int count)
+{
+    if (count != batchAtOnce()) {
+        m_settings->setValue(key(keys::kBatchAtOnce), count);
+        Q_EMIT batchAtOnceChanged(batchAtOnce());
+    }
+}
+
 bool Settings::migrateFromVersion1(const QString& legacyFile)
 {
     if (m_settings->value(key(keys::kLegacyMigrated), false).toBool()) {

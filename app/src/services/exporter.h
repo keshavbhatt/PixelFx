@@ -42,7 +42,7 @@ struct PreparedExport
 /// enhance needs it), resizes and writes it under `options`. Blocking: call on a worker.
 [[nodiscard]] ExportOutcome exportFile(const QString& source,
                                        const std::function<pfx::Settings(const pfx::Image&)>& settingsFor,
-                                       const core::ExportOptions& options);
+                                       const core::ExportOptions& options, core::NameFacts facts = {});
 
 /// Writes a photo with its settings at full resolution on a worker thread (FEATURES X1, X9):
 /// decode, render, resize, encode. Export is the only way PixelFx writes an image.

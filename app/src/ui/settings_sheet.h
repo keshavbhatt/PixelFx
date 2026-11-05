@@ -2,6 +2,8 @@
 
 #include "ui/sheet.h"
 
+class QFormLayout;
+
 namespace pixelfx::core {
 class Settings;
 } // namespace pixelfx::core
@@ -22,6 +24,8 @@ public:
 
 private:
     QWidget* buildGeneral();
+    /// Performance: how many photos Batch works on at once.
+    void addPerformance(QFormLayout* form, QWidget* page);
     core::Settings& m_settings;
 };
 

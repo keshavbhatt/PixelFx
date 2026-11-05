@@ -15,6 +15,8 @@
 #include <QScrollArea>
 #include <QVBoxLayout>
 
+#include <algorithm>
+
 using namespace Qt::StringLiterals;
 
 namespace pixelfx::ui {
@@ -66,6 +68,32 @@ SettingsSheet::SettingsSheet(core::Settings& settings, QWidget* parent)
 }
 
 SettingsSheet::~SettingsSheet() = default;
+
+void SettingsSheet::addPerformance(QFormLayout* form, QWidget* page)
+{
+    form->addRow(sectionHeading(tr("Performance"), page));
+    auto* atOnce = new QComboBox(page);
+    atOnce->setAccessibleName(tr("Photos at a time"));
+    atOnce->addItem(tr("Automatic: 2, or 4 for Compress only"), 0);
+    for (const int n : {1, 2, 4, 8}) {
+        atOnce->addItem(QString::number(n), n);
+    }
+    atOnce->setCurrentIndex(std::max(0, atOnce->findData(m_settings.batchAtOnce())));
+    connect(atOnce, &QComboBox::activated, this,
+            [this, atOnce] { m_settings.setBatchAtOnce(atOnce->currentData().toInt()); });
+    auto* atOnceNote = new QLabel(tr("More at once is faster with many small photos and needs more memory: "
+                                     "a 24 megapixel photo takes about 1 GB while it is edited."),
+                                  page);
+    atOnceNote->setObjectName(u"itemDetail"_s);
+    atOnceNote->setWordWrap(true);
+    auto* atOnceBox = new QWidget(page);
+    auto* atOnceColumn = new QVBoxLayout(atOnceBox);
+    atOnceColumn->setContentsMargins(0, 0, 0, 0);
+    atOnceColumn->setSpacing(kGapSmall);
+    atOnceColumn->addWidget(atOnce);
+    atOnceColumn->addWidget(atOnceNote);
+    form->addRow(tr("Photos at a time"), atOnceBox);
+}
 
 QWidget* SettingsSheet::buildGeneral()
 {
@@ -120,6 +148,8 @@ QWidget* SettingsSheet::buildGeneral()
     connect(clipping, &QCheckBox::toggled, this, [this](bool on) { m_settings.setClippingWarnings(on); });
     connect(&m_settings, &S::clippingWarningsChanged, clipping, &QCheckBox::setChecked);
     form->addRow(tr("Clipping warnings"), clipping);
+
+    addPerformance(form, page);
     setLabelColumn(form, kLabelColumn);
     return page;
 }

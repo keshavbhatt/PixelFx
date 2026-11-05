@@ -56,6 +56,8 @@ qt_add_library(pixelfx_ui STATIC
     look_editor.h
     list_row.cpp
     list_row.h
+    name_field.cpp
+    name_field.h
     status_pill.cpp
     status_pill.h
     looks_panel.cpp

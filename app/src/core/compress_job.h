@@ -1,5 +1,7 @@
 #pragma once
 
+#include "core/export_options.h"
+
 #include <QDate>
 #include <QSet>
 #include <QString>
@@ -24,11 +26,14 @@ struct CompressJob
 /// Pictures/PixelFx/Compressed.
 [[nodiscard]] QString defaultCompressFolder();
 
-/// The file to write for `source`: the name template ({name}, {date}) with the source's own
+/// The file to write for `source`: the name template (the tokens of exportFileName) with its own
 /// extension, in the job's folder, or the source itself when replacing the originals. A name
 /// already taken gets a number, unless it is in `ours` (written by the last run of the same
 /// list), which is replaced; the source is never written unless replacing.
 [[nodiscard]] QString compressTarget(const QString& source, const CompressJob& job, const QSet<QString>& ours,
-                                     const QDate& date);
+                                     const QDate& date, const NameFacts& facts = {});
+/// The file name alone, as compressTarget makes it before a number is added.
+[[nodiscard]] QString compressFileName(const QString& source, const CompressJob& job, const QDate& date,
+                                       const NameFacts& facts = {});
 
 } // namespace pixelfx::core

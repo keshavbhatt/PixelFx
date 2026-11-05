@@ -1,7 +1,5 @@
 #include "core/compress_job.h"
 
-#include "core/export_options.h"
-
 #include <QDir>
 #include <QFileInfo>
 #include <QStandardPaths>
@@ -25,18 +23,24 @@ QString defaultCompressFolder()
     return (pictures.isEmpty() ? QDir::homePath() : pictures) + u"/PixelFx/Compressed"_s;
 }
 
+QString compressFileName(const QString& source, const CompressJob& job, const QDate& date,
+                         const NameFacts& facts)
+{
+    ExportOptions naming;
+    naming.nameTemplate = job.nameTemplate;
+    naming.extension = QFileInfo(source).suffix();
+    return exportFileName(source, naming, {}, date, facts);
+}
+
 QString compressTarget(const QString& source, const CompressJob& job, const QSet<QString>& ours,
-                       const QDate& date)
+                       const QDate& date, const NameFacts& facts)
 {
     const QFileInfo info(source);
     if (job.replaceOriginals) {
         return info.absoluteFilePath();
     }
-    ExportOptions naming;
-    naming.nameTemplate = job.nameTemplate;
-    naming.extension = info.suffix();
     const QDir dir(job.folder.isEmpty() ? info.absolutePath() : job.folder);
-    const QString fileName = exportFileName(source, naming, {}, date);
+    const QString fileName = compressFileName(source, job, date, facts);
     QString target = dir.absoluteFilePath(fileName);
     const auto taken = [&info, &ours](const QString& path) {
         const QFileInfo t(path);

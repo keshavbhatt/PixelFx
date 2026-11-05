@@ -29,6 +29,9 @@ public:
 
     [[nodiscard]] const core::CompressJob& job() const { return m_job; }
     void setJob(const core::CompressJob& job);
+    /// The files of the list, for the name preview.
+    void setFiles(const QStringList& files);
+    [[nodiscard]] class NameField* nameField() const { return m_name; }
     /// The count on the primary button; none disables it.
     void setFileCount(int count);
     /// While running nothing starts; Run again needs a finished run of this list.
@@ -57,7 +60,7 @@ private:
     QButtonGroup* m_where = nullptr;
     QWidget* m_folderRow = nullptr;
     PathLabel* m_folder = nullptr;
-    QLineEdit* m_name = nullptr;
+    class NameField* m_name = nullptr;
     QCheckBox* m_keep = nullptr;
     QPushButton* m_again = nullptr;
     QPushButton* m_compress = nullptr;

@@ -12,6 +12,7 @@
 #include "ui/export_sheet.h"
 #include "ui/icon_text_button.h"
 #include "ui/icons.h"
+#include "ui/name_field.h"
 #include "ui/preview_viewer.h"
 #include "ui/sheet.h"
 #include "ui/slider_row.h"
@@ -625,13 +626,10 @@ QWidget* BatchPage::buildSaveAs(QWidget* parent)
     folderRow->setSpacing(kGapRelated);
     folderRow->addWidget(m_folder, 1);
     folderRow->addWidget(change);
-    m_name = new QLineEdit(m_output.nameTemplate, box);
-    m_name->setObjectName(u"monoField"_s);
-    m_name->setAccessibleName(tr("File name"));
-    m_name->setToolTip(tr("{name} the photo's name, {preset} the recipe, {date}, {w} and {h} the size"));
-    connect(m_name, &QLineEdit::editingFinished, this, [this] {
-        m_output.nameTemplate =
-            m_name->text().trimmed().isEmpty() ? u"{name}-edit"_s : m_name->text().trimmed();
+    m_name = new NameField(box);
+    m_name->setTemplate(m_output.nameTemplate);
+    connect(m_name, &NameField::edited, this, [this](const QString& name) {
+        m_output.nameTemplate = name.isEmpty() ? u"{name}-edit"_s : name;
         outputEdited();
     });
     m_beside = new QCheckBox(tr("Next to each original, in a subfolder"), box);
@@ -737,6 +735,25 @@ void BatchPage::editSaveOptions()
 void BatchPage::outputEdited()
 {
     Q_EMIT outputChanged(recipe().output);
+    refreshNames();
+}
+
+void BatchPage::refreshNames()
+{
+    const QDate today = QDate::currentDate();
+    m_name->setFiles(m_files, [this, today](const QString& nameTemplate, const QString& source,
+                                            const core::NameFacts& facts) {
+        core::ExportOptions o = recipe().output;
+        o.nameTemplate = nameTemplate;
+        auto size = m_photoSizes.find(source);
+        if (size == m_photoSizes.end()) {
+            const auto info = pfx::probe(source.toStdString());
+            size =
+                m_photoSizes.insert(source, info ? QSize(info.value().width, info.value().height) : QSize());
+        }
+        return core::exportFileName(source, o, core::outputSize(o, *size), today, facts);
+    });
+    m_compressPanel->setFiles(m_files);
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -801,7 +818,7 @@ void BatchPage::showRecipeMenu(QWidget* anchor, bool second)
     if (second) {
         add(tr("None"), [this] { chooseSecond({}); });
     } else {
-        add(tr("None: resize and save only"), [this] { chooseRecipe({}); });
+        add(tr("Convert and resize only"), [this] { chooseRecipe({}); });
         if (!m_loadedStack.empty()) {
             add(tr("From the opened recipe: %1").arg(m_loadedName), [this] { chooseRecipe(u"recipe"_s); });
         }
@@ -876,8 +893,8 @@ std::pair<QString, QString> BatchPage::recipeCardText() const
         name = m_loadedName;
         detail = tr("From a batch recipe, %n steps", nullptr, static_cast<int>(m_loadedStack.size()));
     } else {
-        name = tr("No preset or look");
-        detail = tr("The photos are only resized and saved");
+        name = tr("Convert and resize only");
+        detail = tr("No edits: each photo is resized and saved as below");
     }
     return {name, detail};
 }
@@ -898,6 +915,9 @@ void BatchPage::refreshRecipeCard()
     }
     m_secondName->setText(m_second);
     m_secondChange->setText(m_second.isEmpty() ? tr("Choose") : tr("Change"));
+    if (m_name != nullptr) {
+        m_name->refresh(); // {preset} follows the recipe
+    }
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -1104,7 +1124,7 @@ QString BatchPage::loadRecipe(const QString& path)
     m_output.keepMetadata = r.output.keepMetadata;
     m_output.keepLocation = r.output.keepLocation;
     m_output.nameTemplate = r.output.nameTemplate;
-    m_name->setText(m_output.nameTemplate);
+    m_name->setTemplate(m_output.nameTemplate);
     m_output.ifExists = r.output.ifExists;
     if (!r.output.folder.isEmpty()) {
         m_output.folder = r.output.folder;
@@ -1198,6 +1218,7 @@ void BatchPage::rebuildRows()
     m_compressList->setFiles(m_files);
     m_compressList->refresh(m_runner);
     m_compressPanel->setFileCount(static_cast<int>(m_files.size()));
+    refreshNames();
     m_process->setText(m_files.isEmpty()
                            ? tr("Process")
                            : tr("Process %n photos", nullptr, static_cast<int>(m_files.size())));

@@ -45,6 +45,9 @@ Q_SIGNALS:
     void openRequested();
     void openFolderRequested();
     void batchRequested();
+    /// The quick jobs: Batch ready to convert or resize, or in Compress only.
+    void convertRequested();
+    void compressRequested();
     void recentOpened(const QString& path);
     void clearRecentRequested();
 
@@ -53,6 +56,7 @@ protected:
 
 private:
     void buildDropZone();
+    QHBoxLayout* buildQuickJobs();
     void buildRecent();
     void showThumbnail(const services::Thumbnail& thumbnail) const;
 

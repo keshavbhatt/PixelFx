@@ -9,6 +9,7 @@
 #include <QSet>
 #include <QStringList>
 
+#include <algorithm>
 #include <optional>
 #include <pfx/compress.h>
 #include <pfx/document.h>
@@ -82,6 +83,9 @@ public:
     /// Runs the failed photos of the last batch again.
     void retryFailed();
     void setPaused(bool paused);
+    /// Photos worked on at once from the next run: 0 for automatic (kAtOnce, or up to
+    /// kCompressAtOnce for Compress only), at most kMaxAtOnce.
+    void setAtOnce(int count) { m_limit = std::clamp(count, 0, kMaxAtOnce); }
     void stop();
     [[nodiscard]] bool isRunning() const { return m_running > 0 || (!m_queue.empty() && !m_paused); }
     [[nodiscard]] bool isPaused() const { return m_paused; }
@@ -114,6 +118,7 @@ public:
     static constexpr int kAtOnce = 2; // a 24 MP photo needs about 1 GB while it is processed
     /// Compress only decodes without the float pipeline, so it runs more files at once.
     static constexpr int kCompressAtOnce = 4;
+    static constexpr int kMaxAtOnce = 8;
 
 Q_SIGNALS:
     void photoChanged(int index);
@@ -136,6 +141,7 @@ private:
     std::vector<int> m_queue;
     int m_running = 0;
     int m_atOnce = kAtOnce;
+    int m_limit = 0;
     bool m_paused = false;
     quint64 m_generation = 0;
     QElapsedTimer m_clock;
