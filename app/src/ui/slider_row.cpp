@@ -161,7 +161,7 @@ std::optional<int> SliderRow::parse(const QString& typed) const
 
 void SliderRow::beginTyping()
 {
-    if (m_field->isVisible()) {
+    if (!m_field->isHidden()) {
         return;
     }
     m_field->setText(text());
@@ -174,7 +174,7 @@ void SliderRow::beginTyping()
 
 void SliderRow::endTyping(bool keep)
 {
-    if (!m_field->isVisible()) {
+    if (m_field->isHidden()) {
         return;
     }
     if (keep) {

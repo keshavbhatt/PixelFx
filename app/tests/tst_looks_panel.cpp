@@ -1,6 +1,7 @@
 #include "ui/look_editor.h"
 #include "ui/looks_panel.h"
 #include "ui/message_line.h"
+#include "ui/slider_row.h"
 #include "ui/step_list.h"
 #include "ui/style.h"
 
@@ -169,8 +170,15 @@ private Q_SLOTS:
         // The slider's keys weigh the look one step at a time, each a history step.
         QSignalSpy released(&panel, &LooksPanel::strengthReleased);
         panel.strengthSlider()->triggerAction(QAbstractSlider::SliderSingleStepAdd);
-        QVERIFY(released.wait(1000));
+        QCOMPARE(released.size(), 1);
         QCOMPARE(released.first().first().toInt(), 65);
+        // The value can be typed, as on every slider.
+        auto* row = panel.findChild<pixelfx::ui::SliderRow*>();
+        QVERIFY(row);
+        row->beginTyping();
+        row->valueField()->setText(u"40"_s);
+        QTest::keyClick(row->valueField(), Qt::Key_Return);
+        QCOMPARE(released.last().first().toInt(), 40);
     }
 };
 

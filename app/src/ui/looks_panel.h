@@ -16,6 +16,8 @@ class QVBoxLayout;
 
 namespace pixelfx::ui {
 
+class SliderRow;
+
 /// One look as a picture of the photo with it.
 class LookTile : public QWidget
 {
@@ -69,7 +71,7 @@ public:
     /// The picture for entry `index`; index -1 is "Original" (no look).
     void setThumbnail(int index, const QImage& image);
     [[nodiscard]] std::vector<LookTile*> visibleTiles() const;
-    [[nodiscard]] QSlider* strengthSlider() const { return m_strength; }
+    [[nodiscard]] QSlider* strengthSlider() const;
 
 Q_SIGNALS:
     /// A tile was chosen: its id (empty for Original) and the look's own strength.
@@ -96,9 +98,7 @@ private:
     QButtonGroup* m_chips = nullptr;
     QWidget* m_listBox = nullptr;
     QVBoxLayout* m_list = nullptr;
-    QSlider* m_strength = nullptr;
-    QLabel* m_strengthValue = nullptr;
-    QLabel* m_strengthName = nullptr;
+    SliderRow* m_strength = nullptr;
 };
 
 } // namespace pixelfx::ui

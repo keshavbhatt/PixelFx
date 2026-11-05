@@ -2,7 +2,7 @@
 
 #include "ui/flow_layout.h"
 #include "ui/icons.h"
-#include "ui/panel_slider.h"
+#include "ui/slider_row.h"
 #include "ui/style.h"
 
 #include <QButtonGroup>
@@ -210,42 +210,27 @@ LooksPanel::LooksPanel(QWidget* parent)
 
 LooksPanel::~LooksPanel() = default;
 
+QSlider* LooksPanel::strengthSlider() const
+{
+    return m_strength->slider();
+}
+
 QWidget* LooksPanel::buildStrength()
 {
     auto* box = new QWidget(this);
     box->setObjectName(u"lookStrength"_s);
     box->setAttribute(Qt::WA_StyledBackground);
-    m_strengthName = new QLabel(tr("Look strength"), box);
-    m_strengthName->setObjectName(u"adjustName"_s);
-    m_strengthValue = new QLabel(box);
-    m_strengthValue->setObjectName(u"adjustValue"_s);
-    m_strength = new PanelSlider(Qt::Horizontal, box);
-    m_strength->setRange(0, 100);
-    m_strength->setAccessibleName(tr("Look strength"));
-    connect(m_strength, &QSlider::valueChanged, this, [this](int v) {
-        m_strengthValue->setText(QString::number(v));
-        if (m_strength->isSliderDown()) {
+    m_strength = new SliderRow(tr("Look strength"), box);
+    m_strength->setRange(0, 100, 100);
+    // Live while dragging; one history step for a drag, a key, a click, a typed value or a reset.
+    connect(m_strength, &SliderRow::ticksMoved, this, [this](int v) {
+        if (m_strength->slider()->isSliderDown()) {
             Q_EMIT strengthMoved(v);
         }
     });
-    connect(m_strength, &QSlider::sliderReleased, this,
-            [this] { Q_EMIT strengthReleased(m_strength->value()); });
-    // Keys and clicks on the track move it without a drag: one step each.
-    connect(m_strength, &QSlider::actionTriggered, this, [this](int action) {
-        if (action != QAbstractSlider::SliderMove) {
-            QMetaObject::invokeMethod(
-                this, [this] { Q_EMIT strengthReleased(m_strength->value()); }, Qt::QueuedConnection);
-        }
-    });
-    auto* top = new QHBoxLayout;
-    top->setSpacing(kGapControls);
-    top->addWidget(m_strengthName);
-    top->addStretch();
-    top->addWidget(m_strengthValue);
+    connect(m_strength, &SliderRow::ticksReleased, this, &LooksPanel::strengthReleased);
     auto* column = new QVBoxLayout(box);
-    column->setContentsMargins(kPanelPadding, 8, kPanelPadding, 10);
-    column->setSpacing(0);
-    column->addLayout(top);
+    column->setContentsMargins(kPanelPadding, 2, kPanelPadding, 4);
     column->addWidget(m_strength);
     setCurrent({}, 0);
     return box;
@@ -262,18 +247,17 @@ void LooksPanel::setCurrent(const QString& id, double strength)
 {
     const bool changed = id != m_current;
     m_current = id;
-    {
-        const QSignalBlocker block(m_strength);
-        m_strength->setValue(static_cast<int>(std::lround(strength)));
+    // The look's own strength is the default: the value shows in the accent once it is moved
+    // from it, and a double-click on the name goes back to it.
+    int standard = 100;
+    for (const core::LookEntry& e : m_entries) {
+        if (e.id == id && e.look) {
+            standard = e.look->defaultStrength;
+        }
     }
-    m_strengthValue->setText(QString::number(m_strength->value()));
+    m_strength->setRange(0, 100, standard);
+    m_strength->setTicks(static_cast<int>(std::lround(strength)));
     m_strength->setEnabled(!id.isEmpty());
-    m_strengthName->setProperty("changed", !id.isEmpty());
-    m_strengthValue->setProperty("changed", !id.isEmpty());
-    for (QLabel* l : {m_strengthName, m_strengthValue}) {
-        l->style()->unpolish(l);
-        l->style()->polish(l);
-    }
     if (changed) {
         for (LookTile* tile : visibleTiles()) {
             tile->setSelected(tile->id() == id);
