@@ -23,6 +23,9 @@ namespace pixelfx::ui {
 
 namespace {
 
+// Thin enough to lie over a panel's 10 to 14 px padding without covering a control.
+constexpr int kScrollBarWidth = 8;
+
 QColor hex(const char* value)
 {
     return {QString::fromLatin1(value)};
@@ -181,6 +184,14 @@ const QString kControls = uR"(
         QProgressBar { background: {{track}}; border: 0; border-radius: 2px; max-height: 4px; text-align: center; color: transparent; }
         QProgressBar::chunk { background: {{accentStrong}}; border-radius: 2px; }
         QSlider::handle:horizontal:disabled { background: {{faint}}; }
+        QScrollBar:vertical { width: {{scrollbar}}px; background: transparent; margin: 2px 2px 2px 0; }
+        QScrollBar:horizontal { height: {{scrollbar}}px; background: transparent; margin: 0 2px 2px 2px; }
+        QScrollBar::handle { background: {{border}}; border-radius: 3px; }
+        QScrollBar::handle:hover, QScrollBar::handle:pressed { background: {{track}}; }
+        QScrollBar::handle:vertical { min-height: 32px; }
+        QScrollBar::handle:horizontal { min-width: 32px; }
+        QScrollBar::add-line, QScrollBar::sub-line { width: 0; height: 0; border: 0; background: none; }
+        QScrollBar::add-page, QScrollBar::sub-page { background: none; }
         QWidget#listRow { border-radius: 7px; }
         QWidget#listRow:hover { background: {{hover}}; }
         QWidget#listRow[selected="true"] { background: {{accentSoft}}; }
@@ -264,6 +275,7 @@ QString sheet(const Tokens& t)
 {
     QString s = kSheet + kControls;
     s.replace(u"{{glyphs}}"_s, glyphFolder(t));
+    s.replace(u"{{scrollbar}}"_s, QString::number(kScrollBarWidth));
     const auto put = [&s](const QString& name, const QColor& c) {
         s.replace(u"{{"_s + name + u"}}"_s, c.name());
     };
@@ -322,8 +334,8 @@ public:
     int styleHint(StyleHint hint, const QStyleOption* option, const QWidget* widget,
                   QStyleHintReturn* returnData) const override
     {
-        if (hint == SH_ScrollBar_Transient) {
-            return 1;
+        if (hint == SH_Slider_AbsoluteSetButtons) {
+            return Qt::LeftButton; // a click on a slider's track moves it there
         }
         return QProxyStyle::styleHint(hint, option, widget, returnData);
     }
@@ -338,11 +350,11 @@ public:
     }
     using QProxyStyle::polish;
 
-    // Scroll bars lie over the scrolled content instead of taking width from it.
+    // Scroll bars lie over the panels' own padding instead of taking width from the content.
     int pixelMetric(PixelMetric metric, const QStyleOption* option, const QWidget* widget) const override
     {
         if (metric == PM_ScrollView_ScrollBarOverlap) {
-            return QProxyStyle::pixelMetric(PM_ScrollBarExtent, option, widget);
+            return kScrollBarWidth;
         }
         return QProxyStyle::pixelMetric(metric, option, widget);
     }

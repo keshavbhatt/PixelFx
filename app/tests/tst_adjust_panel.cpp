@@ -4,11 +4,13 @@
 #include "ui/style.h"
 
 #include <QApplication>
+#include <QLabel>
 #include <QPushButton>
 #include <QSignalSpy>
 #include <QSlider>
 #include <QTest>
 #include <QToolButton>
+#include <QWheelEvent>
 
 #include <cmath>
 
@@ -275,6 +277,33 @@ private Q_SLOTS:
         QVERIFY(!panel.settings().contains("curves.rgb"));
         QCOMPARE(panel.settings().number("light.contrast", 0), 20.0); // other groups untouched
         QVERIFY(panel.curveEditor()->isIdentity());
+    }
+
+    void slidersTakeTheWheelOnlyWithFocusAndResetFromTheirName()
+    {
+        AdjustPanel panel;
+        panel.resize(316, 800);
+        panel.show();
+        QVERIFY(QTest::qWaitForWindowExposed(&panel));
+        auto* contrast = panel.slider(u"light.contrast"_s);
+        auto* track = contrast->slider();
+        const QPoint middle = track->rect().center();
+        QWheelEvent wheel(middle, track->mapToGlobal(middle), {}, {0, 120}, Qt::NoButton, Qt::NoModifier,
+                          Qt::NoScrollPhase, false);
+        QApplication::sendEvent(track, &wheel);
+        QCOMPARE(contrast->value(), 0.0); // the wheel was passing over the panel
+        track->setFocus();
+        QApplication::sendEvent(track, &wheel);
+        QVERIFY(contrast->value() != 0.0);
+        // A click on the track goes there, not a page at a time.
+        QTest::mouseClick(track, Qt::LeftButton, {}, QPoint(track->width() - 3, middle.y()));
+        QVERIFY(contrast->value() > 90.0);
+        // A double-click on the name resets.
+        auto* name = contrast->findChild<QLabel*>(u"adjustName"_s);
+        QTest::mouseDClick(name, Qt::LeftButton);
+        QCOMPARE(contrast->value(), 0.0);
+        // Exposure steps a twentieth of a stop.
+        QCOMPARE(panel.slider(u"light.exposure"_s)->slider()->singleStep(), 5);
     }
 
     void setSettingsDoesNotEmit()

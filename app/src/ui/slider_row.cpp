@@ -1,5 +1,7 @@
 #include "ui/slider_row.h"
 
+#include "ui/panel_slider.h"
+
 #include <QEvent>
 #include <QHBoxLayout>
 #include <QLabel>
@@ -17,13 +19,14 @@ SliderRow::SliderRow(const QString& label, QWidget* parent)
     : QWidget(parent)
     , m_label(label)
     , m_format([](int ticks) { return QString::number(ticks); })
-    , m_slider(new QSlider(Qt::Horizontal, this))
+    , m_slider(new PanelSlider(Qt::Horizontal, this))
     , m_name(new QLabel(label, this))
     , m_value(new QLabel(this))
 {
     m_slider->setAccessibleName(label);
     m_slider->setToolTip(tr("%1. Double-click to reset.").arg(label));
     m_slider->installEventFilter(this);
+    m_name->installEventFilter(this); // a double-click on the name resets too
     m_name->setObjectName(u"adjustName"_s);
     m_name->setBuddy(m_slider);
     m_value->setObjectName(u"adjustValue"_s);
@@ -103,7 +106,7 @@ void SliderRow::refresh()
 
 bool SliderRow::eventFilter(QObject* watched, QEvent* event)
 {
-    if (watched == m_slider && event->type() == QEvent::MouseButtonDblClick) {
+    if ((watched == m_slider || watched == m_name) && event->type() == QEvent::MouseButtonDblClick) {
         m_slider->setValue(m_default); // emits moved and released
         return true;
     }

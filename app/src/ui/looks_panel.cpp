@@ -2,6 +2,7 @@
 
 #include "ui/flow_layout.h"
 #include "ui/icons.h"
+#include "ui/panel_slider.h"
 #include "ui/style.h"
 
 #include <QButtonGroup>
@@ -218,7 +219,7 @@ QWidget* LooksPanel::buildStrength()
     m_strengthName->setObjectName(u"adjustName"_s);
     m_strengthValue = new QLabel(box);
     m_strengthValue->setObjectName(u"adjustValue"_s);
-    m_strength = new QSlider(Qt::Horizontal, box);
+    m_strength = new PanelSlider(Qt::Horizontal, box);
     m_strength->setRange(0, 100);
     m_strength->setAccessibleName(tr("Look strength"));
     connect(m_strength, &QSlider::valueChanged, this, [this](int v) {

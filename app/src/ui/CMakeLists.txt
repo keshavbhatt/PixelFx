@@ -42,6 +42,8 @@ qt_add_library(pixelfx_ui STATIC
     main_window.cpp
     main_window_heal.cpp
     main_window.h
+    panel_slider.cpp
+    panel_slider.h
     paste_sheet.cpp
     paste_sheet.h
     presets_panel.cpp

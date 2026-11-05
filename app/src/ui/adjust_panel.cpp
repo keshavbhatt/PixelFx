@@ -112,6 +112,8 @@ void AdjustSlider::setStepsPerUnit(double steps)
     const double current = value();
     m_scale = steps;
     setRange(toTicks(m_minimum), toTicks(m_maximum), toTicks(m_default));
+    // Exposure's keys step a twentieth of a stop, a stop with Page Up and Down; whole numbers 1 and 10.
+    slider()->setSingleStep(m_scale >= 100.0 ? 5 : 1);
     slider()->setPageStep(static_cast<int>(m_scale > 1.0 ? m_scale : 10));
     setTicks(toTicks(current));
 }

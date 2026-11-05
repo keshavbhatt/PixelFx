@@ -5,6 +5,7 @@
 #include "core/sidecar_store.h"
 #include "ui/icon_text_button.h"
 #include "ui/icons.h"
+#include "ui/panel_slider.h"
 #include "ui/style.h"
 #include "ui/watermark_sheet.h"
 
@@ -635,7 +636,7 @@ void BatchPage::refreshFormats()
 QFormLayout* BatchPage::saveOptionsForm(QDialog* sheet, const core::ExportOptions& output,
                                         SaveOptionsControls& c)
 {
-    c.quality = new QSlider(Qt::Horizontal, sheet);
+    c.quality = new PanelSlider(Qt::Horizontal, sheet);
     c.quality->setRange(1, 100);
     c.quality->setValue(output.quality);
     c.quality->setEnabled(lossy(output.extension));

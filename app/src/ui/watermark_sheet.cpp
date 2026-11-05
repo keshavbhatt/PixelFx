@@ -3,6 +3,7 @@
 #include "services/qt_image_bridge.h"
 #include "ui/icon_text_button.h"
 #include "ui/icons.h"
+#include "ui/panel_slider.h"
 #include "ui/style.h"
 
 #include <QButtonGroup>
@@ -351,7 +352,7 @@ QWidget* WatermarkSheet::buildControls()
         label->setObjectName(u"adjustName"_s);
         auto* value = new QLabel(panel);
         value->setObjectName(u"adjustValue"_s);
-        auto* slider = new QSlider(Qt::Horizontal, panel);
+        auto* slider = new PanelSlider(Qt::Horizontal, panel);
         slider->setRange(low, high);
         slider->setAccessibleName(name);
         connect(slider, &QSlider::valueChanged, value,
@@ -478,7 +479,7 @@ QWidget* WatermarkSheet::buildPositionRow()
     m_angleRow = new QWidget(row);
     auto* angleLabel = new QLabel(tr("Angle"), m_angleRow);
     angleLabel->setObjectName(u"adjustName"_s);
-    m_angle = new QSlider(Qt::Horizontal, m_angleRow);
+    m_angle = new PanelSlider(Qt::Horizontal, m_angleRow);
     m_angle->setRange(-90, 90);
     m_angle->setAccessibleName(tr("Angle"));
     connect(m_angle, &QSlider::valueChanged, this, &WatermarkSheet::sync);

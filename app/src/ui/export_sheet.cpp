@@ -1,5 +1,6 @@
 #include "ui/export_sheet.h"
 
+#include "ui/panel_slider.h"
 #include "ui/style.h"
 #include "ui/watermark_sheet.h"
 
@@ -153,7 +154,7 @@ QHBoxLayout* ExportSheet::addFooter(QFormLayout* form)
 QWidget* ExportSheet::qualityRow(int quality)
 {
     m_qualityRow = new QWidget(this);
-    m_quality = new QSlider(Qt::Horizontal, m_qualityRow);
+    m_quality = new PanelSlider(Qt::Horizontal, m_qualityRow);
     m_quality->setRange(1, 100);
     m_quality->setValue(quality);
     m_quality->setAccessibleName(tr("Quality"));

@@ -4,6 +4,7 @@
 #include "ui/curve_editor.h"
 #include "ui/icon_text_button.h"
 #include "ui/icons.h"
+#include "ui/panel_slider.h"
 #include "ui/style.h"
 
 #include <QButtonGroup>
@@ -388,7 +389,7 @@ QWidget* LookEditor::buildPreviewBar(QWidget* side)
     strengthName->setObjectName(u"adjustName"_s);
     m_strengthValue = new QLabel(bar);
     m_strengthValue->setObjectName(u"adjustValue"_s);
-    m_strength = new QSlider(Qt::Horizontal, bar);
+    m_strength = new PanelSlider(Qt::Horizontal, bar);
     m_strength->setRange(0, 100);
     m_strength->setFixedWidth(130);
     m_strength->setAccessibleName(tr("Default strength"));
@@ -521,7 +522,7 @@ void LookEditor::addParamSlider(int row, const QString& name, double low, double
     label->setObjectName(u"adjustName"_s);
     auto* shown = new QLabel(QString::number(value, 'f', decimals), m_params);
     shown->setObjectName(u"adjustValue"_s);
-    auto* slider = new QSlider(Qt::Horizontal, m_params);
+    auto* slider = new PanelSlider(Qt::Horizontal, m_params);
     slider->setRange(0, kSliderTicks);
     slider->setAccessibleName(name);
     slider->setValue(static_cast<int>(std::lround((value - low) / (high - low) * kSliderTicks)));
