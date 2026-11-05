@@ -20,6 +20,12 @@ class QWidget;
 
 namespace pixelfx::ui {
 
+class SliderRow;
+
+/// The quality of a lossy format as a slider row ("Smaller file · Better image", 1 to 100,
+/// 90 by default), for Export and Batch.
+[[nodiscard]] SliderRow* qualitySlider(int quality, QWidget* parent);
+
 /// Export: format, quality, size, metadata, folder, file name, and what to
 /// do when the file exists. Starts from the remembered choices; returns the chosen ones.
 class ExportSheet : public Sheet
@@ -70,8 +76,7 @@ private:
 
     QString m_source;
     QButtonGroup* m_formats = nullptr;
-    QSlider* m_quality = nullptr;
-    QLabel* m_qualityValue = nullptr;
+    SliderRow* m_quality = nullptr;
     QWidget* m_qualityRow = nullptr;
     QCheckBox* m_sixteen = nullptr;
     QComboBox* m_size = nullptr;

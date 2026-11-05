@@ -4,10 +4,11 @@
 #include "core/looks.h"
 #include "core/sidecar_store.h"
 #include "ui/elided_label.h"
+#include "ui/export_sheet.h"
 #include "ui/icon_text_button.h"
 #include "ui/icons.h"
-#include "ui/panel_slider.h"
 #include "ui/sheet.h"
+#include "ui/slider_row.h"
 #include "ui/style.h"
 #include "ui/watermark_sheet.h"
 
@@ -627,17 +628,8 @@ void BatchPage::refreshFormats()
 QFormLayout* BatchPage::saveOptionsForm(QDialog* sheet, const core::ExportOptions& output,
                                         SaveOptionsControls& c)
 {
-    c.quality = new PanelSlider(Qt::Horizontal, sheet);
-    c.quality->setRange(1, 100);
-    c.quality->setValue(output.quality);
+    c.quality = qualitySlider(output.quality, sheet);
     c.quality->setEnabled(lossy(output.extension));
-    auto* qualityValue = new QLabel(QString::number(output.quality), sheet);
-    connect(c.quality, &QSlider::valueChanged, qualityValue,
-            [qualityValue](int v) { qualityValue->setNum(v); });
-    auto* qualityRow = new QHBoxLayout;
-    qualityRow->setSpacing(kGapControls);
-    qualityRow->addWidget(c.quality, 1);
-    qualityRow->addWidget(qualityValue);
     c.deep = new QCheckBox(tr("16 bits per channel"), sheet);
     c.deep->setChecked(output.bitsPerSample == 16);
     c.deep->setEnabled(!lossy(output.extension));
@@ -652,7 +644,7 @@ QFormLayout* BatchPage::saveOptionsForm(QDialog* sheet, const core::ExportOption
     c.exists->setCurrentIndex(std::max(0, c.exists->findData(static_cast<int>(output.ifExists))));
     auto* form = new QFormLayout;
     form->setLabelAlignment(Qt::AlignLeft | Qt::AlignVCenter);
-    form->addRow(tr("Quality"), qualityRow);
+    form->addRow(tr("Quality"), c.quality);
     form->addRow(tr("Bit depth"), c.deep);
     auto* metadata = new QVBoxLayout;
     metadata->setSpacing(kGapSmall);
@@ -680,7 +672,7 @@ void BatchPage::editSaveOptions()
     if (sheet.exec() != QDialog::Accepted) {
         return;
     }
-    m_output.quality = c.quality->value();
+    m_output.quality = c.quality->ticks();
     m_output.bitsPerSample = c.deep->isChecked() ? 16 : 8;
     m_output.keepMetadata = c.camera->isChecked();
     m_output.keepLocation = c.location->isChecked();

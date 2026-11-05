@@ -33,6 +33,8 @@ class QVBoxLayout;
 
 namespace pixelfx::ui {
 
+class SliderRow;
+
 /// Batch. Left: the photos, as a list
 /// or a grid, added as files or whole folders or dropped, the first one before and after the
 /// recipe, and while running the progress (Pause, Stop), then the summary (Retry failed, Show in
@@ -101,7 +103,7 @@ private:
     /// The controls of More..., read back once the sheet is accepted.
     struct SaveOptionsControls
     {
-        QSlider* quality = nullptr;
+        SliderRow* quality = nullptr;
         QCheckBox* deep = nullptr;
         QCheckBox* camera = nullptr;
         QCheckBox* location = nullptr;

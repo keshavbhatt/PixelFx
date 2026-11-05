@@ -1,6 +1,6 @@
 #include "ui/export_sheet.h"
 
-#include "ui/panel_slider.h"
+#include "ui/slider_row.h"
 #include "ui/style.h"
 #include "ui/watermark_sheet.h"
 
@@ -72,6 +72,15 @@ QString shortPath(const QString& path)
 }
 
 } // namespace
+
+SliderRow* qualitySlider(int quality, QWidget* parent)
+{
+    auto* row = new SliderRow(ExportSheet::tr("Smaller file \u00B7 Better image"), parent);
+    row->slider()->setAccessibleName(ExportSheet::tr("Quality"));
+    row->setRange(1, 100, core::ExportOptions().quality);
+    row->setTicks(quality);
+    return row;
+}
 
 ExportSheet::ExportSheet(const QString& source, const QSize& photoSize, const core::ExportOptions& options,
                          QWidget* parent)
@@ -149,28 +158,8 @@ QHBoxLayout* ExportSheet::addFooter(QFormLayout* form)
 
 QWidget* ExportSheet::qualityRow(int quality)
 {
-    m_qualityRow = new QWidget(this);
-    m_quality = new PanelSlider(Qt::Horizontal, m_qualityRow);
-    m_quality->setRange(1, 100);
-    m_quality->setValue(quality);
-    m_quality->setAccessibleName(tr("Quality"));
-    m_qualityValue = new QLabel(m_qualityRow);
-    m_qualityValue->setObjectName(u"adjustValue"_s);
-    m_qualityValue->setProperty("changed", true);
-    m_qualityValue->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
-    auto* scale = new QLabel(tr("Smaller file \u00B7 Better image"), m_qualityRow);
-    scale->setObjectName(u"small"_s);
-    auto* top = new QHBoxLayout;
-    top->setSpacing(kGapControls);
-    top->addWidget(scale, 1);
-    top->addWidget(m_qualityValue);
-    auto* qualityLayout = new QVBoxLayout(m_qualityRow);
-    qualityLayout->setContentsMargins(0, 0, 0, 0);
-    qualityLayout->setSpacing(kGapTight);
-    qualityLayout->addLayout(top);
-    qualityLayout->addWidget(m_quality);
-    connect(m_quality, &QSlider::valueChanged, m_qualityValue, qOverload<int>(&QLabel::setNum));
-    m_qualityValue->setNum(quality);
+    m_quality = qualitySlider(quality, this);
+    m_qualityRow = m_quality;
     return m_qualityRow;
 }
 
@@ -495,7 +484,7 @@ core::ExportOptions ExportSheet::options() const
 {
     core::ExportOptions o;
     o.extension = m_formats->checkedButton()->property("extension").toString();
-    o.quality = m_quality->value();
+    o.quality = m_quality->ticks();
     o.bitsPerSample = (formatFor(o.extension)->deep && m_sixteen->isChecked()) ? 16 : 8;
     const QString size = m_size->currentData().toString();
     o.longEdge = size == u"custom"_s ? m_longEdge : 0;
