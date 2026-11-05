@@ -3,6 +3,7 @@
 #include "core/batch_resources.h"
 #include "core/looks.h"
 #include "core/sidecar_store.h"
+#include "ui/icon_text_button.h"
 #include "ui/icons.h"
 #include "ui/style.h"
 #include "ui/watermark_sheet.h"
@@ -338,10 +339,11 @@ QWidget* BatchPage::buildStatus(QWidget* parent)
     m_statusText->setObjectName(u"recentTitle"_s);
     m_statusDetail = new QLabel(m_status);
     m_statusDetail->setObjectName(u"muted"_s);
-    m_pause = new QPushButton(icons::themed(u"pause"_s, tokens().text), tr("Pause"), m_status);
+    m_pause = new IconTextButton(icons::themed(u"pause"_s, tokens().text), tr("Pause"), m_status);
     m_stop = new QPushButton(tr("Stop"), m_status);
     m_retry = new QPushButton(tr("Retry failed"), m_status);
-    m_showFolder = new QPushButton(icons::themed(u"folder"_s, tokens().text), tr("Show in folder"), m_status);
+    m_showFolder =
+        new IconTextButton(icons::themed(u"folder"_s, tokens().text), tr("Show in folder"), m_status);
     connect(m_pause, &QPushButton::clicked, this, [this] {
         m_runner.setPaused(!m_runner.isPaused());
         refreshStatus();
@@ -595,7 +597,8 @@ QWidget* BatchPage::buildSaveAs(QWidget* parent)
 
 QWidget* BatchPage::buildFoot(QWidget* parent)
 {
-    auto* save = new QPushButton(icons::themed(u"save"_s, tokens().text), tr("Save as batch recipe"), parent);
+    auto* save =
+        new IconTextButton(icons::themed(u"save"_s, tokens().text), tr("Save as batch recipe"), parent);
     save->setToolTip(tr("Keep this page as a file, to run again here or from the command line. "
                         "Open one from the main menu, or drop it here."));
     connect(save, &QPushButton::clicked, this, [this] {
@@ -606,7 +609,7 @@ QWidget* BatchPage::buildFoot(QWidget* parent)
             m_status->show();
         }
     });
-    m_process = new QPushButton(icons::themed(u"play"_s, Qt::white), tr("Process"), parent);
+    m_process = new IconTextButton(icons::themed(u"play"_s, Qt::white), tr("Process"), parent);
     m_process->setObjectName(u"primary"_s);
     connect(m_process, &QPushButton::clicked, this, &BatchPage::process);
     auto* foot = new QHBoxLayout;

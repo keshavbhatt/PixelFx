@@ -13,6 +13,7 @@
 #include "ui/filmstrip.h"
 #include "ui/heal_panel.h"
 #include "ui/heal_tool.h"
+#include "ui/icon_text_button.h"
 #include "ui/icons.h"
 #include "ui/look_editor.h"
 #include "ui/looks_panel.h"
@@ -397,7 +398,7 @@ void MainWindow::buildEditButtons()
     m_undo->setEnabled(false);
     m_redo->setEnabled(false);
     m_original->setEnabled(false);
-    m_export = new QPushButton(icons::themed(u"export"_s, tokens().text), tr("Export"), m_header);
+    m_export = new IconTextButton(icons::themed(u"export"_s, tokens().text), tr("Export"), m_header);
     m_export->setToolTip(tr("Save a copy with these settings (Ctrl+Shift+E)"));
     m_export->setEnabled(false);
     connect(m_export, &QPushButton::clicked, this, &MainWindow::exportPhoto);
@@ -464,8 +465,9 @@ void MainWindow::buildHeader()
 
 void MainWindow::buildBatchHeaderButtons()
 {
-    auto* addPhotos = new QPushButton(icons::themed(u"plus"_s, tokens().text), tr("Add photos"), m_header);
-    auto* addFolder = new QPushButton(icons::themed(u"folder"_s, tokens().text), tr("Add folder"), m_header);
+    auto* addPhotos = new IconTextButton(icons::themed(u"plus"_s, tokens().text), tr("Add photos"), m_header);
+    auto* addFolder =
+        new IconTextButton(icons::themed(u"folder"_s, tokens().text), tr("Add folder"), m_header);
     addFolder->setToolTip(tr("Every photo in a folder, subfolders included"));
     connect(addPhotos, &QPushButton::clicked, this, [this] { m_batch->chooseFiles(); });
     connect(addFolder, &QPushButton::clicked, this, [this] { m_batch->chooseFolder(); });

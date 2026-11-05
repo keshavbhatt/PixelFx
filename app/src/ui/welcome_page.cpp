@@ -1,6 +1,7 @@
 #include "ui/welcome_page.h"
 
 #include "services/thumbnailer.h"
+#include "ui/icon_text_button.h"
 #include "ui/icons.h"
 #include "ui/style.h"
 
@@ -65,7 +66,7 @@ void WelcomePage::buildDropZone()
         m_dropZone);
     hint->setObjectName(u"welcomeHint"_s);
     hint->setAlignment(Qt::AlignCenter);
-    auto* open = new QPushButton(icons::themed(u"open"_s, Qt::white), tr("Open images"), m_dropZone);
+    auto* open = new IconTextButton(icons::themed(u"open"_s, Qt::white), tr("Open images"), m_dropZone);
     open->setObjectName(u"primary"_s);
     open->setToolTip(tr("Open images (Ctrl+O)"));
     connect(open, &QPushButton::clicked, this, &WelcomePage::openRequested);
@@ -84,10 +85,10 @@ void WelcomePage::buildDropZone()
     zone->addWidget(hint);
     zone->addSpacing(10);
     auto* openFolder =
-        new QPushButton(icons::themed(u"folder"_s, tokens().text), tr("Open folder"), m_dropZone);
+        new IconTextButton(icons::themed(u"folder"_s, tokens().text), tr("Open folder"), m_dropZone);
     openFolder->setToolTip(tr("Every photo in a folder, ready for Batch"));
     connect(openFolder, &QPushButton::clicked, this, &WelcomePage::openFolderRequested);
-    auto* batch = new QPushButton(icons::themed(u"stack"_s, tokens().text), tr("Batch edit"), m_dropZone);
+    auto* batch = new IconTextButton(icons::themed(u"stack"_s, tokens().text), tr("Batch edit"), m_dropZone);
     batch->setToolTip(tr("One recipe for many photos (B)"));
     connect(batch, &QPushButton::clicked, this, &WelcomePage::batchRequested);
     auto* buttons = new QHBoxLayout;

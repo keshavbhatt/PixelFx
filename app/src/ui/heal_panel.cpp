@@ -1,6 +1,7 @@
 #include "ui/heal_panel.h"
 
 #include "ui/heal_tool.h"
+#include "ui/icon_text_button.h"
 #include "ui/icons.h"
 #include "ui/list_row.h"
 #include "ui/slider_row.h"
@@ -95,7 +96,7 @@ QWidget* HealPanel::buildBrush()
     const QStringList tips = {tr("Click a blemish to heal it; a patch is picked for you"),
                               tr("Paint along a longer mark (a wire, a scratch, a hair) to heal it")};
     for (int i = 0; i < 2; ++i) {
-        auto* b = new QPushButton(icons::themed(glyphs.at(i), tokens().text), names.at(i), box);
+        auto* b = new IconTextButton(icons::themed(glyphs.at(i), tokens().text), names.at(i), box);
         b->setObjectName(u"segment"_s);
         b->setCheckable(true);
         b->setChecked(i == 0);

@@ -1,6 +1,7 @@
 #include "ui/watermark_sheet.h"
 
 #include "services/qt_image_bridge.h"
+#include "ui/icon_text_button.h"
 #include "ui/icons.h"
 #include "ui/style.h"
 
@@ -298,8 +299,8 @@ QWidget* WatermarkSheet::buildKindRow(QWidget* parent)
     const std::array<std::pair<QString, QString>, 2> kindNames = {
         {{tr("Text"), u"type"_s}, {tr("Logo"), u"image"_s}}};
     for (std::size_t i = 0; i < kindNames.size(); ++i) {
-        auto* b = new QPushButton(icons::themed(kindNames.at(i).second, tokens().muted),
-                                  kindNames.at(i).first, panel);
+        auto* b = new IconTextButton(icons::themed(kindNames.at(i).second, tokens().muted),
+                                     kindNames.at(i).first, panel);
         b->setObjectName(u"segment"_s);
         b->setCheckable(true);
         m_kind->addButton(b, static_cast<int>(i));

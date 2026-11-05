@@ -29,6 +29,8 @@ qt_add_library(pixelfx_ui STATIC
     heal_tool.h
     histogram_view.cpp
     histogram_view.h
+    icon_text_button.cpp
+    icon_text_button.h
     icons.cpp
     icons.h
     look_editor.cpp

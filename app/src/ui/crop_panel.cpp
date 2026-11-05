@@ -2,6 +2,7 @@
 
 #include "core/crop_geometry.h"
 #include "ui/adjust_panel.h"
+#include "ui/icon_text_button.h"
 #include "ui/icons.h"
 #include "ui/style.h"
 
@@ -103,7 +104,7 @@ QWidget* chipRows(const QList<QAbstractButton*>& chips, QWidget* parent)
 
 QPushButton* smallButton(const QString& glyph, const QString& text, const QString& tip, QWidget* parent)
 {
-    auto* b = new QPushButton(icons::themed(glyph, tokens().text), text, parent);
+    auto* b = new IconTextButton(icons::themed(glyph, tokens().text), text, parent);
     b->setObjectName(u"small"_s);
     b->setToolTip(tip);
     b->setAccessibleName(tip);

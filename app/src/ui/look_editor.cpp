@@ -2,6 +2,7 @@
 
 #include "services/qt_image_bridge.h"
 #include "ui/curve_editor.h"
+#include "ui/icon_text_button.h"
 #include "ui/icons.h"
 #include "ui/style.h"
 
@@ -275,7 +276,7 @@ void LookEditor::showStepMenu(const QPoint& at)
 
 QHBoxLayout* LookEditor::buildStepButtons(QWidget* side)
 {
-    auto* add = new QPushButton(icons::themed(u"plus"_s, tokens().text), tr("Add step"), side);
+    auto* add = new IconTextButton(icons::themed(u"plus"_s, tokens().text), tr("Add step"), side);
     add->setObjectName(u"small"_s);
     auto* addMenu = new QMenu(add);
     for (const pfx::OpSpec& op : pfx::registry().ops()) {
@@ -285,7 +286,7 @@ QHBoxLayout* LookEditor::buildStepButtons(QWidget* side)
         }
     }
     add->setMenu(addMenu);
-    auto* import = new QPushButton(icons::themed(u"import"_s, tokens().text), tr("Import LUT"), side);
+    auto* import = new IconTextButton(icons::themed(u"import"_s, tokens().text), tr("Import LUT"), side);
     import->setObjectName(u"small"_s);
     connect(import, &QPushButton::clicked, this, &LookEditor::importLut);
     auto* buttons = new QHBoxLayout;

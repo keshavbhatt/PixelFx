@@ -5,6 +5,7 @@
 #include "ui/color_wheel.h"
 #include "ui/curve_editor.h"
 #include "ui/histogram_view.h"
+#include "ui/icon_text_button.h"
 #include "ui/icons.h"
 #include "ui/style.h"
 
@@ -155,11 +156,11 @@ QString AdjustSlider::format(int ticks) const
 
 QHBoxLayout* AdjustPanel::buildTopRow()
 {
-    auto* resetAll = new QPushButton(icons::themed(u"reset"_s, tokens().text), QString(), this);
+    auto* resetAll = new IconTextButton(icons::themed(u"reset"_s, tokens().text), QString(), this);
     resetAll->setObjectName(u"small"_s);
     resetAll->setToolTip(tr("Reset all adjustments (Ctrl+R)"));
     resetAll->setAccessibleName(tr("Reset all"));
-    auto* copy = new QPushButton(icons::themed(u"copy"_s, tokens().text), tr("Copy"), this);
+    auto* copy = new IconTextButton(icons::themed(u"copy"_s, tokens().text), tr("Copy"), this);
     copy->setObjectName(u"small"_s);
     copy->setToolTip(tr("Copy these settings, crop excepted (Ctrl+Shift+C)"));
     connect(copy, &QPushButton::clicked, this, &AdjustPanel::copyRequested);
@@ -169,7 +170,7 @@ QHBoxLayout* AdjustPanel::buildTopRow()
     m_paste->setEnabled(false);
     connect(m_paste, &QPushButton::clicked, this, &AdjustPanel::pasteRequested);
     connect(resetAll, &QPushButton::clicked, this, &AdjustPanel::resetAll);
-    auto* autoButton = new QPushButton(icons::themed(u"auto"_s, tokens().text), tr("Auto"), this);
+    auto* autoButton = new IconTextButton(icons::themed(u"auto"_s, tokens().text), tr("Auto"), this);
     autoButton->setObjectName(u"small"_s);
     autoButton->setToolTip(tr("Set light and color from the photo (Ctrl+Shift+A)"));
     connect(autoButton, &QPushButton::clicked, this, &AdjustPanel::autoRequested);

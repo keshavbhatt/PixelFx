@@ -1,5 +1,6 @@
 #include "ui/presets_panel.h"
 
+#include "ui/icon_text_button.h"
 #include "ui/icons.h"
 #include "ui/looks_panel.h"
 #include "ui/style.h"
@@ -61,7 +62,8 @@ PresetsPanel::PresetsPanel(QWidget* parent)
     scroll->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     m_listBox->setObjectName(u"adjustContent"_s);
 
-    auto* save = new QPushButton(icons::themed(u"plus"_s, tokens().text), tr("Save current as preset"), this);
+    auto* save =
+        new IconTextButton(icons::themed(u"plus"_s, tokens().text), tr("Save current as preset"), this);
     save->setToolTip(tr("Keep this photo's settings, or some of them, as a preset"));
     connect(save, &QPushButton::clicked, this, &PresetsPanel::saveRequested);
     auto* footLine = new QWidget(this);
