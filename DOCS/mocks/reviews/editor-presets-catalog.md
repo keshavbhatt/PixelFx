@@ -64,6 +64,23 @@ a preview, and the tile's tooltip says what a click does.
   presets. High key B&W now uses black and white itself rather than saturation -100.
 - **My presets** open and close like the categories, without the six-tile limit.
 
+## Hover preview, reworked (owner, 2026-11-05)
+
+The owner found a preview the instant the pointer touched a tile too jumpy, and asked for a
+wait with an indicator and for the photo to say it shows a preview.
+
+- **A wait, shown.** Resting 0.35 s on a tile previews it; meanwhile a 3 px bar fills along the
+  bottom of the tile's picture, so the wait reads as on purpose and a pointer passing over the
+  tiles changes nothing. Once a preview shows, the next tile takes 0.15 s, as tooltips do, so
+  comparing neighbours stays quick. Keyboard focus on a tile previews the same way.
+- **The bar** is the accent on a 55% black track: the accent is 6.9:1 (dark) and 5.3:1 (light)
+  against the panel and the track keeps it at least 3:1 over any picture.
+- **The photo says it is a preview**: a "Preview" tag in its top-left corner, drawn as the
+  compare view's Before and After tags (white on 55% black), and the line at the top, "Preview of
+  Everyday gold 200, click the tile to apply". The accent frame considered instead was left out:
+  the accent means selection, focus and "changed" (DESIGN lens 3).
+- Leaving the tiles, a click (which applies), or Escape ends the preview.
+
 ## Questions for the owner
 
 - **Names.** All 429 catalog names are in `scripts/catalog/catalog.tsv` (source, category,
