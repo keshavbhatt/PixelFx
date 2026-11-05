@@ -69,8 +69,10 @@ cards, 14 px sheets.
   Batch is its own page (list of photos, recipe on the right).
 - No menu bar on Linux and Windows: the header carries Open, Export and the main menu, and the
   shortcuts sheet lists every action. macOS keeps its native menu bar.
-- Dialogs ("sheets") are native dialog windows with the system's title bar (owner, 2026-11-05);
-  inside, they follow the mocks: a title row with a close button, the body, a footer bar.
+- Dialogs ("sheets") are windows without the system's title bar (owner, 2026-11-05): a
+  rounded panel with a 1 px border over the dimmed window, moved by dragging any empty part of
+  it, closed by its close button or Escape. Inside: a title row, the body, a footer bar. The
+  system's own dialogs (file and colour pickers, short questions) keep the system's look.
   Sheets never stack.
 - Minimum 1024 by 640. Below 1280 px wide the left panel collapses to a button in the header;
   Tab hides both panels.

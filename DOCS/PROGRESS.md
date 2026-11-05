@@ -23,6 +23,7 @@
 | `batch-compress.html` | 2026-11-04 (`mocks/reviews/batch-compress.md`) | approved 2026-11-04 |
 | `editor-grading.html` | 2026-11-05 (`mocks/reviews/editor-grading.md`) | approved 2026-11-05 (as drawn: two wheels, a group of its own) |
 | `about.html`, `whats-new.html` | 2026-11-05 (`mocks/reviews/about-whats-new.md`) | approved 2026-11-05 |
+| `editor-value-entry.html` | 2026-11-05 (`mocks/reviews/editor-value-entry.md`) | approved 2026-11-05 |
 
 ## Waiting for the owner (2026-11-05)
 
@@ -62,9 +63,9 @@ Decisions the work stopped at; everything else went ahead within the approved mo
 
 ### 2026-11-05 (UI against the mocks)
 
-- Decided by the owner: sheets stay native dialog windows (with the system's title bar),
-  not drawn inside the window over a dimmed backdrop as the mocks show; their insides follow
-  the mocks.
+- Decided by the owner, then changed the same day: sheets have no system title bar. They are
+  drawn as the mocks draw them (rounded, bordered, over a dimmed window) and moved by dragging
+  them; the system's own dialogs (file and colour pickers, short questions) stay native.
 
 - The owner found the Batch page far from `batch.html` and raw Fusion controls everywhere.
   Every screen was grabbed and set beside its mock; the gaps were shared, so they were fixed
