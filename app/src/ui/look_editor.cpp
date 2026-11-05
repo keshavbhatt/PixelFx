@@ -158,6 +158,7 @@ LookEditor::LookEditor(const std::shared_ptr<const pfx::Image>& source, const pf
     head->addWidget(m_name);
     head->addWidget(m_category);
     head->addStretch();
+    head->addWidget(sheetCloseButton(this));
 
     auto* body = new QHBoxLayout;
     body->setContentsMargins(0, 0, 0, 0);
@@ -278,7 +279,7 @@ QHBoxLayout* LookEditor::buildStepButtons(QWidget* side)
     add->setObjectName(u"small"_s);
     auto* addMenu = new QMenu(add);
     for (const pfx::OpSpec& op : pfx::registry().ops()) {
-        if (op.id != "geometry") {
+        if (op.id != "geometry" && op.id != "heal") { // a look never moves or heals pixels
             const QString id = QString::fromStdString(op.id);
             connect(addMenu->addAction(stepName(id)), &QAction::triggered, this, [this, id] { addStep(id); });
         }
@@ -447,7 +448,7 @@ void LookEditor::buildFooter(QVBoxLayout* column)
     foot->addStretch();
     foot->addWidget(cancel);
     foot->addWidget(save);
-    column->addLayout(foot);
+    column->addWidget(sheetFootBar(this, foot));
 }
 
 void LookEditor::refreshSteps()

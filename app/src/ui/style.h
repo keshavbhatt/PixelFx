@@ -4,6 +4,11 @@
 #include <QString>
 
 class QApplication;
+class QDialog;
+class QLayout;
+class QToolButton;
+class QVBoxLayout;
+class QWidget;
 
 namespace pixelfx::ui {
 
@@ -40,5 +45,13 @@ void useLightTheme(bool light);
 
 /// Fusion with a palette and style sheet built from the tokens.
 void applyStyle(QApplication& app);
+
+/// Lays out a sheet as the mocks do (mock.css .sheet): the returned layout is the padded body
+/// (title row first), and `foot`, the buttons, sits on a bar with a top border, edge to edge.
+QVBoxLayout* sheetLayout(QDialog* sheet, QLayout* foot);
+/// The flat close button of a sheet's title row (mock .sh .x); it rejects the sheet.
+QWidget* sheetCloseButton(QDialog* sheet);
+/// The footer bar alone, for sheets whose body runs edge to edge (Watermark, the look editor).
+QWidget* sheetFootBar(QWidget* sheet, QLayout* foot);
 
 } // namespace pixelfx::ui

@@ -42,6 +42,7 @@ WhatsNewSheet::WhatsNewSheet(const QString& markdown, const QString& version, bo
     head->addWidget(title);
     head->addWidget(m_versions);
     head->addStretch();
+    head->addWidget(sheetCloseButton(this));
 
     m_text->setObjectName(u"whatsNewText"_s);
     m_text->setOpenExternalLinks(true);
@@ -62,13 +63,11 @@ WhatsNewSheet::WhatsNewSheet(const QString& markdown, const QString& version, bo
     foot->addStretch();
     foot->addWidget(close);
 
-    auto* layout = new QVBoxLayout(this);
-    layout->setContentsMargins(20, 18, 20, 16);
+    QVBoxLayout* layout = sheetLayout(this, foot);
     layout->setSpacing(10);
     layout->addLayout(head);
     layout->addWidget(m_text, 1);
     layout->addWidget(m_more);
-    layout->addLayout(foot);
     setFixedWidth(600);
     resize(600, 520);
     showVersion(version);

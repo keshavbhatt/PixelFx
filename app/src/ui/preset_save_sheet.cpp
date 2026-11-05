@@ -2,6 +2,7 @@
 
 #include "core/looks.h"
 #include "core/presets.h"
+#include "ui/style.h"
 
 #include <QCheckBox>
 #include <QComboBox>
@@ -67,13 +68,14 @@ PresetSaveSheet::PresetSaveSheet(const pfx::Settings& settings, const QStringLis
 
     QHBoxLayout* buttons = buildButtons();
 
-    auto* column = new QVBoxLayout(this);
-    column->setContentsMargins(22, 18, 22, 18);
-    column->setSpacing(12);
-    column->addWidget(title);
+    QVBoxLayout* column = sheetLayout(this, buttons);
+    auto* titleRow = new QHBoxLayout;
+    titleRow->addWidget(title);
+    titleRow->addStretch();
+    titleRow->addWidget(sheetCloseButton(this));
+    column->addLayout(titleRow);
     column->addLayout(form);
     column->addWidget(note);
-    column->addLayout(buttons);
     setMinimumWidth(460);
     tick(m_changed);
     refreshSave();

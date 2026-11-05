@@ -1,6 +1,7 @@
 #include "ui/paste_sheet.h"
 
 #include "core/presets.h"
+#include "ui/style.h"
 
 #include <QCheckBox>
 #include <QHBoxLayout>
@@ -42,13 +43,14 @@ PasteSheet::PasteSheet(const pfx::Settings& copied, int photos, QWidget* parent)
     buttons->addStretch();
     buttons->addWidget(cancel);
     buttons->addWidget(paste);
-    auto* column = new QVBoxLayout(this);
-    column->setContentsMargins(22, 18, 22, 18);
-    column->setSpacing(12);
-    column->addWidget(title);
+    QVBoxLayout* column = sheetLayout(this, buttons);
+    auto* titleRow = new QHBoxLayout;
+    titleRow->addWidget(title);
+    titleRow->addStretch();
+    titleRow->addWidget(sheetCloseButton(this));
+    column->addLayout(titleRow);
     column->addLayout(boxes);
     column->addWidget(hint);
-    column->addLayout(buttons);
     setMinimumWidth(360);
 }
 

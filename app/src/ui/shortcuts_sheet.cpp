@@ -86,8 +86,7 @@ ShortcutsSheet::ShortcutsSheet(QWidget* parent)
     m_search->addAction(icons::themed(u"search"_s, tokens().muted), QLineEdit::LeadingPosition);
     m_search->setFixedWidth(240);
     connect(m_search, &QLineEdit::textChanged, this, &ShortcutsSheet::filter);
-    auto* close = new QPushButton(tr("Close"), this);
-    connect(close, &QPushButton::clicked, this, &QDialog::accept);
+    auto* close = sheetCloseButton(this);
     auto* head = new QHBoxLayout;
     head->addWidget(title);
     head->addSpacing(12);

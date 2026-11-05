@@ -187,7 +187,7 @@ WatermarkSheet::WatermarkSheet(const QImage& photo, const QString& current, cons
     column->setSpacing(0);
     column->addLayout(head);
     column->addLayout(body, 1);
-    column->addLayout(foot);
+    column->addWidget(sheetFootBar(this, foot));
 
     m_preview->setPhoto(photo);
     connect(m_list, &QComboBox::activated, this, [this](int index) {
@@ -231,6 +231,7 @@ QLayout* WatermarkSheet::buildHeader()
     head->addSpacing(6);
     head->addWidget(saveAs);
     head->addStretch();
+    head->addWidget(sheetCloseButton(this));
     return head;
 }
 
@@ -468,6 +469,8 @@ QWidget* WatermarkSheet::buildPositionRow()
 
     m_repeat = new QCheckBox(tr("Repeat across the photo"), row);
     m_shadow = new QCheckBox(tr("Soft shadow"), row);
+    m_repeat->setObjectName(u"switch"_s); // mock watermark.html: switches
+    m_shadow->setObjectName(u"switch"_s);
     connect(m_repeat, &QCheckBox::toggled, this, &WatermarkSheet::sync);
     connect(m_shadow, &QCheckBox::toggled, this, &WatermarkSheet::sync);
     // The angle matters only when the mark repeats (review: shown only then).

@@ -13,6 +13,8 @@ class QLabel;
 class QLineEdit;
 class QSlider;
 class QSpinBox;
+class QFormLayout;
+class QHBoxLayout;
 class QVBoxLayout;
 class QWidget;
 
@@ -56,7 +58,7 @@ private:
     [[nodiscard]] QWidget* folderRow();
     [[nodiscard]] QWidget* nameRow(const QString& nameTemplate);
     [[nodiscard]] QWidget* ifExistsBox(core::ExportOptions::IfExists ifExists);
-    void addFooter(QVBoxLayout* column);
+    QHBoxLayout* addFooter(QFormLayout* form);
     [[nodiscard]] QWidget* watermarkRow(const QString& current);
     [[nodiscard]] QWidget* metadataRow(const core::ExportOptions& options);
 

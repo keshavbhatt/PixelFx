@@ -92,13 +92,14 @@ AboutSheet::AboutSheet(QWidget* parent)
     foot->addStretch();
     foot->addWidget(close);
 
-    auto* layout = new QVBoxLayout(this);
-    layout->setContentsMargins(20, 18, 20, 16);
-    layout->setSpacing(12);
-    layout->addWidget(title);
+    QVBoxLayout* layout = sheetLayout(this, foot);
+    auto* titleRow = new QHBoxLayout;
+    titleRow->addWidget(title);
+    titleRow->addStretch();
+    titleRow->addWidget(sheetCloseButton(this));
+    layout->addLayout(titleRow);
     layout->addLayout(tabRow);
     layout->addWidget(m_pages, 1);
-    layout->addLayout(foot);
     setFixedSize(520, 480); // the same on every tab
     showPage(AboutPage);
 }

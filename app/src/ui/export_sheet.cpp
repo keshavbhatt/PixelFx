@@ -87,6 +87,7 @@ ExportSheet::ExportSheet(const QString& source, const QSize& photoSize, const co
     heading->addSpacing(8);
     heading->addWidget(file);
     heading->addStretch();
+    heading->addWidget(sheetCloseButton(this));
 
     auto* form = new QFormLayout;
     form->setHorizontalSpacing(16);
@@ -114,18 +115,17 @@ ExportSheet::ExportSheet(const QString& source, const QSize& photoSize, const co
 
     form->addRow(tr("If it exists"), ifExistsBox(options.ifExists));
 
-    auto* column = new QVBoxLayout(this);
-    column->setContentsMargins(24, 20, 24, 18);
+    QHBoxLayout* foot = addFooter(form);
+    QVBoxLayout* column = sheetLayout(this, foot);
     column->setSpacing(14);
     column->addLayout(heading);
     column->addLayout(form);
-    addFooter(column);
     updateForFormat();
 }
 
 ExportSheet::~ExportSheet() = default;
 
-void ExportSheet::addFooter(QVBoxLayout* column)
+QHBoxLayout* ExportSheet::addFooter(QFormLayout* form)
 {
     auto* note = new QLabel(tr("The original photo is never changed. Your choices are remembered."), this);
     note->setObjectName(u"faint"_s);
@@ -147,8 +147,8 @@ void ExportSheet::addFooter(QVBoxLayout* column)
     buttons->addStretch();
     buttons->addWidget(cancel);
     buttons->addWidget(exportButton);
-    column->addWidget(note);
-    column->addLayout(buttons);
+    form->addRow(note);
+    return buttons;
 }
 
 QWidget* ExportSheet::qualityRow(int quality)

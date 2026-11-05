@@ -1,6 +1,7 @@
 #include "ui/settings_sheet.h"
 
 #include "core/settings/settings.h"
+#include "ui/style.h"
 
 #include <QButtonGroup>
 #include <QCheckBox>
@@ -59,8 +60,7 @@ SettingsSheet::SettingsSheet(core::Settings& settings, QWidget* parent)
     resize(760, 560);
     auto* title = new QLabel(tr("Settings"), this);
     title->setObjectName(u"sheetTitle"_s);
-    auto* close = new QPushButton(tr("Close"), this);
-    connect(close, &QPushButton::clicked, this, &QDialog::accept);
+    auto* close = sheetCloseButton(this);
     auto* head = new QHBoxLayout;
     head->setContentsMargins(20, 14, 14, 10);
     head->addWidget(title);
@@ -119,6 +119,7 @@ QWidget* SettingsSheet::buildGeneral()
 
     form->addRow(sectionLabel(tr("Editing"), page));
     auto* remember = new QCheckBox(tr("Keep each photo's settings in the app's library"), page);
+    remember->setObjectName(u"switch"_s); // mock settings.html: switches
     remember->setChecked(m_settings.rememberEdits());
     connect(remember, &QCheckBox::toggled, this, [this](bool on) { m_settings.setRememberEdits(on); });
     form->addRow(tr("Remember edits"), remember);
@@ -132,6 +133,7 @@ QWidget* SettingsSheet::buildGeneral()
 
     form->addRow(sectionLabel(tr("Display"), page));
     auto* clipping = new QCheckBox(tr("Show clipped highlights and shadows (J)"), page);
+    clipping->setObjectName(u"switch"_s);
     clipping->setChecked(m_settings.clippingWarnings());
     connect(clipping, &QCheckBox::toggled, this, [this](bool on) { m_settings.setClippingWarnings(on); });
     connect(&m_settings, &S::clippingWarningsChanged, clipping, &QCheckBox::setChecked);

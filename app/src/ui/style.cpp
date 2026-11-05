@@ -1,8 +1,17 @@
 #include "ui/style.h"
 
+#include "ui/icons.h"
+
 #include <QApplication>
+#include <QDialog>
+#include <QFile>
 #include <QPalette>
 #include <QStyleFactory>
+#include <QTemporaryDir>
+#include <QToolButton>
+#include <QVBoxLayout>
+
+#include <memory>
 
 using namespace Qt::StringLiterals;
 
@@ -127,9 +136,112 @@ const QString kSheet = uR"(
         QPlainTextEdit#noticeText, QPlainTextEdit#diagnostics { background: {{input}}; border: 1px solid {{border}}; border-radius: 8px; padding: 6px; font-family: monospace; font-size: 12px; }
     )"_s;
 
+// Every standard control drawn the way the mocks draw it (mock.css: .check, .input, select,
+// .btn:disabled), so no widget falls back to plain Fusion. {{glyphs}} is a folder of small
+// SVGs made in the theme's colours at start (style sheets take images only from files).
+const QString kControls = uR"(
+        QCheckBox, QRadioButton { spacing: 8px; }
+        QCheckBox::indicator { width: 14px; height: 14px; border-radius: 4px; border: 1.5px solid {{faint}}; background: transparent; }
+        QCheckBox::indicator:hover { border-color: {{muted}}; }
+        QCheckBox::indicator:checked { background: {{accentStrong}}; border-color: {{accentStrong}}; image: url({{glyphs}}/check.svg); }
+        QCheckBox::indicator:indeterminate { background: {{accentStrong}}; border-color: {{accentStrong}}; image: url({{glyphs}}/part.svg); }
+        QCheckBox::indicator:disabled { border-color: {{border}}; }
+        QCheckBox::indicator:checked:disabled { background: {{accentSoft}}; border-color: {{accentSoft}}; }
+        QRadioButton::indicator { width: 14px; height: 14px; border-radius: 8px; border: 1.5px solid {{faint}}; background: transparent; }
+        QRadioButton::indicator:checked { border: 5px solid {{accentStrong}}; background: white; width: 6px; height: 6px; }
+        QCheckBox:disabled, QRadioButton:disabled, QLabel:disabled { color: {{faint}}; }
+        QPushButton:disabled { color: {{faint}}; background: {{panel}}; border-color: {{border}}; }
+        QPushButton#primary:disabled { background: {{accentSoft}}; border-color: {{accentSoft}}; color: {{muted}}; }
+        QToolButton:disabled { color: {{faint}}; }
+        QComboBox { padding: 5px 28px 5px 10px; min-height: 20px; color: {{text}}; }
+        QComboBox:hover { border-color: {{faint}}; }
+        QComboBox:disabled, QLineEdit:disabled, QSpinBox:disabled { color: {{faint}}; background: {{panel}}; }
+        QComboBox::drop-down { subcontrol-origin: padding; subcontrol-position: center right; width: 24px; border: 0; }
+        QComboBox::down-arrow { image: url({{glyphs}}/chevron-down.svg); width: 14px; height: 14px; }
+        QComboBox QAbstractItemView { background: {{elevated}}; color: {{text}}; border: 1px solid {{border}}; border-radius: 8px; padding: 4px; outline: 0; selection-background-color: {{hover}}; selection-color: {{text}}; }
+        QComboBox QAbstractItemView::item { min-height: 26px; padding: 0 8px; border-radius: 6px; }
+        QComboBox QAbstractItemView::item:selected { background: {{hover}}; color: {{text}}; }
+        QSpinBox { padding-right: 24px; min-height: 20px; }
+        QSpinBox::up-button, QSpinBox::down-button { subcontrol-origin: border; width: 22px; border: 0; background: transparent; }
+        QSpinBox::up-button { subcontrol-position: top right; }
+        QSpinBox::down-button { subcontrol-position: bottom right; }
+        QSpinBox::up-arrow { image: url({{glyphs}}/chevron-up.svg); width: 11px; height: 11px; }
+        QSpinBox::down-arrow { image: url({{glyphs}}/chevron-down.svg); width: 11px; height: 11px; }
+        QLineEdit { selection-background-color: {{accentStrong}}; min-height: 20px; }
+        QListWidget, QTextBrowser, QPlainTextEdit, QTextEdit { background: {{input}}; border: 1px solid {{border}}; border-radius: 8px; color: {{text}}; outline: 0; }
+        QListWidget::item:selected { background: {{accentSoft}}; color: {{text}}; }
+        QListWidget::item:hover:!selected { background: {{hover}}; }
+        QScrollArea { border: 0; background: transparent; }
+        QScrollBar:vertical { background: transparent; width: 10px; margin: 0; }
+        QScrollBar:horizontal { background: transparent; height: 10px; margin: 0; }
+        QScrollBar::handle { background: {{border}}; border-radius: 3px; margin: 2px; }
+        QScrollBar::handle:hover { background: {{track}}; }
+        QScrollBar::handle:vertical { min-height: 28px; }
+        QScrollBar::handle:horizontal { min-width: 28px; }
+        QScrollBar::add-line, QScrollBar::sub-line { width: 0; height: 0; border: 0; background: none; }
+        QScrollBar::add-page, QScrollBar::sub-page { background: none; }
+        QToolTip { background: {{elevated}}; color: {{text}}; border: 1px solid {{border}}; border-radius: 6px; padding: 4px 8px; }
+        QMenu::indicator { width: 14px; height: 14px; left: 6px; }
+        QMenu::indicator:checked { image: url({{glyphs}}/check-muted.svg); }
+        QMenu::item:disabled { color: {{faint}}; }
+        QProgressBar { background: {{track}}; border: 0; border-radius: 2px; max-height: 4px; text-align: center; color: transparent; }
+        QProgressBar::chunk { background: {{accentStrong}}; border-radius: 2px; }
+        QSlider::handle:horizontal:disabled { background: {{faint}}; }
+        #sheetFoot { background: {{panel}}; border-top: 1px solid {{border}}; }
+        QCheckBox#switch::indicator { width: 34px; height: 20px; border: 0; border-radius: 10px; background: transparent; image: url({{glyphs}}/switch-off.svg); }
+        QCheckBox#switch::indicator:checked { image: url({{glyphs}}/switch-on.svg); }
+        QCheckBox#switch::indicator:disabled { image: url({{glyphs}}/switch-off.svg); }
+        QToolButton#sheetClose { border: 0; border-radius: 7px; padding: 6px; background: transparent; }
+        QToolButton#sheetClose:hover { background: {{hover}}; }
+    )"_s;
+
+// The glyphs the control rules use, written once per start in the theme's colours.
+QString glyphFolder(const Tokens& t)
+{
+    static std::unique_ptr<QTemporaryDir> folder;
+    if (!folder) {
+        folder = std::make_unique<QTemporaryDir>();
+    }
+    const auto write = [](const QString& path, const QString& body, const QColor& colour, double width) {
+        QFile file(path);
+        if (file.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
+            file.write(
+                QString(u"<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 16 16\" fill=\"none\" "
+                        "stroke=\"%1\" stroke-width=\"%2\" stroke-linecap=\"round\" "
+                        "stroke-linejoin=\"round\">%3</svg>"_s)
+                    .arg(colour.name())
+                    .arg(width)
+                    .arg(body)
+                    .toUtf8());
+        }
+    };
+    const QString dir = folder->path();
+    write(dir + u"/check.svg"_s, u"<path d=\"M3.5 8.5l3 3 6-7\"/>"_s, Qt::white, 2.2);
+    write(dir + u"/check-muted.svg"_s, u"<path d=\"M3.5 8.5l3 3 6-7\"/>"_s, t.text, 2);
+    write(dir + u"/part.svg"_s, u"<path d=\"M4 8h8\"/>"_s, Qt::white, 2.2);
+    write(dir + u"/chevron-down.svg"_s, u"<path d=\"M4 6l4 4 4-4\"/>"_s, t.muted, 1.8);
+    // Switches (mock .switch: 34 by 20, a white knob on the track or the accent).
+    const auto knob = [&dir](const QString& name, const QColor& track, int x) {
+        QFile file(dir + u'/' + name);
+        if (file.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
+            file.write(QString(u"<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 34 20\">"
+                               "<rect width=\"34\" height=\"20\" rx=\"10\" fill=\"%1\"/>"
+                               "<circle cx=\"%2\" cy=\"10\" r=\"8\" fill=\"#ffffff\"/></svg>"_s)
+                           .arg(track.name())
+                           .arg(x)
+                           .toUtf8());
+        }
+    };
+    knob(u"switch-off.svg"_s, t.track, 10);
+    knob(u"switch-on.svg"_s, t.accentStrong, 24);
+    write(dir + u"/chevron-up.svg"_s, u"<path d=\"M4 10l4-4 4 4\"/>"_s, t.muted, 1.8);
+    return dir;
+}
+
 QString sheet(const Tokens& t)
 {
-    QString s = kSheet;
+    QString s = kSheet + kControls;
+    s.replace(u"{{glyphs}}"_s, glyphFolder(t));
     const auto put = [&s](const QString& name, const QColor& c) {
         s.replace(u"{{"_s + name + u"}}"_s, c.name());
     };
@@ -211,6 +323,43 @@ void applyStyle(QApplication& app)
     p.setColor(QPalette::Disabled, QPalette::WindowText, t.faint);
     QApplication::setPalette(p);
     app.setStyleSheet(sheet(t));
+}
+
+QVBoxLayout* sheetLayout(QDialog* sheet, QLayout* foot)
+{
+    auto* root = new QVBoxLayout(sheet);
+    root->setContentsMargins(0, 0, 0, 0);
+    root->setSpacing(0);
+    auto* body = new QVBoxLayout;
+    body->setContentsMargins(20, 16, 20, 16); // mock .sh and .sb
+    body->setSpacing(12);
+    root->addLayout(body, 1);
+    if (foot != nullptr) {
+        root->addWidget(sheetFootBar(sheet, foot));
+    }
+    return body;
+}
+
+QWidget* sheetCloseButton(QDialog* sheet)
+{
+    auto* close = new QToolButton(sheet);
+    close->setObjectName(QStringLiteral("sheetClose"));
+    close->setIcon(icons::themed(QStringLiteral("close"), tokens().muted));
+    close->setIconSize(QSize(18, 18));
+    close->setToolTip(QObject::tr("Close (Escape)"));
+    close->setAccessibleName(QObject::tr("Close"));
+    QObject::connect(close, &QToolButton::clicked, sheet, &QDialog::reject);
+    return close;
+}
+
+QWidget* sheetFootBar(QWidget* sheet, QLayout* foot)
+{
+    auto* bar = new QWidget(sheet);
+    bar->setObjectName(QStringLiteral("sheetFoot"));
+    bar->setAttribute(Qt::WA_StyledBackground);
+    foot->setContentsMargins(20, 12, 20, 12); // mock .sf
+    bar->setLayout(foot);
+    return bar;
 }
 
 } // namespace pixelfx::ui

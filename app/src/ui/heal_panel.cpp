@@ -145,6 +145,8 @@ QWidget* HealPanel::buildBrush()
     m_show = new QCheckBox(tr("Show spots (V)"), box);
     m_show->setChecked(true);
     m_reveal = new QCheckBox(tr("Reveal dust (D)"), box);
+    m_show->setObjectName(u"switch"_s); // mock heal.html: switches
+    m_reveal->setObjectName(u"switch"_s);
     m_reveal->setToolTip(tr("A view where dust and specks stand out, for skies and plain walls. "
                             "Only the view changes, not the photo."));
     connect(m_show, &QCheckBox::toggled, this, &HealPanel::showSpotsToggled);
