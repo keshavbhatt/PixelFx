@@ -6,6 +6,7 @@
 #include <QDialog>
 #include <QFile>
 #include <QLabel>
+#include <QMenu>
 #include <QPalette>
 #include <QProxyStyle>
 #include <QStyleFactory>
@@ -323,6 +324,16 @@ public:
         }
         return QProxyStyle::styleHint(hint, option, widget, returnData);
     }
+
+    // Menus have rounded corners, which need a see-through window behind them.
+    void polish(QWidget* widget) override
+    {
+        if (qobject_cast<QMenu*>(widget) != nullptr) {
+            widget->setAttribute(Qt::WA_TranslucentBackground);
+        }
+        QProxyStyle::polish(widget);
+    }
+    using QProxyStyle::polish;
 
     // Scroll bars lie over the scrolled content instead of taking width from it.
     int pixelMetric(PixelMetric metric, const QStyleOption* option, const QWidget* widget) const override

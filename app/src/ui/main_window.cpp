@@ -266,8 +266,7 @@ void MainWindow::exportPhoto()
     const int result = sheet.exec();
     if (result == ExportSheet::kCopyToClipboard) {
         m_settings.setExportOptions(sheet.options());
-        m_copying = true;
-        m_exporter.startCopy(m_document.info().path, m_document.settings(), sheet.options());
+        copyToClipboard(sheet.options());
         return;
     }
     if (result != QDialog::Accepted) {
@@ -279,6 +278,58 @@ void MainWindow::exportPhoto()
     m_exportTotal = static_cast<int>(jobs.size());
     m_exportSaved = 0;
     exportNext();
+}
+
+void MainWindow::copyToClipboard(const core::ExportOptions& options)
+{
+    if (!m_document.isOpen() || m_exporter.isBusy()) {
+        return;
+    }
+    m_copying = true;
+    m_exporter.startCopy(m_document.info().path, m_document.settings(), options);
+}
+
+void MainWindow::setupMenuActions()
+{
+    const auto add = [this](const QString& name, const QString& text, const std::function<void()>& run) {
+        auto* a = new QAction(text, this);
+        a->setObjectName(name);
+        connect(a, &QAction::triggered, this, run);
+        addAction(a);
+        return a;
+    };
+    add(u"copyToClipboard"_s, tr("Copy to clipboard"),
+        [this] { copyToClipboard(m_settings.exportOptions()); });
+    //: The text after the tab is the key shown in the menu; Space is held to see the original.
+    QAction* original = add(u"showOriginal"_s, tr("Show original\tSpace"), [] {});
+    original->setCheckable(true);
+    connect(original, &QAction::toggled, this, &MainWindow::showOriginal);
+    add(u"rotateLeft"_s, tr("Rotate left"),
+        [this] { editGeometry([](pfx::Settings& s) { core::turn(s, false); }, tr("Rotate left")); });
+    add(u"rotateRight"_s, tr("Rotate right"),
+        [this] { editGeometry([](pfx::Settings& s) { core::turn(s, true); }, tr("Rotate right")); });
+    add(u"flipHorizontal"_s, tr("Flip horizontal"), [this] {
+        editGeometry([](pfx::Settings& s) { core::flip(s, Qt::Horizontal); }, tr("Flip horizontal"));
+    });
+    add(u"flipVertical"_s, tr("Flip vertical"),
+        [this] { editGeometry([](pfx::Settings& s) { core::flip(s, Qt::Vertical); }, tr("Flip vertical")); });
+    add(u"importPresets"_s, tr("Import presets and looks..."), [this] { importPresets(); });
+    add(u"showPresetsFolder"_s, tr("Show presets folder"), [this] {
+        QDir().mkpath(m_library.folder());
+        QDesktopServices::openUrl(QUrl::fromLocalFile(m_library.folder()));
+    });
+    add(u"reportBug"_s, tr("Report a bug"),
+        [] { QDesktopServices::openUrl(QUrl(u"https://github.com/keshavbhatt/PixelFx/issues"_s)); });
+}
+
+void MainWindow::editGeometry(const std::function<void(pfx::Settings&)>& change, const QString& label)
+{
+    if (!m_document.isOpen() || isInTool()) {
+        return;
+    }
+    pfx::Settings settings = m_document.settings();
+    change(settings);
+    m_document.apply(settings, label);
 }
 
 void MainWindow::exportNext()
@@ -376,6 +427,10 @@ void MainWindow::showOriginal(bool on)
         m_canvas->setDetail(m_document.fullImage());
     }
     m_original->setDown(on);
+    if (auto* item = findChild<QAction*>(u"showOriginal"_s, Qt::FindDirectChildrenOnly)) {
+        const QSignalBlocker block(item);
+        item->setChecked(on);
+    }
 }
 
 MainWindow::~MainWindow() = default;
@@ -584,7 +639,7 @@ void MainWindow::setupUi()
 
 void MainWindow::setupActions()
 {
-    auto* openAction = new QAction(tr("Open images"), this);
+    auto* openAction = new QAction(tr("Open images..."), this);
     openAction->setObjectName(u"open"_s);
     openAction->setShortcut(QKeySequence::Open);
     connect(openAction, &QAction::triggered, this, &MainWindow::chooseFiles);
@@ -599,7 +654,7 @@ void MainWindow::setupActions()
     fullScreen->setShortcut(QKeySequence(Qt::Key_F11));
     connect(fullScreen, &QAction::triggered, this,
             [this] { isFullScreen() ? showNormal() : showFullScreen(); });
-    auto* exportAction = new QAction(tr("Export"), this);
+    auto* exportAction = new QAction(tr("Export..."), this);
     exportAction->setObjectName(u"export"_s);
     exportAction->setShortcut(QKeySequence(u"Ctrl+Shift+E"_s));
     connect(exportAction, &QAction::triggered, this, &MainWindow::exportPhoto);
@@ -618,7 +673,7 @@ void MainWindow::setupActions()
     about->setMenuRole(QAction::AboutRole);
     connect(about, &QAction::triggered, this, &MainWindow::showAbout);
     addActions({whatsNew, about});
-    auto* openFolder = new QAction(tr("Open folder"), this);
+    auto* openFolder = new QAction(tr("Open folder..."), this);
     openFolder->setObjectName(u"openFolder"_s);
     openFolder->setShortcut(QKeySequence(u"Ctrl+Shift+O"_s));
     connect(openFolder, &QAction::triggered, m_welcome, &WelcomePage::openFolderRequested);
@@ -1761,6 +1816,11 @@ void MainWindow::dragLeaveEvent(QDragLeaveEvent* event)
     QMainWindow::dragLeaveEvent(event);
 }
 
+QMenu* MainWindow::mainMenu() const
+{
+    return m_menuButton->menu();
+}
+
 QAction* MainWindow::namedAction(const QString& name) const
 {
     auto* a = findChild<QAction*>(name, Qt::FindDirectChildrenOnly);
@@ -1783,7 +1843,8 @@ bool MainWindow::panelsHidden() const
 
 void MainWindow::setupPanelActions()
 {
-    m_hidePanels = new QAction(tr("Hide panels"), this);
+    //: The text after the tab is the key shown in the menu.
+    m_hidePanels = new QAction(tr("Hide panels\tTab"), this);
     m_hidePanels->setObjectName(u"hidePanels"_s);
     m_hidePanels->setCheckable(true);
     connect(m_hidePanels, &QAction::triggered, this, [this](bool on) { setPanelsHidden(on); });
@@ -1830,64 +1891,78 @@ void MainWindow::buildRecentMenu(QMenu* recent)
 
 void MainWindow::buildMainMenu()
 {
-    // The entries of menu.html that exist; each one is the window's own action, so the
-    // shortcut shown is the one that works.
+    // Every entry is one of the window's own actions, so the shortcut shown is the one that works.
     setupPanelActions();
+    setupMenuActions();
+    using Entries = std::initializer_list<std::pair<const char*, const char*>>; // action, icon
+    const auto fill = [this](QMenu* menu, Entries entries) {
+        for (const auto& [name, glyph] : entries) {
+            if (name == nullptr) {
+                menu->addSeparator();
+                continue;
+            }
+            QAction* a = namedAction(QString::fromLatin1(name));
+            a->setIcon(icons::themed(QString::fromLatin1(glyph), tokens().muted));
+            menu->addAction(a);
+        }
+    };
+    const auto submenu = [](QMenu* menu, const QString& title, const char* glyph) {
+        return menu->addMenu(icons::themed(QString::fromLatin1(glyph), tokens().muted), title);
+    };
     auto* menu = new QMenu(m_menuButton);
-    QAction* open = namedAction(u"open"_s);
-    open->setIcon(icons::themed(u"open"_s, tokens().muted));
-    menu->addAction(open);
-    menu->addAction(namedAction(u"openFolder"_s));
-    buildRecentMenu(menu->addMenu(tr("Open recent")));
-    menu->addAction(namedAction(u"pasteImage"_s));
-    menu->addSeparator();
-
-    QMenu* edit = menu->addMenu(tr("Edit"));
-    edit->addActions({namedAction(u"undo"_s), namedAction(u"redo"_s), namedAction(u"history"_s)});
-    edit->addSeparator();
-    edit->addActions({namedAction(u"copySettings"_s), namedAction(u"pasteSettings"_s)});
-    edit->addSeparator();
-    edit->addAction(namedAction(u"resetAll"_s));
-    QMenu* view = menu->addMenu(tr("View"));
-    view->addAction(namedAction(u"compare"_s));
+    fill(menu, {{"open", "open"}, {"openFolder", "folder"}});
+    buildRecentMenu(submenu(menu, tr("Open recent"), "clock"));
+    fill(menu, {{"pasteImage", "paste"}, {nullptr, nullptr}});
+    fill(submenu(menu, tr("Edit"), "undo"), {{"undo", "undo"},
+                                             {"redo", "redo"},
+                                             {"history", "history"},
+                                             {nullptr, nullptr},
+                                             {"copySettings", "copy"},
+                                             {"pasteSettings", "paste"},
+                                             {nullptr, nullptr},
+                                             {"resetAll", "reset"}});
     QAction* clipping = namedAction(u"clipping"_s);
     clipping->setCheckable(true);
     clipping->setChecked(m_settings.clippingWarnings());
     connect(&m_settings, &core::Settings::clippingWarningsChanged, clipping, &QAction::setChecked);
-    view->addAction(clipping);
-    view->addSeparator();
-    view->addActions({namedAction(u"fit"_s), namedAction(u"zoomIn"_s), namedAction(u"zoomOut"_s),
-                      namedAction(u"actualSize"_s)});
-    view->addSeparator();
-    view->addAction(m_hidePanels);
-    view->addAction(namedAction(u"fullScreen"_s));
-    QMenu* photo = menu->addMenu(tr("Photo"));
-    photo->addAction(namedAction(u"auto"_s));
-    photo->addAction(namedAction(u"crop"_s));
-    photo->addAction(namedAction(u"heal"_s));
-    photo->addSeparator();
-    photo->addActions({namedAction(u"edit"_s), namedAction(u"batch"_s)});
-    menu->addSeparator();
-    menu->addAction(namedAction(u"export"_s));
-    menu->addAction(namedAction(u"openBatchRecipe"_s));
-    menu->addSeparator();
-    connect(menu->addAction(tr("Import presets and looks...")), &QAction::triggered, this,
-            &MainWindow::importPresets);
-    connect(menu->addAction(tr("Show presets folder")), &QAction::triggered, this, [this] {
-        QDir().mkpath(m_library.folder());
-        QDesktopServices::openUrl(QUrl::fromLocalFile(m_library.folder()));
-    });
-    menu->addSeparator();
-    menu->addAction(namedAction(u"settings"_s));
-    menu->addAction(namedAction(u"shortcuts"_s));
-    menu->addAction(namedAction(u"whatsNew"_s));
-    connect(menu->addAction(tr("Report a bug")), &QAction::triggered, this,
-            [] { QDesktopServices::openUrl(QUrl(u"https://github.com/keshavbhatt/PixelFx/issues"_s)); });
-    menu->addAction(namedAction(u"about"_s));
-    menu->addSeparator();
-    QAction* quit = namedAction(u"quit"_s);
-    quit->setIcon(icons::themed(u"quit"_s, tokens().muted));
-    menu->addAction(quit);
+    fill(submenu(menu, tr("View"), "eye"), {{"compare", "compare"},
+                                            {"showOriginal", "eye"},
+                                            {"clipping", "alert"},
+                                            {nullptr, nullptr},
+                                            {"fit", "maximize"},
+                                            {"zoomIn", "zoom-in"},
+                                            {"zoomOut", "zoom-out"},
+                                            {"actualSize", "search"},
+                                            {nullptr, nullptr},
+                                            {"hidePanels", "layout-grid"},
+                                            {"fullScreen", "maximize"}});
+    fill(submenu(menu, tr("Photo"), "image"), {{"auto", "auto"},
+                                               {nullptr, nullptr},
+                                               {"rotateLeft", "rotate-ccw"},
+                                               {"rotateRight", "rotate-cw"},
+                                               {"flipHorizontal", "flip-h"},
+                                               {"flipVertical", "flip-v"},
+                                               {nullptr, nullptr},
+                                               {"crop", "crop"},
+                                               {"heal", "bandage"},
+                                               {nullptr, nullptr},
+                                               {"edit", "sliders"},
+                                               {"batch", "stack"}});
+    fill(menu, {{nullptr, nullptr},
+                {"export", "export"},
+                {"copyToClipboard", "share"},
+                {"openBatchRecipe", "stack"},
+                {nullptr, nullptr},
+                {"importPresets", "import"},
+                {"showPresetsFolder", "folder"},
+                {nullptr, nullptr},
+                {"settings", "settings"},
+                {"shortcuts", "keyboard"},
+                {"whatsNew", "sparkles"},
+                {"reportBug", "bug"},
+                {"about", "info"},
+                {nullptr, nullptr},
+                {"quit", "power"}});
     m_menuButton->setMenu(menu);
 }
 

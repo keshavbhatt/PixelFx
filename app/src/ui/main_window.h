@@ -103,6 +103,8 @@ public:
     /// Tab: hides or shows the side panels and the filmstrip (menu.html, "Hide panels").
     void setPanelsHidden(bool hidden);
     [[nodiscard]] bool panelsHidden() const;
+    /// The main menu (F10), for tests and grabs.
+    [[nodiscard]] class QMenu* mainMenu() const;
 
     /// Whether `path` has an extension PixelFx opens.
     [[nodiscard]] static bool isSupported(const QString& path);
@@ -132,6 +134,12 @@ private:
     [[nodiscard]] QAction* namedAction(const QString& name) const;
     void setupEditActions();
     void setupCropActions();
+    /// Actions that live only in the main menu (turn, flip, copy to clipboard ...).
+    void setupMenuActions();
+    /// The photo's geometry changed by `change` as one history step (the menu's turn and flip).
+    void editGeometry(const std::function<void(pfx::Settings&)>& change, const QString& label);
+    /// The photo, as Export would write it, onto the clipboard.
+    void copyToClipboard(const core::ExportOptions& options);
     void setupHeal();
     void setupHealActions();
     void healSpotsChanged(const pfx::Spots& spots, bool finished, const QString& label);

@@ -11,6 +11,8 @@
 //                                      settings, preset, shortcuts, watermark, look, about,
 //                                      notices, diagnostics, whatsnew, paste
 //   PIXELFX_DEBUG_TAB=presets          show the Presets tab of the left panel
+//   PIXELFX_DEBUG_MENU=<submenu>       with GRAB, grab the main menu open ("-" for the menu
+//                                      itself, or a submenu's title such as View)
 //   PIXELFX_DEBUG_ZOOM=<scale>         zoom to this scale (1 is 100%) once the photo is open; with
 //                                      GRAB, grab once the full-size render is shown
 //   PIXELFX_DEBUG_BATCH=<folder>       open Batch with this folder and process it; with GRAB, grab
@@ -36,10 +38,10 @@
 #include "ui/export_sheet.h"
 #include "ui/heal_tool.h"
 #include "ui/look_editor.h"
-#include "ui/paste_sheet.h"
-#include "ui/presets_panel.h"
 #include "ui/main_window.h"
+#include "ui/paste_sheet.h"
 #include "ui/preset_save_sheet.h"
+#include "ui/presets_panel.h"
 #include "ui/settings_sheet.h"
 #include "ui/shortcuts_sheet.h"
 #include "ui/style.h"
@@ -49,6 +51,7 @@
 #include <QDialog>
 #include <QFileInfo>
 #include <QGuiApplication>
+#include <QMenu>
 #include <QStyleHints>
 #include <QTextStream>
 #include <QTimer>
@@ -99,6 +102,29 @@ void applyExpandHook(const pixelfx::ui::MainWindow& window)
     for (auto* toggle : window.findChildren<QToolButton*>(u"groupToggle"_s)) {
         toggle->setChecked(toggle->text() == name);
     }
+}
+
+// The main menu or one of its submenus instead of the window (PIXELFX_DEBUG_MENU).
+bool grabMenu(pixelfx::ui::MainWindow& window, const QString& grab)
+{
+    const QString name = qEnvironmentVariable("PIXELFX_DEBUG_MENU");
+    if (name.isEmpty()) {
+        return false;
+    }
+    QMenu* menu = window.mainMenu();
+    if (name != u"-"_s) {
+        for (QAction* a : menu->actions()) {
+            if (a->menu() != nullptr && a->text() == name) {
+                menu = a->menu();
+            }
+        }
+    }
+    menu->popup(window.mapToGlobal(QPoint(window.width() - 280, 50)));
+    QTimer::singleShot(300, menu, [menu, grab] {
+        menu->grab().save(grab);
+        QCoreApplication::quit();
+    });
+    return true;
 }
 
 // A sheet instead of the window (PIXELFX_DEBUG_SHEET); false when none is asked for.
@@ -169,7 +195,7 @@ void applyGrabHook(pixelfx::ui::MainWindow& window, const QStringList& files)
     const bool settingsSheet = qEnvironmentVariable("PIXELFX_DEBUG_SHEET") == u"settings"_s;
     const bool presetSheet = qEnvironmentVariable("PIXELFX_DEBUG_SHEET") == u"preset"_s;
     const auto save = [&window, grab, exportSheet, settingsSheet, presetSheet] {
-        if (grabSheet(window, grab, exportSheet, settingsSheet, presetSheet)) {
+        if (grabSheet(window, grab, exportSheet, settingsSheet, presetSheet) || grabMenu(window, grab)) {
             return;
         }
         window.grab().save(grab);
