@@ -81,6 +81,23 @@ private Q_SLOTS:
         QCOMPARE(h.labels().size(), History::kMaxSteps);
         QCOMPARE(h.current().number("light.exposure", 0), (History::kMaxSteps + 10) / 100.0);
     }
+    void changedGroupNamesWhatAStepChanged()
+    {
+        History h;
+        pfx::Settings s;
+        h.reset(s, u"Opened"_s);
+        s.set("light.shadows", 28.0);
+        h.push(u"Shadows +28"_s, s);
+        s.set("look.id", std::string("builtin:noir"));
+        h.push(u"Look: Noir 100"_s, s);
+        s.erase("light.shadows");
+        h.push(u"Reset Shadows"_s, s);
+        QCOMPARE(h.changedGroup(0), QString());
+        QCOMPARE(h.changedGroup(1), u"light"_s);
+        QCOMPARE(h.changedGroup(2), u"look"_s);
+        QCOMPARE(h.changedGroup(3), u"light"_s); // a removed key counts too
+        QCOMPARE(h.changedGroup(9), QString());
+    }
 };
 
 QTEST_GUILESS_MAIN(TestHistory)

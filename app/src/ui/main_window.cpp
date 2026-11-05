@@ -380,39 +380,73 @@ void MainWindow::setCompare(bool on)
     }
 }
 
+namespace {
+
+// The icon of a history step, from the settings group it changed.
+QString historyGlyph(const QString& group)
+{
+    static const QHash<QString, QString> glyphs = {{u"light"_s, u"sun"_s},        {u"color"_s, u"droplet"_s},
+                                                   {u"mixer"_s, u"palette"_s},    {u"grading"_s, u"blend"_s},
+                                                   {u"curves"_s, u"curves"_s},    {u"detail"_s, u"detail"_s},
+                                                   {u"effects"_s, u"sparkles"_s}, {u"look"_s, u"sparkles"_s},
+                                                   {u"geometry"_s, u"crop"_s},    {u"heal"_s, u"bandage"_s}};
+    return glyphs.value(group, u"image"_s);
+}
+
+} // namespace
+
 void MainWindow::showHistory()
 {
+    QMenu* menu = historyMenu();
+    menu->exec(historyCorner());
+    menu->deleteLater();
+}
+
+QPoint MainWindow::historyCorner() const
+{
+    return m_canvas->mapToGlobal(QPoint(m_canvas->width() - kHistoryWidth - kHistoryInset, kHistoryInset));
+}
+
+QMenu* MainWindow::historyMenu()
+{
     const core::History& h = m_document.history();
-    QMenu menu(this);
-    menu.addSection(tr("History"));
+    auto* menu = new QMenu(this);
+    menu->setMinimumWidth(kHistoryWidth);
+    addMenuHeading(menu, tr("History"));
     const QStringList labels = h.labels();
-    for (int i = static_cast<int>(labels.size()) - 1; i >= 0; --i) { // newest first, as in history.html
-        QAction* step = menu.addAction(labels.at(i));
-        step->setCheckable(true);
-        step->setChecked(i == h.currentIndex());
+    QAction* current = nullptr;
+    for (int i = static_cast<int>(labels.size()) - 1; i >= 0; --i) { // newest first
+        //: A history step; the text after the tab is shown at the right of the current step.
+        const QString text = i == h.currentIndex() ? tr("%1\tnow").arg(labels.at(i)) : labels.at(i);
+        QAction* step = menu->addAction(icons::themed(historyGlyph(h.changedGroup(i)), tokens().muted), text);
         connect(step, &QAction::triggered, this, [this, i] { m_document.goToStep(i); });
+        if (i == h.currentIndex()) {
+            current = step;
+        }
     }
-    // Snapshots: named states kept with the edit (history.html).
     const auto& snapshots = m_document.snapshots();
     if (!snapshots.empty()) {
-        menu.addSection(tr("Snapshots"));
+        menu->addSeparator();
+        addMenuHeading(menu, tr("Snapshots"));
         for (std::size_t i = 0; i < snapshots.size(); ++i) {
-            connect(menu.addAction(QString::fromStdString(snapshots[i].name)), &QAction::triggered, this,
+            connect(menu->addAction(QString::fromStdString(snapshots[i].name)), &QAction::triggered, this,
                     [this, i] { m_document.applySnapshot(i); });
         }
     }
-    menu.addSeparator();
-    connect(menu.addAction(tr("Save snapshot...")), &QAction::triggered, this, [this] {
-        bool ok = false;
-        const QString name =
-            QInputDialog::getText(this, tr("Save snapshot"), tr("Name"), QLineEdit::Normal,
-                                  tr("Snapshot %1").arg(m_document.snapshots().size() + 1), &ok);
-        if (ok) {
-            m_document.saveSnapshot(name);
-            showToast(tr("Saved snapshot %1").arg(name.trimmed()));
-        }
-    });
-    menu.exec(m_history->mapToGlobal(QPoint(0, m_history->height())));
+    menu->addSeparator();
+    connect(menu->addAction(icons::themed(u"camera"_s, tokens().muted), tr("Save snapshot...")),
+            &QAction::triggered, this, [this] {
+                bool ok = false;
+                const QString name =
+                    QInputDialog::getText(this, tr("Save snapshot"), tr("Name"), QLineEdit::Normal,
+                                          tr("Snapshot %1").arg(m_document.snapshots().size() + 1), &ok);
+                if (ok) {
+                    m_document.saveSnapshot(name);
+                    showToast(tr("Saved snapshot %1").arg(name.trimmed()));
+                }
+            });
+    menu->setActiveAction(current);
+    return menu;
 }
 
 void MainWindow::showOriginal(bool on)
@@ -1201,7 +1235,8 @@ void MainWindow::connectLooks()
         QString name = tr("No look");
         for (const core::LookEntry& e : m_presets->looksPanel()->entries()) {
             if (e.id == id) {
-                name = tr("Look %1").arg(e.name);
+                //: A history step: a look and its strength, "Look: Golden hour 72".
+                name = tr("Look: %1 %2").arg(e.name).arg(strength);
             }
         }
         applyToSelection([id, strength](const pfx::Settings& s) { return core::withLook(s, id, strength); },

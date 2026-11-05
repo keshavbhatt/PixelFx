@@ -7,6 +7,7 @@ class QApplication;
 class QDialog;
 class QLabel;
 class QLayout;
+class QMenu;
 class QToolButton;
 class QVBoxLayout;
 class QWidget;
@@ -55,6 +56,9 @@ QVBoxLayout* sheetLayout(QDialog* sheet, QLayout* foot);
 QWidget* sheetCloseButton(QDialog* sheet);
 /// A section heading of a panel or sheet ("SPOTS (3)", "1. RECIPE"): small, bold, muted capitals.
 QLabel* sectionLabel(const QString& text, QWidget* parent);
+/// A heading inside a menu ("History"): Qt draws a menu section as a bare line under a style
+/// sheet, so the heading is a label of its own.
+void addMenuHeading(QMenu* menu, const QString& text);
 /// The footer bar alone, for sheets whose body runs edge to edge (Watermark, the look editor).
 QWidget* sheetFootBar(QWidget* sheet, QLayout* foot);
 

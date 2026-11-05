@@ -36,6 +36,9 @@ public:
     /// Every step's label, oldest first, and the index of the current one.
     [[nodiscard]] QStringList labels() const;
     [[nodiscard]] int currentIndex() const { return static_cast<int>(m_index); }
+    /// The settings group step `index` changed ("light", "look" ...), from the step before it;
+    /// empty for the first step and for a step that changed nothing a group names.
+    [[nodiscard]] QString changedGroup(int index) const;
 
 private:
     struct Step

@@ -13,6 +13,7 @@
 #include <QTemporaryDir>
 #include <QToolButton>
 #include <QVBoxLayout>
+#include <QWidgetAction>
 
 #include <memory>
 
@@ -175,6 +176,7 @@ const QString kControls = uR"(
         QMenu::indicator { width: 14px; height: 14px; left: 6px; }
         QMenu::indicator:checked { image: url({{glyphs}}/check-muted.svg); }
         QMenu::item:disabled { color: {{faint}}; }
+        QLabel#menuHeading { color: {{muted}}; font-size: 11px; font-weight: 700; padding: 6px 10px 4px; }
         QProgressBar { background: {{track}}; border: 0; border-radius: 2px; max-height: 4px; text-align: center; color: transparent; }
         QProgressBar::chunk { background: {{accentStrong}}; border-radius: 2px; }
         QSlider::handle:horizontal:disabled { background: {{faint}}; }
@@ -418,6 +420,16 @@ QLabel* sectionLabel(const QString& text, QWidget* parent)
     font.setLetterSpacing(QFont::AbsoluteSpacing, 0.66);
     label->setFont(font);
     return label;
+}
+
+void addMenuHeading(QMenu* menu, const QString& text)
+{
+    auto* label = new QLabel(text, menu);
+    label->setObjectName(QStringLiteral("menuHeading"));
+    auto* action = new QWidgetAction(menu);
+    action->setDefaultWidget(label);
+    action->setEnabled(false);
+    menu->addAction(action);
 }
 
 QWidget* sheetFootBar(QWidget* sheet, QLayout* foot)

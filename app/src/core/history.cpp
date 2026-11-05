@@ -1,5 +1,7 @@
 #include "core/history.h"
 
+#include <utility>
+
 namespace pixelfx::core {
 
 void History::reset(const pfx::Settings& base, const QString& label)
@@ -59,6 +61,26 @@ QString History::undoLabel() const
 QString History::redoLabel() const
 {
     return canRedo() ? m_steps[m_index + 1].label : QString();
+}
+
+QString History::changedGroup(int index) const
+{
+    if (index <= 0 || std::cmp_greater_equal(index, m_steps.size())) {
+        return {};
+    }
+    const pfx::Settings& before = m_steps[static_cast<std::size_t>(index) - 1].settings;
+    const pfx::Settings& after = m_steps[static_cast<std::size_t>(index)].settings;
+    std::vector<std::string> keys = before.keys();
+    const std::vector<std::string> added = after.keys();
+    keys.insert(keys.end(), added.begin(), added.end());
+    for (const std::string& key : keys) {
+        const pfx::Value* a = before.find(key);
+        const pfx::Value* b = after.find(key);
+        if ((a == nullptr) != (b == nullptr) || (a != nullptr && !(*a == *b))) {
+            return QString::fromStdString(std::string(pfx::groupOf(key)));
+        }
+    }
+    return {};
 }
 
 QStringList History::labels() const

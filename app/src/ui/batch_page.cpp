@@ -780,7 +780,8 @@ void BatchPage::showRecipeMenu(QWidget* anchor, bool second)
             add(tr("From the opened recipe: %1").arg(m_loadedName), [this] { chooseRecipe(u"recipe"_s); });
         }
     }
-    menu.addSection(tr("Presets"));
+    menu.addSeparator();
+    addMenuHeading(&menu, tr("Presets"));
     for (const core::PresetEntry& p : m_presets) {
         if (second && p.autoEnhance) {
             continue; // Auto enhance has its own check box
@@ -789,7 +790,8 @@ void BatchPage::showRecipeMenu(QWidget* anchor, bool second)
         add(name, [this, name, second] { second ? chooseSecond(name) : chooseRecipe(u"preset:"_s + name); });
     }
     if (!second && !m_looks.empty()) {
-        menu.addSection(tr("Looks"));
+        menu.addSeparator();
+        addMenuHeading(&menu, tr("Looks"));
         for (const core::LookEntry& l : m_looks) {
             const QString id = l.id;
             add(l.name, [this, id] { chooseRecipe(u"look:"_s + id); });

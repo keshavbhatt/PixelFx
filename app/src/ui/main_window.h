@@ -105,6 +105,8 @@ public:
     [[nodiscard]] bool panelsHidden() const;
     /// The main menu (F10), for tests and grabs.
     [[nodiscard]] class QMenu* mainMenu() const;
+    /// A new History popup (H): every step newest first, the current one marked, snapshots.
+    [[nodiscard]] class QMenu* historyMenu();
 
     /// Whether `path` has an extension PixelFx opens.
     [[nodiscard]] static bool isSupported(const QString& path);
@@ -187,6 +189,10 @@ private:
     void updateHistoryButtons();
     void showToast(const QString& text);
     void showHistory();
+    /// The History popup's corner: under the header, at the photo's right edge.
+    [[nodiscard]] QPoint historyCorner() const;
+    static constexpr int kHistoryWidth = 280;
+    static constexpr int kHistoryInset = 14;
     void showOpened(const services::DocumentInfo& info);
     void showFailed(const QString& path, const QString& message);
     [[nodiscard]] int previewLongEdge() const;
