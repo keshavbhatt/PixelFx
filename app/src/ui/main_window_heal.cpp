@@ -128,6 +128,7 @@ void MainWindow::enterHeal()
     for (QAction* a : std::as_const(m_healActions)) {
         a->setEnabled(true);
     }
+    namedAction(u"blackAndWhite"_s)->setEnabled(false); // V is Show spots while healing
     m_healMode->setChecked(true);
 }
 
@@ -139,6 +140,7 @@ void MainWindow::leaveHeal()
     for (QAction* a : std::as_const(m_healActions)) {
         a->setEnabled(false);
     }
+    namedAction(u"blackAndWhite"_s)->setEnabled(true);
     m_healing = false;
     m_canvas->setTool(nullptr);
     m_document.setHealEditing(false);

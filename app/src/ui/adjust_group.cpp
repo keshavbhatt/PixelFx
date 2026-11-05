@@ -64,11 +64,8 @@ AdjustGroup::AdjustGroup(QString id, const QString& name, const QString& glyph, 
     m_dot->setParent(header);
     m_reset->setParent(header);
     m_toggle->setObjectName(u"groupToggle"_s);
-    m_toggle->setText(name);
     m_toggle->setCheckable(true);
     m_toggle->setChecked(true);
-    m_toggle->setAccessibleName(name);
-    m_toggle->setToolTip(tr("Show or hide %1").arg(name));
     auto* icon = new QLabel(header);
     icon->setPixmap(icons::pixmap(glyph, tokens().muted, 15, devicePixelRatioF()));
     m_dot->setObjectName(u"changedDot"_s);
@@ -76,8 +73,7 @@ AdjustGroup::AdjustGroup(QString id, const QString& name, const QString& glyph, 
     m_dot->setToolTip(tr("Changed"));
     m_reset->setObjectName(u"flatIcon"_s);
     m_reset->setIcon(icons::themed(u"reset"_s, tokens().muted));
-    m_reset->setToolTip(tr("Reset %1").arg(name));
-    m_reset->setAccessibleName(tr("Reset %1").arg(name));
+    setName(name);
     auto* row = new QHBoxLayout(header);
     row->setContentsMargins(kPanelPadding, 10, kPanelPadding, 10);
     row->setSpacing(kGapControls);
@@ -103,6 +99,78 @@ AdjustGroup::AdjustGroup(QString id, const QString& name, const QString& glyph, 
 }
 
 AdjustGroup::~AdjustGroup() = default;
+
+void AdjustGroup::setName(const QString& name)
+{
+    m_name = name;
+    m_toggle->setText(buttonText(name));
+    m_toggle->setAccessibleName(name);
+    m_toggle->setToolTip(tr("Show or hide %1").arg(name));
+    m_reset->setToolTip(tr("Reset %1").arg(name));
+    m_reset->setAccessibleName(tr("Reset %1").arg(name));
+}
+
+void AdjustGroup::makeMore()
+{
+    if (m_moreBody != nullptr) {
+        return;
+    }
+    m_moreToggle = new QToolButton(m_body);
+    m_moreToggle->setObjectName(u"disclose"_s);
+    m_moreToggle->setCheckable(true);
+    m_moreToggle->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+    m_moreBody = new QWidget(m_body);
+    m_moreLayout = new QVBoxLayout(m_moreBody);
+    m_moreLayout->setContentsMargins(0, 0, 0, 0);
+    m_moreLayout->setSpacing(0);
+    m_bodyLayout->addWidget(m_moreToggle, 0, Qt::AlignLeft);
+    m_bodyLayout->addWidget(m_moreBody);
+    const auto refresh = [this](bool open) {
+        m_moreBody->setVisible(open);
+        m_moreToggle->setText(open ? tr("Less") : tr("More"));
+        m_moreToggle->setIcon(icons::themed(open ? u"expanded"_s : u"collapsed"_s, tokens().muted));
+        m_moreToggle->setToolTip(open ? tr("Hide the finer settings of %1").arg(m_name)
+                                      : tr("Show the finer settings of %1").arg(m_name));
+    };
+    connect(m_moreToggle, &QToolButton::toggled, this, refresh);
+    refresh(false);
+}
+
+void AdjustGroup::addMoreContent(QWidget* widget)
+{
+    makeMore();
+    widget->setParent(m_moreBody);
+    m_moreLayout->addWidget(widget);
+}
+
+void AdjustGroup::addMoreSlider(AdjustSlider* slider)
+{
+    addMoreContent(slider);
+    m_sliders.push_back(slider);
+}
+
+void AdjustGroup::addCaption(const QString& text, bool more)
+{
+    auto* caption = new QLabel(text, this);
+    caption->setObjectName(u"subcaption"_s);
+    if (more) {
+        addMoreContent(caption);
+    } else {
+        addContent(caption);
+    }
+}
+
+void AdjustGroup::setMoreOpen(bool open)
+{
+    if (m_moreToggle != nullptr) {
+        m_moreToggle->setChecked(open);
+    }
+}
+
+bool AdjustGroup::isMoreOpen() const
+{
+    return m_moreToggle != nullptr && m_moreToggle->isChecked();
+}
 
 void AdjustGroup::addContent(QWidget* widget)
 {

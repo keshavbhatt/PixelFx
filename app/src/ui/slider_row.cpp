@@ -82,6 +82,14 @@ SliderRow::SliderRow(const QString& label, QWidget* parent)
 
 SliderRow::~SliderRow() = default;
 
+void SliderRow::setFullName(const QString& name)
+{
+    m_label = name;
+    m_slider->setAccessibleName(name);
+    m_slider->setToolTip(tr("%1. Double-click to reset.").arg(name));
+    m_field->setAccessibleName(name);
+}
+
 void SliderRow::setRange(int minimum, int maximum, int defaultTicks)
 {
     const QSignalBlocker block(m_slider);

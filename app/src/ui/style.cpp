@@ -118,6 +118,8 @@ const QString kSheet = uR"(
         #adjustValue { color: {{text}}; font-size: 12px; border: 1px solid transparent; border-radius: 4px; }
         #adjustValue:hover { border-color: {{border}}; padding: 0 4px; }
         #adjustValue[changed="true"] { color: {{accent}}; }
+        #adjustName:disabled, #adjustValue:disabled, #adjustValue[changed="true"]:disabled { color: {{faint}}; }
+        QSlider::handle:horizontal:disabled { background: {{track}}; }
         QLineEdit#adjustValueField { font-size: 12px; padding: 0 4px; min-height: 0; border-radius: 4px; border-color: {{accent}}; }
         QPushButton#small { padding: 4px 10px; font-size: 12px; }
         QSlider { min-height: 24px; }
@@ -127,6 +129,24 @@ const QString kSheet = uR"(
         QSlider#temperatureTrack::groove:horizontal { background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #4F86E8, stop:0.5 #DDDDDD, stop:1 #F0B040); }
         QSlider#tintTrack::groove:horizontal { background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #4CB060, stop:0.5 #DDDDDD, stop:1 #D050C0); }
         QSlider#saturationTrack::groove:horizontal { background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #888888, stop:0.2 #E04F4F, stop:0.4 #E0C04F, stop:0.6 #4FE070, stop:0.8 #4F9CE0, stop:1 #B04FE0); }
+        QSlider#bwTrack::groove:horizontal { background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #1E1E1E, stop:0.5 #8A8A8A, stop:1 #F0F0F0); }
+        QSlider#redHueTrack::groove:horizontal { background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #D04FA0, stop:0.5 #E04F4F, stop:1 #E8904A); }
+        QSlider#greenHueTrack::groove:horizontal { background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #C8C04F, stop:0.5 #4FC060, stop:1 #4FC0B0); }
+        QSlider#blueHueTrack::groove:horizontal { background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #4FB0C8, stop:0.5 #4F70E0, stop:1 #8A4FE0); }
+        QSlider#redSaturationTrack::groove:horizontal { background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #8A8A8A, stop:1 #E04F4F); }
+        QSlider#greenSaturationTrack::groove:horizontal { background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #8A8A8A, stop:1 #4FC060); }
+        QSlider#blueSaturationTrack::groove:horizontal { background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #8A8A8A, stop:1 #4F70E0); }
+        QSlider#temperatureTrack::groove:horizontal, QSlider#tintTrack::groove:horizontal,
+        QSlider#saturationTrack::groove:horizontal, QSlider#bwTrack::groove:horizontal,
+        QSlider#redHueTrack::groove:horizontal, QSlider#greenHueTrack::groove:horizontal,
+        QSlider#blueHueTrack::groove:horizontal, QSlider#redSaturationTrack::groove:horizontal,
+        QSlider#greenSaturationTrack::groove:horizontal, QSlider#blueSaturationTrack::groove:horizontal {
+            border: 1px solid {{faint}}; height: 3px; }
+        QFrame#hairline { background: {{border}}; border: 0; }
+        #subcaption { color: {{muted}}; font-size: 11px; font-weight: 600; padding-top: 10px; }
+        QToolButton#disclose { border: 0; background: transparent; color: {{muted}}; font-size: 12px; padding: 4px 0; }
+        QToolButton#disclose:hover { color: {{text}}; }
+        #checkNote { color: {{muted}}; font-size: 12px; margin-left: 24px; }
         QDialog { background: {{panel}}; }
         #sheetTitle { font-size: 16px; font-weight: 600; }
         #mono { font-family: monospace; font-size: 12px; }
@@ -571,7 +591,13 @@ QWidget* sheetHeaderBar(QDialog* sheet, QLayout* titleRow)
     return bar;
 }
 
-QFrame* segmentBox(const QStringList& names, int checked, QButtonGroup* group, QWidget* parent, bool fill)
+QString buttonText(QString text)
+{
+    return text.replace(u'&', QStringLiteral("&&"));
+}
+
+QFrame* segmentBox(const QStringList& names, int checked, QButtonGroup* group, QWidget* parent,
+                   SegmentFit fit)
 {
     auto* box = new QFrame(parent);
     box->setObjectName(QStringLiteral("segmentBox"));
@@ -579,7 +605,8 @@ QFrame* segmentBox(const QStringList& names, int checked, QButtonGroup* group, Q
     row->setContentsMargins(1, 1, 1, 1);
     row->setSpacing(0);
     for (int i = 0; i < names.size(); ++i) {
-        auto* b = new QPushButton(names.at(i), box);
+        auto* b = new QPushButton(buttonText(names.at(i)), box);
+        b->setAccessibleName(names.at(i));
         b->setObjectName(QStringLiteral("segment"));
         b->setCheckable(true);
         b->setChecked(i == checked);
@@ -587,9 +614,9 @@ QFrame* segmentBox(const QStringList& names, int checked, QButtonGroup* group, Q
             b->setProperty("edge", QStringLiteral("first"));
         }
         group->addButton(b, i);
-        row->addWidget(b);
+        row->addWidget(b, fit == SegmentFit::Equal ? 1 : 0);
     }
-    if (fill) {
+    if (fit == SegmentFit::Row) {
         row->addStretch();
     }
     return box;

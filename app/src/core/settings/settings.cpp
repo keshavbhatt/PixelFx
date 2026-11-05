@@ -249,6 +249,16 @@ void Settings::setOpenAdjustGroups(const QStringList& ids)
     m_settings->setValue(key(keys::kOpenAdjustGroups), ids);
 }
 
+QStringList Settings::openAdjustMore() const
+{
+    return m_settings->value(key(keys::kOpenAdjustMore)).toStringList();
+}
+
+void Settings::setOpenAdjustMore(const QStringList& ids)
+{
+    m_settings->setValue(key(keys::kOpenAdjustMore), ids);
+}
+
 bool Settings::showWhatsNew() const
 {
     return m_settings->value(key(keys::kShowWhatsNew), true).toBool();

@@ -65,6 +65,24 @@ Decisions the work stopped at; everything else went ahead within the approved mo
 
 ## Sessions (newest first)
 
+### 2026-11-05 (Lightroom compatibility, the panel)
+
+- The panel of the approved `editor-develop.html`: Color or Black & white at the top of Color
+  (V, also in the Photo menu; off while healing, where V shows the spots), Profile, the Color
+  mixer turning into the B&W mix, Color grading with four small wheels choosing the range and
+  one large wheel editing it, Curves with Points and Regions (split marks dragged or moved with
+  the keys), Texture, a "More" per group remembered between sessions, and the new Optics and
+  Calibration groups. Black & white, Optics and Calibration are parts of presets, pastes and
+  batch recipes, and a colour preset now turns a black-and-white photo back to colour.
+- Shared pieces: groups are built from a table of controls (sliders, choices, checks, with
+  sub-headings and More), `ChoiceRow` and `CheckRow`, `GradingRangeButton` drawing the same wheel
+  as `ColorWheel` (`paintColorWheel`), `RegionCurveView` drawing the library's own sampler, and
+  `SegmentFit` for segmented controls that share their row.
+- Small fixes on the way: a "&" in a button's label no longer becomes a shortcut letter; values
+  that cannot go below zero show no plus sign; every coloured track has a rim; disabled slider
+  rows look disabled; the colour mixer stands aside in black and white, as in Lightroom.
+- Next: the preset catalog (`editor-presets-catalog.html`) and the curation of the 451 presets.
+
 ### 2026-11-05 (Lightroom compatibility, library)
 
 - Decided by the owner: PixelFx reads and renders every global develop setting a Lightroom

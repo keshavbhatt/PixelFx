@@ -77,6 +77,9 @@ public:
     /// The adjustment groups left open (AdjustGroup ids); nothing until the window first closes.
     [[nodiscard]] std::optional<QStringList> openAdjustGroups() const;
     void setOpenAdjustGroups(const QStringList& ids);
+    /// The adjust groups whose "More" was open (empty: none, the first time too).
+    [[nodiscard]] QStringList openAdjustMore() const;
+    void setOpenAdjustMore(const QStringList& ids);
     /// Display: clipped highlights and shadows shown on the photo (J).
     [[nodiscard]] bool clippingWarnings() const;
     void setClippingWarnings(bool on);

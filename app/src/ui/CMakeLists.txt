@@ -5,6 +5,7 @@ qt_add_library(pixelfx_ui STATIC
     about_sheet.cpp
     about_sheet.h
     adjust_panel.cpp
+    adjust_panel_color.cpp
     adjust_panel.h
     batch_page.cpp
     batch_page.h
@@ -17,6 +18,8 @@ qt_add_library(pixelfx_ui STATIC
     color_swatch.h
     color_wheel.cpp
     color_wheel.h
+    grading_range_button.cpp
+    grading_range_button.h
     curve_editor.cpp
     curve_editor.h
     elided_label.cpp
@@ -57,11 +60,15 @@ qt_add_library(pixelfx_ui STATIC
     paste_sheet.cpp
     paste_sheet.h
     preview_viewer.cpp
+    region_curve.cpp
+    region_curve.h
     preview_viewer.h
     presets_panel.cpp
     presets_panel.h
     preset_save_sheet.cpp
     preset_save_sheet.h
+    setting_rows.cpp
+    setting_rows.h
     settings_sheet.cpp
     settings_sheet.h
     sheet.cpp

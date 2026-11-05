@@ -165,6 +165,7 @@ MainWindow::MainWindow(core::Settings& settings, QWidget* parent)
     if (const std::optional<QStringList> open = m_settings.openAdjustGroups()) {
         m_adjust->setOpenGroups(*open);
     }
+    m_adjust->setOpenMore(m_settings.openAdjustMore());
 
     applyGeneralSettings();
     connectPresets();
@@ -794,6 +795,7 @@ void MainWindow::setupEditActions()
         }
     });
     addAction(autoAction);
+    setupBlackAndWhiteAction();
     auto* compare = new QAction(tr("Before and after"), this);
     compare->setObjectName(u"compare"_s);
     compare->setShortcut(QKeySequence(Qt::Key_Backslash));
@@ -808,6 +810,27 @@ void MainWindow::setupEditActions()
     });
     connect(m_compare, &QToolButton::toggled, compare, &QAction::setChecked);
     addActions({undo, redo, resetAll, history, compare});
+}
+
+void MainWindow::setupBlackAndWhiteAction()
+{
+    auto* blackAndWhite = new QAction(tr("Black and white"), this);
+    blackAndWhite->setObjectName(u"blackAndWhite"_s);
+    blackAndWhite->setShortcut(QKeySequence(Qt::Key_V));
+    blackAndWhite->setCheckable(true);
+    connect(blackAndWhite, &QAction::triggered, this, [this, blackAndWhite](bool on) {
+        if (m_document.isOpen() && !isCropping()) {
+            m_adjust->setBlackAndWhite(on);
+        }
+        blackAndWhite->setChecked(m_adjust->isBlackAndWhite());
+    });
+    // The menu item follows the photo: undo, a preset or the panel's own switch change it too.
+    const auto follow = [blackAndWhite](const pfx::Settings& s) {
+        blackAndWhite->setChecked(s.boolean("bw.enabled", false));
+    };
+    connect(m_adjust, &AdjustPanel::settingsChanged, blackAndWhite, follow);
+    connect(&m_document, &services::Document::settingsReplaced, blackAndWhite, follow);
+    addAction(blackAndWhite);
 }
 
 void MainWindow::setupZoomActions()
@@ -1857,6 +1880,7 @@ void MainWindow::closeEvent(QCloseEvent* event)
     m_settings.setWindowGeometry(saveGeometry());
     m_settings.setWindowState(saveState());
     m_settings.setOpenAdjustGroups(m_adjust->openGroups());
+    m_settings.setOpenAdjustMore(m_adjust->openMore());
     QMainWindow::closeEvent(event);
 }
 
@@ -1981,6 +2005,7 @@ constexpr std::array kViewEntries{MenuEntry{"compare", "compare"},
                                   MenuEntry{"hidePanels", "layout-grid"},
                                   MenuEntry{"fullScreen", "maximize"}};
 constexpr std::array kPhotoEntries{MenuEntry{"auto", "auto"},
+                                   MenuEntry{"blackAndWhite", "contrast"},
                                    kSeparator,
                                    MenuEntry{"rotateLeft", "rotate-ccw"},
                                    MenuEntry{"rotateRight", "rotate-cw"},

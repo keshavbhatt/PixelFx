@@ -46,6 +46,7 @@ const std::array<Section, 4>& sections()
           {QT_TRANSLATE_NOOP("ShortcutsSheet", "Copy / Paste settings"), "Ctrl+Shift+C / V"},
           {QT_TRANSLATE_NOOP("ShortcutsSheet", "Reset all"), "Ctrl+R"},
           {QT_TRANSLATE_NOOP("ShortcutsSheet", "Auto"), "Ctrl+Shift+A"},
+          {QT_TRANSLATE_NOOP("ShortcutsSheet", "Black and white"), "V"},
           {QT_TRANSLATE_NOOP("ShortcutsSheet", "Pick a neutral point"), "W"},
           {QT_TRANSLATE_NOOP("ShortcutsSheet", "Reset slider"), "Double-click"}}},
         {QT_TRANSLATE_NOOP("ShortcutsSheet", "View"),

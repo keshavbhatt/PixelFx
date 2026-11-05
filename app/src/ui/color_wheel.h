@@ -5,6 +5,8 @@
 
 #include <utility>
 
+class QPainter;
+
 namespace pixelfx::ui {
 
 /// One colour grading wheel: the angle is the hue, clockwise from red
@@ -18,9 +20,11 @@ class ColorWheel : public QWidget
 
 public:
     /// `name` is what screen readers hear first, for example "Shadows colour".
-    explicit ColorWheel(const QString& name, QWidget* parent = nullptr);
+    explicit ColorWheel(const QString& name, QWidget* parent = nullptr, int diameter = kDiameter);
     ~ColorWheel() override;
 
+    /// What screen readers hear first, when one wheel edits several ranges.
+    void setName(const QString& name);
     [[nodiscard]] double hue() const { return m_hue; }
     [[nodiscard]] double amount() const { return m_amount; }
     /// Shows `hue` (degrees) and `amount` without emitting.
@@ -30,7 +34,7 @@ public:
     /// The hue and amount a point in widget coordinates stands for.
     [[nodiscard]] std::pair<double, double> colorAt(const QPointF& position) const;
 
-    [[nodiscard]] QSize sizeHint() const override { return {kDiameter, kDiameter}; }
+    [[nodiscard]] QSize sizeHint() const override { return {m_diameter, m_diameter}; }
     [[nodiscard]] QSize minimumSizeHint() const override { return sizeHint(); }
 
     static constexpr int kDiameter = 104;
@@ -54,14 +58,21 @@ private:
     [[nodiscard]] QRectF disc() const;
     void change(double hue, double amount, bool finished);
     void refreshDescription();
-    void renderDisc(qreal ratio);
 
     QString m_name;
+    int m_diameter;
     double m_hue = 0.0;
     double m_amount = 0.0;
     bool m_dragging = false;
     bool m_keyed = false; // changed by keys since the last released()
     QImage m_disc;
 };
+
+/// Draws a colour wheel in `disc`: the hue ring fading to grey in the middle, a rim (the accent
+/// when `focused`), and the puck at `hue` and `amount` with a white and a dark edge so it shows
+/// on any colour. `cache` keeps the rendered disc between paints. Shared by the grading wheel
+/// and the small wheels that choose a grading range.
+void paintColorWheel(QPainter& painter, const QRectF& disc, QImage& cache, double hue, double amount,
+                     double puck, bool focused);
 
 } // namespace pixelfx::ui

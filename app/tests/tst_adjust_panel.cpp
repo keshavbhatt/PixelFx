@@ -1,10 +1,14 @@
+#include "ui/adjust_group.h"
 #include "ui/adjust_panel.h"
 #include "ui/color_wheel.h"
 #include "ui/curve_editor.h"
+#include "ui/region_curve.h"
+#include "ui/setting_rows.h"
 #include "ui/style.h"
 
 #include <QAbstractItemView>
 #include <QApplication>
+#include <QCheckBox>
 #include <QComboBox>
 #include <QGuiApplication>
 #include <QLabel>
@@ -151,11 +155,12 @@ private Q_SLOTS:
     {
         AdjustPanel panel;
         panel.resize(316, 900);
-        auto* wheel = panel.gradingWheel(0);
+        auto* wheel = panel.gradingWheel(); // Shadows is the range on show at first
         QVERIFY(wheel != nullptr);
+        QCOMPARE(panel.gradingRange(), 0);
         QSignalSpy finished(&panel, &AdjustPanel::editFinished);
         const QPointF centre = QRectF(wheel->rect()).center();
-        const double radius = (pixelfx::ui::ColorWheel::kDiameter - 2) / 2.0;
+        const double radius = (wheel->width() - 2) / 2.0;
         // Half way out, straight down: cyan (180 degrees), amount 50.
         const QPoint down = (centre + QPointF(0, radius / 2.0)).toPoint();
         QTest::mousePress(wheel, Qt::LeftButton, {}, down);
@@ -176,7 +181,8 @@ private Q_SLOTS:
     void gradingWheelKeysNudgeAndResetAndHeldKeysAreOneStep()
     {
         AdjustPanel panel;
-        auto* wheel = panel.gradingWheel(1);
+        panel.showGradingRange(2); // Highlights
+        auto* wheel = panel.gradingWheel();
         QSignalSpy finished(&panel, &AdjustPanel::editFinished);
         QTest::keyClick(wheel, Qt::Key_Up, Qt::ShiftModifier); // amount 10
         QTest::keyClick(wheel, Qt::Key_Left);                  // hue 359
@@ -205,8 +211,8 @@ private Q_SLOTS:
         QSignalSpy changed(&panel, &AdjustPanel::settingsChanged);
         panel.setSettings(s);
         QCOMPARE(changed.count(), 0);
-        QCOMPARE(panel.gradingWheel(0)->hue(), 200.0);
-        QCOMPARE(panel.gradingWheel(0)->amount(), 20.0);
+        QCOMPARE(panel.gradingWheel()->hue(), 200.0);
+        QCOMPARE(panel.gradingWheel()->amount(), 20.0);
         QCOMPARE(panel.slider(u"grading.balance"_s)->value(), 10.0);
         QToolButton* reset = nullptr;
         for (auto* b : panel.findChildren<QToolButton*>(u"flatIcon"_s)) {
@@ -219,7 +225,7 @@ private Q_SLOTS:
         QVERIFY(!panel.settings().contains("grading.shadows.hue"));
         QVERIFY(!panel.settings().contains("grading.shadows.amount"));
         QVERIFY(!panel.settings().contains("grading.balance"));
-        QCOMPARE(panel.gradingWheel(0)->amount(), 0.0);
+        QCOMPARE(panel.gradingWheel()->amount(), 0.0);
     }
 
     void geometryTurnsFlipsStraightensAndResets()
@@ -428,6 +434,136 @@ private Q_SLOTS:
         QVERIFY2(popup->geometry().top() >= box->mapToGlobal(QPoint(0, 0)).y(),
                  "the list opens below its box");
         box->hidePopup();
+    }
+
+    void blackAndWhiteTurnsTheMixerIntoTheBwMixAndGreysVibrance()
+    {
+        AdjustPanel panel;
+        QSignalSpy finished(&panel, &AdjustPanel::editFinished);
+        QPushButton* bw = nullptr;
+        for (auto* b : panel.findChildren<QPushButton*>(u"segment"_s)) {
+            if (b->accessibleName() == u"Black & white"_s) {
+                bw = b;
+            }
+        }
+        QVERIFY(bw != nullptr);
+        QCOMPARE(bw->text(), u"Black && white"_s); // the & is shown, not a shortcut
+        bw->click();
+        QVERIFY(panel.isBlackAndWhite());
+        QVERIFY(panel.settings().boolean("bw.enabled", false));
+        QCOMPARE(finished.last().first().toString(), u"Black and white"_s);
+        QCOMPARE(panel.group(u"Color mixer"_s)->name(), u"B&W mix"_s);
+        QVERIFY(!panel.slider(u"color.vibrance"_s)->isEnabled());
+        panel.showMixer(0, 5); // blues
+        QCOMPARE(panel.mixerSlider()->key(), u"bw.mix.blue"_s);
+        QCOMPARE(panel.mixerSlider()->label(), u"Blues in black and white"_s);
+        panel.setBlackAndWhite(false);
+        QVERIFY(!panel.settings().contains("bw.enabled"));
+        QCOMPARE(panel.mixerSlider()->key(), u"mixer.hue.blue"_s);
+        QVERIFY(panel.slider(u"color.vibrance"_s)->isEnabled());
+    }
+
+    void choicesAndChecksAreSettingsAndDefaultsAreNotStored()
+    {
+        AdjustPanel panel;
+        pixelfx::ui::ChoiceRow* profile = panel.choiceRow(u"color.profile"_s);
+        QVERIFY(profile != nullptr);
+        QSignalSpy finished(&panel, &AdjustPanel::editFinished);
+        profile->list()->setCurrentIndex(1);
+        Q_EMIT profile->list()->activated(1);
+        QCOMPARE(panel.settings().text("color.profile", ""), std::string("vivid"));
+        QCOMPARE(finished.last().first().toString(), u"Profile Vivid"_s);
+        profile->list()->setCurrentIndex(0);
+        Q_EMIT profile->list()->activated(0);
+        QVERIFY(!panel.settings().contains("color.profile"));
+        pixelfx::ui::CheckRow* ca = panel.checkRow(u"detail.ca.auto"_s);
+        QVERIFY(ca != nullptr);
+        ca->box()->click();
+        QVERIFY(panel.settings().boolean("detail.ca.auto", false));
+        QCOMPARE(finished.last().first().toString(), u"Remove chromatic aberration on"_s);
+        pfx::Settings s;
+        s.set("effects.vignette.style", std::string("paint"));
+        panel.setSettings(s);
+        QCOMPARE(panel.choiceRow(u"effects.vignette.style"_s)->value(), std::string("paint"));
+        QVERIFY(!panel.checkRow(u"detail.ca.auto"_s)->isChecked());
+    }
+
+    void moreOpensTheFinerSettingsAndIsRemembered()
+    {
+        AdjustPanel panel;
+        panel.resize(316, 900);
+        panel.show();
+        pixelfx::ui::AdjustGroup* detail = panel.group(u"Detail"_s);
+        QVERIFY(detail->hasMore());
+        QVERIFY(!panel.group(u"Light"_s)->hasMore());
+        QVERIFY(panel.slider(u"detail.sharpen.detail"_s)->isHidden() ||
+                !panel.slider(u"detail.sharpen.detail"_s)->isVisible());
+        panel.setOpenMore({u"Detail"_s});
+        QVERIFY(detail->isMoreOpen());
+        QCOMPARE(panel.openMore(), QStringList{u"Detail"_s});
+        QVERIFY(panel.slider(u"detail.sharpen.detail"_s)->isVisible());
+        // A radius reads as the pixels of a 6000 px photo, as in Lightroom.
+        QCOMPARE(panel.slider(u"detail.sharpen.radius"_s)->valueText(), u"2.4"_s);
+        QCOMPARE(panel.slider(u"detail.sharpen.detail"_s)->label(), u"Sharpening detail"_s);
+        QCOMPARE(pixelfx::ui::settingLabel(u"detail.sharpen.detail"_s), u"Sharpening detail"_s);
+        // Optics and Calibration start closed.
+        QVERIFY(!panel.group(u"Optics"_s)->isExpanded());
+        QVERIFY(!panel.group(u"Calibration"_s)->isExpanded());
+    }
+
+    void gradingRangesEditTheirOwnKeys()
+    {
+        AdjustPanel panel;
+        panel.showGradingRange(1); // midtones
+        QCOMPARE(panel.gradingWheel()->accessibleName(), u"Midtones colour"_s);
+        QTest::keyClick(panel.gradingWheel(), Qt::Key_Up, Qt::ShiftModifier);
+        QCOMPARE(panel.settings().number("grading.midtones.amount", 0), 10.0);
+        QVERIFY(!panel.settings().contains("grading.shadows.amount"));
+        QVERIFY(!panel.slider(u"grading.midtones.luminance"_s)->isHidden());
+        QVERIFY(panel.slider(u"grading.shadows.luminance"_s)->isHidden());
+        pfx::Settings s;
+        s.set("grading.global.hue", 210.0);
+        s.set("grading.global.amount", 30.0);
+        panel.setSettings(s);
+        panel.showGradingRange(3);
+        QCOMPARE(panel.gradingWheel()->hue(), 210.0);
+        QCOMPARE(panel.slider(u"grading.blending"_s)->value(), 50.0);
+    }
+
+    void curvesShowRegionsForARegionCurveAndSplitsMove()
+    {
+        AdjustPanel panel;
+        QVERIFY(!panel.showsCurveRegions());
+        pfx::Settings s;
+        s.set("curves.parametric.shadows", 20.0);
+        panel.setSettings(s);
+        QVERIFY(panel.showsCurveRegions()); // a preset with only regions opens on them
+        QSignalSpy finished(&panel, &AdjustPanel::editFinished);
+        pixelfx::ui::RegionCurveView* view = panel.regionCurve();
+        Q_EMIT view->splitMoved(0, 30.0, true);
+        QCOMPARE(panel.settings().number("curves.parametric.split.shadows", 0), 30.0);
+        QCOMPARE(finished.last().first().toString(), u"Region split 30"_s);
+        Q_EMIT view->splitMoved(0, 25.0, true);
+        QVERIFY(!panel.settings().contains("curves.parametric.split.shadows")); // the default
+        pfx::Settings points;
+        points.set("curves.rgb", pfx::Curve{{0, 0}, {0.5, 0.6}, {1, 1}});
+        panel.setSettings(points);
+        QVERIFY(!panel.showsCurveRegions());
+    }
+
+    void regionMarksMoveWithKeysAndStayApart()
+    {
+        pixelfx::ui::RegionCurveView view;
+        view.resize(280, view.sizeHint().height());
+        QSignalSpy moved(&view, &pixelfx::ui::RegionCurveView::splitMoved);
+        view.setFocus(Qt::TabFocusReason);
+        QTest::keyClick(&view, Qt::Key_Right, Qt::ShiftModifier);
+        QCOMPARE(view.split(0), 35.0);
+        QCOMPARE(moved.last().at(2).toBool(), true); // released: a history step
+        for (int i = 0; i < 5; ++i) {
+            QTest::keyClick(&view, Qt::Key_Right, Qt::ShiftModifier);
+        }
+        QCOMPARE(view.split(0), 45.0); // 5 short of the next split
     }
 
     void setSettingsDoesNotEmit()

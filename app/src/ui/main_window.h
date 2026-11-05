@@ -154,6 +154,8 @@ private:
     /// Leaves Crop (applying it) and Heal.
     void leaveTools();
     void setupZoomActions();
+    /// Color or black and white (V), the menu item following the photo.
+    void setupBlackAndWhiteAction();
     void connectZoom();
     void connectClipboard();
     void connectWhiteBalance();

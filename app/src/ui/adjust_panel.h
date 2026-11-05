@@ -23,9 +23,15 @@ namespace pixelfx::ui {
 
 class AdjustGroup;
 class AdjustSlider;
+class CheckRow;
+class ChoiceRow;
 class ColorWheel;
 class CurveEditor;
+class GradingRangeButton;
+struct ControlSpec;
+struct GroupSpec;
 class HistogramView;
+class RegionCurveView;
 
 /// The name the panel shows for the slider of `key` ("Clarity"); empty for keys without a slider.
 [[nodiscard]] QString settingLabel(const QString& key);
@@ -54,8 +60,22 @@ public:
     void showMixer(int mode, int band);
     /// The colour mixer slider on show.
     [[nodiscard]] AdjustSlider* mixerSlider() const;
-    /// The colour grading wheel of `zone` (0 shadows, 1 highlights).
-    [[nodiscard]] ColorWheel* gradingWheel(int zone) const;
+    /// Shows colour grading range `range` (0 shadows, 1 midtones, 2 highlights, 3 global) on the
+    /// large wheel.
+    void showGradingRange(int range);
+    [[nodiscard]] int gradingRange() const;
+    /// The large colour grading wheel; it edits the range on show.
+    [[nodiscard]] ColorWheel* gradingWheel() const { return m_wheel; }
+    /// Points (false) or Regions (true) in the Curves group.
+    void showCurveRegions(bool regions);
+    [[nodiscard]] bool showsCurveRegions() const;
+    [[nodiscard]] RegionCurveView* regionCurve() const { return m_regionCurve; }
+    [[nodiscard]] AdjustGroup* group(const QString& id) const;
+    [[nodiscard]] ChoiceRow* choiceRow(const QString& key) const;
+    [[nodiscard]] CheckRow* checkRow(const QString& key) const;
+    /// Color or Black & white (V): one step in the history.
+    void setBlackAndWhite(bool on);
+    [[nodiscard]] bool isBlackAndWhite() const;
     void setHistogram(const core::Histogram& histogram);
     /// The exposure line under the histogram, and the camera and lens as its tooltip.
     void setPhotoDetails(const QString& exposure, const QString& cameraAndLens);
@@ -65,6 +85,9 @@ public:
     [[nodiscard]] QStringList openGroups() const;
     /// Opens the groups in `ids` and closes the others.
     void setOpenGroups(const QStringList& ids);
+    /// The ids of the groups whose "More" is open, for the next session.
+    [[nodiscard]] QStringList openMore() const;
+    void setOpenMore(const QStringList& ids);
     /// White balance shows "Auto" until a slider moves it.
     void markWhiteBalanceAuto();
     /// The picker button's state, without emitting.
@@ -87,11 +110,27 @@ Q_SIGNALS:
     void cropRequested();
 
 private:
+    struct Bound
+    {
+        QString key;
+        QWidget* row;
+    };
     void setValue(const QString& key, double value, bool finished);
+    void setChoice(const QString& key, const std::string& value, const QString& step);
+    void setFlag(const QString& key, bool on, const QString& step);
+    void buildSpecGroup(const GroupSpec& spec, QWidget* content, QVBoxLayout* groups);
+    void addSpecControl(AdjustGroup* group, const ControlSpec& control);
+    QWidget* buildChoiceRow(const QString& key, const QString& shown, const QString& full, QWidget* parent);
+    QWidget* buildCheckRow(const QString& key, const QString& shown, const QString& note, const QString& full,
+                           QWidget* parent);
+    QWidget* buildTreatmentRow(QWidget* parent);
+    void refreshTreatment();
+    void refreshRows();
     void resetGroup(AdjustGroup* group);
     void refreshGroups();
     void buildCurvesGroup(QWidget* content, QVBoxLayout* groups);
-    AdjustSlider* addSlider(AdjustGroup* group, const QString& key, const QString& label);
+    AdjustSlider* addSlider(AdjustGroup* group, const QString& key, const QString& label, bool more = false,
+                            double display = 1.0);
     void addGroup(AdjustGroup* group, QVBoxLayout* groups);
     /// Shows the settings in the controls that are not sliders (curve, wheels).
     void refreshControls();
@@ -101,9 +140,14 @@ private:
     /// on the same part of the photo; a history step when `label` is given.
     void editGeometry(const std::function<void(pfx::Settings&)>& change, const QString& label);
     void buildGradingGroup(QWidget* content, QVBoxLayout* groups);
-    QWidget* buildWheel(int zone, QWidget* parent);
-    void wheelEdited(int zone, double hue, double amount, bool finished);
+    QWidget* buildGradingRanges(QWidget* parent);
+    void wheelEdited(double hue, double amount, bool finished);
     void refreshWheels();
+    QWidget* buildCurvePoints(AdjustGroup* group);
+    void buildCurveRegions(AdjustGroup* group);
+    void splitMoved(int index, double value, bool finished);
+    /// Shows Regions when the settings have only a region curve, Points when they have points.
+    void followCurveMode();
     QHBoxLayout* buildTopRow();
     QWidget* buildWhiteBalanceRow(QWidget* parent);
     void refreshWhiteBalance();
@@ -122,10 +166,23 @@ private:
     std::vector<AdjustGroup*> m_groups;
     std::vector<AdjustSlider*> m_sliders;
     std::vector<AdjustSlider*> m_mixerSliders;
+    std::vector<AdjustSlider*> m_bwSliders;
+    QWidget* m_mixerModeRow = nullptr;
     QButtonGroup* m_mixerModes = nullptr;
     QButtonGroup* m_mixerBands = nullptr;
-    std::array<ColorWheel*, 2> m_wheels{};
-    std::array<QLabel*, 2> m_wheelValues{};
+    AdjustGroup* m_mixerGroup = nullptr;
+    QButtonGroup* m_treatment = nullptr;
+    std::vector<Bound> m_choices;
+    std::vector<Bound> m_checks;
+    QButtonGroup* m_gradingRanges = nullptr;
+    std::array<GradingRangeButton*, 4> m_rangeButtons{};
+    std::array<AdjustSlider*, 4> m_rangeLuminance{};
+    ColorWheel* m_wheel = nullptr;
+    QLabel* m_wheelValues = nullptr;
+    QButtonGroup* m_curveModes = nullptr;
+    std::vector<QWidget*> m_pointsWidgets;
+    std::vector<QWidget*> m_regionsWidgets;
+    RegionCurveView* m_regionCurve = nullptr;
 };
 
 /// The slider of one numeric setting, in the registry's units (stops, degrees) and range.
@@ -135,7 +192,9 @@ class AdjustSlider : public SliderRow
     Q_DISABLE_COPY_MOVE(AdjustSlider)
 
 public:
-    AdjustSlider(const QString& key, const QString& label, QWidget* parent = nullptr);
+    /// `display` scales the value shown (a share of the long edge as pixels of a 6000 px photo,
+    /// the way Lightroom writes a radius); such values step in tenths of the shown unit.
+    AdjustSlider(const QString& key, const QString& label, QWidget* parent = nullptr, double display = 1.0);
     ~AdjustSlider() override;
 
     [[nodiscard]] const QString& key() const { return m_key; }
@@ -159,7 +218,8 @@ private:
 
     QString m_key;
     double m_default = 0.0;
-    double m_scale = 1.0;
+    double m_scale = 1.0;   // ticks per shown unit
+    double m_display = 1.0; // shown unit per setting unit
     double m_minimum = 0.0;
     double m_maximum = 0.0;
     bool m_degrees = false;

@@ -98,11 +98,20 @@ QHBoxLayout* sheetTitleRow(QDialog* sheet, const QString& title, const QList<QWi
 /// The title row on a bar of its own, padded as a sheet's body, for sheets whose body runs edge
 /// to edge (Settings, Watermark, the look editor).
 QWidget* sheetHeaderBar(QDialog* sheet, QLayout* titleRow);
+/// How a segmented control takes its row: as wide as its segments, across the row with the
+/// segments keeping their own width, or across the row in equal shares.
+enum class SegmentFit
+{
+    Content,
+    Row,
+    Equal,
+};
 /// A segmented control: `names` as joined segments in a box, the one at `checked` on, each added
-/// to `group` with its index as id. With `fill` the box runs across its column and the segments
-/// keep their own width.
+/// to `group` with its index as id.
 QFrame* segmentBox(const QStringList& names, int checked, QButtonGroup* group, QWidget* parent,
-                   bool fill = false);
+                   SegmentFit fit = SegmentFit::Content);
+/// `text` for a button or a tool button, whose "&" would otherwise mark a shortcut letter.
+[[nodiscard]] QString buttonText(QString text);
 /// A section heading of a panel or sheet ("SPOTS (3)", "1. RECIPE"): small, bold, muted capitals.
 QLabel* sectionLabel(const QString& text, QWidget* parent);
 /// A section heading on a line of its own: 12 px above it, 4 px below, `sides` px from the edges

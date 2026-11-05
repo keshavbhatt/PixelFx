@@ -26,20 +26,86 @@ double wrapHue(double hue)
     return h < 0.0 ? h + 360.0 : h;
 }
 
+QImage renderDisc(int diameter, qreal ratio)
+{
+    const int size = qRound(diameter * ratio);
+    QImage disc(size, size, QImage::Format_ARGB32_Premultiplied);
+    disc.setDevicePixelRatio(ratio);
+    disc.fill(Qt::transparent);
+    const double centre = size / 2.0;
+    for (int y = 0; y < size; ++y) {
+        auto* line = reinterpret_cast<QRgb*>(disc.scanLine(y));
+        for (int x = 0; x < size; ++x) {
+            const double dx = x + 0.5 - centre;
+            const double dy = y + 0.5 - centre;
+            const double r = std::hypot(dx, dy) / centre;
+            if (r > 1.0) {
+                continue;
+            }
+            const double hue = wrapHue(std::atan2(dx, -dy) * 180.0 / std::numbers::pi);
+            const QColor ring =
+                QColor::fromHsvF(static_cast<float>(hue / 360.0), kRingSaturation, kRingValue);
+            const auto mix = [r](int edge) { return qRound((kCentreGrey * (1.0 - r)) + (edge * r)); };
+            line[x] = qRgb(mix(ring.red()), mix(ring.green()), mix(ring.blue()));
+        }
+    }
+    return disc;
+}
+
 } // namespace
 
-ColorWheel::ColorWheel(const QString& name, QWidget* parent)
+void paintColorWheel(QPainter& painter, const QRectF& disc, QImage& cache, double hue, double amount,
+                     double puck, bool focused)
+{
+    const qreal ratio = painter.device()->devicePixelRatioF();
+    const int diameter = qRound(disc.width());
+    if (cache.isNull() || !qFuzzyCompare(cache.devicePixelRatio(), ratio) ||
+        qRound(cache.width() / ratio) != diameter) {
+        cache = renderDisc(diameter, ratio);
+    }
+    painter.save();
+    painter.setRenderHint(QPainter::Antialiasing);
+    // Clip the disc to a smooth circle; the image edge alone is jagged.
+    QPainterPath circle;
+    circle.addEllipse(disc);
+    painter.save();
+    painter.setClipPath(circle);
+    painter.drawImage(disc, cache);
+    painter.restore();
+    // The rim keeps the edge visible on the light theme.
+    painter.setBrush(Qt::NoBrush);
+    painter.setPen(QPen(focused ? tokens().accent : tokens().faint, focused ? 2.0 : 1.0));
+    painter.drawEllipse(disc);
+    // The puck: white with a dark outer ring, so one of its edges always shows.
+    const double radius = (disc.width() / 2.0) * (std::clamp(amount, 0.0, 100.0) / 100.0);
+    const double a = hue * std::numbers::pi / 180.0;
+    const QPointF c(disc.center().x() + (radius * std::sin(a)), disc.center().y() - (radius * std::cos(a)));
+    const double r = puck / 2.0;
+    painter.setPen(QPen(QColor(0, 0, 0, 140), 1.0));
+    painter.drawEllipse(c, r + 0.5, r + 0.5);
+    painter.setPen(QPen(Qt::white, puck >= 10.0 ? 2.0 : 1.5));
+    painter.drawEllipse(c, r - 1.0, r - 1.0);
+    painter.restore();
+}
+
+ColorWheel::ColorWheel(const QString& name, QWidget* parent, int diameter)
     : QWidget(parent)
-    , m_name(name)
+    , m_diameter(diameter)
 {
     setFocusPolicy(Qt::StrongFocus);
-    setFixedSize(kDiameter, kDiameter);
+    setFixedSize(diameter, diameter);
     setCursor(Qt::CrossCursor);
+    setName(name);
+    refreshDescription();
+}
+
+void ColorWheel::setName(const QString& name)
+{
+    m_name = name;
     setAccessibleName(name);
     setToolTip(tr("%1: drag to pick the colour, further from the centre is stronger. Arrow keys: Left "
                   "and Right turn the hue, Up and Down change the amount. Double-click resets.")
                    .arg(name));
-    refreshDescription();
 }
 
 ColorWheel::~ColorWheel() = default;
@@ -94,58 +160,10 @@ void ColorWheel::refreshDescription()
     setAccessibleDescription(tr("hue %1 degrees, amount %2").arg(qRound(m_hue)).arg(qRound(m_amount)));
 }
 
-void ColorWheel::renderDisc(qreal ratio)
-{
-    const int size = qRound(kDiameter * ratio);
-    m_disc = QImage(size, size, QImage::Format_ARGB32_Premultiplied);
-    m_disc.setDevicePixelRatio(ratio);
-    m_disc.fill(Qt::transparent);
-    const double centre = size / 2.0;
-    for (int y = 0; y < size; ++y) {
-        auto* line = reinterpret_cast<QRgb*>(m_disc.scanLine(y));
-        for (int x = 0; x < size; ++x) {
-            const double dx = x + 0.5 - centre;
-            const double dy = y + 0.5 - centre;
-            const double r = std::hypot(dx, dy) / centre;
-            if (r > 1.0) {
-                continue;
-            }
-            const double hue = wrapHue(std::atan2(dx, -dy) * 180.0 / std::numbers::pi);
-            const QColor ring =
-                QColor::fromHsvF(static_cast<float>(hue / 360.0), kRingSaturation, kRingValue);
-            const auto mix = [r](int edge) { return qRound((kCentreGrey * (1.0 - r)) + (edge * r)); };
-            line[x] = qRgb(mix(ring.red()), mix(ring.green()), mix(ring.blue()));
-        }
-    }
-}
-
 void ColorWheel::paintEvent(QPaintEvent* /*event*/)
 {
-    const qreal ratio = devicePixelRatioF();
-    if (m_disc.isNull() || !qFuzzyCompare(m_disc.devicePixelRatio(), ratio)) {
-        renderDisc(ratio);
-    }
     QPainter p(this);
-    p.setRenderHint(QPainter::Antialiasing);
-    // Clip the disc to a smooth circle; the image edge alone is jagged.
-    QPainterPath circle;
-    circle.addEllipse(disc());
-    p.save();
-    p.setClipPath(circle);
-    p.drawImage(rect(), m_disc);
-    p.restore();
-    // The rim keeps the edge visible on the light theme.
-    p.setBrush(Qt::NoBrush);
-    const bool ring = showsFocusRing(this);
-    p.setPen(QPen(ring ? tokens().accent : tokens().faint, ring ? 2.0 : 1.0));
-    p.drawEllipse(disc());
-    // The puck: white with a dark outer ring, so one of its edges always shows.
-    const QPointF c = puckPosition();
-    const double r = kPuck / 2.0;
-    p.setPen(QPen(QColor(0, 0, 0, 140), 1.0));
-    p.drawEllipse(c, r + 0.5, r + 0.5);
-    p.setPen(QPen(Qt::white, 2.0));
-    p.drawEllipse(c, r - 1.0, r - 1.0);
+    paintColorWheel(p, disc(), m_disc, m_hue, m_amount, kPuck, showsFocusRing(this));
 }
 
 void ColorWheel::mousePressEvent(QMouseEvent* event)

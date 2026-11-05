@@ -28,7 +28,7 @@ template <typename Chosen>
 QWidget* segments(const QStringList& names, int current, QWidget* parent, Chosen chosen)
 {
     auto* group = new QButtonGroup(parent);
-    QFrame* box = segmentBox(names, current, group, parent, true);
+    QFrame* box = segmentBox(names, current, group, parent, SegmentFit::Row);
     QObject::connect(group, &QButtonGroup::idClicked, box, chosen);
     return box;
 }
