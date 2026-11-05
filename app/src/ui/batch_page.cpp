@@ -3,6 +3,7 @@
 #include "core/batch_resources.h"
 #include "core/looks.h"
 #include "core/sidecar_store.h"
+#include "ui/elided_label.h"
 #include "ui/icon_text_button.h"
 #include "ui/icons.h"
 #include "ui/panel_slider.h"
@@ -457,9 +458,9 @@ QWidget* BatchPage::buildRecipeCard(QWidget* box)
     m_cardThumb = new QLabel(card);
     m_cardThumb->setFixedSize(54, 36);
     m_cardThumb->setObjectName(u"cardThumb"_s);
-    m_cardName = new QLabel(card);
+    m_cardName = new ElidedLabel(card);
     m_cardName->setObjectName(u"presetName"_s);
-    m_cardDetail = new QLabel(card);
+    m_cardDetail = new ElidedLabel(card);
     m_cardDetail->setObjectName(u"presetSummary"_s);
     m_cardChange = new QPushButton(tr("Change"), card);
     m_cardChange->setObjectName(u"small"_s);
@@ -481,7 +482,7 @@ QHBoxLayout* BatchPage::buildSecondRow(QWidget* box)
 {
     // "Then add preset Product white   Change"
     m_secondOn = new QCheckBox(tr("Then add preset"), box);
-    m_secondName = new QLabel(box);
+    m_secondName = new ElidedLabel(box);
     m_secondName->setObjectName(u"presetName"_s);
     m_secondChange = new QPushButton(tr("Change"), box);
     m_secondChange->setObjectName(u"link"_s);
@@ -495,8 +496,7 @@ QHBoxLayout* BatchPage::buildSecondRow(QWidget* box)
     auto* secondRow = new QHBoxLayout;
     secondRow->setSpacing(6);
     secondRow->addWidget(m_secondOn);
-    secondRow->addWidget(m_secondName);
-    secondRow->addStretch();
+    secondRow->addWidget(m_secondName, 1);
     secondRow->addWidget(m_secondChange);
     return secondRow;
 }
