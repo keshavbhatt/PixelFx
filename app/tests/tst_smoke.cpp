@@ -11,6 +11,7 @@
 #include "ui/straighten_dial.h"
 #include "ui/style.h"
 
+#include <QAction>
 #include <QApplication>
 #include <QClipboard>
 #include <QComboBox>
@@ -68,6 +69,26 @@ private Q_SLOTS:
         QVERIFY(window.canvas()->isComparing());
         QTest::keyClick(&window, Qt::Key_Backslash);
         QVERIFY(!window.canvas()->isComparing());
+        // Side by side: the menu item and the header's compare button agree, and the button says
+        // which comparison it shows.
+        QAction* sideBySide = window.namedAction(u"sideBySide"_s);
+        QAction* compare = window.namedAction(u"compare"_s);
+        sideBySide->setChecked(true);
+        QVERIFY(window.canvas()->isComparing());
+        QVERIFY(compare->isChecked());
+        QToolButton* compareButton = nullptr;
+        for (auto* b : window.findChildren<QToolButton*>(u"headerButton"_s)) {
+            if (b->isCheckable() && b->isChecked()) {
+                compareButton = b;
+            }
+        }
+        QVERIFY(compareButton);
+        QVERIFY(compareButton->toolTip().startsWith(u"Side by side"_s));
+        sideBySide->setChecked(false);
+        QVERIFY(compareButton->toolTip().startsWith(u"Before and after"_s));
+        QTest::keyClick(&window, Qt::Key_Backslash);
+        QVERIFY(!window.canvas()->isComparing());
+        QVERIFY(!compare->isChecked());
         // Tab hides the panels while the photo has the focus, and brings them back.
         window.canvas()->setFocus();
         QVERIFY(window.adjustPanel()->isVisible());

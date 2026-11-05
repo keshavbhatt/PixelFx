@@ -116,11 +116,17 @@ protected:
     }
 };
 
+// A header button's icon: the text colour, the accent while it is on.
+QIcon headerIcon(const QString& glyph)
+{
+    return icons::toggle(glyph, tokens().text, tokens().accent, tokens().faint);
+}
+
 QToolButton* headerButton(QWidget* parent, const QString& glyph, const QString& tip)
 {
     auto* b = new QToolButton(parent);
     b->setObjectName(u"headerButton"_s);
-    b->setIcon(icons::toggle(glyph, tokens().text, tokens().accent, tokens().faint));
+    b->setIcon(headerIcon(glyph));
     b->setIconSize(QSize(18, 18));
     b->setToolTip(tip);
     b->setAccessibleName(tip);
@@ -312,6 +318,11 @@ void MainWindow::setupMenuActions()
     sideBySide->setCheckable(true);
     connect(sideBySide, &QAction::toggled, this, [this](bool on) {
         m_canvas->setSideBySide(on);
+        // The header's compare button says which comparison it turns on.
+        const QString tip = on ? tr("Side by side (\\)") : tr("Before and after (\\)");
+        m_compare->setIcon(headerIcon(on ? u"square-split-horizontal"_s : u"compare"_s));
+        m_compare->setToolTip(tip);
+        m_compare->setAccessibleName(tip);
         if (on) {
             setCompare(true);
         }
@@ -1958,7 +1969,7 @@ constexpr std::array kEditEntries{MenuEntry{"undo", "undo"},
                                   kSeparator,
                                   MenuEntry{"resetAll", "reset"}};
 constexpr std::array kViewEntries{MenuEntry{"compare", "compare"},
-                                  MenuEntry{"sideBySide", "images"},
+                                  MenuEntry{"sideBySide", "square-split-horizontal"},
                                   MenuEntry{"showOriginal", "eye"},
                                   MenuEntry{"clipping", "alert"},
                                   kSeparator,
