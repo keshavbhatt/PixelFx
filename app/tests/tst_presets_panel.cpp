@@ -1,3 +1,4 @@
+#include "ui/hover_preview.h"
 #include "ui/paste_sheet.h"
 #include "ui/photo_tile.h"
 #include "ui/preset_save_sheet.h"
@@ -129,7 +130,7 @@ private Q_SLOTS:
         pixelfx::ui::PhotoTile* first = panel.tiles().at(1);
         pixelfx::ui::PhotoTile* second = panel.tiles().at(2);
         Q_EMIT first->hovered(true);
-        QTest::qWait(PresetsPanel::kPreviewWait / 2);
+        QTest::qWait(pixelfx::ui::HoverPreview::kWait / 2);
         QCOMPARE(preview.count(), 0); // not yet: passing over a tile changes nothing
         QTRY_COMPARE_WITH_TIMEOUT(preview.count(), 1, 1000);
         QVERIFY(preview.last().first().value<const PresetEntry*>() != nullptr);
@@ -137,7 +138,7 @@ private Q_SLOTS:
         // The next tile follows after the short wait, with no gap back to the photo.
         Q_EMIT first->hovered(false);
         Q_EMIT second->hovered(true);
-        QTRY_COMPARE_WITH_TIMEOUT(preview.count(), 2, PresetsPanel::kPreviewWait);
+        QTRY_COMPARE_WITH_TIMEOUT(preview.count(), 2, pixelfx::ui::HoverPreview::kWait);
         QCOMPARE(preview.last().first().value<const PresetEntry*>()->name, second->name());
         // Leaving the tiles ends it.
         Q_EMIT second->hovered(false);

@@ -25,7 +25,7 @@
 //                                      point (fractions of the photo); "-" enters only
 //   PIXELFX_DEBUG_TARGET=<x,y[,steps]> pick a colour on the photo for the Color mixer at x,y
 //                                      (fractions) and, with steps, drag that far up
-//   PIXELFX_DEBUG_HOVER=<preset>[;<preset>] preview the first preset as after resting on its tile;
+//   PIXELFX_DEBUG_HOVER=<name>[;<name>] preview the first preset or look as after resting on its tile;
 //                                      the second's tile shows the wait half done
 //   PIXELFX_DEBUG_GRAB=<file.png>      grab the window once the photo is shown (or after 2 s
 //                                      with nothing to show) and quit
@@ -45,6 +45,7 @@
 #include "ui/export_sheet.h"
 #include "ui/heal_tool.h"
 #include "ui/look_editor.h"
+#include "ui/looks_panel.h"
 #include "ui/main_window.h"
 #include "ui/paste_sheet.h"
 #include "ui/photo_tile.h"
@@ -128,13 +129,22 @@ void applyHoverHook(pixelfx::ui::MainWindow& window)
     }
     QObject::connect(&window.document(), &pixelfx::services::Document::opened, &window, [&window, names] {
         pixelfx::ui::PresetsPanel* panel = window.presetsPanel();
-        panel->showTab(1);
-        for (const pixelfx::core::PresetEntry& e : panel->entries()) {
+        pixelfx::ui::LooksPanel* looks = panel->looksPanel();
+        bool isLook = false;
+        for (const pixelfx::core::LookEntry& e : looks->entries()) {
             if (e.name == names.front()) {
+                isLook = true;
+                Q_EMIT looks->previewRequested(e.id, e.look->defaultStrength);
+            }
+        }
+        panel->showTab(isLook ? 0 : 1);
+        for (const pixelfx::core::PresetEntry& e : panel->entries()) {
+            if (!isLook && e.name == names.front()) {
                 Q_EMIT panel->previewRequested(&e);
             }
         }
-        for (pixelfx::ui::PhotoTile* tile : panel->tiles()) {
+        const std::vector<pixelfx::ui::PhotoTile*> tiles = isLook ? looks->visibleTiles() : panel->tiles();
+        for (pixelfx::ui::PhotoTile* tile : tiles) {
             if (names.size() > 1 && tile->name() == names[1]) {
                 tile->setWaiting(0.5);
             }

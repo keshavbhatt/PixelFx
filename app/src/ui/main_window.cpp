@@ -1139,21 +1139,18 @@ void MainWindow::connectPresets()
             [this](const QStringList& ids) { m_settings.setFavoritePresets(ids); });
     connect(m_presets, &PresetsPanel::closedCategoriesChanged, this,
             [this](const QStringList& names) { m_settings.setClosedPresetCategories(names); });
-    auto* endPreview = new QAction(tr("End the preview"), this);
-    endPreview->setShortcut(QKeySequence(Qt::Key_Escape));
-    endPreview->setEnabled(false); // only while a preview shows: Crop and Heal have their own Escape
-    connect(endPreview, &QAction::triggered, m_presets, &PresetsPanel::endPreview);
-    addAction(endPreview);
-    connect(m_presets, &PresetsPanel::previewRequested, this,
-            [this, endPreview](const core::PresetEntry* entry) {
-                const bool show = entry != nullptr && !entry->autoEnhance && m_document.isOpen() &&
-                                  !isInTool() && !isColorTargeting();
-                endPreview->setEnabled(show);
-                m_canvas->setPreviewName(show ? entry->name : QString());
-                m_document.setHoverSettings(
-                    show ? std::optional(core::applyPreset(m_document.settings(), entry->settings))
-                         : std::nullopt);
-            });
+    m_endPreview = new QAction(tr("End the preview"), this);
+    m_endPreview->setShortcut(QKeySequence(Qt::Key_Escape));
+    m_endPreview->setEnabled(false); // only while a preview shows: Crop and Heal have their own Escape
+    connect(m_endPreview, &QAction::triggered, m_presets, &PresetsPanel::endPreview);
+    addAction(m_endPreview);
+    connect(m_presets, &PresetsPanel::previewRequested, this, [this](const core::PresetEntry* entry) {
+        if (entry == nullptr || entry->autoEnhance) {
+            previewOnPhoto({}, std::nullopt);
+            return;
+        }
+        previewOnPhoto(entry->name, core::applyPreset(m_document.settings(), entry->settings));
+    });
     connect(m_presets, &PresetsPanel::saveRequested, this, &MainWindow::savePreset);
     connectPresetActions();
     refreshPresets();
@@ -1301,6 +1298,16 @@ void MainWindow::connectLooks()
                 }
             });
     connect(m_thumbnailTimer, &QTimer::timeout, this, &MainWindow::requestLookThumbnails);
+    connect(looks, &LooksPanel::previewRequested, this, [this, looks](const QString& id, int strength) {
+        QString name = tr("Original");
+        for (const core::LookEntry& e : looks->entries()) {
+            if (e.id == id) {
+                name = e.name;
+            }
+        }
+        previewOnPhoto(name, core::withLook(m_document.settings(), id, strength));
+    });
+    connect(looks, &LooksPanel::previewEnded, this, [this] { previewOnPhoto({}, std::nullopt); });
     connect(looks, &LooksPanel::lookChosen, this, [this](const QString& id, int strength) {
         if (!m_document.isOpen() || isInTool()) {
             return;
@@ -1451,6 +1458,14 @@ void MainWindow::requestPresetThumbnails()
             ((m_thumbnailGeneration % kThumbnailGenerations) * kThumbnailKeySpan) + static_cast<int>(i),
             source, s);
     }
+}
+
+void MainWindow::previewOnPhoto(const QString& name, const std::optional<pfx::Settings>& settings)
+{
+    const bool show = settings.has_value() && m_document.isOpen() && !isInTool() && !isColorTargeting();
+    m_endPreview->setEnabled(show);
+    m_canvas->setPreviewName(show ? name : QString());
+    m_document.setHoverSettings(show ? settings : std::nullopt);
 }
 
 void MainWindow::applyPreset(const core::PresetEntry& entry)

@@ -1,6 +1,7 @@
 #include "ui/looks_panel.h"
 
 #include "ui/flow_layout.h"
+#include "ui/hover_preview.h"
 #include "ui/icons.h"
 #include "ui/photo_tile.h"
 #include "ui/slider_row.h"
@@ -9,6 +10,7 @@
 #include <QButtonGroup>
 #include <QContextMenuEvent>
 #include <QGridLayout>
+#include <QHBoxLayout>
 #include <QKeyEvent>
 #include <QLabel>
 #include <QLineEdit>
@@ -53,7 +55,13 @@ LooksPanel::LooksPanel(QWidget* parent)
     , m_chips(new QButtonGroup(this))
     , m_listBox(new QWidget(this))
     , m_list(new QVBoxLayout(m_listBox))
+    , m_hover(new HoverPreview(this))
 {
+    connect(m_hover, &HoverPreview::started, this, [this](int index) {
+        const QString& id = m_tileIds.at(static_cast<std::size_t>(index));
+        Q_EMIT previewRequested(id, id.isEmpty() ? 0 : defaultStrength(id));
+    });
+    connect(m_hover, &HoverPreview::ended, this, &LooksPanel::previewEnded);
     m_search->setPlaceholderText(tr("Search looks"));
     m_search->setClearButtonEnabled(true);
     m_search->addAction(icons::themed(u"search"_s, tokens().muted), QLineEdit::LeadingPosition);
@@ -114,6 +122,16 @@ QWidget* LooksPanel::buildStrength()
     auto* box = new QWidget(this);
     box->setObjectName(u"lookStrength"_s);
     box->setAttribute(Qt::WA_StyledBackground);
+    // The look the slider belongs to; during a preview it says the applied one has not changed.
+    auto* nameRow = new QHBoxLayout;
+    nameRow->setSpacing(kGapRelated);
+    auto* label = new QLabel(tr("Applied"), box);
+    label->setObjectName(u"adjustName"_s);
+    m_appliedName = new QLabel(box);
+    m_appliedName->setObjectName(u"itemTitle"_s);
+    nameRow->addWidget(label);
+    nameRow->addStretch();
+    nameRow->addWidget(m_appliedName);
     m_strength = new SliderRow(tr("Look strength"), box);
     m_strength->setRange(0, 100, 100);
     // Live while dragging; one history step for a drag, a key, a click, a typed value or a reset.
@@ -124,10 +142,32 @@ QWidget* LooksPanel::buildStrength()
     });
     connect(m_strength, &SliderRow::ticksReleased, this, &LooksPanel::strengthReleased);
     auto* column = new QVBoxLayout(box);
-    column->setContentsMargins(kPanelPadding, 2, kPanelPadding, 4);
+    column->setContentsMargins(kPanelPadding, 8, kPanelPadding, 4);
+    column->setSpacing(0);
+    column->addLayout(nameRow);
     column->addWidget(m_strength);
     setCurrent({}, 0);
     return box;
+}
+
+int LooksPanel::defaultStrength(const QString& id) const
+{
+    for (const core::LookEntry& e : m_entries) {
+        if (e.id == id && e.look) {
+            return e.look->defaultStrength;
+        }
+    }
+    return 100;
+}
+
+bool LooksPanel::isPreviewing() const
+{
+    return m_hover->isPreviewing();
+}
+
+void LooksPanel::endPreview()
+{
+    m_hover->end();
 }
 
 void LooksPanel::setEntries(std::vector<core::LookEntry> entries)
@@ -152,6 +192,13 @@ void LooksPanel::setCurrent(const QString& id, double strength)
     m_strength->setRange(0, 100, standard);
     m_strength->setTicks(static_cast<int>(std::lround(strength)));
     m_strength->setEnabled(!id.isEmpty());
+    QString name = tr("None");
+    for (const core::LookEntry& e : m_entries) {
+        if (e.id == id) {
+            name = e.name;
+        }
+    }
+    m_appliedName->setText(name);
     if (changed) {
         for (PhotoTile* tile : visibleTiles()) {
             tile->setSelected(tile->id() == id);
@@ -201,14 +248,13 @@ void LooksPanel::addSection(const QString& title, QWidget* extra, const std::vec
     const auto place = [&](PhotoTile* tile) {
         tile->setSelected(tile->id() == m_current);
         connect(tile, &PhotoTile::clicked, this, [this, tile] {
-            int strength = 100;
-            for (const core::LookEntry& e : m_entries) {
-                if (e.id == tile->id()) {
-                    strength = e.look->defaultStrength;
-                }
-            }
-            Q_EMIT lookChosen(tile->id(), strength);
+            m_hover->end();
+            Q_EMIT lookChosen(tile->id(), defaultStrength(tile->id()));
         });
+        const auto index = static_cast<int>(m_tileIds.size());
+        m_tileIds.push_back(tile->id());
+        connect(tile, &PhotoTile::hovered, this,
+                [this, tile, index](bool inside) { m_hover->hover(tile, index, inside); });
         tiles.push_back(tile);
     };
     if (withOriginal) {
@@ -242,6 +288,8 @@ void LooksPanel::addSection(const QString& title, QWidget* extra, const std::vec
 
 void LooksPanel::rebuild()
 {
+    m_hover->end(); // its tile goes with the list
+    m_tileIds.clear();
     // Later, not now: a tile may be the one whose menu or click led here.
     const auto retire = [](QWidget* w) {
         if (w != nullptr) {

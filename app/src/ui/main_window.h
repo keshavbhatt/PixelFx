@@ -162,6 +162,8 @@ private:
     void setupZoomActions();
     void connectPresetAmount();
     void connectColorTarget();
+    /// A preset's or a look's preview on the photo, named `name`; nullopt ends it.
+    void previewOnPhoto(const QString& name, const std::optional<pfx::Settings>& settings);
     /// The preset just applied at `amount` (0 to 200) over the photo as it was before it.
     void blendAppliedPreset(double amount, bool finished);
     /// Color or black and white (V), the menu item following the photo.
@@ -254,6 +256,7 @@ private:
     class HealTool* m_healTool = nullptr;
     class ColorTargetTool* m_colorTarget = nullptr;
     QAction* m_colorTargetStop = nullptr;
+    QAction* m_endPreview = nullptr;
     class HealPanel* m_healPanel = nullptr;
     QList<QAction*> m_healActions;
     pfx::Settings m_healStart;

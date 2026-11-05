@@ -1,5 +1,6 @@
 #include "ui/presets_panel.h"
 
+#include "ui/hover_preview.h"
 #include "ui/icon_text_button.h"
 #include "ui/icons.h"
 #include "ui/looks_panel.h"
@@ -56,19 +57,12 @@ PresetsPanel::PresetsPanel(QWidget* parent)
     , m_looks(new LooksPanel(this))
     , m_pages(new QStackedWidget(this))
     , m_tabs(new QButtonGroup(this))
-    , m_waitTick(new QTimer(this))
-    , m_endTimer(new QTimer(this))
+    , m_hover(new HoverPreview(this))
 {
     makeSidePanel(this, Qt::RightEdge);
-    m_waitTick->setInterval(16);
-    connect(m_waitTick, &QTimer::timeout, this, &PresetsPanel::tickWait);
-    // Leaving a tile ends its preview a moment later: moving to the next one keeps it smooth.
-    m_endTimer->setSingleShot(true);
-    m_endTimer->setInterval(kPreviewNext);
-    connect(m_endTimer, &QTimer::timeout, this, [this] {
-        m_previewing = false;
-        Q_EMIT previewRequested(nullptr);
-    });
+    connect(m_hover, &HoverPreview::started, this,
+            [this](int index) { Q_EMIT previewRequested(&m_entries[static_cast<std::size_t>(index)]); });
+    connect(m_hover, &HoverPreview::ended, this, [this] { Q_EMIT previewRequested(nullptr); });
     setFixedWidth(kPanelWidth);
 
     QHBoxLayout* tabs = buildTabs();
@@ -436,7 +430,7 @@ void PresetsPanel::clearList()
 
 void PresetsPanel::rebuild()
 {
-    endPreview(); // its tile goes with the list
+    m_hover->end(); // its tile goes with the list
     clearList();
     const bool inCategory = !m_category.isEmpty();
     const bool searching = !m_search->text().trimmed().isEmpty();
@@ -591,64 +585,22 @@ PhotoTile* PresetsPanel::makeTile(std::size_t index)
         Q_EMIT applyRequested(m_entries[index]);
     });
     connect(tile, &PhotoTile::hovered, this,
-            [this, tile, index](bool inside) { hoverTile(tile, index, inside); });
+            [this, tile, index](bool inside) { m_hover->hover(tile, static_cast<int>(index), inside); });
     connect(tile, &PhotoTile::favoriteRequested, this, [this, index] { toggleFavorite(index); });
     connect(tile, &PhotoTile::menuRequested, this,
             [this, index](const QPoint& where) { showMenu(index, where); });
     return tile;
 }
 
-void PresetsPanel::hoverTile(PhotoTile* tile, std::size_t index, bool inside)
+bool PresetsPanel::isPreviewing() const
 {
-    if (m_waitTile != nullptr) {
-        m_waitTile->setWaiting(-1.0);
-    }
-    m_waitTick->stop();
-    if (!inside) {
-        m_waitTile = nullptr;
-        if (m_previewing) {
-            m_endTimer->start();
-        }
-        return;
-    }
-    m_endTimer->stop();
-    m_waitTile = tile;
-    m_waitIndex = index;
-    m_waitDelay = m_previewing ? kPreviewNext : kPreviewWait;
-    m_waitClock.start();
-    tile->setWaiting(0.0);
-    m_waitTick->start();
-}
-
-void PresetsPanel::tickWait()
-{
-    if (m_waitTile == nullptr) {
-        m_waitTick->stop();
-        return;
-    }
-    const double progress = static_cast<double>(m_waitClock.elapsed()) / m_waitDelay;
-    if (progress < 1.0) {
-        m_waitTile->setWaiting(progress);
-        return;
-    }
-    m_waitTick->stop();
-    m_waitTile->setWaiting(-1.0);
-    m_previewing = true;
-    Q_EMIT previewRequested(&m_entries[m_waitIndex]);
+    return m_hover->isPreviewing() || m_looks->isPreviewing();
 }
 
 void PresetsPanel::endPreview()
 {
-    m_waitTick->stop();
-    m_endTimer->stop();
-    if (m_waitTile != nullptr) {
-        m_waitTile->setWaiting(-1.0);
-    }
-    m_waitTile = nullptr;
-    if (m_previewing) {
-        m_previewing = false;
-        Q_EMIT previewRequested(nullptr);
-    }
+    m_hover->end();
+    m_looks->endPreview();
 }
 
 void PresetsPanel::toggleFavorite(std::size_t index)

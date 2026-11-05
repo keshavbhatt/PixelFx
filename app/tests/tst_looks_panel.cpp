@@ -1,4 +1,5 @@
 #include "ui/canvas.h"
+#include "ui/hover_preview.h"
 #include "ui/look_editor.h"
 #include "ui/looks_panel.h"
 #include "ui/message_line.h"
@@ -9,6 +10,7 @@
 #include "ui/style.h"
 
 #include <QApplication>
+#include <QLabel>
 #include <QLineEdit>
 #include <QListWidget>
 #include <QPushButton>
@@ -16,6 +18,8 @@
 #include <QSlider>
 #include <QTemporaryDir>
 #include <QTest>
+
+#include <algorithm>
 
 using namespace Qt::StringLiterals;
 using pixelfx::ui::LooksPanel;
@@ -190,6 +194,44 @@ private Q_SLOTS:
         QVERIFY(entries.front().isMine());
         QCOMPARE(entries.front().id, editor.savedId());
         QCOMPARE(entries.front().look->steps.size(), std::size_t{2});
+    }
+
+    void restingOnALookPreviewsItAndTheAppliedLookStays()
+    {
+        LooksPanel panel;
+        panel.setEntries(pixelfx::core::builtInLooks());
+        const pixelfx::core::LookEntry golden = pixelfx::core::builtInLooks().at(5);
+        panel.setCurrent(pixelfx::core::builtInLooks().front().id, 72);
+        QSignalSpy preview(&panel, &LooksPanel::previewRequested);
+        QSignalSpy ended(&panel, &LooksPanel::previewEnded);
+        QSignalSpy chosen(&panel, &LooksPanel::lookChosen);
+        pixelfx::ui::PhotoTile* tile = nullptr;
+        for (pixelfx::ui::PhotoTile* t : panel.visibleTiles()) {
+            if (t->id() == golden.id) {
+                tile = t;
+            }
+        }
+        QVERIFY(tile != nullptr);
+        Q_EMIT tile->hovered(true);
+        QTest::qWait(pixelfx::ui::HoverPreview::kWait / 2);
+        QCOMPARE(preview.count(), 0);
+        QTRY_COMPARE_WITH_TIMEOUT(preview.count(), 1, 1000);
+        QCOMPARE(preview.first().at(0).toString(), golden.id);
+        QCOMPARE(preview.first().at(1).toInt(), golden.look->defaultStrength); // what a click gives
+        QVERIFY(panel.isPreviewing());
+        QCOMPARE(panel.current(), pixelfx::core::builtInLooks().front().id); // nothing applied yet
+        // A click applies it and ends the preview.
+        QTest::mouseClick(tile, Qt::LeftButton);
+        QCOMPARE(ended.count(), 1);
+        QCOMPARE(chosen.count(), 1);
+        QVERIFY(!panel.isPreviewing());
+        // The applied look is named above its strength; none greys the slider.
+        auto labels = panel.findChildren<QLabel*>(u"itemTitle"_s);
+        QVERIFY(std::ranges::any_of(
+            labels, [&](QLabel* l) { return l->text() == pixelfx::core::builtInLooks().front().name; }));
+        panel.setCurrent({}, 0);
+        QVERIFY(std::ranges::any_of(labels, [](QLabel* l) { return l->text() == u"None"_s; }));
+        QVERIFY(!panel.strengthSlider()->isEnabled());
     }
 
     void currentLookSelectsItsTileAndTheSlider()

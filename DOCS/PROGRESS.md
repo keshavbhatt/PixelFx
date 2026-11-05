@@ -30,6 +30,7 @@
 | `editor-mixer-target.html` | 2026-11-05 (`mocks/reviews/editor-mixer-target.md`) | approved 2026-11-05 |
 | `editor-collapse-all.html` | 2026-11-05 (`mocks/reviews/editor-collapse-all.md`) | approved 2026-11-05 |
 | `editor-zoom-loading.html` | 2026-11-05 (`mocks/reviews/editor-zoom-loading.md`) | approved 2026-11-05 |
+| `editor-looks-preview.html` | 2026-11-05 (`mocks/reviews/editor-looks-preview.md`) | approved 2026-11-05 |
 | `editor-presets-catalog.html`, hover preview | 2026-11-05 (same review, "Hover preview, reworked") | approved 2026-11-05 |
 
 ## Waiting for the owner (2026-11-05)
@@ -69,6 +70,15 @@ Decisions the work stopped at; everything else went ahead within the approved mo
     Heal); Reveal dust explains itself in its tooltip rather than a first-time line.
 
 ## Sessions (newest first)
+
+### 2026-11-05 (Looks, hover preview)
+
+- The approved `editor-looks-preview.html`: resting on a look previews it as presets do (the look
+  at its own strength over the edit, in place of the applied one; Original as no look), and
+  "Applied" above Look strength names the look the slider belongs to ("None" greys it).
+- One `HoverPreview` now runs the wait, the bar, the quicker next tile and the moment's grace on
+  leaving for both tabs; `MainWindow::previewOnPhoto` shows either on the photo (the Preview tag,
+  the line, Escape), so there is one copy of the behaviour.
 
 ### 2026-11-05 (zoom: loading the sharp picture)
 

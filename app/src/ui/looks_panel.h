@@ -39,6 +39,10 @@ public:
     void setThumbnail(int index, const QImage& image);
     [[nodiscard]] std::vector<PhotoTile*> visibleTiles() const;
     [[nodiscard]] QSlider* strengthSlider() const;
+    /// A look's preview shows on the photo (after the wait on its tile).
+    [[nodiscard]] bool isPreviewing() const;
+    /// Ends the preview and any wait for one.
+    void endPreview();
 
 Q_SIGNALS:
     /// A tile was chosen: its id (empty for Original) and the look's own strength.
@@ -47,6 +51,10 @@ Q_SIGNALS:
     void strengthMoved(int strength);
     void strengthReleased(int strength);
     void newLookRequested();
+    /// After resting on a tile: show look `id` (empty: no look) at `strength` on the photo.
+    void previewRequested(const QString& id, int strength);
+    /// Back to the photo's own look.
+    void previewEnded();
     void editLookRequested(const QString& id);
     void exportLookRequested(const QString& id);
     void deleteLookRequested(const QString& id);
@@ -66,6 +74,11 @@ private:
     QWidget* m_listBox = nullptr;
     QVBoxLayout* m_list = nullptr;
     SliderRow* m_strength = nullptr;
+    QLabel* m_appliedName = nullptr;
+    class HoverPreview* m_hover = nullptr;
+    std::vector<QString> m_tileIds; // the look of each tile on show, by HoverPreview index
+    /// The look's own strength, the one a click applies.
+    [[nodiscard]] int defaultStrength(const QString& id) const;
 };
 
 } // namespace pixelfx::ui
