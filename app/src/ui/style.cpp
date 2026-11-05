@@ -395,6 +395,9 @@ public:
         if (metric == PM_ScrollView_ScrollBarOverlap) {
             return kScrollBarWidth;
         }
+        if (metric == PM_LayoutHorizontalSpacing || metric == PM_LayoutVerticalSpacing) {
+            return kGapControls; // a layout without a gap of its own spaces its items as controls
+        }
         return QProxyStyle::pixelMetric(metric, option, widget);
     }
 };
@@ -555,6 +558,7 @@ QHBoxLayout* sectionHeadingRow(QLabel* label, QWidget* trailing, int sides)
 {
     auto* row = new QHBoxLayout;
     row->setContentsMargins(sides, kAboveSection, sides, kBelowSection);
+    row->setSpacing(kGapControls);
     row->addWidget(label, 1);
     if (trailing != nullptr) {
         row->addWidget(trailing);

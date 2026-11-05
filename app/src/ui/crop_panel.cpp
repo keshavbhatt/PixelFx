@@ -212,6 +212,7 @@ QLayout* CropPanel::buildStraighten()
                               tr("Drag along something that should be level or upright"), this);
     connect(level, &QPushButton::clicked, this, &CropPanel::levelLineRequested);
     auto* levelRow = new QHBoxLayout;
+    levelRow->setSpacing(kGapControls);
     levelRow->addWidget(level);
     levelRow->addStretch();
     straighten->addLayout(levelRow);
@@ -335,6 +336,7 @@ void CropPanel::askCustomRatio()
     connect(buttons.cancel, &QPushButton::clicked, &sheet, &QDialog::reject);
     connect(buttons.primary, &QPushButton::clicked, &sheet, &QDialog::accept);
     auto* ratio = new QHBoxLayout;
+    ratio->setSpacing(kGapRelated);
     ratio->addWidget(width, 1);
     ratio->addWidget(new QLabel(u":"_s, &sheet));
     ratio->addWidget(height, 1);

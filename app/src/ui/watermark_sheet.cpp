@@ -271,6 +271,7 @@ QWidget* WatermarkSheet::buildLogoPage()
     logoColumn->setContentsMargins(0, 0, 0, 0);
     logoColumn->setSpacing(kGapRelated);
     auto* logoRow = new QHBoxLayout;
+    logoRow->setSpacing(kGapRelated);
     logoRow->addWidget(m_logoName, 1);
     logoRow->addWidget(chooseLogo);
     logoColumn->addLayout(logoRow);

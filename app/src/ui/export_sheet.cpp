@@ -161,6 +161,7 @@ QWidget* ExportSheet::qualityRow(int quality)
     auto* scale = new QLabel(tr("Smaller file \u00B7 Better image"), m_qualityRow);
     scale->setObjectName(u"small"_s);
     auto* top = new QHBoxLayout;
+    top->setSpacing(kGapControls);
     top->addWidget(scale, 1);
     top->addWidget(m_qualityValue);
     auto* qualityLayout = new QVBoxLayout(m_qualityRow);

@@ -34,6 +34,9 @@ public:
     void setRows(const QList<Row>& rows);
     void setSubtitle(int row, const QString& subtitle);
     [[nodiscard]] int count() const { return static_cast<int>(m_rows.size()); }
+    /// The height that shows every row, up to `rows` of them; past that, half of the next row
+    /// shows too, so the list reads as one that scrolls.
+    [[nodiscard]] int heightForRows(int rows) const;
     [[nodiscard]] int current() const { return m_current; }
     /// Selects `row` (or nothing with -1) and reports it.
     void setCurrent(int row);

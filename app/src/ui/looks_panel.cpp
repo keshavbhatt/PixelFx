@@ -238,6 +238,7 @@ QWidget* LooksPanel::buildStrength()
         }
     });
     auto* top = new QHBoxLayout;
+    top->setSpacing(kGapControls);
     top->addWidget(m_strengthName);
     top->addStretch();
     top->addWidget(m_strengthValue);

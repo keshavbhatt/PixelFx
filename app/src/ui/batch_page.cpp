@@ -549,6 +549,7 @@ QWidget* BatchPage::buildSaveAs(QWidget* parent)
     more->setToolTip(tr("Quality, bit depth, metadata, and what to do when a file is already there"));
     connect(more, &QPushButton::clicked, this, &BatchPage::editSaveOptions);
     auto* formatRow = new QHBoxLayout;
+    formatRow->setSpacing(kGapRelated);
     formatRow->addWidget(m_format);
     formatRow->addWidget(more);
     formatRow->addStretch();
@@ -567,6 +568,7 @@ QWidget* BatchPage::buildSaveAs(QWidget* parent)
         }
     });
     auto* folderRow = new QHBoxLayout;
+    folderRow->setSpacing(kGapRelated);
     folderRow->addWidget(m_folder, 1);
     folderRow->addWidget(change);
     m_name = new QLineEdit(m_output.nameTemplate, box);
@@ -633,6 +635,7 @@ QFormLayout* BatchPage::saveOptionsForm(QDialog* sheet, const core::ExportOption
     connect(c.quality, &QSlider::valueChanged, qualityValue,
             [qualityValue](int v) { qualityValue->setNum(v); });
     auto* qualityRow = new QHBoxLayout;
+    qualityRow->setSpacing(kGapControls);
     qualityRow->addWidget(c.quality, 1);
     qualityRow->addWidget(qualityValue);
     c.deep = new QCheckBox(tr("16 bits per channel"), sheet);
@@ -652,6 +655,7 @@ QFormLayout* BatchPage::saveOptionsForm(QDialog* sheet, const core::ExportOption
     form->addRow(tr("Quality"), qualityRow);
     form->addRow(tr("Bit depth"), c.deep);
     auto* metadata = new QVBoxLayout;
+    metadata->setSpacing(kGapSmall);
     metadata->addWidget(c.camera);
     metadata->addWidget(c.location);
     form->addRow(tr("Metadata"), metadata);

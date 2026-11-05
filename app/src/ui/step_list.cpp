@@ -10,6 +10,8 @@
 #include <QToolButton>
 #include <QVBoxLayout>
 
+#include <algorithm>
+
 using namespace Qt::StringLiterals;
 
 namespace pixelfx::ui {
@@ -57,9 +59,24 @@ void StepList::setRows(const QList<Row>& rows)
             Q_EMIT menuRequested(indexOf(row), button->mapToGlobal(QPoint(0, button->height())));
         });
         m_column->insertWidget(m_column->count() - 1, row); // before the stretch
+        row->show(); // now, so the list measures it even while the sheet is open
         m_rows.append({row, handle, check});
     }
     m_current = -1;
+}
+
+int StepList::heightForRows(int rows) const
+{
+    const QMargins margins = m_column->contentsMargins();
+    int height = margins.top() + margins.bottom();
+    const int shown = std::min(rows, count());
+    for (int i = 0; i < shown; ++i) {
+        height += m_rows.at(i).row->sizeHint().height() + (i > 0 ? m_column->spacing() : 0);
+    }
+    if (count() > rows) {
+        height += m_column->spacing() + (m_rows.at(rows).row->sizeHint().height() / 2);
+    }
+    return height;
 }
 
 void StepList::setSubtitle(int row, const QString& subtitle)

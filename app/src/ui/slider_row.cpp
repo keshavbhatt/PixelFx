@@ -57,6 +57,7 @@ SliderRow::SliderRow(const QString& label, QWidget* parent)
     m_value->setFont(figures);
     m_field->setFont(figures);
     auto* top = new QHBoxLayout;
+    top->setSpacing(kGapControls);
     top->setContentsMargins(0, 0, 0, 0);
     top->addWidget(m_name);
     top->addStretch();

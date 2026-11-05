@@ -425,6 +425,7 @@ QHBoxLayout* LookEditor::buildStepButtons(QWidget* side)
     import->setObjectName(u"small"_s);
     connect(import, &QPushButton::clicked, this, &LookEditor::importLut);
     auto* buttons = new QHBoxLayout;
+    buttons->setSpacing(kGapControls);
     buttons->setContentsMargins(kToolRowPadding, 8, kToolRowPadding, 8);
     buttons->addWidget(add);
     buttons->addWidget(import);
@@ -586,12 +587,7 @@ void LookEditor::refreshSteps()
     m_save->setToolTip(empty ? tr("Add a step first") : QString());
     m_export->setToolTip(empty ? tr("Add a step first") : tr("Save the look as a .pfxlook file to share"));
     m_bake->setToolTip(empty ? tr("Add a step first") : tr("The colour-only steps as a LUT for other apps"));
-    // The list is as tall as its steps, up to a few; then it scrolls.
-    const int all = m_steps->sizeHint().height();
-    const int rowHeight = m_steps->count() > 0 ? all / m_steps->count() : all;
-    m_stepsScroll->setFixedHeight(m_steps->count() <= kVisibleSteps
-                                      ? std::max(all, rowHeight)
-                                      : (kVisibleSteps * rowHeight) - (rowHeight / 2));
+    m_stepsScroll->setFixedHeight(m_steps->heightForRows(kVisibleSteps));
 }
 
 void LookEditor::selectStep(int row)

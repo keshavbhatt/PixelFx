@@ -70,6 +70,7 @@ PresetsPanel::PresetsPanel(QWidget* parent)
     footLine->setAttribute(Qt::WA_StyledBackground);
     footLine->setFixedHeight(1);
     auto* foot = new QHBoxLayout;
+    foot->setSpacing(kGapControls);
     foot->setContentsMargins(kPanelPadding, 10, kPanelPadding, 10);
     foot->addWidget(save, 1);
 

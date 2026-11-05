@@ -113,6 +113,7 @@ void WelcomePage::buildRecent()
     clear->setCursor(Qt::PointingHandCursor);
     connect(clear, &QPushButton::clicked, this, &WelcomePage::clearRecentRequested);
     auto* heading = new QHBoxLayout;
+    heading->setSpacing(kGapControls);
     heading->addWidget(recentTitle);
     heading->addStretch();
     heading->addWidget(clear);

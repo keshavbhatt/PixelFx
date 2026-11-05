@@ -90,6 +90,10 @@ private Q_SLOTS:
         editor.addStep(u"exposure"_s);
         editor.addStep(u"grain"_s);
         QCOMPARE(editor.stepList()->count(), 2);
+        // Steps added while the sheet is open all show.
+        QApplication::processEvents();
+        const QWidget* viewport = editor.stepList()->parentWidget();
+        QVERIFY2(viewport->height() >= 2 * 40, qPrintable(QString::number(viewport->height())));
         // The exposure step's slider: the selected step is grain; pick exposure and move its first slider.
         editor.stepList()->setCurrent(0);
         QSlider* exposure = nullptr;
