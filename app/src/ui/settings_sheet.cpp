@@ -119,7 +119,7 @@ QWidget* SettingsSheet::buildGeneral()
 
     form->addRow(sectionLabel(tr("Editing"), page));
     auto* remember = new QCheckBox(tr("Keep each photo's settings in the app's library"), page);
-    remember->setObjectName(u"switch"_s); // mock settings.html: switches
+    remember->setObjectName(u"switch"_s);
     remember->setChecked(m_settings.rememberEdits());
     connect(remember, &QCheckBox::toggled, this, [this](bool on) { m_settings.setRememberEdits(on); });
     form->addRow(tr("Remember edits"), remember);

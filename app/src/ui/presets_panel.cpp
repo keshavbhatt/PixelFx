@@ -25,7 +25,7 @@ using namespace Qt::StringLiterals;
 namespace pixelfx::ui {
 
 namespace {
-constexpr int kPanelWidth = 272; // mock --left-w
+constexpr int kPanelWidth = 272;
 constexpr int kThumbWidth = 44;
 constexpr int kThumbHeight = 30;
 } // namespace
@@ -104,7 +104,6 @@ int PresetsPanel::currentTab() const
 
 QHBoxLayout* PresetsPanel::buildTabs()
 {
-    // Tabs of the mock: Looks, Presets.
     auto* tabs = new QHBoxLayout;
     tabs->setContentsMargins(10, 8, 10, 0);
     tabs->setSpacing(4);
@@ -265,7 +264,7 @@ PresetRow::PresetRow(std::size_t index, const core::PresetEntry& entry, QWidget*
     connect(more, &QToolButton::clicked, this, &PresetRow::menuRequested);
     m_more = more;
     auto* row = new QHBoxLayout(this);
-    row->setContentsMargins(18 + kThumbWidth + 10, 7, 14, 7); // mock .list .it: 8 px outside, 10 inside
+    row->setContentsMargins(18 + kThumbWidth + 10, 7, 14, 7);
     row->setSpacing(10);
     row->addLayout(text, 1);
     row->addWidget(more);

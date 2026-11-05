@@ -170,7 +170,7 @@ WatermarkSheet::WatermarkSheet(const QImage& photo, const QString& current, cons
 {
     setWindowTitle(tr("Watermark"));
     setModal(true);
-    resize(980, 640); // mock .sheet.wide
+    resize(980, 640);
 
     auto* head = buildHeader();
 
@@ -330,7 +330,7 @@ QWidget* WatermarkSheet::buildControls()
     auto* panel = new QWidget(this);
     panel->setObjectName(u"watermarkControls"_s);
     panel->setAttribute(Qt::WA_StyledBackground);
-    panel->setFixedWidth(340); // mock grid column
+    panel->setFixedWidth(340);
     auto* column = new QVBoxLayout(panel);
     column->setContentsMargins(16, 12, 16, 12);
     column->setSpacing(10);
@@ -452,7 +452,7 @@ QWidget* WatermarkSheet::buildPositionRow()
         auto* cell = new QToolButton(row);
         cell->setObjectName(u"positionCell"_s);
         cell->setCheckable(true);
-        cell->setFixedSize(26, 26); // review: 24 px minimum
+        cell->setFixedSize(26, 26);
         cell->setToolTip(tr(names.at(static_cast<std::size_t>(i))));
         cell->setAccessibleName(cell->toolTip());
         m_anchors->addButton(cell, i);
@@ -469,11 +469,11 @@ QWidget* WatermarkSheet::buildPositionRow()
 
     m_repeat = new QCheckBox(tr("Repeat across the photo"), row);
     m_shadow = new QCheckBox(tr("Soft shadow"), row);
-    m_repeat->setObjectName(u"switch"_s); // mock watermark.html: switches
+    m_repeat->setObjectName(u"switch"_s);
     m_shadow->setObjectName(u"switch"_s);
     connect(m_repeat, &QCheckBox::toggled, this, &WatermarkSheet::sync);
     connect(m_shadow, &QCheckBox::toggled, this, &WatermarkSheet::sync);
-    // The angle matters only when the mark repeats (review: shown only then).
+    // The angle matters only when the mark repeats.
     m_angleRow = new QWidget(row);
     auto* angleLabel = new QLabel(tr("Angle"), m_angleRow);
     angleLabel->setObjectName(u"adjustName"_s);

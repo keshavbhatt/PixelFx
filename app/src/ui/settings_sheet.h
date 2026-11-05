@@ -8,10 +8,9 @@ class Settings;
 
 namespace pixelfx::ui {
 
-/// Settings (mock settings.html): a sheet with a sidebar where every row writes straight to the
+/// Settings: a sheet with a sidebar where every row writes straight to the
 /// settings, no OK button. The General page has what exists today: theme and canvas
-/// background, remembering edits and how a photo opens, clipping warnings. The other pages of
-/// the mock arrive with their features (Batch, presets and looks, the monitor profile, GPU).
+/// background, remembering edits and how a photo opens, clipping warnings.
 class SettingsSheet : public QDialog
 {
     Q_OBJECT

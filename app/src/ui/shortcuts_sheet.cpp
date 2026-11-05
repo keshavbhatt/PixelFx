@@ -31,7 +31,6 @@ struct Section
     std::vector<Shortcut> rows;
 };
 
-// The mock's sections and wording; key names are not translated.
 const std::array<Section, 4>& sections()
 {
     static const std::array<Section, 4> list = {{
@@ -94,7 +93,6 @@ ShortcutsSheet::ShortcutsSheet(QWidget* parent)
     head->addStretch();
     head->addWidget(close);
 
-    // Two columns of sections, as the mock lays them out.
     auto* grid = new QGridLayout;
     grid->setHorizontalSpacing(32);
     grid->setVerticalSpacing(4);

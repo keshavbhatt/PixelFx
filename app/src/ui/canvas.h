@@ -35,7 +35,7 @@ public:
 
 /// The photo, fitted to the widget on the canvas colour (DESIGN section 2). Shows a status line
 /// while opening and the reason when opening failed. In crop mode it draws the crop box over
-/// the whole photo (mock crop.html) and reports where the box is dragged.
+/// the whole photo and reports where the box is dragged.
 class Canvas : public QWidget
 {
     Q_OBJECT

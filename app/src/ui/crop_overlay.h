@@ -2,7 +2,7 @@
 
 namespace pixelfx::ui {
 
-/// The guide drawn inside the crop box (mock crop.html, Overlay).
+/// The guide drawn inside the crop box.
 enum class CropOverlay
 {
     Thirds,

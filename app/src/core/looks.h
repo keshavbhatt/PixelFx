@@ -9,7 +9,7 @@
 #include <pfx/result.h>
 #include <vector>
 
-// Looks (FEATURES L1 to L7, mock editor.html): one-click styles with a strength. A photo's
+// Looks (FEATURES L1 to L7): one-click styles with a strength. A photo's
 // settings name its look in the `look` group (presets.md section 2): `look.id` and
 // `look.strength` (0 to 100). Built-in looks are `builtin:<slug>`; the user's are .pfxlook
 // files in <AppData>/looks, named by their document id.
@@ -25,7 +25,7 @@ struct LookEntry
     [[nodiscard]] bool isMine() const { return !path.isEmpty(); }
 };
 
-/// The looks that ship with PixelFx, in the mock's order ("Original" is no look and not here).
+/// The looks that ship with PixelFx, in display order ("Original" is no look and not here).
 [[nodiscard]] const std::vector<LookEntry>& builtInLooks();
 
 class LookLibrary

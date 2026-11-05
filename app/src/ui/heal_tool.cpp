@@ -22,7 +22,7 @@ double longEdge(const QRectF& photo)
     return std::max(photo.width(), photo.height());
 }
 
-// White with a dark outline, so a circle reads on any photo (review: 15:1 on a pale sky).
+// White with a dark outline, so a circle reads on any photo.
 void outlined(QPainter& painter, const std::function<void()>& draw, Qt::PenStyle style = Qt::SolidLine)
 {
     painter.setBrush(Qt::NoBrush);

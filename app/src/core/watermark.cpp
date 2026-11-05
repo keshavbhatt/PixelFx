@@ -54,7 +54,7 @@ QFont markFont(const Watermark& w, double pixelHeight)
     if (w.font.isEmpty()) {
         font.setStyleHint(QFont::SansSerif);
     }
-    font.setWeight(QFont::DemiBold); // mock: "System sans, semibold"
+    font.setWeight(QFont::DemiBold);
     font.setPixelSize(std::max(1, static_cast<int>(std::lround(pixelHeight))));
     return font;
 }

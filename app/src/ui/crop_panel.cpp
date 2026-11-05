@@ -59,7 +59,7 @@ QLabel* section(const QString& text, QWidget* parent)
     auto* label = new QLabel(text.toUpper(), parent);
     label->setObjectName(u"section"_s);
     QFont f = label->font();
-    f.setLetterSpacing(QFont::AbsoluteSpacing, 0.66); // .06em of 11 px (mock .sec)
+    f.setLetterSpacing(QFont::AbsoluteSpacing, 0.66);
     label->setFont(f);
     label->setContentsMargins(kSide, 12, kSide, 4);
     return label;
@@ -74,7 +74,7 @@ QPushButton* chip(const QString& text, QWidget* parent)
     return b;
 }
 
-/// Chips in rows that wrap at the panel's width (mock .chips: 6 px gaps, 10 px sides).
+/// Chips in rows that wrap at the panel's width.
 QWidget* chipRows(const QList<QAbstractButton*>& chips, QWidget* parent)
 {
     auto* box = new QWidget(parent);
@@ -340,7 +340,7 @@ void CropPanel::chooseRatio(const QString& name)
 
 void CropPanel::askCustomRatio()
 {
-    // "Custom asks for numbers" (mock crop.html): width and height, in a small sheet.
+    // "Custom asks for numbers": width and height, in a small sheet.
     QDialog sheet(this);
     sheet.setWindowTitle(tr("Custom ratio"));
     auto* width = new QSpinBox(&sheet);

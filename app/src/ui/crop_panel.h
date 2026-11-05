@@ -18,7 +18,7 @@ namespace pixelfx::ui {
 
 class AdjustSlider;
 
-/// The Crop mode panel (mock crop.html, right side): aspect ratio, orientation, straighten,
+/// The Crop mode panel: aspect ratio, orientation, straighten,
 /// quarter turns, flips and the overlay. It edits a copy of the photo's settings and reports
 /// every change live; Done and Cancel end the mode. It holds no image logic.
 class CropPanel : public QWidget

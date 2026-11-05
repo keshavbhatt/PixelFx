@@ -4,7 +4,7 @@
 
 namespace pixelfx::ui {
 
-/// The straighten ruler under the photo in Crop mode (mock crop.html): -45 to 45 degrees with
+/// The straighten ruler under the photo in Crop mode: -45 to 45 degrees with
 /// the current angle written in the middle and marked on the ticks. Drag sideways, or use the
 /// arrow keys (a tenth of a degree; Shift, a whole one), to turn the photo.
 class StraightenDial : public QWidget

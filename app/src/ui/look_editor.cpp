@@ -55,7 +55,7 @@ constexpr std::array<Category, 3> kCategories = {{
 }};
 
 // A ramp of every hue at full and half saturation over a grey scale, for checking a look on
-// colours a photo may not have (mock: Preview on Ramp).
+// colours a photo may not have.
 std::shared_ptr<const pfx::Image> makeRamp()
 {
     constexpr int kWidth = 600;
@@ -138,7 +138,7 @@ LookEditor::LookEditor(const std::shared_ptr<const pfx::Image>& source, const pf
     }
     setWindowTitle(entry.look ? tr("Edit look") : tr("New look"));
     setModal(true);
-    resize(960, 640); // mock .sheet.wide
+    resize(960, 640);
 
     auto* title = new QLabel(windowTitle(), this);
     title->setObjectName(u"sheetTitle"_s);
@@ -301,7 +301,7 @@ QWidget* LookEditor::buildSteps()
     auto* side = new QWidget(this);
     side->setObjectName(u"watermarkControls"_s); // the same panel look as the watermark sheet
     side->setAttribute(Qt::WA_StyledBackground);
-    side->setFixedWidth(320); // mock grid column
+    side->setFixedWidth(320);
     auto* label = new QLabel(tr("Steps, applied top to bottom").toUpper(), side);
     label->setObjectName(u"section"_s);
     m_steps = new QListWidget(side);
@@ -364,8 +364,6 @@ QWidget* LookEditor::buildPreviewBar(QWidget* side)
     layout->setSpacing(0);
     layout->addWidget(on);
     layout->addSpacing(6);
-    // This photo and a colour ramp; the mock's Portrait and Landscape test pictures wait for
-    // pictures PixelFx may ship (fixtures/README.md).
     const std::array<QString, 2> names = {tr("This photo"), tr("Ramp")};
     for (int i = 0; i < 2; ++i) {
         auto* b = new QPushButton(names.at(static_cast<std::size_t>(i)), bar);

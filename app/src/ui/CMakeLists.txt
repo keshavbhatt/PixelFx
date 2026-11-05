@@ -17,6 +17,8 @@ qt_add_library(pixelfx_ui STATIC
     curve_editor.h
     export_sheet.cpp
     filmstrip.cpp
+    flow_layout.cpp
+    flow_layout.h
     filmstrip.h
     export_sheet.h
     heal_panel.cpp

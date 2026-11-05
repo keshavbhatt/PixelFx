@@ -16,7 +16,6 @@ namespace pixelfx::ui {
 namespace {
 
 constexpr double kPuck = 14.0;
-// The mock's ring colours (#E04F4F and its hue neighbours) and its grey centre (#7A7A7A).
 constexpr float kRingSaturation = 0.65F;
 constexpr float kRingValue = 0.88F;
 constexpr int kCentreGrey = 0x7A;
@@ -135,11 +134,11 @@ void ColorWheel::paintEvent(QPaintEvent* /*event*/)
     p.setClipPath(circle);
     p.drawImage(rect(), m_disc);
     p.restore();
-    // The rim keeps the edge visible on the light theme (review: yellow on white is 1.6:1).
+    // The rim keeps the edge visible on the light theme.
     p.setBrush(Qt::NoBrush);
     p.setPen(QPen(hasFocus() ? tokens().accent : tokens().faint, hasFocus() ? 2.0 : 1.0));
     p.drawEllipse(disc());
-    // The puck: white with a dark outer ring, so one of its edges always shows (review).
+    // The puck: white with a dark outer ring, so one of its edges always shows.
     const QPointF c = puckPosition();
     const double r = kPuck / 2.0;
     p.setPen(QPen(QColor(0, 0, 0, 140), 1.0));

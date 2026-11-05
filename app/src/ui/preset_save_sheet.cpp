@@ -114,7 +114,6 @@ QLabel* PresetSaveSheet::unitNote(const QString& unit, const pfx::Settings& sett
     if (unit == u"wb"_s) {
         text = tr("relative to the photo");
     } else if (unit == u"look"_s && !settings.text("look.id", "").empty()) {
-        // Mock preset-save.html: "Look  Golden hour 72".
         const QString name = core::lookName(QString::fromStdString(settings.text("look.id", "")));
         text = u"%1 %2"_s.arg(name.isEmpty() ? tr("A look") : name)
                    .arg(std::lround(settings.number("look.strength", 100.0)));

@@ -93,7 +93,7 @@ public:
     /// applied), sampled from the original around it; one history step.
     void pickWhiteBalance(QPointF fraction);
     [[nodiscard]] const core::History& history() const { return m_history; }
-    /// Named states kept with the photo's edits (mock history.html: Save snapshot).
+    /// Named states kept with the photo's edits.
     [[nodiscard]] const std::vector<pfx::BatchStep>& snapshots() const { return m_snapshots; }
     void saveSnapshot(const QString& name);
     /// Goes to snapshot `index` as one history step.

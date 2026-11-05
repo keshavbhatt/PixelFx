@@ -61,14 +61,15 @@ public:
     void refreshPresets();
     /// Saves the photo's settings as a preset through the Save as preset sheet.
     void savePreset();
-    /// Imports PixelFx, Lightroom and Camera Raw presets chosen in a file dialog.
+    /// Imports presets (PixelFx, Lightroom, Camera Raw) and looks (PixelFx looks, .cube LUTs,
+    /// HaldCLUT pictures) chosen in one file dialog.
     void importPresets();
     /// Crop mode (C): the crop box over the whole photo and the crop panel.
     void enterCrop();
     /// Leaves Crop mode, keeping the changes as one history step (`apply`) or dropping them.
     void leaveCrop(bool apply);
     [[nodiscard]] bool isCropping() const;
-    /// Heal mode (R): spots and brush strokes healed on the upright photo (mock heal.html).
+    /// Heal mode (R): spots and brush strokes healed on the upright photo.
     void enterHeal();
     /// Leaves Heal mode; every spot is already a history step.
     void leaveHeal();
@@ -148,7 +149,17 @@ private:
     void exportNext();
     void connectPresets();
     void connectLooks();
-    void importLooks();
+    /// What an import brought in, for its toast.
+    struct ImportTally
+    {
+        int presets = 0;
+        int looks = 0;
+        QStringList skipped;
+        QString lastError;
+        [[nodiscard]] QString summary(int files) const;
+    };
+    void importPresetFile(const QString& file, ImportTally& tally);
+    static void importLookFile(const QString& file, ImportTally& tally);
     void refreshLooks();
     void editLook(const QString& id);
     void exportLook(const QString& id);

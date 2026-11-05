@@ -20,7 +20,7 @@ class QWidget;
 
 namespace pixelfx::ui {
 
-/// Export (mock export.html): format, quality, size, metadata, folder, file name, and what to
+/// Export: format, quality, size, metadata, folder, file name, and what to
 /// do when the file exists. Starts from the remembered choices; returns the chosen ones.
 class ExportSheet : public QDialog
 {

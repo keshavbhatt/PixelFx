@@ -19,7 +19,7 @@ class LooksPanel;
 
 class PresetRow;
 
-/// The Presets tab of the left panel (mock editor-presets.html): the user's presets by group,
+/// The Presets tab of the left panel: the user's presets by group,
 /// imported ones, the built-in ones; search, import, and Save current as preset. A click
 /// applies a preset, hovering previews it on the photo, the row menu manages it. The Looks tab
 /// arrives with looks (M4).

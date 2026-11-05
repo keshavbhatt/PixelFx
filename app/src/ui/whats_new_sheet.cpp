@@ -35,7 +35,7 @@ WhatsNewSheet::WhatsNewSheet(const QString& markdown, const QString& version, bo
     for (const core::ChangelogRelease& r : core::changelogReleases(markdown)) {
         m_versions->addItem(r.version);
     }
-    m_versions->setVisible(m_versions->count() > 1); // review: hidden while it holds one entry
+    m_versions->setVisible(m_versions->count() > 1);
     connect(m_versions, &QComboBox::currentTextChanged, this, &WhatsNewSheet::showVersion);
     auto* head = new QHBoxLayout;
     head->setSpacing(8);
@@ -47,7 +47,7 @@ WhatsNewSheet::WhatsNewSheet(const QString& markdown, const QString& version, bo
     m_text->setObjectName(u"whatsNewText"_s);
     m_text->setOpenExternalLinks(true);
     m_text->setFrameShape(QFrame::NoFrame);
-    m_text->document()->setIndentWidth(18); // the mock's list indent, not Qt's 40 px
+    m_text->document()->setIndentWidth(18);
     m_more->setText(u"<a href=\"#all\" style=\"color:%1\">%2</a>"_s.arg(tokens().accent.name(),
                                                                         tr("The full list of changes")));
     m_more->setObjectName(u"credit"_s);

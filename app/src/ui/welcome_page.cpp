@@ -41,7 +41,6 @@ WelcomePage::WelcomePage(QWidget* parent)
 
     auto* outer = new QVBoxLayout(this);
     outer->setContentsMargins(32, 32, 32, 32);
-    // Mock: the card is min(760 px, 92%) wide, a little above the middle, Recent under it.
     outer->addStretch(2);
     outer->addWidget(m_dropZone, 0, Qt::AlignHCenter);
     outer->addWidget(m_recent, 0, Qt::AlignHCenter);
@@ -56,7 +55,7 @@ void WelcomePage::buildDropZone()
     auto* glyph = new QLabel(m_dropZone);
     glyph->setPixmap(icons::pixmap(u"images"_s, tokens().muted, 48, devicePixelRatioF()));
     glyph->setAlignment(Qt::AlignCenter);
-    glyph->setFixedHeight(62); // the picture, then 10 px before the title (mock)
+    glyph->setFixedHeight(62);
     glyph->setAlignment(Qt::AlignHCenter | Qt::AlignTop);
     auto* title = new QLabel(tr("Drop photos here"), m_dropZone);
     title->setObjectName(u"welcomeTitle"_s);
@@ -84,7 +83,6 @@ void WelcomePage::buildDropZone()
     zone->addWidget(title);
     zone->addWidget(hint);
     zone->addSpacing(10);
-    // Mock welcome.html: Open images, Open folder, Batch edit (the last two open Batch).
     auto* openFolder =
         new QPushButton(icons::themed(u"folder"_s, tokens().text), tr("Open folder"), m_dropZone);
     openFolder->setToolTip(tr("Every photo in a folder, ready for Batch"));
@@ -106,7 +104,6 @@ void WelcomePage::buildDropZone()
 
 void WelcomePage::buildRecent()
 {
-    // Mock: a heading with Clear, then a row of cards.
     auto* recentTitle = new QLabel(tr("Recent"), m_recent);
     recentTitle->setObjectName(u"recentTitle"_s);
     auto* clear = new QPushButton(tr("Clear"), m_recent);
@@ -135,7 +132,6 @@ QString WelcomePage::formatsText(const std::vector<std::string>& extensions)
     };
     QStringList names;
     const std::pair<const char*, QString> known[] = {
-        // The mock's order; GIF and BMP open too but are not worth the line.
         {".jpg", u"JPEG"_s},  {".png", u"PNG"_s},  {".webp", u"WebP"_s},   {".avif", u"AVIF"_s},
         {".heic", u"HEIC"_s}, {".tif", u"TIFF"_s}, {".jxl", u"JPEG XL"_s}, {".dng", tr("camera RAW")}};
     for (const auto& [ext, name] : known) {
@@ -152,7 +148,6 @@ QString WelcomePage::formatsText(const std::vector<std::string>& extensions)
 
 void WelcomePage::resizeEvent(QResizeEvent* event)
 {
-    // Mock welcome.html: min(760 px, 92%) wide.
     const int width = std::max(360, std::min(760, (this->width() * 92) / 100));
     m_dropZone->setFixedWidth(width);
     m_recent->setFixedWidth(width);
@@ -260,7 +255,7 @@ QString RecentCard::dateText() const
     if (!modified.isValid()) {
         return {};
     }
-    // A date alone, as in the mock; capitalised when it is a word.
+    // A date alone, capitalised when it is a word ("Today").
     QString text = day(modified.date());
     if (!text.isEmpty() && text.at(0).isLower()) {
         text[0] = text.at(0).toUpper();
@@ -279,7 +274,7 @@ void RecentCard::paintEvent(QPaintEvent* /*event*/)
     p.setClipPath(rounded);
     p.fillRect(box, tokens().panel);
     if (!m_image.isNull()) {
-        // Cover: fill the 3:2 box, cropping the longer side (mock: object-fit cover).
+        // Cover: fill the 3:2 box, cropping the longer side.
         const QSizeF source = QSizeF(box.size()).scaled(m_image.size(), Qt::KeepAspectRatio);
         const QRectF from((m_image.width() - source.width()) / 2, (m_image.height() - source.height()) / 2,
                           source.width(), source.height());

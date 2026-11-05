@@ -13,7 +13,7 @@ namespace pixelfx::ui {
 
 class HealTool;
 
-/// The Heal panel (mock heal.html, right side): Spot or Brush, the brush's size, feather and
+/// The Heal panel: Spot or Brush, the brush's size, feather and
 /// opacity (the selected spot's while one is selected), Show spots and Reveal dust, the list of
 /// spots with Remove all, then Reset and Done.
 class HealPanel : public QWidget

@@ -45,12 +45,12 @@ public:
     void addRecentFile(const QString& path);
     void clearRecentFiles();
 
-    /// Export choices, remembered (mock export.html: "Saved formats and choices are remembered").
+    /// Export choices, remembered.
     /// The folder defaults to Pictures/PixelFx.
     [[nodiscard]] ExportOptions exportOptions() const;
     void setExportOptions(const ExportOptions& options);
 
-    /// Appearance (mock settings.html). The theme applies when PixelFx starts.
+    /// Appearance. The theme applies when PixelFx starts.
     enum class Theme
     {
         System,

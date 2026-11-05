@@ -1,4 +1,4 @@
-// MainWindow's Heal mode (mock heal.html), kept apart from the rest of the window.
+// MainWindow's Heal mode, kept apart from the rest of the window.
 #include "core/reveal_dust.h"
 #include "ui/adjust_panel.h"
 #include "ui/canvas.h"

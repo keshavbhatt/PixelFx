@@ -1,5 +1,6 @@
 #include "ui/looks_panel.h"
 
+#include "ui/flow_layout.h"
 #include "ui/icons.h"
 #include "ui/style.h"
 
@@ -28,12 +29,12 @@ namespace pixelfx::ui {
 
 namespace {
 
-// Two columns that share the panel's width (mock .looks: 1fr 1fr, 3:2 pictures); about 116 px
+// Two columns that share the panel's width; about 116 px
 // each beside the scroll bar.
 constexpr int kImageHeight = 77;
 constexpr int kTileHeight = kImageHeight + 24;
 
-// Chips of the mock, by category; Favorites waits for favourites.
+// The category chips.
 struct Chip
 {
     const char* label;
@@ -162,21 +163,21 @@ LooksPanel::LooksPanel(QWidget* parent)
     m_search->setClearButtonEnabled(true);
     m_search->addAction(icons::themed(u"search"_s, tokens().muted), QLineEdit::LeadingPosition);
     connect(m_search, &QLineEdit::textChanged, this, &LooksPanel::rebuild);
-    auto* import = new QToolButton(this);
-    import->setObjectName(u"groupReset"_s);
-    import->setIcon(icons::themed(u"import"_s, tokens().text));
-    import->setToolTip(tr("Import a LUT (.cube) or a HaldCLUT picture as a look"));
-    import->setAccessibleName(tr("Import a LUT"));
-    connect(import, &QToolButton::clicked, this, &LooksPanel::importRequested);
+    auto* add = new QToolButton(this);
+    add->setObjectName(u"iconButton"_s);
+    add->setIcon(icons::themed(u"plus"_s, tokens().text));
+    add->setToolTip(tr("New look (Ctrl+Shift+N)"));
+    add->setAccessibleName(tr("New look"));
+    connect(add, &QToolButton::clicked, this, &LooksPanel::newLookRequested);
     auto* head = new QHBoxLayout;
-    head->setContentsMargins(10, 10, 10, 6);
+    head->setContentsMargins(10, 10, 10, 4);
     head->setSpacing(6);
     head->addWidget(m_search, 1);
-    head->addWidget(import);
+    head->addWidget(add);
 
-    auto* chips = new QHBoxLayout;
-    chips->setContentsMargins(10, 0, 10, 6);
-    chips->setSpacing(4);
+    auto* chipBox = new QWidget(this);
+    auto* chips = new FlowLayout(chipBox, 6);
+    chips->setContentsMargins(10, 6, 10, 6);
     for (std::size_t i = 0; i < kChips.size(); ++i) {
         auto* chip = new QPushButton(tr(kChips.at(i).label), this);
         chip->setObjectName(u"chip"_s);
@@ -185,7 +186,6 @@ LooksPanel::LooksPanel(QWidget* parent)
         m_chips->addButton(chip, static_cast<int>(i));
         chips->addWidget(chip);
     }
-    chips->addStretch();
     connect(m_chips, &QButtonGroup::idClicked, this, &LooksPanel::rebuild);
 
     m_list->setContentsMargins(0, 0, 0, 8);
@@ -202,7 +202,7 @@ LooksPanel::LooksPanel(QWidget* parent)
     column->setContentsMargins(0, 0, 0, 0);
     column->setSpacing(0);
     column->addLayout(head);
-    column->addLayout(chips);
+    column->addWidget(chipBox);
     column->addWidget(scroll, 1);
     column->addWidget(buildStrength());
 }
@@ -211,7 +211,6 @@ LooksPanel::~LooksPanel() = default;
 
 QWidget* LooksPanel::buildStrength()
 {
-    // Mock .strength: at the foot of the panel, staying put while the grid scrolls.
     auto* box = new QWidget(this);
     box->setObjectName(u"lookStrength"_s);
     box->setAttribute(Qt::WA_StyledBackground);
@@ -403,7 +402,6 @@ void LooksPanel::rebuild()
     }
     const bool all = m_chips->checkedId() <= 0 && m_search->text().trimmed().isEmpty();
     if (!mine.empty() || all || m_chips->checkedId() == 1) {
-        // Mock editor.html: "My looks" with New look beside it.
         auto* make = new QPushButton(tr("New look"), m_listBox);
         make->setObjectName(u"link"_s);
         make->setToolTip(tr("Make a look of your own from steps and LUTs"));

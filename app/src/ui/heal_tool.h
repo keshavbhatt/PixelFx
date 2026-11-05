@@ -11,7 +11,7 @@
 
 namespace pixelfx::ui {
 
-/// Heal on the canvas (mock heal.html): a click heals a spot the brush's size, a drag paints a
+/// Heal on the canvas: a click heals a spot the brush's size, a drag paints a
 /// stroke healed along its length; every spot stays editable. The selected spot shows its
 /// source (hollow, joined by a dashed line): drag the solid circle to move the spot, the hollow
 /// one to choose another patch. Positions are fractions of the upright photo as shown.

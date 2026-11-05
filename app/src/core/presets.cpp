@@ -254,7 +254,6 @@ std::vector<PresetEntry> PresetLibrary::entries() const
         e.settings = doc.value().settings;
         out.push_back(std::move(e));
     }
-    // Mock order: My presets, then the user's own groups, then Imported (Built in follows).
     const QString mine = QCoreApplication::translate(kContext, "My presets");
     const QString imported = QCoreApplication::translate(kContext, "Imported");
     const auto rank = [&mine, &imported](const QString& group) {

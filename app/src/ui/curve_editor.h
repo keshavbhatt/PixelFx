@@ -7,7 +7,7 @@
 
 namespace pixelfx::ui {
 
-/// A tone curve editor (mock editor.html, Curves group): the grid, the identity diagonal and the
+/// A tone curve editor: the grid, the identity diagonal and the
 /// curve drawn with the library's own sampler, so what is drawn is what renders. Click to add a
 /// point, drag to move it, double-click to remove it; the end points move only up and down.
 class CurveEditor : public QWidget

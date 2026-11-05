@@ -6,8 +6,7 @@ namespace pfx {
 struct ExifSummary;
 }
 
-// What the camera wrote, said the way photographers write it (FEATURES O7; mock editor.html
-// shows the exposure line under the histogram).
+// What the camera wrote, said the way photographers write it (FEATURES O7).
 namespace pixelfx::core {
 
 /// "ISO 100 · f/8 · 1/250 s · 24 mm", leaving out what the photo does not say; empty when it

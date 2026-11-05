@@ -9,7 +9,7 @@
 namespace pixelfx::core {
 
 /// One open-source component PixelFx ships or is built from (THIRD_PARTY.md), with its licence
-/// text built in (mock about.html, Open-source notices).
+/// text built in.
 struct Notice
 {
     QString name;
@@ -24,7 +24,7 @@ struct Notice
 [[nodiscard]] QString noticeText(const Notice& notice);
 
 /// What a bug report needs to know about this build and system, and nothing personal: no file
-/// names, no paths, nothing about accounts (mock about.html, Diagnostics).
+/// names, no paths, nothing about accounts.
 struct DiagnosticsFacts
 {
     QString appVersion;

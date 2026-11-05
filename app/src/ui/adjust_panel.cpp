@@ -44,7 +44,7 @@ struct GroupSpec
     std::vector<ControlSpec> controls;
 };
 
-// The panel's order and wording (DESIGN section 3, mock editor.html). Ranges, defaults and
+// The panel's order and wording (DESIGN section 3). Ranges, defaults and
 // units come from the registry; display names live here, translatable (ADR-005).
 const std::vector<GroupSpec>& groupSpecs()
 {
@@ -309,7 +309,6 @@ bool AdjustSlider::eventFilter(QObject* watched, QEvent* event)
 
 QHBoxLayout* AdjustPanel::buildTopRow()
 {
-    // Mock editor.html: Auto takes the room, then Copy, Paste and an icon-only Reset all.
     auto* resetAll = new QPushButton(icons::themed(u"reset"_s, tokens().text), QString(), this);
     resetAll->setObjectName(u"small"_s);
     resetAll->setToolTip(tr("Reset all adjustments (Ctrl+R)"));
@@ -373,7 +372,6 @@ AdjustPanel::AdjustPanel(QWidget* parent)
         groups->addWidget(group);
         m_groups.push_back(group);
         if (std::string_view(g.name) == "Color") {
-            // Mock order: Light, Color, Color mixer, Color grading, Curves, Detail.
             buildMixerGroup(content, groups);
             buildGradingGroup(content, groups);
             buildCurvesGroup(content, groups);
@@ -401,8 +399,6 @@ AdjustPanel::~AdjustPanel() = default;
 
 QWidget* AdjustPanel::buildWhiteBalanceRow(QWidget* parent)
 {
-    // Mock editor.html: "White balance" with a menu and a picker, above Temperature. Kelvin
-    // presets (Daylight, Cloudy ...) need the camera's own white balance and come with RAW.
     auto* row = new QWidget(parent);
     auto* label = new QLabel(tr("White balance"), row);
     label->setObjectName(u"adjustName"_s);
@@ -507,7 +503,7 @@ struct MixerBand
 {
     const char* key;
     const char* label; // plural, as in "Yellows hue"
-    QColor swatch;     // mock editor.html .swatches
+    QColor swatch;
 };
 
 constexpr std::array<const char*, 3> kMixerModes = {"hue", "saturation", "luminance"};
@@ -532,7 +528,7 @@ const std::vector<MixerBand>& mixerBands()
 void AdjustPanel::buildMixerGroup(QWidget* content, QVBoxLayout* groups)
 {
     auto* group = new AdjustGroup(tr("Color mixer"), u"palette"_s, content);
-    group->setExpanded(false); // mock: closed until needed
+    group->setExpanded(false);
     auto* modes = new QWidget(group);
     auto* modeRow = new QHBoxLayout(modes);
     modeRow->setContentsMargins(0, 4, 0, 8);

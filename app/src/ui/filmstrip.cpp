@@ -260,7 +260,7 @@ void FilmTile::paintEvent(QPaintEvent* /*event*/)
         p.setBrush(Qt::NoBrush);
         p.drawRoundedRect(box, 6, 6);
     }
-    if (m_edited) { // mock .mk: a small dark badge with the sliders glyph, bottom right
+    if (m_edited) {
         const QRectF mark(width() - 21, height() - 21, 16, 16);
         p.setPen(Qt::NoPen);
         p.setBrush(QColor(0, 0, 0, 153));

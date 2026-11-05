@@ -7,7 +7,7 @@
 #include <pfx/settings.h>
 #include <vector>
 
-// Presets (FEATURES P1 to P4, mocks editor-presets.html and preset-save.html): saved subsets of
+// Presets (FEATURES P1 to P4): saved subsets of
 // a photo's settings. A preset holds whole "units" (the rows of Save as preset); applying it
 // replaces those units and leaves every other setting of the photo as it is, so presets stack.
 namespace pixelfx::core {

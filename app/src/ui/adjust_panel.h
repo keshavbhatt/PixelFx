@@ -25,7 +25,7 @@ class ColorWheel;
 class CurveEditor;
 class HistogramView;
 
-/// The adjustments panel (mock editor.html, right side): groups in a photographer's order,
+/// The adjustments panel: groups in a photographer's order,
 /// built from the library's operation registry (ADR-005). It edits a copy of the photo's
 /// settings and reports every change; it holds no image logic.
 class AdjustPanel : public QWidget

@@ -16,7 +16,7 @@ class QVBoxLayout;
 
 namespace pixelfx::ui {
 
-/// One look as a picture of the photo with it (mock editor.html .looks .tile).
+/// One look as a picture of the photo with it.
 class LookTile : public QWidget
 {
     Q_OBJECT
@@ -50,7 +50,7 @@ private:
     QImage m_image;
 };
 
-/// The Looks tab of the left panel (mock editor.html): search, category chips, the user's
+/// The Looks tab of the left panel: search, category chips, the user's
 /// looks and the built-in ones as tiles of the photo, and the strength of the applied look.
 class LooksPanel : public QWidget
 {
@@ -77,7 +77,6 @@ Q_SIGNALS:
     /// The strength slider moves (live) and is let go (a history step).
     void strengthMoved(int strength);
     void strengthReleased(int strength);
-    void importRequested();
     void newLookRequested();
     void editLookRequested(const QString& id);
     void exportLookRequested(const QString& id);

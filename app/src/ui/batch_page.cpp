@@ -51,8 +51,8 @@ namespace {
 
 bool (*isPhotoTest)(const QString&) = nullptr;
 
-constexpr int kPanelWidth = 380; // mock: the right column is 380 px
-constexpr int kSide = 14;        // mock .sec and the panel's padding
+constexpr int kPanelWidth = 380;
+constexpr int kSide = 14;
 
 QLabel* sectionTitle(const QString& text, QWidget* parent)
 {
@@ -103,7 +103,7 @@ QString formatName(const QString& extension)
     return extension.toUpper();
 }
 
-// A status pill (mock .pill): Saved, Waiting, Not saved, Saving.
+// A status pill: Saved, Waiting, Not saved, Saving.
 void setPill(QWidget* pill, const QString& kind, const QString& icon, const QString& text)
 {
     auto* glyph = pill->findChild<QLabel*>(u"pillIcon"_s);
@@ -134,7 +134,7 @@ QWidget* makePill(QWidget* parent)
 {
     auto* pill = new QFrame(parent);
     pill->setObjectName(u"pill"_s);
-    pill->setFixedHeight(20); // mock .pill
+    pill->setFixedHeight(20);
     auto* glyph = new QLabel(pill);
     glyph->setObjectName(u"pillIcon"_s);
     auto* text = new QLabel(pill);
@@ -228,7 +228,7 @@ QWidget* BatchPage::buildListHead(QWidget* parent)
     title->setObjectName(u"recentTitle"_s);
     auto* hint = new QLabel(tr("Drop files or folders here"), head);
     hint->setObjectName(u"muted"_s);
-    // List or grid (mock: two icons in a segmented control).
+    // List or grid.
     auto* views = new QFrame(head);
     views->setObjectName(u"segmentBox"_s);
     auto* viewRow = new QHBoxLayout(views);
@@ -307,7 +307,6 @@ QWidget* BatchPage::buildList()
 
 QWidget* BatchPage::buildPreview(QWidget* parent)
 {
-    // Mock: "Preview", the first photo before and after the recipe, on a bar of its own.
     m_preview = new QWidget(parent);
     m_preview->setObjectName(u"batchBar"_s);
     m_preview->setAttribute(Qt::WA_StyledBackground);
@@ -427,7 +426,6 @@ QWidget* BatchPage::buildRecipe(QWidget* parent)
     column->setContentsMargins(0, 0, 0, 0);
     column->setSpacing(8);
     column->addWidget(sectionTitle(tr("1. Recipe"), box));
-    // Mock: a segmented choice, then a card with the recipe on the first photo and Change.
     auto* sources = new QHBoxLayout;
     sources->setSpacing(0);
     m_sources = new QButtonGroup(this);
@@ -511,7 +509,7 @@ QComboBox* BatchPage::buildSizes(QWidget* parent)
     for (const int edge : {3840, 2048, 1600, 1080}) {
         sizes->addItem(tr("%1 px long edge").arg(edge), edge);
     }
-    // The Export sheet's named sizes too (mock batch.html: "Web · 2048 long edge").
+    // The Export sheet's named sizes too.
     for (const core::SizePreset& p : core::sizePresets()) {
         const QString size =
             p.longEdge > 0 ? tr("%1 long edge").arg(p.longEdge) : tr("%1 x %2").arg(p.width).arg(p.height);
@@ -674,7 +672,7 @@ QFormLayout* BatchPage::saveOptionsForm(QDialog* sheet, const core::ExportOption
 
 void BatchPage::editSaveOptions()
 {
-    // More... (mock batch.html): what the Export sheet has beyond the format and the folder.
+    // More...: what the Export sheet has beyond the format and the folder.
     QDialog sheet(this);
     sheet.setWindowTitle(tr("Save options"));
     SaveOptionsControls c;
@@ -1113,7 +1111,7 @@ QWidget* BatchPage::makeRow(const QString& file)
     text->addWidget(name);
     text->addWidget(meta);
     text->addWidget(reason);
-    auto* thumb = new QLabel(row); // mock .thumb 72 by 48
+    auto* thumb = new QLabel(row);
     thumb->setObjectName(u"batchThumb"_s);
     thumb->setProperty("path", file);
     thumb->setFixedSize(72, 48);

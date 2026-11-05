@@ -33,7 +33,7 @@ class QVBoxLayout;
 
 namespace pixelfx::ui {
 
-/// Batch (mocks batch.html, batch-running.html, batch-done.html). Left: the photos, as a list
+/// Batch. Left: the photos, as a list
 /// or a grid, added as files or whole folders or dropped, the first one before and after the
 /// recipe, and while running the progress (Pause, Stop), then the summary (Retry failed, Show in
 /// folder). Right: 1. Recipe (a preset or look, or the settings of the photo open in the

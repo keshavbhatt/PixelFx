@@ -9,7 +9,7 @@ class QStackedWidget;
 
 namespace pixelfx::ui {
 
-/// About PixelFx (mock about.html): the version and the ways on (What's new, the source, a bug
+/// About PixelFx: the version and the ways on (What's new, the source, a bug
 /// report), the open-source notices with every licence text, and diagnostics to paste into a
 /// bug report.
 class AboutSheet : public QDialog

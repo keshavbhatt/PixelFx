@@ -28,7 +28,7 @@ constexpr int kMargin = 28;
 constexpr double kCornerReach = 14.0; ///< how near a corner a press grabs it
 constexpr double kEdgeReach = 8.0;
 constexpr double kMinimumBox = 24.0;
-constexpr int kCornerLength = 18; ///< mock crop.html: 18 px corners, 4 px thick, 3 px outside
+constexpr int kCornerLength = 18;
 constexpr int kCornerWidth = 4;
 // Zoom steps in screen pixels per photo pixel; Fit sits wherever the window puts it.
 constexpr std::array kZoomSteps = {0.0625, 0.125, 0.25, 1.0 / 3, 0.5, 2.0 / 3, 1.0, 1.5, 2.0, 3.0, 4.0, 8.0};
@@ -131,7 +131,6 @@ void Canvas::startLevelLine()
 
 void Canvas::buildZoomBar()
 {
-    // Mock editor.html .zoombar: zoom out, the level, zoom in, a divider, 1:1, full screen.
     m_zoomBar = new QWidget(this);
     m_zoomBar->setObjectName(u"zoomBar"_s);
     m_zoomBar->setAttribute(Qt::WA_StyledBackground);
@@ -189,7 +188,6 @@ void Canvas::updateZoomBar()
     m_zoomBar->adjustSize();
     m_zoomBar->move((width() - m_zoomBar->width()) / 2, height() - m_zoomBar->height() - 12);
     m_zoomBar->raise();
-    // Mock crop.html: the ruler sits just above the zoom bar while cropping.
     m_dial->setVisible(m_cropping && !m_image.isNull());
     m_dial->move((width() - m_dial->width()) / 2, m_zoomBar->y() - m_dial->height() - 8);
     m_dial->raise();
@@ -575,7 +573,7 @@ void Canvas::mouseMoveEvent(QMouseEvent* event)
         if (target.isEmpty()) {
             return;
         }
-        // Shift keeps the box's shape when the ratio is free (mock: the strip's hint).
+        // Shift keeps the box's shape when the ratio is free.
         const bool keep = m_cropRatio <= 0 && event->modifiers().testFlag(Qt::ShiftModifier);
         const double ratio = keep ? m_pressBox.width() / std::max(1.0, m_pressBox.height()) : m_cropRatio;
         const QRectF box =
@@ -669,7 +667,7 @@ void Canvas::paintOverlay(QPainter& painter, const QRectF& box) const
 void Canvas::paintCrop(QPainter& painter, const QRect& target)
 {
     const QRectF box = cropBox();
-    // The rest of the photo dims (mock: brightness .45).
+    // The rest of the photo dims.
     QPainterPath outside;
     outside.addRect(QRectF(target));
     outside.addRect(box);

@@ -12,7 +12,7 @@ using namespace Qt::StringLiterals;
 namespace pixelfx::ui {
 
 namespace {
-constexpr int kWidth = 420; // mock: 420 px, labels above a 10 px tick bar
+constexpr int kWidth = 420;
 constexpr double kRange = 45.0;
 } // namespace
 
@@ -55,7 +55,7 @@ void StraightenDial::paintEvent(QPaintEvent* /*event*/)
     p.setRenderHint(QPainter::Antialiasing);
     const int labelsHeight = fontMetrics().height();
     const QRect labels(0, 0, width(), labelsHeight);
-    // Labels at -45, -30, -15, the angle, 15, 30, 45 (the mock's row), spread evenly.
+    // Labels at -45, -30, -15, the angle, 15, 30, 45, spread evenly.
     const QList<double> marks = {-45, -30, -15, 0, 15, 30, 45};
     for (const double mark : marks) {
         const auto x = static_cast<int>((mark + kRange) / (2 * kRange) * (width() - 1));
@@ -70,7 +70,7 @@ void StraightenDial::paintEvent(QPaintEvent* /*event*/)
         p.drawText(QRect(std::clamp(x - (w / 2), 0, width() - w), labels.top(), w, labelsHeight),
                    Qt::AlignCenter, text);
     }
-    // Ticks every degree-and-a-half (14 px apart at the mock's width), and the current angle.
+    // Ticks every degree and a half, and the current angle.
     const int top = labelsHeight + 2;
     p.setPen(QPen(QColor(0x99, 0x99, 0x99), 1));
     for (int x = 0; x < width(); x += 14) {

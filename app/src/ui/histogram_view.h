@@ -6,7 +6,7 @@
 
 namespace pixelfx::ui {
 
-/// The histogram well at the top of the adjust panel (mock editor.html): red, green and blue
+/// The histogram well at the top of the adjust panel: red, green and blue
 /// as translucent areas, square-root scaled so dark and light tones both stay visible.
 class HistogramView : public QWidget
 {
@@ -19,7 +19,7 @@ public:
 
     void setHistogram(const core::Histogram& histogram);
     [[nodiscard]] const core::Histogram& histogram() const { return m_histogram; }
-    /// The small line at the bottom left (the exposure, as the mock shows).
+    /// The small line at the bottom left, such as the exposure.
     void setCaption(const QString& caption);
     [[nodiscard]] const QString& caption() const { return m_caption; }
 

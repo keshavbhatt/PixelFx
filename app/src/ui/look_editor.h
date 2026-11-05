@@ -21,7 +21,7 @@ class QWidget;
 
 namespace pixelfx::ui {
 
-/// New look / Edit look (mock filter-editor.html): a named stack of steps from the same
+/// New look / Edit look: a named stack of steps from the same
 /// operations as the sliders, plus LUTs; reorder by dragging, switch off, duplicate, remove;
 /// the selected step's parameters; a live preview on the photo or a ramp; the look's default
 /// strength. Saves into the user's looks; exports a .pfxlook or bakes a .cube.

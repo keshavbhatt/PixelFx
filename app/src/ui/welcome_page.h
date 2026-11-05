@@ -18,7 +18,7 @@ namespace pixelfx::ui {
 
 class RecentCard;
 
-/// First run and nothing open (mock welcome.html): the drop zone, Open images, and the Recent
+/// First run and nothing open: the drop zone, Open images, and the Recent
 /// row with each photo as it was left. Open folder and Batch edit arrive with Batch (M5).
 class WelcomePage : public QWidget
 {

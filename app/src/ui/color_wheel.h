@@ -7,7 +7,7 @@
 
 namespace pixelfx::ui {
 
-/// One colour grading wheel (mock editor-grading.html): the angle is the hue, clockwise from red
+/// One colour grading wheel: the angle is the hue, clockwise from red
 /// at the top, and the distance from the centre is the amount (0 to 100). Drag to pick, arrow
 /// keys to nudge (Left and Right the hue, Up and Down the amount, Shift for 10), double-click or
 /// Backspace to reset. It holds no image logic; the library's `grading` operation does the work.

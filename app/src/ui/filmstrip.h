@@ -13,7 +13,7 @@ namespace pixelfx::ui {
 
 class FilmTile;
 
-/// Every open photo along the bottom (mock editor.html .strip, apply-to-selected.html): the
+/// Every open photo along the bottom: the
 /// current one framed, edited ones marked, Ctrl or Shift click to select several (ticks show
 /// then), a + tile to add photos, and "2 of 6" or "4 selected · Select all · Clear".
 class Filmstrip : public QWidget
@@ -38,7 +38,7 @@ public:
     void toggle(int index, bool range);
     [[nodiscard]] QList<FilmTile*> tiles() const;
 
-    static constexpr int kHeight = 92; // mock --strip-h
+    static constexpr int kHeight = 92;
 
 Q_SIGNALS:
     void currentRequested(int index);

@@ -8,7 +8,7 @@
 
 namespace pixelfx::core {
 
-/// What Export writes (mock export.html; FEATURES X1, X2, X5, X6). Remembered between exports.
+/// What Export writes. Remembered between exports.
 struct ExportOptions
 {
     enum class IfExists
@@ -28,7 +28,7 @@ struct ExportOptions
     /// When the preset's shape differs from the photo: fit inside with a border, or crop to fill.
     bool fitInside = false;
     bool keepMetadata = true;
-    bool keepLocation = false; ///< off by default for privacy (mock export.html)
+    bool keepLocation = false;
     /// A saved watermark (.pfxwatermark) to lay on each photo, empty for none.
     QString watermark;
     QString folder;
@@ -40,7 +40,7 @@ struct ExportOptions
     bool operator==(const ExportOptions&) const = default;
 };
 
-/// A size preset: where the photo is going, and the pixels that takes (mock export-sizes.html).
+/// A size preset: where the photo is going, and the pixels that takes.
 struct SizePreset
 {
     const char* id;

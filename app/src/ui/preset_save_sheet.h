@@ -17,7 +17,7 @@ class QLabel;
 
 namespace pixelfx::ui {
 
-/// Save as preset (mock preset-save.html): a name, a group, and which parts of the settings the
+/// Save as preset: a name, a group, and which parts of the settings the
 /// preset holds. Changed parts are ticked, except White balance and Crop and rotate, which
 /// rarely carry from one photo to another. Save to file also writes a copy to share.
 class PresetSaveSheet : public QDialog

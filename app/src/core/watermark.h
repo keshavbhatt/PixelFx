@@ -17,7 +17,7 @@ namespace pfx {
 struct ExifSummary;
 }
 
-// Watermarks (FEATURES X10, mock watermark.html): a line of text or a logo laid on exported
+// Watermarks (FEATURES X10): a line of text or a logo laid on exported
 // photos, never on the editor view. Size and margin are shares of the photo's long edge, so a
 // whole batch of portrait, square and landscape photos gets the same-looking mark.
 namespace pixelfx::core {

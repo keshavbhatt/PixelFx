@@ -15,7 +15,7 @@ class QThreadPool;
 
 namespace pixelfx::services {
 
-/// One recipe for many photos (mock batch.html): presets stacked in order, optionally on top of
+/// One recipe for many photos: presets stacked in order, optionally on top of
 /// an Auto enhance worked out per photo and of the edits already made in PixelFx, then the
 /// output options of the Export sheet.
 struct BatchRecipe

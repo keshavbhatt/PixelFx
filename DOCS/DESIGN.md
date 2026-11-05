@@ -116,6 +116,15 @@ cards, 14 px sheets.
 - Every hover-only action (preset row menu, filmstrip remove) has a right-click twin.
 - Colour is never the only signal: changed values also turn bold labels, states carry words.
 - Nothing in the UI mentions accounts or app licensing (CLAUDE.md).
+- Slider ranges, units and defaults follow the established editors, not the mocks' sample
+  numbers (the mocks' values were never checked; owner, 2026-11-05). Reference: Lightroom
+  and Camera Raw first, then darktable and Snapseed. Exposure is in stops, -5 to +5, shown
+  with hundredths ("+0.12"); Contrast, Highlights, Shadows, Whites, Blacks, Temperature and
+  Tint (relative), Vibrance, Saturation, Clarity, Dehaze, the colour mixer and Vignette are
+  -100 to +100; Sharpen 0 to 150; Noise reduction, Color noise, Grain, Fade, grading amounts
+  and look strength 0 to 100; grading hues 0 to 360 degrees; Straighten -45 to +45 degrees;
+  Vignette midpoint and Grain size default to 50 and 25. A new control is checked against the
+  same references before it is built.
 
 ## 5. Design review before the owner looks
 

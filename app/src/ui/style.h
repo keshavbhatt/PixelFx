@@ -12,7 +12,7 @@ class QWidget;
 
 namespace pixelfx::ui {
 
-/// The design tokens of DOCS/DESIGN.md section 1 (the mocks' mock.css holds the same values).
+/// The design tokens of DOCS/DESIGN.md section 1.
 struct Tokens
 {
     QColor accent;
@@ -47,10 +47,10 @@ void useLightTheme(bool light);
 /// Fusion with a palette and style sheet built from the tokens.
 void applyStyle(QApplication& app);
 
-/// Lays out a sheet as the mocks do (mock.css .sheet): the returned layout is the padded body
+/// Lays out a sheet: the returned layout is the padded body
 /// (title row first), and `foot`, the buttons, sits on a bar with a top border, edge to edge.
 QVBoxLayout* sheetLayout(QDialog* sheet, QLayout* foot);
-/// The flat close button of a sheet's title row (mock .sh .x); it rejects the sheet.
+/// The flat close button of a sheet's title row; it rejects the sheet.
 QWidget* sheetCloseButton(QDialog* sheet);
 /// The footer bar alone, for sheets whose body runs edge to edge (Watermark, the look editor).
 QWidget* sheetFootBar(QWidget* sheet, QLayout* foot);

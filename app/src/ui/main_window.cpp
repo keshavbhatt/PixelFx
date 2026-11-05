@@ -85,7 +85,7 @@ const QStringList& supportedSuffixes()
     return suffixes;
 }
 
-/// The colour-wheel mark of the header (mock: .brand .mark).
+/// The colour-wheel mark of the header.
 class BrandMark : public QWidget
 {
 public:
@@ -419,7 +419,7 @@ void MainWindow::buildHeader()
     m_menuButton = headerButton(m_header, u"menu"_s, tr("Main menu (F10)"));
     m_menuButton->setPopupMode(QToolButton::InstantPopup);
 
-    // Thin separators between the groups (mock .header .sep).
+    // Thin separators between the groups.
     const auto separator = [this] {
         auto* line = new QFrame(m_header);
         line->setObjectName(u"headerSep"_s);
@@ -428,7 +428,7 @@ void MainWindow::buildHeader()
     };
     QWidget* sepHistory = separator();
     QWidget* sepView = separator();
-    // Batch's own: Add photos and Add folder (mock batch.html).
+    // Batch's own: Add photos and Add folder.
     auto* addPhotos = new QPushButton(icons::themed(u"plus"_s, tokens().text), tr("Add photos"), m_header);
     auto* addFolder = new QPushButton(icons::themed(u"folder"_s, tokens().text), tr("Add folder"), m_header);
     addFolder->setToolTip(tr("Every photo in a folder, subfolders included"));
@@ -439,7 +439,7 @@ void MainWindow::buildHeader()
     header->setContentsMargins(12, 0, 10, 0);
     header->setSpacing(6);
     header->addWidget(new BrandMark(m_header));
-    m_wordmark = new QLabel(u"PixelFx"_s, m_header); // the start page's header (mock welcome.html)
+    m_wordmark = new QLabel(u"PixelFx"_s, m_header);
     m_wordmark->setObjectName(u"wordmark"_s);
     header->addWidget(m_wordmark);
     header->addSpacing(4);
@@ -757,7 +757,7 @@ void MainWindow::buildRail()
     m_rail->setObjectName(u"rail"_s);
     m_rail->setAttribute(Qt::WA_StyledBackground);
     m_rail->setFixedWidth(56);
-    // Shown from the start: Batch works without a photo open (mock welcome.html has the rail).
+    // Shown from the start: Batch works without a photo open.
     const auto railButton = [this](const QString& glyph, const QString& text, const QString& tip) {
         auto* b = new QToolButton(m_rail);
         b->setObjectName(u"railButton"_s);
@@ -799,7 +799,7 @@ void MainWindow::buildRail()
     column->addWidget(m_healMode);
     column->addWidget(m_batchMode);
     column->addStretch();
-    // Settings at the foot of the rail (mock: the gear), as Ctrl+, and the main menu.
+    // Settings at the foot of the rail, as Ctrl+, and the main menu.
     auto* gear = new QToolButton(m_rail);
     gear->setObjectName(u"railButton"_s);
     gear->setIcon(icons::themed(u"settings"_s, tokens().muted));
@@ -819,7 +819,7 @@ QWidget* MainWindow::buildCanvasPage()
     m_cropStrip = new QWidget(page);
     m_cropStrip->setObjectName(u"strip"_s);
     m_cropStrip->setAttribute(Qt::WA_StyledBackground);
-    m_cropStrip->setFixedHeight(92); // mock --strip-h
+    m_cropStrip->setFixedHeight(92);
     m_cropSize = new QLabel(m_cropStrip);
     m_cropSize->setObjectName(u"mono"_s);
     auto* hint = new QLabel(
@@ -988,34 +988,81 @@ void MainWindow::connectPresets()
 void MainWindow::importPresets()
 {
     const QStringList files = QFileDialog::getOpenFileNames(
-        this, tr("Import presets"), m_settings.lastOpenFolder(),
-        tr("Presets (*.pfxpreset *.pfxrecipe *.xmp);;PixelFx presets "
-           "(*.pfxpreset *.pfxrecipe);;Lightroom and Camera Raw presets (*.xmp)"));
+        this, tr("Import presets and looks"), m_settings.lastOpenFolder(),
+        tr("Presets and looks (*.pfxpreset *.pfxrecipe *.xmp *.pfxlook *.cube *.png *.tif *.tiff);;"
+           "PixelFx presets and looks (*.pfxpreset *.pfxrecipe *.pfxlook);;"
+           "Lightroom and Camera Raw presets (*.xmp);;LUTs (*.cube *.png *.tif *.tiff)"));
     if (files.isEmpty()) {
         return;
     }
-    int imported = 0;
-    QString lastError;
-    QStringList skipped;
+    ImportTally tally;
     for (const QString& file : files) {
-        const auto result = m_library.importFile(file);
-        if (result.path.isEmpty()) {
-            lastError = result.error;
+        const QString suffix = QFileInfo(file).suffix().toLower();
+        if (suffix == u"pfxpreset"_s || suffix == u"pfxrecipe"_s || suffix == u"xmp"_s) {
+            importPresetFile(file, tally);
         } else {
-            ++imported;
-            skipped << result.skipped;
+            importLookFile(file, tally);
         }
     }
     refreshPresets();
-    skipped.removeDuplicates();
-    QString text = lastError.isEmpty()
-                       ? tr("Imported %n preset(s).", nullptr, imported)
-                       : tr("Imported %1 of %2. %3").arg(imported).arg(files.size()).arg(lastError);
-    if (!skipped.isEmpty()) {
-        // Lightroom settings with no equivalent are named, so nothing goes missing silently.
-        text += u' ' + tr("Left out: %1.").arg(skipped.mid(0, 6).join(u", "_s));
+    if (tally.looks > 0) {
+        refreshLooks();
     }
-    showToast(text);
+    showToast(tally.summary(static_cast<int>(files.size())));
+}
+
+void MainWindow::importPresetFile(const QString& file, ImportTally& tally)
+{
+    const auto result = m_library.importFile(file);
+    if (result.path.isEmpty()) {
+        tally.lastError = u"%1: %2"_s.arg(QFileInfo(file).fileName(), result.error);
+        return;
+    }
+    ++tally.presets;
+    tally.skipped << result.skipped;
+}
+
+void MainWindow::importLookFile(const QString& file, ImportTally& tally)
+{
+    const core::LookLibrary library(core::LookLibrary::defaultFolder());
+    QString error;
+    if (QFileInfo(file).suffix().toLower() == u"pfxlook"_s) {
+        const auto doc = pfx::loadDocument(file.toStdString());
+        if (doc && doc.value().kind == pfx::DocumentKind::Look &&
+            !library.save(QString::fromStdString(doc.value().name), doc.value().look).isEmpty()) {
+            ++tally.looks;
+            return;
+        }
+        error = doc ? tr("not a look") : QString::fromStdString(doc.error().message);
+    } else if (!library.importLut(file, &error).isEmpty()) {
+        ++tally.looks;
+        return;
+    }
+    tally.lastError = u"%1: %2"_s.arg(QFileInfo(file).fileName(), error);
+}
+
+QString MainWindow::ImportTally::summary(int files) const
+{
+    QStringList parts;
+    if (presets > 0) {
+        parts << tr("%n preset(s)", nullptr, presets);
+    }
+    if (looks > 0) {
+        parts << tr("%n look(s)", nullptr, looks);
+    }
+    QString text =
+        parts.isEmpty() ? tr("Nothing was imported.") : tr("Imported %1.").arg(parts.join(tr(" and ")));
+    if (!lastError.isEmpty()) {
+        text +=
+            u' ' + tr("%n file(s) could not be read, %1", nullptr, files - presets - looks).arg(lastError);
+    }
+    QStringList left = skipped;
+    left.removeDuplicates();
+    if (!left.isEmpty()) {
+        // Lightroom settings with no equivalent are named, so nothing goes missing silently.
+        text += u' ' + tr("Left out: %1.").arg(left.mid(0, 6).join(u", "_s));
+    }
+    return text;
 }
 
 void MainWindow::connectPresetActions()
@@ -1096,8 +1143,16 @@ void MainWindow::connectLooks()
         m_document.setSettings(core::withLook(m_document.settings(), looks->current(), strength));
         m_document.commit(tr("Look strength %1").arg(strength));
     });
-    connect(looks, &LooksPanel::importRequested, this, &MainWindow::importLooks);
     connect(looks, &LooksPanel::newLookRequested, this, [this] { editLook({}); });
+    auto* newLook = new QAction(tr("New look"), this);
+    newLook->setObjectName(u"newLook"_s);
+    newLook->setShortcut(QKeySequence(u"Ctrl+Shift+N"_s));
+    connect(newLook, &QAction::triggered, this, [this] {
+        if (!isInTool()) {
+            editLook({});
+        }
+    });
+    addAction(newLook);
     connect(looks, &LooksPanel::editLookRequested, this, &MainWindow::editLook);
     connect(looks, &LooksPanel::exportLookRequested, this, &MainWindow::exportLook);
     connect(looks, &LooksPanel::deleteLookRequested, this, &MainWindow::deleteLook);
@@ -1166,34 +1221,6 @@ void MainWindow::editLook(const QString& id)
     }
     refreshLooks();
     showToast(tr("Saved the look %1").arg(core::lookName(editor.savedId())));
-}
-
-void MainWindow::importLooks()
-{
-    const QStringList files = QFileDialog::getOpenFileNames(
-        this, tr("Import LUTs"), m_settings.lastOpenFolder(),
-        tr("LUTs (*.cube *.png *.tif *.tiff);;Cube LUTs (*.cube);;HaldCLUT pictures "
-           "(*.png *.tif *.tiff)"));
-    if (files.isEmpty()) {
-        return;
-    }
-    const core::LookLibrary library(core::LookLibrary::defaultFolder());
-    int imported = 0;
-    QString lastError;
-    for (const QString& file : files) {
-        QString error;
-        if (library.importLut(file, &error).isEmpty()) {
-            lastError = u"%1: %2"_s.arg(QFileInfo(file).fileName(), error);
-        } else {
-            ++imported;
-        }
-    }
-    m_presets->looksPanel()->setEntries(library.entries());
-    m_batch->setLooks(m_presets->looksPanel()->entries());
-    requestLookThumbnails();
-    showToast(lastError.isEmpty()
-                  ? tr("Imported %n look(s).", nullptr, imported)
-                  : tr("Imported %1 of %2. %3").arg(imported).arg(files.size()).arg(lastError));
 }
 
 void MainWindow::requestLookThumbnails()
@@ -1376,7 +1403,7 @@ void MainWindow::enterBatch()
 
 void MainWindow::updateHeader()
 {
-    // The header follows the page (mocks welcome.html, editor.html, batch.html): the wordmark
+    // The header follows the page: the wordmark
     // and the menu on the start page, the photo and its tools in the editor, Batch's own.
     const bool welcome = m_stack->currentWidget() == m_welcome;
     const bool batch = m_stack->currentWidget() == m_batch;
@@ -1446,7 +1473,7 @@ void MainWindow::enterCrop()
     m_canvas->dial()->setAngle(m_cropStart.number("geometry.angle", 0.0));
     m_canvas->setImage(m_document.preview(), m_document.displaySize());
     m_panels->setCurrentWidget(m_cropPanel);
-    m_presets->hide(); // mock crop.html: no left panel while cropping
+    m_presets->hide();
     m_cropStrip->show();
     m_strip->hide();
     updateCropStrip();
@@ -1812,7 +1839,8 @@ void MainWindow::buildMainMenu()
     menu->addAction(namedAction(u"export"_s));
     menu->addAction(namedAction(u"openBatchRecipe"_s));
     menu->addSeparator();
-    connect(menu->addAction(tr("Import presets...")), &QAction::triggered, this, &MainWindow::importPresets);
+    connect(menu->addAction(tr("Import presets and looks...")), &QAction::triggered, this,
+            &MainWindow::importPresets);
     connect(menu->addAction(tr("Show presets folder")), &QAction::triggered, this, [this] {
         QDir().mkpath(m_library.folder());
         QDesktopServices::openUrl(QUrl::fromLocalFile(m_library.folder()));

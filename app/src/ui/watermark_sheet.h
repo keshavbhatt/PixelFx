@@ -66,7 +66,7 @@ private:
     core::Watermark m_mark;
 };
 
-/// Watermark (mock watermark.html), opened from Export: make, pick or change a saved watermark.
+/// Watermark, opened from Export: make, pick or change a saved watermark.
 class WatermarkSheet : public QDialog
 {
     Q_OBJECT

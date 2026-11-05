@@ -138,7 +138,6 @@ QHBoxLayout* ExportSheet::addFooter(QFormLayout* form)
     exportButton->setDefault(true);
     connect(cancel, &QPushButton::clicked, this, &QDialog::reject);
     connect(exportButton, &QPushButton::clicked, this, &QDialog::accept);
-    // Mock export.html: the same pixels onto the clipboard, for pasting into a chat or a document.
     m_copyButton = new QPushButton(tr("Copy to clipboard"), this);
     m_copyButton->setToolTip(tr("Copy the photo at this size, with the watermark, instead of saving a file"));
     connect(m_copyButton, &QPushButton::clicked, this, [this] { done(kCopyToClipboard); });
@@ -178,7 +177,6 @@ QWidget* ExportSheet::qualityRow(int quality)
 
 QWidget* ExportSheet::sizeRow(const QSize& photoSize, const core::ExportOptions& options)
 {
-    // Mock export-sizes.html: where the photo is going, with the pixels on the right.
     auto* row = new QWidget(this);
     m_size = new QComboBox(row);
     m_size->addItem(tr("Original (%1 x %2)").arg(photoSize.width()).arg(photoSize.height()), QString());

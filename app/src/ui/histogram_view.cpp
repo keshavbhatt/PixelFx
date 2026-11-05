@@ -68,7 +68,6 @@ void HistogramView::paintEvent(QPaintEvent* /*event*/)
         p.drawPath(path);
     }
     if (!m_caption.isEmpty()) {
-        // Mock .histo .meta: 10 px, muted, 8 px from the left, 4 px from the bottom.
         p.setCompositionMode(QPainter::CompositionMode_SourceOver);
         QFont small = font();
         small.setPixelSize(10);

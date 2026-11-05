@@ -6,6 +6,7 @@
 #include <QDialog>
 #include <QFile>
 #include <QPalette>
+#include <QProxyStyle>
 #include <QStyleFactory>
 #include <QTemporaryDir>
 #include <QToolButton>
@@ -133,9 +134,8 @@ const QString kSheet = uR"(
         QPlainTextEdit#noticeText, QPlainTextEdit#diagnostics { background: {{input}}; border: 1px solid {{border}}; border-radius: 8px; padding: 6px; font-family: monospace; font-size: 12px; }
     )"_s;
 
-// Every standard control drawn the way the mocks draw it (mock.css: .check, .input, select,
-// .btn:disabled), so no widget falls back to plain Fusion. {{glyphs}} is a folder of small
-// SVGs made in the theme's colours at start (style sheets take images only from files).
+// The standard controls. {{glyphs}} is a folder of small SVGs made in the theme's colours at
+// start, because style sheets take images only from files.
 const QString kControls = uR"(
         QCheckBox, QRadioButton { spacing: 8px; }
         QCheckBox::indicator { width: 14px; height: 14px; border-radius: 4px; border: 1.5px solid {{faint}}; background: transparent; }
@@ -188,6 +188,9 @@ const QString kControls = uR"(
         QCheckBox#switch::indicator { width: 34px; height: 20px; border: 0; border-radius: 10px; background: transparent; image: url({{glyphs}}/switch-off.svg); }
         QCheckBox#switch::indicator:checked { image: url({{glyphs}}/switch-on.svg); }
         QCheckBox#switch::indicator:disabled { image: url({{glyphs}}/switch-off.svg); }
+        QToolButton#iconButton { border: 1px solid {{border}}; border-radius: 7px; background: {{panel}}; padding: 4px; }
+        QToolButton#iconButton:hover { background: {{hover}}; }
+        QToolButton#iconButton:checked { background: {{accentSoft}}; border-color: transparent; }
         QToolButton#sheetClose { border: 0; border-radius: 7px; padding: 6px; background: transparent; }
         QToolButton#sheetClose:hover { background: {{hover}}; }
         #headerSep { background: {{border}}; }
@@ -235,7 +238,7 @@ QString glyphFolder(const Tokens& t)
     write(dir + u"/check-muted.svg"_s, u"<path d=\"M3.5 8.5l3 3 6-7\"/>"_s, t.text, 2);
     write(dir + u"/part.svg"_s, u"<path d=\"M4 8h8\"/>"_s, Qt::white, 2.2);
     write(dir + u"/chevron-down.svg"_s, u"<path d=\"M4 6l4 4 4-4\"/>"_s, t.muted, 1.8);
-    // Switches (mock .switch: 34 by 20, a white knob on the track or the accent).
+    // Switches.
     const auto knob = [&dir](const QString& name, const QColor& track, int x) {
         QFile file(dir + u'/' + name);
         if (file.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
@@ -303,6 +306,25 @@ const Tokens& lightTokens()
 }
 
 namespace {
+
+// Fusion with transient scroll bars.
+class PixelFxStyle : public QProxyStyle
+{
+public:
+    PixelFxStyle()
+        : QProxyStyle(QStyleFactory::create(QStringLiteral("Fusion")))
+    {}
+
+    int styleHint(StyleHint hint, const QStyleOption* option, const QWidget* widget,
+                  QStyleHintReturn* returnData) const override
+    {
+        if (hint == SH_ScrollBar_Transient) {
+            return 1;
+        }
+        return QProxyStyle::styleHint(hint, option, widget, returnData);
+    }
+};
+
 bool g_light = false; // set once at start, before any window exists
 } // namespace
 
@@ -319,7 +341,7 @@ const Tokens& tokens()
 void applyStyle(QApplication& app)
 {
     const Tokens& t = tokens();
-    QApplication::setStyle(QStyleFactory::create(u"Fusion"_s));
+    QApplication::setStyle(new PixelFxStyle); // the application owns it
     QPalette p;
     p.setColor(QPalette::Window, t.bg);
     p.setColor(QPalette::WindowText, t.text);
@@ -347,7 +369,7 @@ QVBoxLayout* sheetLayout(QDialog* sheet, QLayout* foot)
     root->setContentsMargins(0, 0, 0, 0);
     root->setSpacing(0);
     auto* body = new QVBoxLayout;
-    body->setContentsMargins(20, 16, 20, 16); // mock .sh and .sb
+    body->setContentsMargins(20, 16, 20, 16);
     body->setSpacing(12);
     root->addLayout(body, 1);
     if (foot != nullptr) {
@@ -373,7 +395,7 @@ QWidget* sheetFootBar(QWidget* sheet, QLayout* foot)
     auto* bar = new QWidget(sheet);
     bar->setObjectName(QStringLiteral("sheetFoot"));
     bar->setAttribute(Qt::WA_StyledBackground);
-    foot->setContentsMargins(20, 12, 20, 12); // mock .sf
+    foot->setContentsMargins(20, 12, 20, 12);
     bar->setLayout(foot);
     return bar;
 }
