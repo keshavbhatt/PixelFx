@@ -33,6 +33,9 @@ make golden    # regenerate golden images on purpose, then review them
 
 Debug hooks are listed at the top of `app/src/main.cpp`. For manual runs, point
 `XDG_CONFIG_HOME`, `XDG_DATA_HOME` and `XDG_CACHE_HOME` at a scratch folder or use `--profile`.
+Neither moves the Pictures folder, where Export and Batch save by default: also write
+`XDG_PICTURES_DIR="<scratch>/pics"` to `$XDG_CONFIG_HOME/user-dirs.dirs`, or the output lands
+in the owner's `~/Pictures/PixelFx`.
 
 ## Standing rules
 
