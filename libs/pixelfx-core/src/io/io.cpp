@@ -334,6 +334,18 @@ Result<ImageInfo> probe(const std::filesystem::path& path)
     }
 }
 
+Result<Metadata> readMetadata(const std::filesystem::path& path)
+{
+    ensureVips();
+    try {
+        const vips::VImage in = openFile(path);
+        return Metadata{blob(in, VIPS_META_EXIF_NAME), blob(in, VIPS_META_XMP_NAME),
+                        blob(in, VIPS_META_IPTC_NAME)};
+    } catch (const vips::VError& e) {
+        return Error{ErrorCode::DecodeFailed, readFailure(e.what())};
+    }
+}
+
 namespace {
 
 // Converts decoded pixels from their embedded profile (sRGB when there is none or it is not an

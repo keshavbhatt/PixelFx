@@ -86,6 +86,8 @@ struct Rgba8Image
 // header cannot exhaust memory.
 [[nodiscard]] Result<LoadedImage> load(const std::filesystem::path& path, const LoadOptions& options = {});
 [[nodiscard]] Result<ImageInfo> probe(const std::filesystem::path& path);
+// The Exif, XMP and IPTC of a file, from its header, without decoding the pixels.
+[[nodiscard]] Result<Metadata> readMetadata(const std::filesystem::path& path);
 
 // Converts to sRGB, embeds the sRGB profile, writes the format the extension names.
 [[nodiscard]] Status save(const Image& image, const std::filesystem::path& path,
