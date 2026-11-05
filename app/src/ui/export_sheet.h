@@ -20,6 +20,7 @@ class QWidget;
 
 namespace pixelfx::ui {
 
+class PathLabel;
 class SliderRow;
 
 /// The quality of a lossy format as a slider row ("Smaller file · Better image", 1 to 100,
@@ -89,7 +90,7 @@ private:
     class QPushButton* m_fit = nullptr;
     QCheckBox* m_metadata = nullptr;
     QCheckBox* m_location = nullptr;
-    QLabel* m_folder = nullptr;
+    PathLabel* m_folder = nullptr;
     QLineEdit* m_name = nullptr;
     QLabel* m_extension = nullptr;
     QComboBox* m_ifExists = nullptr;

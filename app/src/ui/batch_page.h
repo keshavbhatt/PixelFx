@@ -33,6 +33,7 @@ class QVBoxLayout;
 
 namespace pixelfx::ui {
 
+class PathLabel;
 class SliderRow;
 
 /// Batch. Left: the photos, as a list
@@ -198,7 +199,7 @@ private:
     QComboBox* m_size = nullptr;
     QCheckBox* m_noEnlarge = nullptr;
     QComboBox* m_format = nullptr;
-    QLabel* m_folder = nullptr;
+    PathLabel* m_folder = nullptr;
     QLineEdit* m_name = nullptr;
     QCheckBox* m_beside = nullptr;
     class WatermarkPicker* m_watermark = nullptr;

@@ -1,5 +1,6 @@
 #include "ui/export_sheet.h"
 
+#include "ui/elided_label.h"
 #include "ui/slider_row.h"
 #include "ui/style.h"
 #include "ui/watermark_sheet.h"
@@ -60,15 +61,6 @@ const Format* formatFor(const QString& extension)
         }
     }
     return &kFormats[0];
-}
-
-QString shortPath(const QString& path)
-{
-    if (path.isEmpty()) {
-        return QObject::tr("Next to the photo");
-    }
-    const QString home = QDir::homePath();
-    return path.startsWith(home) ? u"~"_s + path.mid(home.size()) : path;
 }
 
 } // namespace
@@ -310,9 +302,9 @@ void ExportSheet::refreshSize(const QSize& photoSize)
 QWidget* ExportSheet::folderRow()
 {
     auto* row = new QWidget(this);
-    m_folder = new QLabel(shortPath(m_folderPath), row);
+    m_folder = new PathLabel(tr("Next to the photo"), row);
     m_folder->setObjectName(u"mono"_s);
-    m_folder->setToolTip(m_folderPath);
+    m_folder->setPath(m_folderPath);
     auto* change = new QPushButton(tr("Change..."), row);
     change->setObjectName(u"small"_s);
     connect(change, &QPushButton::clicked, this, &ExportSheet::chooseFolder);
@@ -429,8 +421,7 @@ void ExportSheet::chooseFolder()
     const QString folder = QFileDialog::getExistingDirectory(this, tr("Save to"), m_folderPath);
     if (!folder.isEmpty()) {
         m_folderPath = folder;
-        m_folder->setText(shortPath(folder));
-        m_folder->setToolTip(folder);
+        m_folder->setPath(folder);
     }
 }
 

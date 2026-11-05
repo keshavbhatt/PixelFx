@@ -69,14 +69,6 @@ QString describe(const QString& path)
     return info ? u"%1 x %2 · %3"_s.arg(info.value().width).arg(info.value().height).arg(size) : size;
 }
 
-// "~/Pictures/PixelFx/Batch": the home folder as people write it.
-QString shortPath(const QString& path)
-{
-    const QString home = QDir::homePath();
-    const QString native = QDir::toNativeSeparators(path);
-    return path.startsWith(home) ? u"~"_s + QDir::toNativeSeparators(path.mid(home.size())) : native;
-}
-
 // The formats Save as offers, and whether they take a quality.
 bool lossy(const QString& extension)
 {
@@ -568,17 +560,16 @@ QWidget* BatchPage::buildSaveAs(QWidget* parent)
     formatRow->addWidget(m_format);
     formatRow->addWidget(more);
     formatRow->addStretch();
-    m_folder = new QLabel(shortPath(m_output.folder), box);
+    m_folder = new PathLabel({}, box);
     m_folder->setObjectName(u"mono"_s);
-    m_folder->setToolTip(QDir::toNativeSeparators(m_output.folder));
+    m_folder->setPath(m_output.folder);
     auto* change = new QPushButton(tr("Change"), box);
     change->setObjectName(u"small"_s);
     connect(change, &QPushButton::clicked, this, [this] {
         const QString folder = QFileDialog::getExistingDirectory(this, tr("Save to"), m_output.folder);
         if (!folder.isEmpty()) {
             m_output.folder = folder;
-            m_folder->setText(shortPath(folder));
-            m_folder->setToolTip(QDir::toNativeSeparators(folder));
+            m_folder->setPath(folder);
             outputEdited();
         }
     });
@@ -1065,7 +1056,7 @@ QString BatchPage::loadRecipe(const QString& path)
     m_output.ifExists = r.output.ifExists;
     if (!r.output.folder.isEmpty()) {
         m_output.folder = r.output.folder;
-        m_folder->setText(shortPath(m_output.folder));
+        m_folder->setPath(m_output.folder);
     }
     return adopted.problems.join(u' ');
 }
