@@ -45,8 +45,9 @@ private:
 
 } // namespace
 
-AdjustGroup::AdjustGroup(const QString& name, const QString& glyph, QWidget* parent)
+AdjustGroup::AdjustGroup(QString id, const QString& name, const QString& glyph, QWidget* parent)
     : QWidget(parent)
+    , m_id(std::move(id))
     , m_name(name)
     , m_toggle(new QToolButton(this))
     , m_chevron(new QLabel(this))

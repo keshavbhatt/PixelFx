@@ -48,6 +48,7 @@ private Q_SLOTS:
         QVERIFY(s.windowGeometry().isEmpty());
         QVERIFY(s.recentFiles().isEmpty());
         QVERIFY(QFileInfo(s.lastOpenFolder()).isDir()); // Pictures or home
+        QVERIFY(!s.openAdjustGroups().has_value());     // the panel keeps its own until then
     }
 
     void valuesPersistAndSignal()
@@ -61,9 +62,11 @@ private Q_SLOTS:
             s.setLastOpenFolder(dir.path()); // unchanged: no second signal
             QCOMPARE(folderSpy.count(), 1);
             s.setWindowGeometry(QByteArray("geometry"));
+            s.setOpenAdjustGroups({});
             s.sync();
         }
         const Settings again(file);
+        QCOMPARE(again.openAdjustGroups(), std::optional<QStringList>(QStringList())); // all closed
         QCOMPARE(again.lastOpenFolder(), dir.path());
         QCOMPARE(again.windowGeometry(), QByteArray("geometry"));
     }

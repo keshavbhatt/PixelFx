@@ -111,6 +111,7 @@ void AdjustSlider::setStepsPerUnit(double steps)
 {
     const double current = value();
     m_scale = steps;
+    setTicksPerUnit(steps);
     setRange(toTicks(m_minimum), toTicks(m_maximum), toTicks(m_default));
     // Exposure's keys step a twentieth of a stop, a stop with Page Up and Down; whole numbers 1 and 10.
     slider()->setSingleStep(m_scale >= 100.0 ? 5 : 1);
@@ -203,7 +204,8 @@ AdjustPanel::AdjustPanel(QWidget* parent)
     groups->setContentsMargins(0, 0, 0, 0);
     groups->setSpacing(0);
     for (const GroupSpec& g : groupSpecs()) {
-        auto* group = new AdjustGroup(tr(g.name), QString::fromLatin1(g.glyph), content);
+        auto* group =
+            new AdjustGroup(QString::fromLatin1(g.name), tr(g.name), QString::fromLatin1(g.glyph), content);
         if (std::string_view(g.name) == "Color") {
             group->addContent(buildWhiteBalanceRow(group));
         }
@@ -249,6 +251,24 @@ AdjustSlider* AdjustPanel::addSlider(AdjustGroup* group, const QString& key, con
     connect(s, &AdjustSlider::moved, this, [this, s](double v) { setValue(s->key(), v, false); });
     connect(s, &AdjustSlider::released, this, [this, s](double v) { setValue(s->key(), v, true); });
     return s;
+}
+
+QStringList AdjustPanel::openGroups() const
+{
+    QStringList ids;
+    for (const AdjustGroup* group : m_groups) {
+        if (group->isExpanded()) {
+            ids.append(group->id());
+        }
+    }
+    return ids;
+}
+
+void AdjustPanel::setOpenGroups(const QStringList& ids)
+{
+    for (AdjustGroup* group : m_groups) {
+        group->setExpanded(ids.contains(group->id()));
+    }
 }
 
 void AdjustPanel::addGroup(AdjustGroup* group, QVBoxLayout* groups)
@@ -389,7 +409,7 @@ const std::vector<MixerBand>& mixerBands()
 
 void AdjustPanel::buildMixerGroup(QWidget* content, QVBoxLayout* groups)
 {
-    auto* group = new AdjustGroup(tr("Color mixer"), u"palette"_s, content);
+    auto* group = new AdjustGroup(u"Color mixer"_s, tr("Color mixer"), u"palette"_s, content);
     group->setExpanded(false);
     auto* modes = new QWidget(group);
     auto* modeRow = new QHBoxLayout(modes);
@@ -467,7 +487,7 @@ std::string gradingKey(int zone, const char* part)
 
 void AdjustPanel::buildGradingGroup(QWidget* content, QVBoxLayout* groups)
 {
-    auto* group = new AdjustGroup(tr("Color grading"), u"blend"_s, content);
+    auto* group = new AdjustGroup(u"Color grading"_s, tr("Color grading"), u"blend"_s, content);
     group->setExpanded(false);
     auto* wheels = new QWidget(group);
     auto* row = new QHBoxLayout(wheels);
@@ -571,7 +591,7 @@ void AdjustPanel::refreshWheels()
 
 void AdjustPanel::buildGeometryGroup(QWidget* content, QVBoxLayout* groups)
 {
-    auto* group = new AdjustGroup(tr("Geometry"), u"scaling"_s, content);
+    auto* group = new AdjustGroup(u"Geometry"_s, tr("Geometry"), u"scaling"_s, content);
     group->setExpanded(false);
     group->addKeys({"geometry.rotate90", "geometry.flipH", "geometry.flipV"});
     auto* straighten = new AdjustSlider(u"geometry.angle"_s, tr("Straighten"), group);
@@ -663,7 +683,7 @@ void AdjustPanel::showMixer(int mode, int band)
 
 void AdjustPanel::buildCurvesGroup(QWidget* content, QVBoxLayout* groups)
 {
-    auto* group = new AdjustGroup(tr("Curves"), u"curves"_s, content);
+    auto* group = new AdjustGroup(u"Curves"_s, tr("Curves"), u"curves"_s, content);
     group->setExpanded(false);
     for (const QString& key : curveKeys()) {
         group->addKeys({key.toStdString()});

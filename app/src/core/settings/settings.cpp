@@ -235,6 +235,20 @@ void Settings::setClippingWarnings(bool on)
     }
 }
 
+std::optional<QStringList> Settings::openAdjustGroups() const
+{
+    const QString name = key(keys::kOpenAdjustGroups);
+    if (!m_settings->contains(name)) {
+        return std::nullopt;
+    }
+    return m_settings->value(name).toStringList();
+}
+
+void Settings::setOpenAdjustGroups(const QStringList& ids)
+{
+    m_settings->setValue(key(keys::kOpenAdjustGroups), ids);
+}
+
 bool Settings::showWhatsNew() const
 {
     return m_settings->value(key(keys::kShowWhatsNew), true).toBool();

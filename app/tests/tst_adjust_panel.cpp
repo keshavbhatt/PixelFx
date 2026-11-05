@@ -5,6 +5,7 @@
 
 #include <QApplication>
 #include <QLabel>
+#include <QLineEdit>
 #include <QPushButton>
 #include <QSignalSpy>
 #include <QSlider>
@@ -307,6 +308,60 @@ private Q_SLOTS:
         // The value keeps its tabular figures under the style sheet.
         auto* value = contrast->findChild<QLabel*>(u"adjustValue"_s);
         QVERIFY(value->font().featureTags().contains(QFont::Tag("tnum")));
+    }
+
+    void aValueCanBeTypedInTheSlidersUnit()
+    {
+        AdjustPanel panel;
+        panel.resize(316, 800);
+        panel.show();
+        QVERIFY(QTest::qWaitForWindowExposed(&panel));
+        auto* exposure = panel.slider(u"light.exposure"_s);
+        QSignalSpy released(exposure, &pixelfx::ui::AdjustSlider::released);
+        auto* value = exposure->findChild<QLabel*>(u"adjustValue"_s);
+        QLineEdit* field = exposure->valueField();
+        QTest::mouseClick(value, Qt::LeftButton);
+        QVERIFY(field->isVisible());
+        QVERIFY(field->hasSelectedText());
+        field->setText(u"+0.35"_s);
+        QTest::keyClick(field, Qt::Key_Return);
+        QVERIFY(!field->isVisible());
+        QCOMPARE(exposure->value(), 0.35);
+        QCOMPARE(released.count(), 1); // one history step
+        // Escape goes back.
+        exposure->beginTyping();
+        field->setText(u"2"_s);
+        QTest::keyClick(field, Qt::Key_Escape);
+        QCOMPARE(exposure->value(), 0.35);
+        QVERIFY(!field->isVisible());
+        // Up nudges by the slider's step, Shift by ten.
+        exposure->beginTyping();
+        QTest::keyClick(field, Qt::Key_Up);
+        QCOMPARE(exposure->value(), 0.40);
+        QTest::keyClick(field, Qt::Key_Down, Qt::ShiftModifier);
+        QCOMPARE(exposure->value(), -0.10);
+        QTest::keyClick(field, Qt::Key_Escape);
+        // Past the end goes to the end; words leave the value; a unit is allowed.
+        QCOMPARE(exposure->parse(u"9"_s), std::optional<int>(500));
+        QCOMPARE(exposure->parse(u"bright"_s), std::nullopt);
+        auto* straighten = panel.slider(u"geometry.angle"_s);
+        QCOMPARE(straighten->parse(u"-12\u00B0"_s), std::optional<int>(-12));
+        // Enter on a focused slider opens the field.
+        auto* contrast = panel.slider(u"light.contrast"_s);
+        contrast->slider()->setFocus();
+        QTest::keyClick(contrast->slider(), Qt::Key_Return);
+        QVERIFY(contrast->valueField()->isVisible());
+    }
+
+    void openGroupsAreReadAndSet()
+    {
+        AdjustPanel panel;
+        panel.setOpenGroups({u"Detail"_s, u"Curves"_s});
+        QStringList open = panel.openGroups();
+        open.sort();
+        QCOMPARE(open, QStringList({u"Curves"_s, u"Detail"_s}));
+        panel.setOpenGroups({});
+        QVERIFY(panel.openGroups().isEmpty());
     }
 
     void setSettingsDoesNotEmit()

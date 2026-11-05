@@ -110,6 +110,7 @@ QWidget* HealPanel::buildBrush()
     m_size = new SliderRow(tr("Size"), box);
     m_size->setRange(qRound(HealTool::kMinSize * kSizeTicks), qRound(HealTool::kMaxSize * kSizeTicks), 40);
     m_size->setFormat([](int ticks) { return percent(static_cast<double>(ticks) / kSizeTicks); });
+    m_size->setTicksPerUnit(kSizeTicks / 100.0); // typed in percent
     m_size->setToolTip(tr("[ and ] change the size"));
     m_feather = new SliderRow(tr("Feather"), box);
     m_feather->setRange(0, 100, 50);

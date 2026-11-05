@@ -24,7 +24,8 @@ class AdjustGroup : public QWidget
     Q_DISABLE_COPY_MOVE(AdjustGroup)
 
 public:
-    AdjustGroup(const QString& name, const QString& glyph, QWidget* parent);
+    /// `id` names the group in saved state and does not change with the language; `name` is shown.
+    AdjustGroup(QString id, const QString& name, const QString& glyph, QWidget* parent);
     ~AdjustGroup() override;
 
     void addContent(QWidget* widget);
@@ -32,6 +33,7 @@ public:
     /// Settings keys of controls that are not sliders (curves, wheels, turns).
     void addKeys(const std::vector<std::string>& keys);
     [[nodiscard]] const std::vector<AdjustSlider*>& sliders() const { return m_sliders; }
+    [[nodiscard]] const QString& id() const { return m_id; }
     [[nodiscard]] const QString& name() const { return m_name; }
     [[nodiscard]] QToolButton* resetButton() const { return m_reset; }
 
@@ -47,6 +49,7 @@ public:
 private:
     void updateChevron();
 
+    QString m_id;
     QString m_name;
     QToolButton* m_toggle;
     QLabel* m_chevron;

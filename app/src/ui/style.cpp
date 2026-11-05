@@ -97,8 +97,10 @@ const QString kSheet = uR"(
         #changedDot { background: {{accent}}; border-radius: 3px; }
         #adjustName { color: {{muted}}; font-size: 12px; }
         #adjustName[changed="true"] { color: {{text}}; }
-        #adjustValue { color: {{text}}; font-size: 12px; }
+        #adjustValue { color: {{text}}; font-size: 12px; border: 1px solid transparent; border-radius: 4px; }
+        #adjustValue:hover { border-color: {{border}}; padding: 0 4px; }
         #adjustValue[changed="true"] { color: {{accent}}; }
+        QLineEdit#adjustValueField { font-size: 12px; padding: 0 4px; min-height: 0; border-radius: 4px; border-color: {{accent}}; }
         QPushButton#small { padding: 4px 10px; font-size: 12px; }
         QSlider { min-height: 24px; }
         QSlider::groove:horizontal { height: 3px; border-radius: 1px; background: {{track}}; }

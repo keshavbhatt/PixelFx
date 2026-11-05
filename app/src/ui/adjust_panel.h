@@ -58,6 +58,10 @@ public:
     void setPhotoDetails(const QString& exposure, const QString& cameraAndLens);
     /// Clears every setting (Ctrl+R) and reports it as one step.
     void resetAll();
+    /// The ids of the open groups ("Light", "Color grading"), for the next session.
+    [[nodiscard]] QStringList openGroups() const;
+    /// Opens the groups in `ids` and closes the others.
+    void setOpenGroups(const QStringList& ids);
     /// White balance shows "Auto" until a slider moves it.
     void markWhiteBalanceAuto();
     /// The picker button's state, without emitting.

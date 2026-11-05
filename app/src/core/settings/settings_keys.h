@@ -24,6 +24,7 @@ inline constexpr auto kTheme = "appearance/theme";
 inline constexpr auto kCanvasBackground = "appearance/canvasBackground";
 inline constexpr auto kRememberEdits = "editing/rememberEdits";
 inline constexpr auto kOpenAsLeft = "editing/openAsLeft";
+inline constexpr auto kOpenAdjustGroups = "editing/openAdjustGroups";
 inline constexpr auto kClippingWarnings = "display/clippingWarnings";
 inline constexpr auto kShowWhatsNew = "whatsNew/show";
 inline constexpr auto kWhatsNewSeen = "whatsNew/seenVersion";

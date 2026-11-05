@@ -9,6 +9,7 @@
 #include <QStringList>
 
 #include <memory>
+#include <optional>
 
 namespace pixelfx::core {
 
@@ -73,6 +74,9 @@ public:
     void setRememberEdits(bool on);
     [[nodiscard]] bool openAsLeft() const;
     void setOpenAsLeft(bool on);
+    /// The adjustment groups left open (AdjustGroup ids); nothing until the window first closes.
+    [[nodiscard]] std::optional<QStringList> openAdjustGroups() const;
+    void setOpenAdjustGroups(const QStringList& ids);
     /// Display: clipped highlights and shadows shown on the photo (J).
     [[nodiscard]] bool clippingWarnings() const;
     void setClippingWarnings(bool on);

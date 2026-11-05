@@ -160,6 +160,9 @@ MainWindow::MainWindow(core::Settings& settings, QWidget* parent)
         resize(1280, 820);
     }
     restoreState(m_settings.windowState());
+    if (const std::optional<QStringList> open = m_settings.openAdjustGroups()) {
+        m_adjust->setOpenGroups(*open);
+    }
 
     applyGeneralSettings();
     connectPresets();
@@ -1844,6 +1847,7 @@ void MainWindow::closeEvent(QCloseEvent* event)
     m_document.flush();
     m_settings.setWindowGeometry(saveGeometry());
     m_settings.setWindowState(saveState());
+    m_settings.setOpenAdjustGroups(m_adjust->openGroups());
     QMainWindow::closeEvent(event);
 }
 

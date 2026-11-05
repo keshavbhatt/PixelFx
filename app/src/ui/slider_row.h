@@ -3,8 +3,10 @@
 #include <QWidget>
 
 #include <functional>
+#include <optional>
 
 class QLabel;
+class QLineEdit;
 class QSlider;
 
 namespace pixelfx::ui {
@@ -12,6 +14,8 @@ namespace pixelfx::ui {
 /// A labelled slider: the name and the value above the track. The value shows in the accent
 /// while it differs from the default, and a double-click on the track goes back to the
 /// default. It works in whole ticks; how a tick reads ("+0.35", "4%") is set with setFormat.
+/// A click on the value (or Enter on the slider) turns it into a field to type a value in the
+/// unit shown; setTicksPerUnit says how many ticks make one of those units.
 class SliderRow : public QWidget
 {
     Q_OBJECT
@@ -23,6 +27,7 @@ public:
 
     void setRange(int minimum, int maximum, int defaultTicks);
     void setFormat(std::function<QString(int)> format);
+    void setTicksPerUnit(double ticks);
     [[nodiscard]] int ticks() const;
     /// Shows `ticks` without emitting.
     void setTicks(int ticks);
@@ -31,6 +36,12 @@ public:
     [[nodiscard]] QString text() const;
     [[nodiscard]] const QString& label() const { return m_label; }
     [[nodiscard]] QSlider* slider() const { return m_slider; }
+    /// The field the value is typed in; hidden unless typing.
+    [[nodiscard]] QLineEdit* valueField() const { return m_field; }
+    /// Turns the value into a field with the number selected.
+    void beginTyping();
+    /// The ticks a typed value stands for, held in the range, or nothing if it is not a number.
+    [[nodiscard]] std::optional<int> parse(const QString& typed) const;
 
 Q_SIGNALS:
     /// Every change, live while dragging.
@@ -43,13 +54,17 @@ protected:
 
 private:
     void refresh();
+    void endTyping(bool keep);
+    bool fieldEvent(QEvent* event);
 
     QString m_label;
     int m_default = 0;
     std::function<QString(int)> m_format;
+    double m_ticksPerUnit = 1.0;
     QSlider* m_slider;
     QLabel* m_name;
     QLabel* m_value;
+    QLineEdit* m_field;
 };
 
 } // namespace pixelfx::ui
