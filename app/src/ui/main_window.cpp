@@ -165,6 +165,7 @@ MainWindow::MainWindow(core::Settings& settings, QWidget* parent)
     connectClipboard();
     connectWhiteBalance();
     buildMainMenu(); // last: it lists the actions made above
+    updateHeader();
 }
 
 void MainWindow::connectDocument()
@@ -438,6 +439,9 @@ void MainWindow::buildHeader()
     header->setContentsMargins(12, 0, 10, 0);
     header->setSpacing(6);
     header->addWidget(new BrandMark(m_header));
+    m_wordmark = new QLabel(u"PixelFx"_s, m_header); // the start page's header (mock welcome.html)
+    m_wordmark->setObjectName(u"wordmark"_s);
+    header->addWidget(m_wordmark);
     header->addSpacing(4);
     header->addWidget(open);
     header->addSpacing(4);
@@ -525,6 +529,7 @@ void MainWindow::setupUi()
     m_stack->addWidget(m_welcome);
     m_stack->addWidget(m_canvasPage);
     buildBatch();
+    connect(m_stack, &QStackedWidget::currentChanged, this, &MainWindow::updateHeader);
 
     m_adjust = new AdjustPanel(this);
     m_cropPanel = new CropPanel(this);
@@ -1366,19 +1371,25 @@ void MainWindow::enterBatch()
     m_stack->setCurrentWidget(m_batch);
     m_presets->hide();
     m_panels->hide();
-    showBatchHeader(true);
     m_batchMode->setChecked(true);
 }
 
-void MainWindow::showBatchHeader(bool on)
+void MainWindow::updateHeader()
 {
+    // The header follows the page (mocks welcome.html, editor.html, batch.html): the wordmark
+    // and the menu on the start page, the photo and its tools in the editor, Batch's own.
+    const bool welcome = m_stack->currentWidget() == m_welcome;
+    const bool batch = m_stack->currentWidget() == m_batch;
     for (QWidget* w : std::as_const(m_editHeader)) {
-        w->setVisible(!on);
+        w->setVisible(!welcome && !batch);
     }
     for (QWidget* w : std::as_const(m_batchHeader)) {
-        w->setVisible(on);
+        w->setVisible(batch);
     }
-    if (on) {
+    m_wordmark->setVisible(welcome);
+    m_docName->setVisible(!welcome);
+    m_docMeta->setVisible(!welcome);
+    if (batch) {
         m_docName->setText(tr("Batch"));
         m_docMeta->setText(m_batch->summary());
         setWindowTitle(tr("Batch"));
@@ -1388,8 +1399,6 @@ void MainWindow::showBatchHeader(bool on)
         m_docMeta->setText(describe(m_document.info()));
         setWindowTitle(name);
     } else {
-        m_docName->clear();
-        m_docMeta->clear();
         setWindowTitle(QString());
     }
 }
@@ -1402,7 +1411,6 @@ void MainWindow::leaveBatch()
     m_stack->setCurrentWidget(m_document.isOpen() ? m_canvasPage : static_cast<QWidget*>(m_welcome));
     m_presets->setVisible(m_document.isOpen());
     m_panels->setVisible(m_document.isOpen());
-    showBatchHeader(false);
     m_editMode->setChecked(true);
 }
 

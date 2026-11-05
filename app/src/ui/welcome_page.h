@@ -48,6 +48,9 @@ Q_SIGNALS:
     void recentOpened(const QString& path);
     void clearRecentRequested();
 
+protected:
+    void resizeEvent(QResizeEvent* event) override;
+
 private:
     void buildDropZone();
     void buildRecent();

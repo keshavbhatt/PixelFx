@@ -24,7 +24,7 @@ private Q_SLOTS:
     {
         QCOMPARE(WelcomePage::formatsText({".jpg", ".png"}), u"JPEG and PNG."_s);
         QCOMPARE(WelcomePage::formatsText({".jpg", ".png", ".tif", ".webp", ".heic", ".jxl", ".dng"}),
-                 u"JPEG, PNG, TIFF, WebP, HEIC, JPEG XL and camera RAW."_s);
+                 u"JPEG, PNG, WebP, HEIC, TIFF, JPEG XL and camera RAW."_s);
         QCOMPARE(WelcomePage::formatsText({".jpg"}), u"JPEG."_s);
         QVERIFY(WelcomePage::formatsText({}).isEmpty());
     }

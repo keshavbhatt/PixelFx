@@ -191,6 +191,7 @@ const QString kControls = uR"(
         QToolButton#sheetClose { border: 0; border-radius: 7px; padding: 6px; background: transparent; }
         QToolButton#sheetClose:hover { background: {{hover}}; }
         #headerSep { background: {{border}}; }
+        #wordmark { font-weight: 700; font-size: 14px; }
         #batchPage, #batchList, #batchRows, #batchPanelContent { background: {{panel}}; }
         QListWidget#batchGrid { background: {{panel}}; border: 0; }
         #batchHead { border-bottom: 1px solid {{border}}; }

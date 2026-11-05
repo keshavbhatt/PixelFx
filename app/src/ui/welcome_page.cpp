@@ -41,11 +41,11 @@ WelcomePage::WelcomePage(QWidget* parent)
 
     auto* outer = new QVBoxLayout(this);
     outer->setContentsMargins(32, 32, 32, 32);
-    outer->addStretch();
+    // Mock: the card is min(760 px, 92%) wide, a little above the middle, Recent under it.
+    outer->addStretch(2);
     outer->addWidget(m_dropZone, 0, Qt::AlignHCenter);
     outer->addWidget(m_recent, 0, Qt::AlignHCenter);
-    outer->addStretch();
-    m_dropZone->setMinimumWidth(520);
+    outer->addStretch(3);
 }
 
 void WelcomePage::buildDropZone()
@@ -56,7 +56,8 @@ void WelcomePage::buildDropZone()
     auto* glyph = new QLabel(m_dropZone);
     glyph->setPixmap(icons::pixmap(u"images"_s, tokens().muted, 48, devicePixelRatioF()));
     glyph->setAlignment(Qt::AlignCenter);
-    glyph->setFixedHeight(52); // the layout must not squeeze the picture
+    glyph->setFixedHeight(62); // the picture, then 10 px before the title (mock)
+    glyph->setAlignment(Qt::AlignHCenter | Qt::AlignTop);
     auto* title = new QLabel(tr("Drop photos here"), m_dropZone);
     title->setObjectName(u"welcomeTitle"_s);
     title->setAlignment(Qt::AlignCenter);
@@ -85,7 +86,7 @@ void WelcomePage::buildDropZone()
     zone->addSpacing(10);
     // Mock welcome.html: Open images, Open folder, Batch edit (the last two open Batch).
     auto* openFolder =
-        new QPushButton(icons::themed(u"folder-plus"_s, tokens().text), tr("Open folder"), m_dropZone);
+        new QPushButton(icons::themed(u"folder"_s, tokens().text), tr("Open folder"), m_dropZone);
     openFolder->setToolTip(tr("Every photo in a folder, ready for Batch"));
     connect(openFolder, &QPushButton::clicked, this, &WelcomePage::openFolderRequested);
     auto* batch = new QPushButton(icons::themed(u"stack"_s, tokens().text), tr("Batch edit"), m_dropZone);
@@ -106,8 +107,6 @@ void WelcomePage::buildDropZone()
 void WelcomePage::buildRecent()
 {
     // Mock: a heading with Clear, then a row of cards.
-    m_recent->setMaximumWidth(760);
-    m_recent->setMinimumWidth(520);
     auto* recentTitle = new QLabel(tr("Recent"), m_recent);
     recentTitle->setObjectName(u"recentTitle"_s);
     auto* clear = new QPushButton(tr("Clear"), m_recent);
@@ -136,9 +135,9 @@ QString WelcomePage::formatsText(const std::vector<std::string>& extensions)
     };
     QStringList names;
     const std::pair<const char*, QString> known[] = {
-        {".jpg", u"JPEG"_s},  {".png", u"PNG"_s},        {".tif", u"TIFF"_s},    {".webp", u"WebP"_s},
-        {".heic", u"HEIC"_s}, {".avif", u"AVIF"_s},      {".jxl", u"JPEG XL"_s}, {".gif", u"GIF"_s},
-        {".bmp", u"BMP"_s},   {".dng", tr("camera RAW")}};
+        // The mock's order; GIF and BMP open too but are not worth the line.
+        {".jpg", u"JPEG"_s},  {".png", u"PNG"_s},  {".webp", u"WebP"_s},   {".avif", u"AVIF"_s},
+        {".heic", u"HEIC"_s}, {".tif", u"TIFF"_s}, {".jxl", u"JPEG XL"_s}, {".dng", tr("camera RAW")}};
     for (const auto& [ext, name] : known) {
         if (has(ext)) {
             names << name;
@@ -149,6 +148,15 @@ QString WelcomePage::formatsText(const std::vector<std::string>& extensions)
     }
     const QString last = names.takeLast();
     return names.isEmpty() ? last + u'.' : tr("%1 and %2.").arg(names.join(u", "_s), last);
+}
+
+void WelcomePage::resizeEvent(QResizeEvent* event)
+{
+    // Mock welcome.html: min(760 px, 92%) wide.
+    const int width = std::max(360, std::min(760, (this->width() * 92) / 100));
+    m_dropZone->setFixedWidth(width);
+    m_recent->setFixedWidth(width);
+    QWidget::resizeEvent(event);
 }
 
 void WelcomePage::setSidecarFolder(const QString& folder)

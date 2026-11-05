@@ -234,8 +234,9 @@ private:
     /// What the header shows while editing, hidden while Batch is up, and Batch's own buttons.
     QList<QWidget*> m_editHeader;
     QList<QWidget*> m_batchHeader;
-    /// The header as Batch shows it (mock batch.html), or as the editor does.
-    void showBatchHeader(bool on);
+    QLabel* m_wordmark = nullptr;
+    /// The header for the page on show: start page, editor or Batch.
+    void updateHeader();
 };
 
 } // namespace pixelfx::ui
