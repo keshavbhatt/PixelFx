@@ -9,7 +9,7 @@
 //   PIXELFX_DEBUG_CROP=<ratio>[,<deg>] enter Crop mode with a ratio chip ("Free", "3:2") and
 //                                      a straightening angle once the photo is open
 //   PIXELFX_DEBUG_SHEET=<name>         with GRAB, grab the window with that sheet open: export,
-//                                      settings, preset, shortcuts, watermark, look, about,
+//                                      settings, preset, shortcuts, watermark, look, newlook, about,
 //                                      notices, diagnostics, whatsnew, paste
 //   PIXELFX_DEBUG_TAB=presets          show the Presets tab of the left panel
 //   PIXELFX_DEBUG_MENU=<submenu>       with GRAB, grab the main menu open ("-" for the menu
@@ -168,10 +168,14 @@ bool grabSheet(pixelfx::ui::MainWindow& window, const QString& grab, bool export
             new pixelfx::ui::WatermarkSheet(window.document().preview(), QString(),
                                             pixelfx::core::WatermarkLibrary::defaultFolder(), &window);
         sheet = mark;
-    } else if (qEnvironmentVariable("PIXELFX_DEBUG_SHEET") == u"look"_s && window.document().isOpen()) {
-        // The look editor on a built-in look's steps, unsaved.
-        pixelfx::core::LookEntry entry = pixelfx::core::builtInLooks().at(3); // Film: curve, grading, grain
-        entry.path.clear();
+    } else if (const QString look = qEnvironmentVariable("PIXELFX_DEBUG_SHEET");
+               (look == u"look"_s || look == u"newlook"_s) && window.document().isOpen()) {
+        // The look editor on a built-in look's steps, unsaved, or on a new look.
+        pixelfx::core::LookEntry entry;
+        if (look == u"look"_s) {
+            entry = pixelfx::core::builtInLooks().at(3); // Film: curve, grading, grain
+            entry.path.clear();
+        }
         auto* editor =
             new pixelfx::ui::LookEditor(window.document().previewSource(), window.document().settings(),
                                         entry, pixelfx::core::LookLibrary::defaultFolder(), &window);

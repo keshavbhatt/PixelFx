@@ -63,7 +63,7 @@ SliderRow::SliderRow(const QString& label, QWidget* parent)
     top->addWidget(m_field);
     auto* column = new QVBoxLayout(this);
     column->setContentsMargins(0, 6, 0, 6);
-    column->setSpacing(4);
+    column->setSpacing(3);
     column->addLayout(top);
     column->addWidget(m_slider);
     connect(m_slider, &QSlider::valueChanged, this, [this](int ticks) {

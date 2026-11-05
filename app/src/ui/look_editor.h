@@ -90,6 +90,10 @@ private:
     QLineEdit* m_name = nullptr;
     QComboBox* m_category = nullptr;
     StepList* m_steps = nullptr;
+    QLabel* m_noSteps = nullptr;
+    QPushButton* m_save = nullptr;
+    QPushButton* m_export = nullptr;
+    QPushButton* m_bake = nullptr;
     QScrollArea* m_stepsScroll = nullptr;
     QLabel* m_paramsTitle = nullptr;
     QWidget* m_params = nullptr;

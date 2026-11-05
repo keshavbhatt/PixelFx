@@ -274,6 +274,7 @@ LookEditor::LookEditor(const std::shared_ptr<const pfx::Image>& source, const pf
     m_category->setAccessibleName(tr("Category"));
     auto* head = new QHBoxLayout;
     head->setContentsMargins(20, 14, 20, 12);
+    head->setSpacing(8);
     head->addWidget(title);
     head->addSpacing(8);
     head->addWidget(m_name);
@@ -464,11 +465,17 @@ QWidget* LookEditor::buildSteps()
     m_stepsScroll->setFrameShape(QFrame::NoFrame);
     m_stepsScroll->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 
+    m_noSteps = new QLabel(tr("No steps yet. Add a step, or import a LUT to start from."), side);
+    m_noSteps->setObjectName(u"faint"_s);
+    m_noSteps->setWordWrap(true);
+    m_noSteps->setContentsMargins(14, 6, 14, 6);
+
     QHBoxLayout* buttons = buildStepButtons(side);
 
     m_paramsTitle = new QLabel(side);
     m_paramsTitle->setObjectName(u"section"_s);
     m_params = new QWidget(side);
+    m_params->setObjectName(u"adjustContent"_s);
     m_paramsLayout = new QVBoxLayout(m_params);
     m_paramsLayout->setContentsMargins(14, 0, 14, 8);
     auto* scroll = new QScrollArea(side);
@@ -477,13 +484,13 @@ QWidget* LookEditor::buildSteps()
     scroll->setWidgetResizable(true);
     scroll->setFrameShape(QFrame::NoFrame);
     scroll->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    m_params->setObjectName(u"adjustContent"_s);
 
     auto* column = new QVBoxLayout(side);
     column->setContentsMargins(0, 10, 0, 0);
     column->setSpacing(4);
     column->addWidget(label);
     label->setContentsMargins(14, 0, 14, 0);
+    column->addWidget(m_noSteps);
     column->addWidget(m_stepsScroll);
     column->addLayout(buttons);
     m_paramsTitle->setContentsMargins(14, 4, 14, 0);
@@ -560,25 +567,23 @@ QWidget* LookEditor::buildPreview()
 
 void LookEditor::buildFooter(QVBoxLayout* column)
 {
-    auto* exportButton =
-        new IconTextButton(icons::themed(u"share"_s, tokens().text), tr("Export look..."), this);
-    connect(exportButton, &QPushButton::clicked, this, &LookEditor::exportLook);
-    auto* bake = new QPushButton(tr("Bake to .cube..."), this);
-    bake->setToolTip(tr("The colour-only steps as a LUT for other apps"));
-    connect(bake, &QPushButton::clicked, this, &LookEditor::bakeCube);
+    m_export = new IconTextButton(icons::themed(u"share"_s, tokens().text), tr("Export look..."), this);
+    connect(m_export, &QPushButton::clicked, this, &LookEditor::exportLook);
+    m_bake = new QPushButton(tr("Bake to .cube..."), this);
+    connect(m_bake, &QPushButton::clicked, this, &LookEditor::bakeCube);
     auto* cancel = new QPushButton(tr("Cancel"), this);
     connect(cancel, &QPushButton::clicked, this, &QDialog::reject);
-    auto* save = new QPushButton(tr("Save look"), this);
-    save->setObjectName(u"primary"_s);
-    save->setDefault(true);
-    connect(save, &QPushButton::clicked, this, &LookEditor::saveLook);
+    m_save = new QPushButton(tr("Save look"), this);
+    m_save->setObjectName(u"primary"_s);
+    m_save->setDefault(true);
+    connect(m_save, &QPushButton::clicked, this, &LookEditor::saveLook);
     auto* foot = new QHBoxLayout;
     foot->setContentsMargins(20, 10, 20, 14);
-    foot->addWidget(exportButton);
-    foot->addWidget(bake);
+    foot->addWidget(m_export);
+    foot->addWidget(m_bake);
     foot->addStretch();
     foot->addWidget(cancel);
-    foot->addWidget(save);
+    foot->addWidget(m_save);
     column->addWidget(sheetFootBar(this, foot));
 }
 
@@ -590,6 +595,16 @@ void LookEditor::refreshSteps()
             {stepGlyph(step.op), stepName(QString::fromStdString(step.op)), stepSummary(step), step.enabled});
     }
     m_steps->setRows(rows);
+    // A look with no steps changes nothing: there is nothing to save, export or bake yet.
+    const bool empty = m_look.steps.empty();
+    m_noSteps->setVisible(empty);
+    m_stepsScroll->setVisible(!empty);
+    for (QPushButton* b : {m_save, m_export, m_bake}) {
+        b->setEnabled(!empty);
+    }
+    m_save->setToolTip(empty ? tr("Add a step first") : QString());
+    m_export->setToolTip(empty ? tr("Add a step first") : tr("Save the look as a .pfxlook file to share"));
+    m_bake->setToolTip(empty ? tr("Add a step first") : tr("The colour-only steps as a LUT for other apps"));
     // The list is as tall as its steps, up to a few; then it scrolls.
     const int all = m_steps->sizeHint().height();
     const int rowHeight = m_steps->count() > 0 ? all / m_steps->count() : all;
