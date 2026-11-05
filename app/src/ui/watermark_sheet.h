@@ -1,8 +1,8 @@
 #pragma once
 
 #include "core/watermark.h"
+#include "ui/sheet.h"
 
-#include <QDialog>
 #include <QImage>
 #include <QStringList>
 #include <QWidget>
@@ -67,7 +67,7 @@ private:
 };
 
 /// Watermark, opened from Export: make, pick or change a saved watermark.
-class WatermarkSheet : public QDialog
+class WatermarkSheet : public Sheet
 {
     Q_OBJECT
     Q_DISABLE_COPY_MOVE(WatermarkSheet)

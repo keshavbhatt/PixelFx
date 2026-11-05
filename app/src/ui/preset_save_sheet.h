@@ -1,6 +1,7 @@
 #pragma once
 
-#include <QDialog>
+#include "ui/sheet.h"
+
 #include <QStringList>
 
 #include <map>
@@ -20,7 +21,7 @@ namespace pixelfx::ui {
 /// Save as preset: a name, a group, and which parts of the settings the
 /// preset holds. Changed parts are ticked, except White balance and Crop and rotate, which
 /// rarely carry from one photo to another. Save to file also writes a copy to share.
-class PresetSaveSheet : public QDialog
+class PresetSaveSheet : public Sheet
 {
     Q_OBJECT
     Q_DISABLE_COPY_MOVE(PresetSaveSheet)

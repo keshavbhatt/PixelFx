@@ -14,7 +14,7 @@ using namespace Qt::StringLiterals;
 namespace pixelfx::ui {
 
 PasteSheet::PasteSheet(const pfx::Settings& copied, int photos, QWidget* parent)
-    : QDialog(parent)
+    : Sheet(parent)
 {
     setWindowTitle(tr("Paste settings"));
     auto* title = new QLabel(tr("Paste to %n photos", nullptr, photos), this);

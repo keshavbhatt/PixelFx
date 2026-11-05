@@ -63,7 +63,7 @@ QPushButton* smallButton(const QString& text, QWidget* parent)
 } // namespace
 
 AboutSheet::AboutSheet(QWidget* parent)
-    : QDialog(parent)
+    : Sheet(parent)
     , m_tabs(new QButtonGroup(this))
     , m_pages(new QStackedWidget(this))
 {

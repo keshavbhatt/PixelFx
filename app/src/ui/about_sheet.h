@@ -1,6 +1,6 @@
 #pragma once
 
-#include <QDialog>
+#include "ui/sheet.h"
 
 class QButtonGroup;
 class QListWidget;
@@ -12,7 +12,7 @@ namespace pixelfx::ui {
 /// About PixelFx: the version and the ways on (What's new, the source, a bug
 /// report), the open-source notices with every licence text, and diagnostics to paste into a
 /// bug report.
-class AboutSheet : public QDialog
+class AboutSheet : public Sheet
 {
     Q_OBJECT
     Q_DISABLE_COPY_MOVE(AboutSheet)

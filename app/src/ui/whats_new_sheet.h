@@ -1,6 +1,6 @@
 #pragma once
 
-#include <QDialog>
+#include "ui/sheet.h"
 
 class QCheckBox;
 class QComboBox;
@@ -12,7 +12,7 @@ namespace pixelfx::ui {
 /// What's new: the running version's section of the bundled changelog,
 /// written for people. The first few items show, then "The full list of changes" shows them all.
 /// A Version list reads older sections; it is hidden while there is only one release.
-class WhatsNewSheet : public QDialog
+class WhatsNewSheet : public Sheet
 {
     Q_OBJECT
     Q_DISABLE_COPY_MOVE(WhatsNewSheet)

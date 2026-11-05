@@ -6,6 +6,7 @@
 #include "ui/icon_text_button.h"
 #include "ui/icons.h"
 #include "ui/panel_slider.h"
+#include "ui/sheet.h"
 #include "ui/style.h"
 #include "ui/watermark_sheet.h"
 
@@ -673,7 +674,7 @@ QFormLayout* BatchPage::saveOptionsForm(QDialog* sheet, const core::ExportOption
 void BatchPage::editSaveOptions()
 {
     // More...: what the Export sheet has beyond the format and the folder.
-    QDialog sheet(this);
+    Sheet sheet(this);
     sheet.setWindowTitle(tr("Save options"));
     SaveOptionsControls c;
     QFormLayout* form = saveOptionsForm(&sheet, m_output, c);

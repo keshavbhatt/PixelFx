@@ -1,8 +1,8 @@
 #pragma once
 
 #include "core/looks.h"
+#include "ui/sheet.h"
 
-#include <QDialog>
 #include <QImage>
 
 #include <memory>
@@ -25,7 +25,7 @@ namespace pixelfx::ui {
 /// operations as the sliders, plus LUTs; reorder by dragging, switch off, duplicate, remove;
 /// the selected step's parameters; a live preview on the photo or a ramp; the look's default
 /// strength. Saves into the user's looks; exports a .pfxlook or bakes a .cube.
-class LookEditor : public QDialog
+class LookEditor : public Sheet
 {
     Q_OBJECT
     Q_DISABLE_COPY_MOVE(LookEditor)

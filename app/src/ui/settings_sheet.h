@@ -1,6 +1,6 @@
 #pragma once
 
-#include <QDialog>
+#include "ui/sheet.h"
 
 namespace pixelfx::core {
 class Settings;
@@ -11,7 +11,7 @@ namespace pixelfx::ui {
 /// Settings: a sheet with a sidebar where every row writes straight to the
 /// settings, no OK button. The General page has what exists today: theme and canvas
 /// background, remembering edits and how a photo opens, clipping warnings.
-class SettingsSheet : public QDialog
+class SettingsSheet : public Sheet
 {
     Q_OBJECT
     Q_DISABLE_COPY_MOVE(SettingsSheet)

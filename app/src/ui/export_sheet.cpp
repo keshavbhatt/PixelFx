@@ -69,7 +69,7 @@ QString shortPath(const QString& path)
 
 ExportSheet::ExportSheet(const QString& source, const QSize& photoSize, const core::ExportOptions& options,
                          QWidget* parent)
-    : QDialog(parent)
+    : Sheet(parent)
     , m_source(source)
     , m_folderPath(options.folder)
 {

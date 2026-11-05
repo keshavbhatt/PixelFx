@@ -52,7 +52,7 @@ QWidget* segments(const QStringList& names, int current, QWidget* parent, Chosen
 } // namespace
 
 SettingsSheet::SettingsSheet(core::Settings& settings, QWidget* parent)
-    : QDialog(parent)
+    : Sheet(parent)
     , m_settings(settings)
 {
     setWindowTitle(tr("Settings"));

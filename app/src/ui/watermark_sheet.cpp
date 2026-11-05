@@ -166,7 +166,7 @@ void WatermarkPreview::mouseMoveEvent(QMouseEvent* event)
 
 WatermarkSheet::WatermarkSheet(const QImage& photo, const QString& current, const QString& folder,
                                QWidget* parent)
-    : QDialog(parent)
+    : Sheet(parent)
     , m_library(folder)
     , m_photo(photo)
 {

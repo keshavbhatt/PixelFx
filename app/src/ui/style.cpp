@@ -201,6 +201,9 @@ const QString kControls = uR"(
         QWidget#listRow[selected="true"] QLabel#listTitle { color: {{accent}}; }
         QLabel#listSubtitle { color: {{muted}}; font-size: 11px; }
         #sheetFoot { background: {{panel}}; border-top: 1px solid {{border}}; }
+        pixelfx--ui--Sheet { background: transparent; }
+        pixelfx--ui--Sheet #sheetFoot { border-bottom-left-radius: 13px; border-bottom-right-radius: 13px; }
+        QListWidget#settingsPages { border-bottom-left-radius: 13px; }
         QCheckBox#switch::indicator { width: 34px; height: 20px; border: 0; border-radius: 10px; background: transparent; image: url({{glyphs}}/switch-off.svg); }
         QCheckBox#switch::indicator:checked { image: url({{glyphs}}/switch-on.svg); }
         QCheckBox#switch::indicator:disabled { image: url({{glyphs}}/switch-off.svg); }

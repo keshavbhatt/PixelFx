@@ -1,6 +1,7 @@
 #pragma once
 
-#include <QDialog>
+#include "ui/sheet.h"
+
 #include <QStringList>
 
 #include <map>
@@ -12,7 +13,7 @@ namespace pixelfx::ui {
 
 /// Paste to several photos (apply-to-selected.html: "Paste settings asks which groups"): the
 /// parts the copied settings hold, ticked except White balance and Crop and rotate.
-class PasteSheet : public QDialog
+class PasteSheet : public Sheet
 {
     Q_OBJECT
     Q_DISABLE_COPY_MOVE(PasteSheet)

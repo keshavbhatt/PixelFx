@@ -52,6 +52,8 @@ qt_add_library(pixelfx_ui STATIC
     preset_save_sheet.h
     settings_sheet.cpp
     settings_sheet.h
+    sheet.cpp
+    sheet.h
     shortcuts_sheet.cpp
     shortcuts_sheet.h
     slider_row.cpp

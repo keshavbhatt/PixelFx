@@ -119,7 +119,7 @@ int decimalsFor(const pfx::ParamSpec& p)
 
 LookEditor::LookEditor(const std::shared_ptr<const pfx::Image>& source, const pfx::Settings& settings,
                        const core::LookEntry& entry, QString folder, QWidget* parent)
-    : QDialog(parent)
+    : Sheet(parent)
     , m_path(entry.path)
     , m_folder(std::move(folder))
     , m_photoSettings(core::withLook(settings, {}, 0))

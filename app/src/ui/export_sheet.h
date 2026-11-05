@@ -1,8 +1,8 @@
 #pragma once
 
 #include "core/export_options.h"
+#include "ui/sheet.h"
 
-#include <QDialog>
 #include <QImage>
 #include <QSize>
 
@@ -22,7 +22,7 @@ namespace pixelfx::ui {
 
 /// Export: format, quality, size, metadata, folder, file name, and what to
 /// do when the file exists. Starts from the remembered choices; returns the chosen ones.
-class ExportSheet : public QDialog
+class ExportSheet : public Sheet
 {
     Q_OBJECT
     Q_DISABLE_COPY_MOVE(ExportSheet)

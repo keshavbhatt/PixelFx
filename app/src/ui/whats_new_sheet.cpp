@@ -19,7 +19,7 @@ namespace pixelfx::ui {
 
 WhatsNewSheet::WhatsNewSheet(const QString& markdown, const QString& version, bool showAfterUpdates,
                              QWidget* parent)
-    : QDialog(parent)
+    : Sheet(parent)
     , m_markdown(markdown)
     , m_versions(new QComboBox(this))
     , m_text(new QTextBrowser(this))

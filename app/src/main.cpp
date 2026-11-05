@@ -8,7 +8,7 @@
 //                                      by side)
 //   PIXELFX_DEBUG_CROP=<ratio>[,<deg>] enter Crop mode with a ratio chip ("Free", "3:2") and
 //                                      a straightening angle once the photo is open
-//   PIXELFX_DEBUG_SHEET=<name>         with GRAB, grab that sheet instead of the window: export,
+//   PIXELFX_DEBUG_SHEET=<name>         with GRAB, grab the window with that sheet open: export,
 //                                      settings, preset, shortcuts, watermark, look, about,
 //                                      notices, diagnostics, whatsnew, paste
 //   PIXELFX_DEBUG_TAB=presets          show the Presets tab of the left panel
@@ -53,6 +53,8 @@
 #include <QFileInfo>
 #include <QGuiApplication>
 #include <QMenu>
+#include <QPainter>
+#include <QPixmap>
 #include <QStyleHints>
 #include <QTextStream>
 #include <QTimer>
@@ -179,8 +181,14 @@ bool grabSheet(pixelfx::ui::MainWindow& window, const QString& grab, bool export
         return false;
     }
     sheet->show();
-    QTimer::singleShot(300, sheet, [sheet, grab] {
-        sheet->grab().save(grab);
+    // The window as seen: dimmed, with the sheet in the middle.
+    QTimer::singleShot(300, sheet, [&window, sheet, grab] {
+        QPixmap shot = window.grab();
+        const QPixmap front = sheet->grab();
+        QPainter painter(&shot);
+        painter.drawPixmap((shot.width() - front.width()) / 2, (shot.height() - front.height()) / 2, front);
+        painter.end();
+        shot.save(grab);
         QCoreApplication::quit();
     });
     return true;

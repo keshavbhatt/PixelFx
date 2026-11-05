@@ -23,7 +23,7 @@ using namespace Qt::StringLiterals;
 namespace pixelfx::ui {
 
 PresetSaveSheet::PresetSaveSheet(const pfx::Settings& settings, const QStringList& groups, QWidget* parent)
-    : QDialog(parent)
+    : Sheet(parent)
     , m_name(new QLineEdit(this))
     , m_group(new QComboBox(this))
 {

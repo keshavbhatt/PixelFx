@@ -74,7 +74,7 @@ const std::array<Section, 4>& sections()
 } // namespace
 
 ShortcutsSheet::ShortcutsSheet(QWidget* parent)
-    : QDialog(parent)
+    : Sheet(parent)
     , m_search(new QLineEdit(this))
 {
     setWindowTitle(tr("Keyboard shortcuts"));

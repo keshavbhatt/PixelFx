@@ -4,6 +4,7 @@
 #include "ui/adjust_panel.h"
 #include "ui/icon_text_button.h"
 #include "ui/icons.h"
+#include "ui/sheet.h"
 #include "ui/style.h"
 
 #include <QButtonGroup>
@@ -338,7 +339,7 @@ void CropPanel::chooseRatio(const QString& name)
 void CropPanel::askCustomRatio()
 {
     // "Custom asks for numbers": width and height, in a small sheet.
-    QDialog sheet(this);
+    Sheet sheet(this);
     sheet.setWindowTitle(tr("Custom ratio"));
     auto* width = new QSpinBox(&sheet);
     auto* height = new QSpinBox(&sheet);
