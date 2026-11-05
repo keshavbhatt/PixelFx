@@ -124,7 +124,7 @@ ShortcutsSheet::ShortcutsSheet(QWidget* parent)
     layout->setContentsMargins(22, 18, 22, 18);
     layout->addLayout(head);
     layout->addLayout(grid);
-    setMinimumWidth(720);
+    setFixedWidth(820);
 }
 
 ShortcutsSheet::~ShortcutsSheet() = default;
