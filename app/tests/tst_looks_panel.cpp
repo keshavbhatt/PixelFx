@@ -203,6 +203,27 @@ private Q_SLOTS:
         }
     }
 
+    void sizesReadAsShareOfTheLongEdge()
+    {
+        QTemporaryDir dir;
+        auto photo = std::make_shared<pfx::Image>(40, 30);
+        pixelfx::ui::LookEditor editor(photo, {}, {}, dir.filePath(u"looks"_s));
+        editor.addStep(u"blur"_s);
+        pixelfx::ui::SliderRow* radius = nullptr;
+        for (pixelfx::ui::SliderRow* row : editor.findChildren<pixelfx::ui::SliderRow*>()) {
+            if (row->label() == u"Radius"_s) {
+                radius = row;
+            }
+        }
+        QVERIFY(radius);
+        radius->slider()->setValue(50); // ticks of 0.0001 of the long edge
+        QStringList shown;
+        for (const QLabel* l : radius->findChildren<QLabel*>()) {
+            shown << l->text();
+        }
+        QVERIFY2(shown.contains(u"0.50%"_s), qPrintable(shown.join(u", "_s)));
+    }
+
     void lookEditorMakesALook()
     {
         QTemporaryDir dir;

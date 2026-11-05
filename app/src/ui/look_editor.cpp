@@ -122,9 +122,13 @@ int decimalsFor(const pfx::ParamSpec& p)
     return range <= 10.0 ? 2 : 0;
 }
 
-// A value as the panel shows it: signed when it can go both ways, with its unit ("+10", "200°").
+// A value as the panel shows it: signed when it can go both ways, with its unit ("+10", "200°");
+// sizes as a percentage of the photo's long edge ("0.50%").
 QString shownValue(double value, int decimals, double minimum, const std::string& unit)
 {
+    if (unit == "long edge") {
+        return QString::number(value * 100.0, 'f', std::max(0, decimals - 2)) + u'%';
+    }
     QString text = QString::number(value, 'f', decimals);
     if (minimum < 0.0 && value > 0.0) {
         text.prepend(u'+');
