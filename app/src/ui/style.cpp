@@ -193,7 +193,7 @@ const QString kControls = uR"(
         QListWidget::item:hover:!selected { background: {{hover}}; }
         QScrollArea { border: 0; background: transparent; }
         QToolTip { background: {{elevated}}; color: {{text}}; border: 1px solid {{border}}; border-radius: 6px; padding: 4px 8px; }
-        QLabel#menuHeading { color: {{muted}}; font-size: 11px; font-weight: 700; padding: 6px 10px 4px; }
+        QLabel#menuHeading { color: {{muted}}; font-size: 11px; font-weight: 700; padding: 6px 15px 4px; }
         QProgressBar { background: {{track}}; border: 0; border-radius: 2px; max-height: 4px; text-align: center; color: transparent; }
         QProgressBar::chunk { background: {{accentStrong}}; border-radius: 2px; }
         QSlider::handle:horizontal:disabled { background: {{faint}}; }

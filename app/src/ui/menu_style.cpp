@@ -159,7 +159,9 @@ bool drawItem(const QStyleOption* option, QPainter* painter, const QWidget* widg
     if (item == nullptr) {
         return false;
     }
-    const QRect rect = item->rect;
+    // Rows run to the panel's border (Wayland opens a submenu at its row's edge); the panel's
+    // padding is drawn inside them.
+    const QRect rect = item->rect.adjusted(kPanelPadding, 0, -kPanelPadding, 0);
     if (item->menuItemType == QStyleOptionMenuItem::Separator) {
         painter->fillRect(QRect(rect.left() + 4, rect.center().y(), rect.width() - 8, 1), tokens().border);
         return true;
@@ -200,7 +202,7 @@ std::optional<QSize> itemSize(const QStyleOption* option, const QSize& contents)
     if (item->menuItemType == QStyleOptionMenuItem::Separator) {
         return QSize(contents.width(), kSeparator);
     }
-    int width = (2 * kRowPaddingX) + contents.width();
+    int width = (2 * (kPanelPadding + kRowPaddingX)) + contents.width();
     if (item->maxIconWidth > 0) {
         width += kIcon + kGapItems;
     }
@@ -246,12 +248,12 @@ std::optional<int> pixelMetric(QStyle::PixelMetric metric)
     case QStyle::PM_MenuPanelWidth:
         return kPanelBorder;
     case QStyle::PM_MenuHMargin:
+        return 0; // drawn inside each row, see drawItem
     case QStyle::PM_MenuVMargin:
         return kPanelPadding;
     case QStyle::PM_SubMenuOverlap:
-        // Qt places a submenu this far past the edge of its row, inside the parent's padding and
-        // border: past those, then a gap.
-        return kPanelPadding + kPanelBorder + kSubmenuGap;
+        // Qt places a submenu this far past the edge of its row: past the parent's border, then a gap.
+        return kPanelBorder + kSubmenuGap;
     default:
         return std::nullopt;
     }
