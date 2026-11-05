@@ -172,6 +172,8 @@ private:
     void previewOnPhoto(const QString& name, const std::optional<pfx::Settings>& settings);
     /// The chip beside the zoom bar: a preview being prepared, else the full-size picture's state.
     void refreshBusy();
+    /// Opening RAW files: the early preview, developing, the light sources, the way out.
+    void connectRaw();
     /// The preset just applied at `amount` (0 to 200) over the photo as it was before it.
     void blendAppliedPreset(double amount, bool finished);
     /// Color or black and white (V), the menu item following the photo.

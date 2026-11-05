@@ -216,17 +216,7 @@ void MainWindow::connectDocument()
         }
     });
     connect(&m_document, &services::Document::failed, this, &MainWindow::showFailed);
-    connect(m_canvas, &Canvas::errorActionTriggered, this, [this] {
-        if (!m_failedRaw.isEmpty()) {
-            m_document.openPreview(m_failedRaw, previewLongEdge());
-        }
-    });
-    // A RAW: its JPEG at once, then the developed picture (editor-raw.html).
-    connect(&m_document, &services::Document::earlyPreview, this,
-            [this](const QImage& image, const QSize& size) { m_canvas->setImage(image, size); });
-    connect(&m_document, &services::Document::developingChanged, this, &MainWindow::refreshBusy);
-    connect(&m_document, &services::Document::opened, this,
-            [this](const services::DocumentInfo& info) { m_adjust->setRaw(info.raw, info.asShotKelvin); });
+    connectRaw();
     connect(&m_document, &services::Document::settingsReplaced, m_adjust, &AdjustPanel::setSettings);
     connect(&m_document, &services::Document::historyChanged, this, &MainWindow::updateHistoryButtons);
     connect(&m_document, &services::Document::histogramReady, m_adjust, &AdjustPanel::setHistogram);
@@ -2039,6 +2029,21 @@ void MainWindow::showOpened(const services::DocumentInfo& info)
     m_showingOriginal = false;
     m_cropMode->setEnabled(true);
     m_healMode->setEnabled(true);
+}
+
+void MainWindow::connectRaw()
+{
+    connect(m_canvas, &Canvas::errorActionTriggered, this, [this] {
+        if (!m_failedRaw.isEmpty()) {
+            m_document.openPreview(m_failedRaw, previewLongEdge());
+        }
+    });
+    // A RAW: its JPEG at once, then the developed picture (editor-raw.html).
+    connect(&m_document, &services::Document::earlyPreview, this,
+            [this](const QImage& image, const QSize& size) { m_canvas->setImage(image, size); });
+    connect(&m_document, &services::Document::developingChanged, this, &MainWindow::refreshBusy);
+    connect(&m_document, &services::Document::opened, this,
+            [this](const services::DocumentInfo& info) { m_adjust->setRaw(info.raw, info.asShotKelvin); });
 }
 
 void MainWindow::showFailed(const QString& path, const QString& message)
