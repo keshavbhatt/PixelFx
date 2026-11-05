@@ -8,6 +8,7 @@
 #include <QTemporaryDir>
 #include <QTest>
 
+#include <cmath>
 #include <pfx/io.h>
 
 using namespace Qt::StringLiterals;
@@ -158,6 +159,69 @@ private Q_SLOTS:
         QSignalSpy failed(&exporter, &Exporter::failed);
         exporter.startCopy(dir.filePath(u"missing.png"_s), {}, o);
         QVERIFY(failed.wait(15000));
+    }
+
+    void theColorSpaceIsEmbedded()
+    {
+        QTemporaryDir dir;
+        const QString source = dir.filePath(u"photo.png"_s);
+        pfx::SaveOptions adobe;
+        adobe.space = pfx::OutputSpace::AdobeRgb;
+        pfx::Image img(60, 40);
+        img.fill(0.2F, 0.3F, 0.1F);
+        QVERIFY(pfx::save(img, source.toStdString(), adobe).ok());
+        const auto original = pfx::load(source.toStdString());
+        QVERIFY(original.ok());
+        const auto exported = [&](pfx::OutputSpace space, const QString& name) {
+            ExportOptions o;
+            o.folder = dir.filePath(u"out"_s);
+            o.extension = u"png"_s;
+            o.nameTemplate = name;
+            o.colorSpace = space;
+            o.sharpen = pfx::OutputSharpen::Screen;
+            const auto out =
+                pixelfx::services::exportFile(source, [](const pfx::Image&) { return pfx::Settings{}; }, o);
+            auto loaded = pfx::load(out.target.toStdString());
+            return loaded ? loaded.value().profile : std::vector<std::uint8_t>{};
+        };
+        QCOMPARE(exported(pfx::OutputSpace::Original, u"same"_s), original.value().profile);
+        const auto p3 = exported(pfx::OutputSpace::DisplayP3, u"p3"_s);
+        QVERIFY(!p3.empty());
+        QVERIFY(p3 != original.value().profile);
+    }
+
+    void theSizeEstimateIsNearTheWrittenFile()
+    {
+        // A photo-like picture: smooth shading with fine texture, the same at every size.
+        const auto paint = [](int width, int height) {
+            QImage image(width, height, QImage::Format_RGBA8888);
+            for (int y = 0; y < height; ++y) {
+                for (int x = 0; x < width; ++x) {
+                    const double u = static_cast<double>(x) / width;
+                    const double v = static_cast<double>(y) / height;
+                    const double texture = 0.5 + (0.5 * std::sin(u * 90.0) * std::cos(v * 70.0));
+                    image.setPixelColor(x, y,
+                                        QColor::fromRgbF(static_cast<float>(0.3 + 0.5 * u),
+                                                         static_cast<float>(0.2 + 0.3 * texture),
+                                                         static_cast<float>(0.6 - 0.4 * v)));
+                }
+            }
+            return image;
+        };
+        QTemporaryDir dir;
+        const QString source = dir.filePath(u"photo.png"_s);
+        QVERIFY(paint(1800, 1200).save(source));
+        ExportOptions o;
+        o.folder = dir.filePath(u"out"_s);
+        o.keepMetadata = false;
+        const auto out =
+            pixelfx::services::exportFile(source, [](const pfx::Image&) { return pfx::Settings{}; }, o);
+        QVERIFY(out.error.isEmpty());
+        const auto written = static_cast<double>(QFileInfo(out.target).size());
+        const auto estimate =
+            static_cast<double>(pixelfx::services::estimateExportSize(paint(600, 400), QSize(1800, 1200), o));
+        QVERIFY2(estimate > written * 0.6 && estimate < written * 1.6,
+                 qPrintable(u"estimate %1, written %2"_s.arg(estimate).arg(written)));
     }
 
     void failureSaysWhy()

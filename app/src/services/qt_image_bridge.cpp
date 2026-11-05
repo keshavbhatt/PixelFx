@@ -31,4 +31,19 @@ QImage toDisplayImage(const pfx::Image& image)
     return pixels ? toQImage(pixels.value()) : QImage();
 }
 
+pfx::Result<pfx::Image> fromDisplayImage(const QImage& image)
+{
+    const QImage rgba = image.convertToFormat(QImage::Format_RGBA8888);
+    pfx::Rgba8Image pixels;
+    pixels.width = rgba.width();
+    pixels.height = rgba.height();
+    const auto rowBytes = static_cast<std::size_t>(rgba.width()) * 4;
+    pixels.pixels.resize(rowBytes * static_cast<std::size_t>(rgba.height()));
+    for (int y = 0; y < rgba.height(); ++y) {
+        std::memcpy(pixels.pixels.data() + static_cast<std::size_t>(y) * rowBytes, rgba.constScanLine(y),
+                    rowBytes);
+    }
+    return pfx::fromSrgb8(pixels);
+}
+
 } // namespace pixelfx::services

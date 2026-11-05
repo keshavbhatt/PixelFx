@@ -19,4 +19,14 @@ namespace pfx {
 // (linear light, 0 black, 1 white). May enlarge.
 [[nodiscard]] Result<Image> fitInside(const Image& image, int width, int height, float border);
 
+// Sharpening for where the resized photo is going, on its luminance (no colour fringes), in
+// output pixels: it is applied once the image has its final size.
+enum class OutputSharpen
+{
+    None,
+    Screen, // gentle, at the pixel level: resizing softens fine detail
+    Print,  // stronger and wider, as ink spreads on paper (for about 300 pixels per inch)
+};
+void sharpenForOutput(Image& image, OutputSharpen kind);
+
 } // namespace pfx

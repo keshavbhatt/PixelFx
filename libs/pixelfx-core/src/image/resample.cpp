@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 #include "pfx/resample.h"
 
+#include "ops/ops.h"
+
 #include <algorithm>
 #include <cmath>
 #include <mutex>
@@ -114,6 +116,21 @@ Result<Image> fitLongEdge(const Image& image, int longEdge)
         return result;
     } catch (const vips::VError& e) {
         return Error{ErrorCode::InvalidArgument, std::string("Could not resize the image: ") + e.what()};
+    }
+}
+
+void sharpenForOutput(Image& image, OutputSharpen kind)
+{
+    // Radius in output pixels, strength, and where halos start to be softened (perceptual units).
+    switch (kind) {
+    case OutputSharpen::None:
+        return;
+    case OutputSharpen::Screen:
+        detail::outputSharpen(image, 0.5, 0.6, 0.05, 0);
+        return;
+    case OutputSharpen::Print:
+        detail::outputSharpen(image, 1.0, 0.9, 0.08, 0);
+        return;
     }
 }
 

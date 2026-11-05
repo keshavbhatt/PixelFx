@@ -44,3 +44,30 @@ TEST_CASE("size presets: fill keeps the middle, fit adds a border, both exact")
     CHECK(fitted.value().pixel(50, 62)[1] == doctest::Approx(0.5).epsilon(0.05));
     CHECK_FALSE(pfx::fillSize(wide, 0, 10).ok());
 }
+
+TEST_CASE("output sharpening lifts an edge, Print more than Screen, flat areas unchanged")
+{
+    pfx::Image edge = fixtures::flat(0.1F, 0.1F, 0.1F, 40, 8);
+    for (int y = 0; y < 8; ++y) {
+        for (int x = 20; x < 40; ++x) {
+            float* p = edge.pixel(x, y);
+            p[0] = p[1] = p[2] = 0.4F;
+        }
+    }
+    const auto sharpened = [&edge](pfx::OutputSharpen kind) {
+        pfx::Image copy = edge;
+        pfx::sharpenForOutput(copy, kind);
+        return copy;
+    };
+    const pfx::Image none = sharpened(pfx::OutputSharpen::None);
+    const pfx::Image screen = sharpened(pfx::OutputSharpen::Screen);
+    const pfx::Image print = sharpened(pfx::OutputSharpen::Print);
+    CHECK(none == edge);
+    // The bright side of the edge gets brighter, the dark side darker.
+    CHECK(screen.pixel(20, 4)[1] > 0.4F);
+    CHECK(screen.pixel(19, 4)[1] < 0.1F);
+    CHECK(print.pixel(20, 4)[1] > screen.pixel(20, 4)[1]);
+    // Far from the edge nothing moves.
+    CHECK(screen.pixel(5, 4)[1] == doctest::Approx(0.1).epsilon(1e-3));
+    CHECK(print.pixel(35, 4)[1] == doctest::Approx(0.4).epsilon(1e-3));
+}

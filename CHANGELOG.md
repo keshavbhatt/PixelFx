@@ -84,6 +84,8 @@ A new editor, a new image engine, and a new look.
   chat or a document.
 - Export sizes named for where the photo is going: Instagram portrait, square and story, X,
   web, email, a 4K wallpaper, prints at 300 dpi; crop to fill or fit inside with a border.
+- Export sharpens for the screen or for print, saves in sRGB, Display P3, Adobe RGB or the
+  photo's own colour space, and tells you about how big the file will be.
 - A sheet of every keyboard shortcut (F1), and a main menu (F10) that reaches every command.
 - What's new opens once after an update (it can be turned off), and About shows the version,
   the open-source components with their notices, and diagnostics to paste into a bug report.

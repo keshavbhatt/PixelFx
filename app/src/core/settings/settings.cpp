@@ -127,6 +127,8 @@ ExportOptions Settings::exportOptions() const
     o.customSize = QSize(std::max(0, m_settings->value(key(keys::kExportCustomWidth), 0).toInt()),
                          std::max(0, m_settings->value(key(keys::kExportCustomHeight), 0).toInt()));
     o.dpi = std::clamp(m_settings->value(key(keys::kExportDpi), 0).toInt(), 0, 4800);
+    o.sharpen = sharpenFromKey(m_settings->value(key(keys::kExportSharpen)).toString());
+    o.colorSpace = colorSpaceFromKey(m_settings->value(key(keys::kExportColorSpace)).toString());
     return o;
 }
 
@@ -147,6 +149,8 @@ void Settings::setExportOptions(const ExportOptions& options)
     m_settings->setValue(key(keys::kExportCustomWidth), options.customSize.width());
     m_settings->setValue(key(keys::kExportCustomHeight), options.customSize.height());
     m_settings->setValue(key(keys::kExportDpi), options.dpi);
+    m_settings->setValue(key(keys::kExportSharpen), sharpenKey(options.sharpen));
+    m_settings->setValue(key(keys::kExportColorSpace), colorSpaceKey(options.colorSpace));
 }
 
 std::vector<CustomSize> Settings::customSizes() const

@@ -249,4 +249,16 @@ void sharpenApply(Image& image, const Settings& s, const OpContext& ctx)
     setPerceptualLuma(image, p, ctx.threads);
 }
 
+void outputSharpen(Image& image, double sigma, double amount, double haloLimit, int threads)
+{
+    Plane p = perceptualLuma(image, threads);
+    const Plane blurred = gaussianBlur(p, sigma, threads);
+    forEachValue(p, threads, [&](std::size_t i) {
+        const auto d = double{p.values[i] - blurred.values[i]};
+        p.values[i] = static_cast<float>(
+            std::max(0.0, double{p.values[i]} + amount * d / (1.0 + (std::abs(d) / haloLimit))));
+    });
+    setPerceptualLuma(image, p, threads);
+}
+
 } // namespace pfx::detail

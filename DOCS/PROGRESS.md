@@ -72,6 +72,27 @@ Decisions the work stopped at; everything else went ahead within the approved mo
 
 ## Sessions (newest first)
 
+### 2026-11-06 (Export: sharpening, colour space, size estimate)
+
+- FEATURES X3, X4 and X7 from the approved `export.html`. libpixelfx: `sharpenForOutput` (an
+  unsharp mask on perceptual luminance in output pixels, Screen at 0.5 px and Print at 1 px, its
+  halos softened), `SaveOptions::space` with Display P3 and Adobe RGB profiles made by LittleCMS
+  and the photo's own profile kept as stored for Same as original (`LoadedImage::profile`;
+  anything not RGB saves sRGB), `encode` to memory and `fromSrgb8`.
+- The app: Sharpen for and Color space rows under Size, remembered with the other choices; the
+  note says "About 1.9 MB." a moment after any change. The estimate encodes the preview at up to
+  1 megapixel and carries it to the output size with a measured trend (bytes a pixel as
+  pixels^-0.30 lossy, ^-0.24 lossless); on four photos of 1.5 to 48 megapixels it lands within
+  about 30 percent of the written file for JPEG and PNG (the test photo: 1.9 MB estimated, 1.6 MB
+  written); WebP can read up to 60 percent high, AVIF, HEIC and JPEG XL are not measured yet.
+- Batch keeps writing sRGB without output sharpening; its recipe format is unchanged.
+- Also: a DNG's BaselineExposureOffset is added to its baseline exposure (the tag was read but
+  unused; the owner's file has none).
+- Checks: 152 library tests (colour spaces round trip and keep what sRGB clips, the original
+  profile kept byte for byte, encode equals save, output sharpening, 8-bit sRGB round trip), 38
+  app suites (`tst_exporter`: profiles embedded, the estimate near the file; `tst_export_sheet`,
+  `tst_export_options`, `tst_settings`), the linters; the sheet grabbed headless.
+
 ### 2026-11-06 (Camera RAW)
 
 - The approved `editor-raw.html`, built (ADR-012). libpixelfx reads linear DNG itself (the owner's

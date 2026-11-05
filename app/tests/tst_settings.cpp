@@ -71,6 +71,25 @@ private Q_SLOTS:
         QCOMPARE(again.windowGeometry(), QByteArray("geometry"));
     }
 
+    void exportSharpeningAndColorSpacePersist()
+    {
+        QTemporaryDir dir;
+        const QString file = dir.filePath(u"e.ini"_s);
+        pixelfx::core::ExportOptions o;
+        QCOMPARE(o.sharpen, pfx::OutputSharpen::None);
+        QCOMPARE(o.colorSpace, pfx::OutputSpace::Srgb);
+        o.sharpen = pfx::OutputSharpen::Print;
+        o.colorSpace = pfx::OutputSpace::AdobeRgb;
+        {
+            Settings s(file);
+            s.setExportOptions(o);
+            s.sync();
+        }
+        const Settings again(file);
+        QCOMPARE(again.exportOptions().sharpen, pfx::OutputSharpen::Print);
+        QCOMPARE(again.exportOptions().colorSpace, pfx::OutputSpace::AdobeRgb);
+    }
+
     void missingFolderFallsBack()
     {
         QTemporaryDir dir;

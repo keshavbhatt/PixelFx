@@ -459,3 +459,83 @@ TEST_CASE("engine versions: libvips and Little CMS, as dotted numbers")
         CHECK(e.version.find_first_not_of("0123456789.") == std::string::npos);
     }
 }
+
+namespace {
+
+std::string profileDescription(const std::vector<std::uint8_t>& icc)
+{
+    cmsHPROFILE p = cmsOpenProfileFromMem(icc.data(), static_cast<cmsUInt32Number>(icc.size()));
+    REQUIRE(p != nullptr);
+    std::array<char, 256> text{};
+    cmsGetProfileInfoASCII(p, cmsInfoDescription, "en", "US", text.data(), text.size());
+    cmsCloseProfile(p);
+    return text.data();
+}
+
+} // namespace
+
+TEST_CASE("Display P3 and Adobe RGB are embedded and keep colours sRGB clips")
+{
+    const fixtures::TempDir dir;
+    // Linear Rec.2020: a green past sRGB's reach, inside Adobe RGB's and Display P3's.
+    const pfx::Image green = fixtures::flat(0.1F, 0.5F, 0.1F, 8, 8);
+    const auto roundTrip = [&](pfx::OutputSpace space, const std::string& name) {
+        pfx::SaveOptions options;
+        options.space = space;
+        const auto path = dir.path() / (name + ".png");
+        REQUIRE(pfx::save(green, path, options).ok());
+        auto loaded = pfx::load(path);
+        REQUIRE(loaded.ok());
+        return std::move(loaded).value();
+    };
+    const pfx::LoadedImage srgb = roundTrip(pfx::OutputSpace::Srgb, "srgb");
+    const pfx::LoadedImage p3 = roundTrip(pfx::OutputSpace::DisplayP3, "p3");
+    const pfx::LoadedImage adobe = roundTrip(pfx::OutputSpace::AdobeRgb, "adobe");
+    CHECK(profileDescription(p3.profile) == "Display P3");
+    CHECK(profileDescription(adobe.profile) == "Adobe RGB (1998) compatible");
+    CHECK(fixtures::compare(adobe.image, green).max < 0.01);
+    CHECK(fixtures::compare(p3.image, green).max < fixtures::compare(srgb.image, green).max);
+    CHECK(fixtures::compare(adobe.image, green).max < fixtures::compare(srgb.image, green).max);
+
+    // Same as original: the photo's profile goes back as it was stored; none gives sRGB.
+    pfx::SaveOptions original;
+    original.space = pfx::OutputSpace::Original;
+    original.originalProfile = adobe.profile;
+    REQUIRE(pfx::save(adobe.image, dir.path() / "again.png", original).ok());
+    const auto again = pfx::load(dir.path() / "again.png");
+    REQUIRE(again.ok());
+    CHECK(again.value().profile == adobe.profile);
+    original.originalProfile.clear();
+    REQUIRE(pfx::save(adobe.image, dir.path() / "none.png", original).ok());
+    const auto none = pfx::load(dir.path() / "none.png");
+    REQUIRE(none.ok());
+    CHECK(none.value().profile == srgb.profile);
+}
+
+TEST_CASE("encode gives the bytes save writes")
+{
+    const fixtures::TempDir dir;
+    const pfx::Image scene = fixtures::scene();
+    for (const char* ext : {".jpg", ".png"}) {
+        CAPTURE(ext);
+        const auto path = dir.path() / (std::string("scene") + ext);
+        REQUIRE(pfx::save(scene, path).ok());
+        const auto bytes = pfx::encode(scene, ext);
+        REQUIRE(bytes.ok());
+        CHECK(bytes.value().size() == std::filesystem::file_size(path));
+    }
+    CHECK_FALSE(pfx::encode(pfx::Image(), ".jpg").ok());
+}
+
+TEST_CASE("8-bit sRGB comes back from the working space as it went")
+{
+    const pfx::Image scene = fixtures::scene();
+    const auto eight = pfx::toSrgb8(scene);
+    REQUIRE(eight.ok());
+    const auto back = pfx::fromSrgb8(eight.value());
+    REQUIRE(back.ok());
+    const auto again = pfx::toSrgb8(back.value());
+    REQUIRE(again.ok());
+    CHECK(again.value().pixels == eight.value().pixels);
+    CHECK_FALSE(pfx::fromSrgb8(pfx::Rgba8Image{}).ok());
+}

@@ -58,6 +58,8 @@ public:
     [[nodiscard]] bool customSizesChanged() const { return m_mySizesChanged; }
     [[nodiscard]] QComboBox* sizeList() const { return m_size; }
     [[nodiscard]] class FramePicker* framePicker() const { return m_picker; }
+    /// The note under the choices: the estimated file size once it is known.
+    [[nodiscard]] QLabel* note() const { return m_note; }
 
 private:
     void updateForFormat();
@@ -96,6 +98,12 @@ private:
     QHBoxLayout* addFooter(QFormLayout* form);
     [[nodiscard]] QWidget* watermarkRow(const QString& current);
     [[nodiscard]] QWidget* metadataRow(const core::ExportOptions& options);
+    [[nodiscard]] QWidget* sharpenRow(pfx::OutputSharpen sharpen);
+    [[nodiscard]] QWidget* colorSpaceBox(pfx::OutputSpace space);
+    /// Estimates the file size again after a short pause; changes in the meantime restart it.
+    void scheduleEstimate();
+    void estimate();
+    void showEstimate(qint64 bytes);
 
     QString m_source;
     QButtonGroup* m_formats = nullptr;
@@ -124,6 +132,13 @@ private:
     QString m_folderPath;
     QString m_pendingSize; ///< a Mine size to choose once the list has it
     class WatermarkPicker* m_watermark = nullptr;
+    QButtonGroup* m_sharpen = nullptr;
+    QComboBox* m_colorSpace = nullptr;
+    QLabel* m_note = nullptr;
+    class QTimer* m_estimateTimer = nullptr;
+    QImage m_preview;
+    int m_photoCount = 1;
+    int m_estimates = 0; ///< estimates started, so only the latest is shown
 };
 
 } // namespace pixelfx::ui

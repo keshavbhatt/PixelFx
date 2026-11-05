@@ -35,6 +35,7 @@ struct LoadedImage
     Image image; // working space
     ImageInfo info;
     Metadata metadata;
+    std::vector<std::uint8_t> profile; // the file's embedded ICC profile, as stored; empty when none
 };
 
 struct LoadOptions
@@ -48,6 +49,16 @@ struct LoadOptions
     bool embeddedPreview = false;
 };
 
+// The colour space a file is saved in; its ICC profile is embedded. Display P3 and Adobe RGB
+// hold more saturated colours than sRGB, for screens and printers that show them.
+enum class OutputSpace
+{
+    Srgb,
+    DisplayP3,
+    AdobeRgb,
+    Original, // the photo's own profile (SaveOptions::originalProfile)
+};
+
 struct SaveOptions
 {
     int quality = 90;      // JPEG, WebP, AVIF, HEIC, JPEG XL
@@ -55,6 +66,10 @@ struct SaveOptions
     bool keepMetadata = true;
     bool keepLocation = true; // with keepMetadata: false strips GPS from Exif and XMP
     int dpi = 0;              // pixels per inch written into the file (prints); 0 leaves it out
+    OutputSpace space = OutputSpace::Srgb;
+    // With OutputSpace::Original: the photo's profile (LoadedImage::profile). An empty, unreadable
+    // or not RGB profile saves sRGB.
+    std::vector<std::uint8_t> originalProfile;
 };
 
 // Metadata with the location taken out: the Exif GPS block unlinked and zeroed (no trace of the
@@ -103,9 +118,14 @@ struct Rgba8Image
 // The Exif, XMP and IPTC of a file, from its header, without decoding the pixels.
 [[nodiscard]] Result<Metadata> readMetadata(const std::filesystem::path& path);
 
-// Converts to sRGB, embeds the sRGB profile, writes the format the extension names.
+// Converts to the options' colour space, embeds its profile, writes the format the extension
+// names.
 [[nodiscard]] Status save(const Image& image, const std::filesystem::path& path,
                           const SaveOptions& options = {}, const Metadata* metadata = nullptr);
+// The bytes save() would write for `extension` (".jpg"), in memory: for a size estimate.
+[[nodiscard]] Result<std::vector<std::uint8_t>> encode(const Image& image, const std::string& extension,
+                                                       const SaveOptions& options = {},
+                                                       const Metadata* metadata = nullptr);
 
 // File extensions (lower case, with the dot) this build can write: always .jpg, .png, .tif and
 // .webp; .avif, .heic and .jxl when libvips has a working encoder for them (each is tried once).
@@ -128,5 +148,8 @@ struct EngineVersion
 // Converts working-space pixels to 8-bit sRGB for display, through the same colour engine as
 // save(). Values outside 0..1 are clipped.
 [[nodiscard]] Result<Rgba8Image> toSrgb8(const Image& image);
+// The reverse: 8-bit sRGB pixels into the working space (a picture from the screen or the
+// clipboard).
+[[nodiscard]] Result<Image> fromSrgb8(const Rgba8Image& image);
 
 } // namespace pfx

@@ -94,6 +94,64 @@ std::string resize(pfx::Image& image, const core::ExportOptions& options)
 
 } // namespace
 
+namespace {
+
+// The pixels an estimate encodes at most: the encoders take well under a second for them.
+constexpr double kSamplePixels = 1e6;
+
+// How bytes a pixel change with the picture's size: as pixels^exponent. A larger picture takes
+// fewer a pixel, since more of each detail is smooth. Measured on photos from 6 to 48
+// megapixels against encodes of their 1 megapixel copies: -0.22 to -0.35 for JPEG, -0.19 to
+// -0.29 for PNG; within about 30 percent of the written file.
+constexpr double kLossyExponent = -0.30;
+constexpr double kLosslessExponent = -0.24;
+
+// `image` cropped to the shape of `frame` and scaled to about `pixels` pixels.
+pfx::Result<pfx::Image> sampleOf(const pfx::Image& image, const QSize& frame, double pixels)
+{
+    const double aspect = static_cast<double>(frame.width()) / frame.height();
+    const int width = std::max(1, static_cast<int>(std::lround(std::sqrt(pixels * aspect))));
+    const int height = std::max(1, static_cast<int>(std::lround(width / aspect)));
+    return pfx::fillSize(image, width, height);
+}
+
+} // namespace
+
+qint64 estimateExportSize(const QImage& preview, const QSize& photoSize, const core::ExportOptions& options)
+{
+    if (preview.isNull() || photoSize.isEmpty()) {
+        return -1;
+    }
+    const auto source = fromDisplayImage(preview);
+    if (!source) {
+        return -1;
+    }
+    QSize target = core::frameSize(options, photoSize);
+    if (!target.isValid()) {
+        target = core::outputSize(options, photoSize);
+    }
+    if (!target.isValid() || target.isEmpty()) {
+        target = photoSize;
+    }
+    const double wanted = static_cast<double>(target.width()) * target.height();
+    const double previewPixels = static_cast<double>(preview.width()) * preview.height();
+    auto sample = sampleOf(source.value(), target, std::min({wanted, kSamplePixels, previewPixels}));
+    if (!sample) {
+        return -1;
+    }
+    pfx::sharpenForOutput(sample.value(), options.sharpen);
+    const auto bytes =
+        pfx::encode(sample.value(), "." + options.extension.toStdString(), core::saveOptions(options));
+    if (!bytes) {
+        return -1;
+    }
+    const auto sampled = static_cast<double>(sample.value().pixelCount());
+    const bool lossless = options.extension == u"png" || options.extension == u"tif";
+    const double exponent = lossless ? kLosslessExponent : kLossyExponent;
+    const double perPixel = static_cast<double>(bytes.value().size()) / sampled;
+    return std::llround(perPixel * std::pow(std::max(1.0, wanted / sampled), exponent) * wanted);
+}
+
 PreparedExport prepareExport(const QString& source,
                              const std::function<pfx::Settings(const pfx::Image&)>& settingsFor,
                              const core::ExportOptions& options, const pfx::LoadOptions& load)
@@ -105,6 +163,7 @@ PreparedExport prepareExport(const QString& source,
         return out;
     }
     out.metadata = std::move(loaded.value().metadata);
+    out.profile = std::move(loaded.value().profile);
     const pfx::Settings settings = settingsFor(loaded.value().image);
     // A RAW is developed with its own tone only for the Camera profile.
     const bool tone = settings.text("color.profile", "standard") == "camera";
@@ -125,6 +184,7 @@ PreparedExport prepareExport(const QString& source,
         out.error = QString::fromStdString(error);
         return out;
     }
+    pfx::sharpenForOutput(out.image, options.sharpen);
     // The watermark goes on last, on the final pixels, so its size is right for them.
     out.error = applyWatermark(out.image, options.watermark, out.metadata);
     return out;
@@ -155,13 +215,8 @@ ExportOutcome exportFile(const QString& source,
             QObject::tr("The folder %1 could not be created.").arg(QFileInfo(out.target).absolutePath());
         return out;
     }
-    pfx::SaveOptions save;
-    save.quality = options.quality;
-    save.bitsPerSample = options.bitsPerSample;
-    save.keepMetadata = options.keepMetadata;
-    save.keepLocation = options.keepLocation;
-    save.dpi = options.dpi;
-    const auto saved = pfx::save(image, out.target.toStdString(), save, &prepared.metadata);
+    const auto saved = pfx::save(image, out.target.toStdString(),
+                                 core::saveOptions(options, prepared.profile), &prepared.metadata);
     if (!saved) {
         out.error = QString::fromStdString(saved.error().message);
     }

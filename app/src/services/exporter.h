@@ -27,16 +27,24 @@ struct PreparedExport
 {
     pfx::Image image;
     pfx::Metadata metadata;
-    QString error; ///< user-facing; empty on success
+    std::vector<std::uint8_t> profile; ///< the photo's own ICC profile, for Same as original
+    QString error;                     ///< user-facing; empty on success
 };
 
 /// Decodes `source`, renders the settings `settingsFor` works out from the decoded photo, then
-/// resizes and lays the watermark under `options`. `load` can decode a smaller copy, for a preview
-/// of what would be written. Blocking: call on a worker.
+/// resizes, sharpens for output and lays the watermark under `options`. `load` can decode a smaller copy, for
+/// a preview of what would be written. Blocking: call on a worker.
 [[nodiscard]] PreparedExport prepareExport(const QString& source,
                                            const std::function<pfx::Settings(const pfx::Image&)>& settingsFor,
                                            const core::ExportOptions& options,
                                            const pfx::LoadOptions& load = {});
+
+/// About how many bytes Export writes under `options` for a photo `photoSize` big, from
+/// `preview` (the photo as edited, any size): the preview encoded at the output size, or, for a
+/// larger output, at two sizes and extended to it. -1 when it cannot tell. Blocking: call on a
+/// worker.
+[[nodiscard]] qint64 estimateExportSize(const QImage& preview, const QSize& photoSize,
+                                        const core::ExportOptions& options);
 
 /// Decodes `source`, renders the settings `settingsFor` works out from the decoded photo (Auto
 /// enhance needs it), resizes and writes it under `options`. Blocking: call on a worker.

@@ -276,8 +276,10 @@ bool grabSheet(pixelfx::ui::MainWindow& window, const QString& grab)
         return false;
     }
     sheet->show();
-    // The window as seen: dimmed, with the sheet in the middle.
-    QTimer::singleShot(300, sheet, [&window, sheet, grab] {
+    // The window as seen: dimmed, with the sheet in the middle, once work the sheet starts on
+    // opening (Export's size estimate) has had time to finish.
+    constexpr int kSettleMs = 1500;
+    QTimer::singleShot(kSettleMs, sheet, [&window, sheet, grab] {
         QPixmap shot = window.grab();
         const QPixmap front = sheet->grab();
         QPainter painter(&shot);

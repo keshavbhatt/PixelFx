@@ -54,6 +54,9 @@ bool textureActive(const Settings& s);
 void textureApply(Image& image, const Settings& s, const OpContext& ctx);
 bool sharpenActive(const Settings& s);
 void sharpenApply(Image& image, const Settings& s, const OpContext& ctx);
+// An unsharp mask on perceptual luminance at `sigma` pixels, its halos softened past
+// `haloLimit` (export's output sharpening).
+void outputSharpen(Image& image, double sigma, double amount, double haloLimit, int threads);
 bool mixerActive(const Settings& s);
 void mixerApply(Image& image, const Settings& s, const OpContext& ctx);
 bool blackAndWhiteActive(const Settings& s);

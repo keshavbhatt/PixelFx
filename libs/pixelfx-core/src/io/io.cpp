@@ -62,6 +62,38 @@ ProfilePtr srgbProfile()
     return {cmsCreate_sRGBProfile(), &cmsCloseProfile};
 }
 
+// A matrix-shaper RGB profile with a D65 white, named `description`.
+ProfilePtr rgbProfile(const cmsCIExyYTRIPLE& primaries, cmsToneCurve* curve, const char* description)
+{
+    const cmsCIExyY d65 = {0.3127, 0.3290, 1.0};
+    cmsToneCurve* const curves[3] = {curve, curve, curve};
+    ProfilePtr profile(cmsCreateRGBProfile(&d65, &primaries, curves), &cmsCloseProfile);
+    cmsFreeToneCurve(curve);
+    if (profile) {
+        cmsMLU* text = cmsMLUalloc(nullptr, 1);
+        cmsMLUsetASCII(text, "en", "US", description);
+        cmsWriteTag(profile.get(), cmsSigProfileDescriptionTag, text);
+        cmsMLUfree(text);
+    }
+    return profile;
+}
+
+// Display P3: the P3 primaries with sRGB's white and tone curve.
+ProfilePtr displayP3Profile()
+{
+    const cmsFloat64Number srgbCurve[5] = {2.4, 1.0 / 1.055, 0.055 / 1.055, 1.0 / 12.92, 0.04045};
+    return rgbProfile({{0.680, 0.320, 1.0}, {0.265, 0.690, 1.0}, {0.150, 0.060, 1.0}},
+                      cmsBuildParametricToneCurve(nullptr, 4, srgbCurve), "Display P3");
+}
+
+// The Adobe RGB (1998) colour space: its primaries and a gamma of 563/256.
+ProfilePtr adobeRgbProfile()
+{
+    constexpr double kGamma = 563.0 / 256.0;
+    return rgbProfile({{0.64, 0.33, 1.0}, {0.21, 0.71, 1.0}, {0.15, 0.06, 1.0}},
+                      cmsBuildGamma(nullptr, kGamma), "Adobe RGB (1998) compatible");
+}
+
 std::vector<std::uint8_t> profileBytes(cmsHPROFILE profile)
 {
     cmsUInt32Number size = 0;
@@ -407,6 +439,7 @@ Result<LoadedImage> loadVips(vips::VImage in, const LoadOptions& options)
         result.info.hasAlpha = in.has_alpha();
         icc = blob(in, VIPS_META_ICC_NAME);
         result.info.hasProfile = !icc.empty();
+        result.profile = icc;
         result.metadata = {blob(in, VIPS_META_EXIF_NAME), blob(in, VIPS_META_XMP_NAME),
                            blob(in, VIPS_META_IPTC_NAME)};
         in = in.autorot();
@@ -580,34 +613,85 @@ std::vector<std::uint8_t> encodeRows(const Image& image, const RowConverter& con
 
 } // namespace
 
-Status save(const Image& image, const std::filesystem::path& path, const SaveOptions& options,
-            const Metadata* metadata)
+namespace {
+
+// The profile a file is saved in and the bytes embedded for it: the photo's own as stored for
+// OutputSpace::Original, so the file says exactly what the original said.
+struct OutputProfile
+{
+    ProfilePtr profile{nullptr, &cmsCloseProfile};
+    std::vector<std::uint8_t> bytes;
+};
+
+OutputProfile outputProfile(const SaveOptions& options)
+{
+    OutputProfile out;
+    switch (options.space) {
+    case OutputSpace::DisplayP3:
+        out.profile = displayP3Profile();
+        break;
+    case OutputSpace::AdobeRgb:
+        out.profile = adobeRgbProfile();
+        break;
+    case OutputSpace::Original: {
+        const auto& icc = options.originalProfile;
+        ProfilePtr own(icc.empty()
+                           ? nullptr
+                           : cmsOpenProfileFromMem(icc.data(), static_cast<cmsUInt32Number>(icc.size())),
+                       &cmsCloseProfile);
+        if (own && cmsGetColorSpace(own.get()) == cmsSigRgbData) {
+            out.profile = std::move(own);
+            out.bytes = icc;
+            return out;
+        }
+        if (!icc.empty()) {
+            detail::log(LogLevel::Warning, "The photo's own profile cannot be saved into; saving sRGB");
+        }
+        out.profile = srgbProfile();
+        break;
+    }
+    case OutputSpace::Srgb:
+        out.profile = srgbProfile();
+        break;
+    }
+    out.bytes = profileBytes(out.profile.get());
+    return out;
+}
+
+// The image as libvips writes it: converted to the output profile, which is attached with the
+// metadata. The returned image points into `bytes`, which must outlive it.
+Result<vips::VImage> prepareForSaving(const Image& image, const std::string& ext, const SaveOptions& options,
+                                      const Metadata* metadata, std::vector<std::uint8_t>& bytes)
 {
     ensureVips();
     if (image.empty()) {
         return Error{ErrorCode::InvalidArgument, "Nothing to save: the image is empty."};
     }
-    const std::string ext = lowerExtension(path);
     const bool jpeg = ext == ".jpg" || ext == ".jpeg";
     const bool sixteen = options.bitsPerSample == 16 && (ext == ".png" || ext == ".tif" || ext == ".tiff");
 
     const ProfilePtr working = workingProfile();
-    const ProfilePtr srgb = srgbProfile();
-    const auto convert = RowConverter::create(working.get(), srgb.get());
+    OutputProfile target = outputProfile(options);
+    auto convert = RowConverter::create(working.get(), target.profile.get());
+    if (!convert && options.space != OutputSpace::Srgb) {
+        detail::log(LogLevel::Warning, "The chosen colour space cannot be written; saving sRGB");
+        target = outputProfile(SaveOptions{});
+        convert = RowConverter::create(working.get(), target.profile.get());
+    }
     if (!convert) {
-        return Error{ErrorCode::ColorManagement, "Could not prepare the sRGB conversion."};
+        return Error{ErrorCode::ColorManagement, "Could not prepare the colour conversion."};
     }
     // Alpha is kept only when some pixel is not fully opaque (and never in a JPEG).
     const int bands = (!jpeg && hasTranslucency(image)) ? 4 : 3;
-    std::vector<std::uint8_t> bytes = encodeRows(image, *convert, bands, sixteen);
+    bytes = encodeRows(image, *convert, bands, sixteen);
     try {
         vips::VImage img =
             vips::VImage::new_from_memory(bytes.data(), bytes.size(), image.width(), image.height(), bands,
                                           sixteen ? VIPS_FORMAT_USHORT : VIPS_FORMAT_UCHAR);
         img = img.copy(vips::VImage::option()->set("interpretation", sixteen ? VIPS_INTERPRETATION_RGB16
                                                                              : VIPS_INTERPRETATION_sRGB));
-        const auto icc = profileBytes(srgb.get());
-        vips_image_set_blob_copy(img.get_image(), VIPS_META_ICC_NAME, icc.data(), icc.size());
+        vips_image_set_blob_copy(img.get_image(), VIPS_META_ICC_NAME, target.bytes.data(),
+                                 target.bytes.size());
         if (metadata != nullptr && options.keepMetadata) {
             attachMetadata(img, options.keepLocation ? *metadata : withoutLocation(*metadata));
         }
@@ -616,11 +700,52 @@ Status save(const Image& image, const std::filesystem::path& path, const SaveOpt
             const double perMillimetre = options.dpi / 25.4; // libvips keeps resolution per millimetre
             img = img.copy(vips::VImage::option()->set("xres", perMillimetre)->set("yres", perMillimetre));
         }
-        img.write_to_file(path.string().c_str(), saverOptions(ext, options));
+        return img;
+    } catch (const vips::VError& e) {
+        return Error{ErrorCode::EncodeFailed, std::string("Could not save the image: ") + e.what()};
+    }
+}
+
+} // namespace
+
+Status save(const Image& image, const std::filesystem::path& path, const SaveOptions& options,
+            const Metadata* metadata)
+{
+    const std::string ext = lowerExtension(path);
+    std::vector<std::uint8_t> bytes;
+    auto prepared = prepareForSaving(image, ext, options, metadata, bytes);
+    if (!prepared) {
+        return prepared.error();
+    }
+    try {
+        prepared.value().write_to_file(path.string().c_str(), saverOptions(ext, options));
     } catch (const vips::VError& e) {
         return Error{ErrorCode::EncodeFailed, std::string("Could not save the image: ") + e.what()};
     }
     return {};
+}
+
+Result<std::vector<std::uint8_t>> encode(const Image& image, const std::string& extension,
+                                         const SaveOptions& options, const Metadata* metadata)
+{
+    // As a name ("x.jpg"), so ".jpg" reads as an extension.
+    const std::string ext = lowerExtension("x" + extension);
+    std::vector<std::uint8_t> bytes;
+    auto prepared = prepareForSaving(image, ext, options, metadata, bytes);
+    if (!prepared) {
+        return prepared.error();
+    }
+    try {
+        void* buffer = nullptr;
+        std::size_t size = 0;
+        prepared.value().write_to_buffer(ext.c_str(), &buffer, &size, saverOptions(ext, options));
+        const auto* first = static_cast<const std::uint8_t*>(buffer);
+        std::vector<std::uint8_t> out(first, first + size);
+        g_free(buffer);
+        return out;
+    } catch (const vips::VError& e) {
+        return Error{ErrorCode::EncodeFailed, std::string("Could not encode the image: ") + e.what()};
+    }
 }
 
 Result<Rgba8Image> toSrgb8(const Image& image)
@@ -651,6 +776,33 @@ Result<Rgba8Image> toSrgb8(const Image& image)
                 const auto v = double{std::clamp(row[i], 0.0F, 1.0F)};
                 dst[i] = static_cast<std::uint8_t>(std::lround(v * 255.0));
             }
+        }
+    });
+    return out;
+}
+
+Result<Image> fromSrgb8(const Rgba8Image& image)
+{
+    const auto rowValues = static_cast<std::size_t>(image.width) * 4;
+    if (image.width <= 0 || image.height <= 0 ||
+        image.pixels.size() != rowValues * static_cast<std::size_t>(image.height)) {
+        return Error{ErrorCode::InvalidArgument, "Nothing to convert: the image is empty."};
+    }
+    const ProfilePtr srgb = srgbProfile();
+    const ProfilePtr working = workingProfile();
+    const auto convert = RowConverter::create(srgb.get(), working.get());
+    if (!convert) {
+        return Error{ErrorCode::ColorManagement, "Could not prepare the sRGB conversion."};
+    }
+    Image out(image.width, image.height);
+    detail::parallelFor(image.height, 0, [&](int y0, int y1) {
+        for (int y = y0; y < y1; ++y) {
+            const std::uint8_t* src = image.pixels.data() + (static_cast<std::size_t>(y) * rowValues);
+            float* row = out.row(y);
+            for (std::size_t i = 0; i < rowValues; ++i) {
+                row[i] = static_cast<float>(src[i]) / 255.0F;
+            }
+            (*convert)(row, image.width);
         }
     });
     return out;

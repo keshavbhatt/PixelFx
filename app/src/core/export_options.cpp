@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <array>
 #include <cmath>
+#include <utility>
 
 using namespace Qt::StringLiterals;
 
@@ -191,6 +192,78 @@ ExportOptions::IfExists ifExistsFromKey(const QString& key)
         return ExportOptions::IfExists::Skip;
     }
     return ExportOptions::IfExists::AddNumber;
+}
+
+namespace {
+
+constexpr std::array<std::pair<pfx::OutputSharpen, const char*>, 3> kSharpenKeys = {{
+    {pfx::OutputSharpen::None, "none"},
+    {pfx::OutputSharpen::Screen, "screen"},
+    {pfx::OutputSharpen::Print, "print"},
+}};
+
+constexpr std::array<std::pair<pfx::OutputSpace, const char*>, 4> kColorSpaceKeys = {{
+    {pfx::OutputSpace::Srgb, "srgb"},
+    {pfx::OutputSpace::DisplayP3, "display-p3"},
+    {pfx::OutputSpace::AdobeRgb, "adobe-rgb"},
+    {pfx::OutputSpace::Original, "original"},
+}};
+
+template <typename Value, std::size_t N>
+QString keyOf(const std::array<std::pair<Value, const char*>, N>& keys, Value value)
+{
+    for (const auto& [v, k] : keys) {
+        if (v == value) {
+            return QString::fromLatin1(k);
+        }
+    }
+    return QString::fromLatin1(keys.front().second);
+}
+
+template <typename Value, std::size_t N>
+Value valueOf(const std::array<std::pair<Value, const char*>, N>& keys, const QString& key)
+{
+    for (const auto& [v, k] : keys) {
+        if (key == QLatin1StringView(k)) {
+            return v;
+        }
+    }
+    return keys.front().first;
+}
+
+} // namespace
+
+pfx::SaveOptions saveOptions(const ExportOptions& options, std::vector<std::uint8_t> originalProfile)
+{
+    pfx::SaveOptions save;
+    save.quality = options.quality;
+    save.bitsPerSample = options.bitsPerSample;
+    save.keepMetadata = options.keepMetadata;
+    save.keepLocation = options.keepLocation;
+    save.dpi = options.dpi;
+    save.space = options.colorSpace;
+    save.originalProfile = std::move(originalProfile);
+    return save;
+}
+
+QString sharpenKey(pfx::OutputSharpen value)
+{
+    return keyOf(kSharpenKeys, value);
+}
+
+pfx::OutputSharpen sharpenFromKey(const QString& key)
+{
+    return valueOf(kSharpenKeys, key);
+}
+
+QString colorSpaceKey(pfx::OutputSpace value)
+{
+    return keyOf(kColorSpaceKeys, value);
+}
+
+pfx::OutputSpace colorSpaceFromKey(const QString& key)
+{
+    return valueOf(kColorSpaceKeys, key);
 }
 
 const std::vector<SizePreset>& sizePresets()

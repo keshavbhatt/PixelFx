@@ -1,5 +1,6 @@
 #include "ui/export_sheet.h"
 
+#include "services/exporter.h"
 #include "ui/elided_label.h"
 #include "ui/frame_picker.h"
 #include "ui/size_list.h"
@@ -17,15 +18,19 @@
 #include <QFileInfo>
 #include <QFormLayout>
 #include <QFrame>
+#include <QFutureWatcher>
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QLineEdit>
+#include <QLocale>
 #include <QMenu>
 #include <QPushButton>
 #include <QSlider>
 #include <QSpinBox>
 #include <QStandardItemModel>
+#include <QTimer>
 #include <QVBoxLayout>
+#include <QtConcurrent/QtConcurrentRun>
 
 #include <algorithm>
 #include <array>
@@ -54,6 +59,7 @@ constexpr Format kFormats[] = {
 };
 
 constexpr int kLabelColumn = 160;
+constexpr int kEstimatePauseMs = 300;
 
 const Format* formatFor(const QString& extension)
 {
@@ -107,6 +113,9 @@ ExportSheet::ExportSheet(const QString& source, const QSize& photoSize, const co
     form->addRow(QString(), framingCard(options));
     refreshSize();
 
+    form->addRow(tr("Sharpen for"), sharpenRow(options.sharpen));
+    form->addRow(tr("Color space"), colorSpaceBox(options.colorSpace));
+
     form->addRow(tr("Watermark"), watermarkRow(options.watermark));
 
     form->addRow(tr("Metadata"), metadataRow(options));
@@ -130,15 +139,23 @@ ExportSheet::ExportSheet(const QString& source, const QSize& photoSize, const co
     column->addLayout(form);
     updateForFormat();
     setSize(Size::Regular);
+
+    m_estimateTimer = new QTimer(this);
+    m_estimateTimer->setSingleShot(true);
+    m_estimateTimer->setInterval(kEstimatePauseMs);
+    connect(m_estimateTimer, &QTimer::timeout, this, &ExportSheet::estimate);
+    connect(m_quality, &SliderRow::ticksReleased, this, &ExportSheet::scheduleEstimate);
+    connect(m_sixteen, &QCheckBox::toggled, this, &ExportSheet::scheduleEstimate);
+    connect(m_metadata, &QCheckBox::toggled, this, &ExportSheet::scheduleEstimate);
 }
 
 ExportSheet::~ExportSheet() = default;
 
 QHBoxLayout* ExportSheet::addFooter(QFormLayout* form)
 {
-    auto* note = new QLabel(tr("The original photo is never changed. Your choices are remembered."), this);
-    note->setObjectName(u"faint"_s);
-    note->setWordWrap(true);
+    m_note = new QLabel(tr("Saved formats and choices are remembered."), this);
+    m_note->setObjectName(u"faint"_s);
+    m_note->setWordWrap(true);
 
     m_copyButton = new QPushButton(tr("Copy to clipboard"), this);
     m_copyButton->setToolTip(tr("Copy the photo at this size, with the watermark, instead of saving a file"));
@@ -147,7 +164,7 @@ QHBoxLayout* ExportSheet::addFooter(QFormLayout* form)
     m_exportButton = buttons.primary;
     connect(buttons.cancel, &QPushButton::clicked, this, &QDialog::reject);
     connect(m_exportButton, &QPushButton::clicked, this, &QDialog::accept);
-    form->addRow(note);
+    form->addRow(m_note);
     return buttons.row;
 }
 
@@ -380,6 +397,7 @@ core::ExportOptions ExportSheet::sizeOptions() const
 
 void ExportSheet::refreshSize()
 {
+    scheduleEstimate();
     const core::ExportOptions o = sizeOptions();
     const QSize frame = core::frameSize(o, m_photoSize);
     // Only when the shapes differ is there anything to choose.
@@ -513,6 +531,7 @@ void ExportSheet::updateForFormat()
     m_qualityRow->setEnabled(f->lossy);
     m_sixteen->setVisible(f->deep);
     m_extension->setText(u"."_s + ext);
+    scheduleEstimate();
 }
 
 void ExportSheet::chooseFolder()
@@ -529,6 +548,7 @@ void ExportSheet::setPhotoCount(int count)
     if (count < 2) {
         return;
     }
+    m_photoCount = count;
     m_copyButton->setVisible(count <= 1); // one picture fits on the clipboard
     const QString text = tr("Export %n photos", nullptr, count);
     m_title->setText(text);
@@ -562,8 +582,73 @@ QWidget* ExportSheet::watermarkRow(const QString& current)
 
 void ExportSheet::setPreview(const QImage& preview)
 {
+    m_preview = preview;
     m_watermark->setPreview(preview);
     m_picker->setPicture(preview);
+    scheduleEstimate();
+}
+
+QWidget* ExportSheet::sharpenRow(pfx::OutputSharpen sharpen)
+{
+    m_sharpen = new QButtonGroup(this);
+    QFrame* box =
+        segmentBox({tr("None"), tr("Screen"), tr("Print")}, static_cast<int>(sharpen), m_sharpen, this);
+    box->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+    m_sharpen->button(static_cast<int>(pfx::OutputSharpen::Screen))
+        ->setToolTip(tr("A little crisper on screens, after resizing"));
+    m_sharpen->button(static_cast<int>(pfx::OutputSharpen::Print))
+        ->setToolTip(tr("Crisper on paper, where ink softens detail"));
+    connect(m_sharpen, &QButtonGroup::idClicked, this, &ExportSheet::scheduleEstimate);
+    return box;
+}
+
+QWidget* ExportSheet::colorSpaceBox(pfx::OutputSpace space)
+{
+    m_colorSpace = new QComboBox(this);
+    m_colorSpace->setAccessibleName(tr("Color space"));
+    m_colorSpace->addItem(tr("sRGB (recommended for sharing)"), static_cast<int>(pfx::OutputSpace::Srgb));
+    m_colorSpace->addItem(tr("Display P3"), static_cast<int>(pfx::OutputSpace::DisplayP3));
+    m_colorSpace->addItem(tr("Adobe RGB"), static_cast<int>(pfx::OutputSpace::AdobeRgb));
+    m_colorSpace->addItem(tr("Same as original"), static_cast<int>(pfx::OutputSpace::Original));
+    m_colorSpace->setCurrentIndex(std::max(0, m_colorSpace->findData(static_cast<int>(space))));
+    m_colorSpace->setToolTip(tr("Display P3 and Adobe RGB keep more saturated colours, for screens and "
+                                "printers that show them; sRGB looks right everywhere"));
+    connect(m_colorSpace, &QComboBox::currentIndexChanged, this, &ExportSheet::scheduleEstimate);
+    return m_colorSpace;
+}
+
+void ExportSheet::scheduleEstimate()
+{
+    if (m_estimateTimer != nullptr && !m_preview.isNull()) {
+        m_estimateTimer->start();
+    }
+}
+
+void ExportSheet::estimate()
+{
+    const int ticket = ++m_estimates;
+    auto* watcher = new QFutureWatcher<qint64>(this);
+    connect(watcher, &QFutureWatcher<qint64>::finished, this, [this, watcher, ticket] {
+        watcher->deleteLater();
+        if (ticket == m_estimates) {
+            showEstimate(watcher->result());
+        }
+    });
+    watcher->setFuture(QtConcurrent::run(&services::estimateExportSize, m_preview, m_photoSize, options()));
+}
+
+void ExportSheet::showEstimate(qint64 bytes)
+{
+    const QString remembered = tr("Saved formats and choices are remembered.");
+    if (bytes <= 0) {
+        m_note->setText(remembered);
+        return;
+    }
+    const QString size = QLocale().formattedDataSize(bytes, 1, QLocale::DataSizeSIFormat);
+    //: The estimated size of the file Export writes, with one photo or with several.
+    const QString about =
+        m_photoCount > 1 ? tr("About %1 for this photo.").arg(size) : tr("About %1.").arg(size);
+    m_note->setText(about + u' ' + remembered);
 }
 
 void ExportSheet::setWatermarkFolder(const QString& folder)
@@ -585,6 +670,8 @@ core::ExportOptions ExportSheet::options() const
     o.fitInside = size.fitInside;
     o.frameX = size.frameX;
     o.frameY = size.frameY;
+    o.sharpen = static_cast<pfx::OutputSharpen>(std::max(0, m_sharpen->checkedId()));
+    o.colorSpace = static_cast<pfx::OutputSpace>(m_colorSpace->currentData().toInt());
     o.keepMetadata = m_metadata->isChecked();
     o.keepLocation = m_location->isChecked();
     o.watermark = m_watermark->path();

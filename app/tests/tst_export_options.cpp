@@ -106,6 +106,34 @@ private Q_SLOTS:
         }
     }
 
+    void sharpenAndColorSpaceKeysRoundTrip()
+    {
+        for (const auto v :
+             {pfx::OutputSharpen::None, pfx::OutputSharpen::Screen, pfx::OutputSharpen::Print}) {
+            QCOMPARE(sharpenFromKey(sharpenKey(v)), v);
+        }
+        for (const auto v : {pfx::OutputSpace::Srgb, pfx::OutputSpace::DisplayP3, pfx::OutputSpace::AdobeRgb,
+                             pfx::OutputSpace::Original}) {
+            QCOMPARE(colorSpaceFromKey(colorSpaceKey(v)), v);
+        }
+        QCOMPARE(colorSpaceKey(pfx::OutputSpace::DisplayP3), u"display-p3"_s);
+        QCOMPARE(sharpenFromKey(u"loud"_s), pfx::OutputSharpen::None);
+        QCOMPARE(colorSpaceFromKey(QString()), pfx::OutputSpace::Srgb);
+    }
+
+    void saveOptionsCarryTheChoices()
+    {
+        ExportOptions o;
+        o.quality = 70;
+        o.dpi = 300;
+        o.colorSpace = pfx::OutputSpace::Original;
+        const pfx::SaveOptions save = saveOptions(o, {1, 2, 3});
+        QCOMPARE(save.quality, 70);
+        QCOMPARE(save.dpi, 300);
+        QCOMPARE(save.space, pfx::OutputSpace::Original);
+        QCOMPARE(save.originalProfile, (std::vector<std::uint8_t>{1, 2, 3}));
+    }
+
     void printSizesTurnWithThePhoto()
     {
         const pixelfx::core::SizePreset* print = pixelfx::core::sizePreset(u"print-10x15"_s);

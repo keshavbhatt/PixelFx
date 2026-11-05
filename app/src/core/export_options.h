@@ -6,6 +6,7 @@
 #include <QStringList>
 
 #include <pfx/io.h>
+#include <pfx/resample.h>
 #include <vector>
 
 namespace pixelfx::core {
@@ -47,6 +48,10 @@ struct ExportOptions
     /// bottom. Chosen per export by dragging the frame; not remembered.
     double frameX = 0.5;
     double frameY = 0.5;
+    /// Sharpening for the screen or for print, once the photo has its final size.
+    pfx::OutputSharpen sharpen = pfx::OutputSharpen::None;
+    /// The colour space written; its profile is embedded.
+    pfx::OutputSpace colorSpace = pfx::OutputSpace::Srgb;
 
     bool operator==(const ExportOptions&) const = default;
 };
@@ -133,5 +138,14 @@ struct NameFacts
 
 [[nodiscard]] QString ifExistsKey(ExportOptions::IfExists value);
 [[nodiscard]] ExportOptions::IfExists ifExistsFromKey(const QString& key);
+/// How the options encode a file; `originalProfile` is the photo's own, for Same as original.
+[[nodiscard]] pfx::SaveOptions saveOptions(const ExportOptions& options,
+                                           std::vector<std::uint8_t> originalProfile = {});
+/// "none", "screen", "print"; anything else reads as none.
+[[nodiscard]] QString sharpenKey(pfx::OutputSharpen value);
+[[nodiscard]] pfx::OutputSharpen sharpenFromKey(const QString& key);
+/// "srgb", "display-p3", "adobe-rgb", "original"; anything else reads as sRGB.
+[[nodiscard]] QString colorSpaceKey(pfx::OutputSpace value);
+[[nodiscard]] pfx::OutputSpace colorSpaceFromKey(const QString& key);
 
 } // namespace pixelfx::core

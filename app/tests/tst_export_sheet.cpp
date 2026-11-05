@@ -9,6 +9,7 @@
 #include <QCheckBox>
 #include <QComboBox>
 #include <QFile>
+#include <QLabel>
 #include <QMenu>
 #include <QPushButton>
 #include <QTemporaryDir>
@@ -42,8 +43,25 @@ private Q_SLOTS:
         in.folder = u"/tmp/out"_s;
         in.nameTemplate = u"{name}-web"_s;
         in.ifExists = ExportOptions::IfExists::Skip;
+        in.sharpen = pfx::OutputSharpen::Print;
+        in.colorSpace = pfx::OutputSpace::DisplayP3;
         const ExportSheet sheet(u"/p/photo.jpg"_s, QSize(6000, 4000), in);
         QCOMPARE(sheet.options(), in);
+    }
+
+    void theFileSizeIsEstimatedFromThePreview()
+    {
+        ExportSheet sheet(u"/p/photo.jpg"_s, QSize(1200, 800), ExportOptions());
+        QVERIFY(!sheet.note()->text().contains(u"About"_s)); // nothing to estimate from yet
+        QImage preview(300, 200, QImage::Format_RGBA8888);
+        for (int y = 0; y < preview.height(); ++y) {
+            for (int x = 0; x < preview.width(); ++x) {
+                preview.setPixelColor(x, y, QColor((x * 7) % 256, (y * 5) % 256, ((x + y) * 3) % 256));
+            }
+        }
+        sheet.setPreview(preview);
+        QTRY_VERIFY_WITH_TIMEOUT(sheet.note()->text().startsWith(u"About "_s), 10000);
+        QVERIFY(sheet.note()->text().endsWith(u"Saved formats and choices are remembered."_s));
     }
 
     void theSizeListGroupsTheSizesAndKeepsMine()
