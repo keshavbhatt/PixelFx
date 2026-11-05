@@ -6,6 +6,7 @@
 
 class QButtonGroup;
 class QCheckBox;
+class QLayout;
 class QLabel;
 class QPushButton;
 class QVBoxLayout;
@@ -45,6 +46,7 @@ Q_SIGNALS:
 
 private:
     QWidget* buildBrush();
+    QLayout* buildModes(QWidget* box);
     QWidget* buildSpots();
     QWidget* buildSwitch(const QString& label, const QString& key, QCheckBox** box);
     void refreshValues();

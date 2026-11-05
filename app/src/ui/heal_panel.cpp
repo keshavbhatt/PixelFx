@@ -75,12 +75,9 @@ HealPanel::HealPanel(HealTool* tool, QWidget* parent)
 
 HealPanel::~HealPanel() = default;
 
-QWidget* HealPanel::buildBrush()
+QLayout* HealPanel::buildModes(QWidget* box)
 {
-    auto* box = new QWidget(this);
-    auto* column = new QVBoxLayout(box);
-    column->setContentsMargins(kPanelPadding, 0, kPanelPadding, 4);
-    column->setSpacing(8);
+    // Spot or Brush.
     auto* modes = new QHBoxLayout;
     modes->setSpacing(0);
     m_modes = new QButtonGroup(this);
@@ -100,7 +97,16 @@ QWidget* HealPanel::buildBrush()
     }
     connect(m_modes, &QButtonGroup::idClicked, this,
             [this](int id) { m_tool->setMode(id == 0 ? HealTool::Mode::Spot : HealTool::Mode::Brush); });
-    column->addLayout(modes);
+    return modes;
+}
+
+QWidget* HealPanel::buildBrush()
+{
+    auto* box = new QWidget(this);
+    auto* column = new QVBoxLayout(box);
+    column->setContentsMargins(kPanelPadding, 0, kPanelPadding, 4);
+    column->setSpacing(8);
+    column->addLayout(buildModes(box));
     m_size = new SliderRow(tr("Size"), box);
     m_size->setRange(qRound(HealTool::kMinSize * kSizeTicks), qRound(HealTool::kMaxSize * kSizeTicks), 40);
     m_size->setFormat([](int ticks) { return percent(static_cast<double>(ticks) / kSizeTicks); });
