@@ -17,6 +17,7 @@ struct Job
 {
     quint64 generation = 0;
     pfx::Settings settings;
+    pfx::LensFacts lens;
     QImage image;
     core::Histogram histogram;
     QString error;
@@ -25,7 +26,9 @@ struct Job
 Job renderJob(const std::shared_ptr<const pfx::Image>& source,
               Job job) // NOLINT(performance-unnecessary-value-param)
 {
-    const auto rendered = core::renderPhoto(*source, job.settings);
+    pfx::RenderOptions options;
+    options.lens = &job.lens;
+    const auto rendered = core::renderPhoto(*source, job.settings, options);
     if (!rendered) {
         job.error = QString::fromStdString(rendered.error().message);
         return job;
@@ -71,7 +74,7 @@ void RenderScheduler::startNext()
     if (!m_pending || !m_source) {
         return;
     }
-    Job job{m_sourceGeneration, std::move(*m_pending), {}, {}, {}};
+    Job job{m_sourceGeneration, std::move(*m_pending), m_lens, {}, {}, {}};
     m_pending.reset();
     m_running = true;
     auto* watcher = new QFutureWatcher<Job>(this);

@@ -72,6 +72,28 @@ Decisions the work stopped at; everything else went ahead within the approved mo
 
 ## Sessions (newest first)
 
+### 2026-11-06 (lens profiles, ADR-013)
+
+- ADR-013 written as the owner asked: Lensfun 0.3.4 (LGPL-3.0, its database CC-BY-SA-3.0),
+  optional at build time (`PFX_WITH_LENSFUN`), built in `scripts/build-deps.sh` for dev builds
+  (pinned, SHA-256), a THIRD_PARTY row and its notice in About.
+- libpixelfx: `pfx/lens.h` (`LensFacts` from Exif, `lensProfileName`, `lensProfilesAvailable`,
+  `setLensDatabaseFolder`) and the `lens_profile` step at stage 2 (`detail.lensProfile.enable`,
+  `distortion` and `vignetting` 0 to 200): vignetting undone, then distortion and the profile's
+  lateral CA in one resampling, scaled to fill. The photo's camera and lens travel in
+  `RenderOptions::lens`; the editor, thumbnails, Batch, Export and `pfx apply` pass them.
+  Presets version 4, recipes and batch recipes version 5 (presets.md, tests). The Lightroom
+  importer maps LensProfileEnable and its two scales.
+- Checked on the system's database: Canon EF 24-70mm f/2.8L, Sony FE 24-105mm f/4 and Nikon
+  AF-S 50mm f/1.8G are found from their Exif names; the Canon at 24 mm f/2.8 lifts its corners
+  from 0.2 to 0.77. The owner's Galaxy S22 Ultra is not in the database (phones rarely are).
+- Not built: the Optics control. `editor-lens-profile.html` and its review wait for the owner.
+  The two EmulsionPresets lens tools left out of the catalog (ADR-009) can join it once that
+  control exists.
+- Checks: 154 library tests (a lens database written by the test: lookups, vignetting and its
+  amount, distortion at two sizes, Exif facts; version bumps; the importer), 38 app suites, the
+  linters.
+
 ### 2026-11-06 (Export: sharpening, colour space, size estimate)
 
 - FEATURES X3, X4 and X7 from the approved `export.html`. libpixelfx: `sharpenForOutput` (an

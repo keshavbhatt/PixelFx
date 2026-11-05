@@ -321,5 +321,44 @@ RAW to open on its camera's look, its embedded JPEG first, and a way out when it
 **Consequences.** Opcode lists, lossless JPEG (compression 7) linear DNGs and floating-point DNGs
 go to LibRaw as before. The Camera curve is a global one: a phone's own JPEG may differ where the
 phone also tone-mapped locally beyond the gain table map (the owner's test file: a little brighter
-and redder flower). Lens profiles wait for lensfun (ADR to come).
+and redder flower). Lens profiles: ADR-013.
 
+
+## ADR-013: lens profiles through Lensfun (2026-11-06)
+
+**Context.** Lens corrections by profile (FEATURES G6) were LATER. The owner asked on 2026-11-06
+to write this ADR and build them: Lightroom presets turn them on (`LensProfileEnable`, the two
+EmulsionPresets left out of the catalog for it), and photographers expect a lens's distortion
+and dark corners to be undone. A profile is a measurement of one lens; nobody can write them
+for PixelFx alone. Lensfun is the open database (about 1,000 lenses, used by darktable,
+RawTherapee and digiKam) with a library that applies it.
+
+**Decision.**
+- libpixelfx links Lensfun (0.3.2 or later; LGPL-3.0, dynamically linked, which CODING_STANDARDS
+  section 11 allows), optional at build time: `PFX_WITH_LENSFUN` AUTO (used when found), ON or
+  OFF. Without it `pfx::lensProfilesAvailable()` is false and the step does nothing.
+- Its database (CC-BY-SA-3.0) ships as data files beside the app, its licence in the notices.
+  `pfx::setLensDatabaseFolder` points at a package's own copy; otherwise Lensfun's own search
+  (the system's copy, then the user's updates) is used. Updating it is Lensfun's business.
+- A new step, `lens_profile` (stage 2, before CA removal): `detail.lensProfile.enable` and two
+  amounts, `distortion` and `vignetting` (0 to 200, 100 the profile as measured, as Lightroom's
+  scales). Vignetting is undone first on the pixels as the lens drew them, then distortion and
+  the profile's lateral chromatic aberration in one bilinear resampling, scaled so no empty
+  corner shows. Coordinates are Lensfun's, relative to the image and the sensor, so a preview
+  and the full-size export agree.
+- The lens is the photo's own: `pfx::RenderOptions::lens` carries its camera and lens from Exif
+  (`pfx::lensFacts`), so a preset or a batch only turns the correction on and each photo finds
+  its lens, like Lightroom's "LensDefaults". Rendering is a pure function of the image, the
+  settings and these facts. A photo with no lens name matches only a fixed-lens camera.
+- Presets go to version 4, recipes and batch recipes to version 5; older files read unchanged.
+  The Lightroom importer maps `LensProfileEnable`, `LensProfileDistortionScale` and
+  `LensProfileVignettingScale`; Lightroom's own profile names are not needed and are ignored.
+- The control (a Lens profile switch in Optics naming the lens found) is drawn as a mock first
+  and built after the owner approves it.
+
+**Consequences.** Phones are mostly absent from the database (the owner's Galaxy S22 Ultra is);
+a phone's DNG describes its own lens in opcodes (WarpRectilinear, FixVignetteRadial) that
+ADR-012 leaves to later. Packages carry the library and about 4 MB of database: dev builds
+build Lensfun 0.3.4 in `scripts/build-deps.sh`; the snap part, the Flatpak module and the
+Windows and macOS builds add it when they are written (M7). The manual lens sliders of
+Lightroom (`LensManualDistortionAmount`, vignetting by hand) are not part of this.

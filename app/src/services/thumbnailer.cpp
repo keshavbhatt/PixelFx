@@ -49,8 +49,11 @@ Thumbnail Thumbnailer::make(const QString& path, int longEdge, const QString& si
     if (!loaded) {
         return thumb;
     }
+    const pfx::LensFacts lens = pfx::lensFacts(pfx::readExif(loaded.value().metadata.exif));
+    pfx::RenderOptions render;
+    render.lens = &lens;
     const auto rendered = settings.isEmpty() ? pfx::Result<pfx::Image>(std::move(loaded).value().image)
-                                             : core::renderPhoto(loaded.value().image, settings);
+                                             : core::renderPhoto(loaded.value().image, settings, render);
     if (!rendered) {
         return thumb;
     }

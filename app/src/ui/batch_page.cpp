@@ -1246,7 +1246,10 @@ void BatchPage::openLargePreview()
             sidecars.isEmpty()
                 ? pfx::Settings{}
                 : core::SidecarStore(sidecars).read(core::fileFingerprint(file)).value_or(pfx::Settings{});
-        photo.before = services::toDisplayImage(core::renderPhoto(loaded.value().image, own));
+        const pfx::LensFacts lens = pfx::lensFacts(pfx::readExif(loaded.value().metadata.exif));
+        pfx::RenderOptions withLens;
+        withLens.lens = &lens;
+        photo.before = services::toDisplayImage(core::renderPhoto(loaded.value().image, own, withLens));
         const services::PreparedExport after = services::prepareExport(
             file,
             [&r, &own](const pfx::Image& image) { return services::BatchRunner::settingsFor(r, own, image); },

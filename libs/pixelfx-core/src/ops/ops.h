@@ -7,11 +7,16 @@
 #include <string_view>
 #include <vector>
 
+namespace pfx {
+struct LensFacts;
+} // namespace pfx
+
 namespace pfx::detail {
 
 struct OpContext
 {
     int threads = 0;
+    const LensFacts* lens = nullptr; // the photo's camera and lens, for its lens profile
 };
 
 // An operation's implementation, paired with its registry entry by id. `active` is false
@@ -24,6 +29,8 @@ struct OpImpl
 };
 
 // Implementations, one translation unit per group.
+bool lensProfileActive(const Settings& s);
+void lensProfileApply(Image& image, const Settings& s, const OpContext& ctx);
 bool chromaticAberrationActive(const Settings& s);
 void chromaticAberrationApply(Image& image, const Settings& s, const OpContext& ctx);
 bool defringeActive(const Settings& s);

@@ -2,6 +2,7 @@
 #pragma once
 
 #include "pfx/image.h"
+#include "pfx/lens.h"
 #include "pfx/look.h"
 #include "pfx/result.h"
 #include "pfx/settings.h"
@@ -16,6 +17,7 @@ struct RenderOptions
     const std::atomic<bool>* cancel = nullptr; // checked between operations
     const Look* look = nullptr;                // run after colour grading, before sharpening
     float lookStrength = 1.0F;                 // 0 to 1
+    const LensFacts* lens = nullptr;           // the photo's camera and lens, for its lens profile
 };
 
 // Renders `settings` onto `input` (working space) in the fixed pipeline order. Spatial

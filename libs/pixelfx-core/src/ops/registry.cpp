@@ -133,10 +133,19 @@ void addCalibration(std::vector<OpSpec>& ops)
     ops.push_back({"calibration", "calibration", 1, 32, true, std::move(params)});
 }
 
-// Lens corrections that need no lens profile: lateral chromatic aberration found from the
-// photo itself, and purple and green fringes along high-contrast edges.
+// Lens corrections: the lens's own profile (ADR-013; amounts 100 for the profile as measured),
+// then those that need none: lateral chromatic aberration found from the photo itself, and
+// purple and green fringes along high-contrast edges.
 void addLensCorrections(std::vector<OpSpec>& ops)
 {
+    ops.push_back(
+        {"lens_profile",
+         "detail",
+         1,
+         2,
+         false,
+         {boolean("detail.lensProfile.enable"), number("detail.lensProfile.distortion", 0, 200, 100),
+          number("detail.lensProfile.vignetting", 0, 200, 100)}});
     ops.push_back({"chromatic_aberration", "detail", 1, 3, false, {boolean("detail.ca.auto")}});
     ops.push_back(
         {"defringe",
@@ -243,7 +252,7 @@ void addCurves(std::vector<OpSpec>& ops)
 }
 
 // Stages follow DOCS/presets.md section 5; gaps leave room for the operations of later
-// milestones (CA 3, defringe 4, heal 5, geometry 10, calibration 32, profile 35, dehaze 45,
+// milestones (lens profile 2, CA 3, defringe 4, heal 5, geometry 10, calibration 32, profile 35, dehaze 45,
 // texture 62, mixer 80, B&W 82, grading 90, look 100, vignette 120 ...).
 std::vector<OpSpec> builtInOps()
 {

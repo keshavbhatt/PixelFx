@@ -107,6 +107,9 @@ internal units, so a file reads like the panel.
   (-100 to 100), `detail.sharpen.detail` (0 to 100, 25 the plain mask), the noise reduction detail,
   contrast and smoothness (0 to 100), `detail.ca.auto` (lateral chromatic aberration measured on
   the photo) and `detail.defringe` (purple and green, amount 0 to 20 and a hue range 0 to 100).
+  `detail.lensProfile` (presets version 4, recipes and batch recipes version 5; ADR-013):
+  `enable` corrects the photo's lens from its profile, found from the photo's own camera and
+  lens, with `distortion` and `vignetting` amounts (0 to 200, 100 the profile as measured).
   `effects.vignette` gains `feather` (0 to 100), `style` (`highlight`, `color` or `paint`) and
   `highlights` (0 to 100); `effects.grain` gains `roughness` (0 to 100, 50 one even layer).
 - `look.id` refers to a look by id: `builtin:<slug>` for shipped looks, a UUID for the user's.
@@ -175,11 +178,11 @@ internal units, so a file reads like the panel.
 }
 ```
 
-- Recipes are at **version 4**: version 2 added the `heal` group (section 2), version 3 the
-  Lightroom-compatible settings (section 2), version 4 the `camera` profile. Older recipes read
-  unchanged (nothing to migrate: an older file never names `camera`); a file above version 4 is
-  refused as made by a newer PixelFx. Presets are at **version 3** for the same settings; version
-  1 and 2 presets read unchanged.
+- Recipes are at **version 5**: version 2 added the `heal` group (section 2), version 3 the
+  Lightroom-compatible settings (section 2), version 4 the `camera` profile, version 5
+  `detail.lensProfile`. Older recipes read unchanged (nothing to migrate: an older file never
+  names either); a file above version 5 is refused as made by a newer PixelFx. Presets are at
+  **version 4** for the same settings; version 1 to 3 presets read unchanged.
 - The fingerprint (size plus a hash of the first and last 64 KiB) re-attaches a sidecar to a
   photo that was moved or renamed within the library folder.
 - History entries store only the changed groups (deltas), capped at 200 steps per photo.
@@ -199,8 +202,9 @@ internal units, so a file reads like the panel.
 }
 ```
 
-Batch recipes are at **version 4** (version 3 added the Lightroom-compatible settings of
-section 2, version 4 the `camera` profile; looks stay at version 1).
+Batch recipes are at **version 5** (version 3 added the Lightroom-compatible settings of
+section 2, version 4 the `camera` profile, version 5 `detail.lensProfile`; looks stay at
+version 1).
 
 - The stack is applied in order onto each photo's settings (later entries win per key). A step
   is a preset (its settings, embedded) or a look on its own (`id`, `strength` 0 to 100,
@@ -221,13 +225,13 @@ section 2, version 4 the `camera` profile; looks stay at version 1).
   watermark. Opening the file adds the watermark to the user's watermarks unless an identical
   one is there already.
 - Version 1 batch recipes had none of these keys and read unchanged; there is nothing to
-  migrate. A file with a `version` above 4 is refused as made by a newer PixelFx.
+  migrate. A file with a `version` above 5 is refused as made by a newer PixelFx.
 
 ## 5. Pipeline order (fixed, documented here and in ADR-004)
 
-Input decode and orientation, RAW development, then: chromatic aberration -> defringe -> spot
-heal -> geometry (crop, rotate, perspective, as one resampling) -> noise reduction -> white
-balance -> calibration -> profile -> exposure -> dehaze -> tone (highlights, shadows, whites,
+Input decode and orientation, RAW development, then: lens profile -> chromatic aberration ->
+defringe -> spot heal -> geometry (crop, rotate, perspective, as one resampling) -> noise
+reduction -> white balance -> calibration -> profile -> exposure -> dehaze -> tone (highlights, shadows, whites,
 blacks, contrast) -> clarity -> texture -> curves (parametric, then points) -> colour mixer ->
 black and white -> vibrance and saturation -> colour grading -> **look** (blended by strength)
 -> sharpen -> vignette -> grain -> fade -> output transform (colour space, bit depth). Identity
@@ -239,7 +243,7 @@ settings are skipped.
 |---|---|---|
 | `.cube` (1D, 3D), `.3dl`, HaldCLUT `.png` | look with one LUT step | exact |
 | RawTherapee `.pp3` | LATER (subset) | |
-| Lightroom / Camera Raw `.xmp` preset (`crs:` namespace) | preset | Every global develop setting (FEATURES P8): Basic (Exposure2012 to Blacks2012, Temperature and Tint relative or Kelvin, Vibrance, Saturation, Texture, Clarity2012, Dehaze), Treatment and ConvertToGrayscale, HSL and GrayMixer (8 bands), ToneCurvePV2012 (and per channel) and the parametric curve with its splits, SplitToning and ColorGrade (all four ranges, luminance, blending, balance), Detail (sharpening amount, radius, detail, masking; noise reduction with detail, contrast and smoothness), AutoLateralCA and Defringe, PostCropVignette (with feather, style, highlights), Grain (with roughness), Calibration (primaries and shadow tint), and the profile (Adobe Monochrome as black and white, Adobe Vivid as the vivid profile, the other Adobe standard profiles as PixelFx's own rendering). The same kind of result, not pixel-identical. A report lists what is skipped: lens profiles (LensProfileEnable, an ADR to come), creative and camera profiles PixelFx does not have, masks |
+| Lightroom / Camera Raw `.xmp` preset (`crs:` namespace) | preset | Every global develop setting (FEATURES P8): Basic (Exposure2012 to Blacks2012, Temperature and Tint relative or Kelvin, Vibrance, Saturation, Texture, Clarity2012, Dehaze), Treatment and ConvertToGrayscale, HSL and GrayMixer (8 bands), ToneCurvePV2012 (and per channel) and the parametric curve with its splits, SplitToning and ColorGrade (all four ranges, luminance, blending, balance), Detail (sharpening amount, radius, detail, masking; noise reduction with detail, contrast and smoothness), AutoLateralCA and Defringe, PostCropVignette (with feather, style, highlights), Grain (with roughness), Calibration (primaries and shadow tint), and the profile (Adobe Monochrome as black and white, Adobe Vivid as the vivid profile, the other Adobe standard profiles as PixelFx's own rendering). The same kind of result, not pixel-identical. LensProfileEnable with its distortion and vignetting scales as the lens profile (ADR-013). A report lists what is skipped: the manual lens corrections, creative and camera profiles PixelFx does not have, masks |
 | darktable style (`.dtstyle`) | LATER | |
 
 ## 7. Watermark (`.pfxwatermark`, version 1)

@@ -2,7 +2,7 @@
 # Builds libvips from source against the KDE Qt 6.11 snap SDK (kde-qt6-core24-sdk), the same
 # libraries the shipped snap links (ADR-003), into build/deps/prefix, together with the codec
 # libraries the SDK has no development files for: libheif (HEIC through libde265, AVIF through
-# dav1d), libjxl (with highway) and LibRaw. dev-build.sh calls it; it does nothing when the
+# dav1d), libjxl (with highway), LibRaw and lensfun (lens profiles, ADR-013). dev-build.sh calls it; it does nothing when the
 # pinned versions are already built. The snap builds the same versions as parts, the Flatpak as
 # modules.
 #
@@ -41,10 +41,13 @@ HEIF_URL="$GH/strukturag/libheif/releases/download/v$HEIF_VERSION/libheif-$HEIF_
 RAW_VERSION=0.22.3
 RAW_SHA256=789f3c33466210a1a0907f747a97c715d21bbf4af712f257fcbbd90111b227e4
 RAW_URL="https://www.libraw.org/data/LibRaw-$RAW_VERSION.tar.gz"
+LENSFUN_VERSION=0.3.4
+LENSFUN_SHA256=dafb39c08ef24a0e2abd00d05d7341b1bf1f0c38bfcd5a4c69cf5f0ecb6db112
+LENSFUN_URL="$GH/lensfun/lensfun/archive/refs/tags/v$LENSFUN_VERSION.tar.gz"
 
 # Any change to a pin (or to this stamp's format) rebuilds the whole prefix.
 STAMP="deps-2 vips-$VIPS_VERSION hwy-$HWY_VERSION jxl-$JXL_VERSION dav1d-$DAV1D_VERSION"
-STAMP="$STAMP de265-$DE265_VERSION heif-$HEIF_VERSION raw-$RAW_VERSION"
+STAMP="$STAMP de265-$DE265_VERSION heif-$HEIF_VERSION raw-$RAW_VERSION lensfun-$LENSFUN_VERSION"
 if [ "$(cat "$PREFIX/.deps-stamp" 2>/dev/null)" = "$STAMP" ]; then
     exit 0
 fi
@@ -76,6 +79,7 @@ fetch "dav1d-$DAV1D_VERSION.tar.xz" "$DAV1D_SHA256" "$DAV1D_URL"
 fetch "libde265-$DE265_VERSION.tar.gz" "$DE265_SHA256" "$DE265_URL"
 fetch "libheif-$HEIF_VERSION.tar.gz" "$HEIF_SHA256" "$HEIF_URL"
 fetch "LibRaw-$RAW_VERSION.tar.gz" "$RAW_SHA256" "$RAW_URL"
+fetch "lensfun-$LENSFUN_VERSION.tar.gz" "$LENSFUN_SHA256" "$LENSFUN_URL"
 
 # An overlay over the SDK, so the build sees only the snap's libraries:
 # - Some of the SDK's development links (libglib-2.0.so, libz.so, ...) point at libraries that
@@ -189,6 +193,11 @@ raw_src="$WORK/src/LibRaw-$RAW_VERSION"
     --enable-jpeg --enable-zlib --enable-lcms >/dev/null)
 make -C "$raw_src" -j"$(nproc)" >/dev/null
 make -C "$raw_src" install >/dev/null
+
+# lensfun (lens profiles, for libpixelfx itself), on the SDK's GLib, with its database; no
+# tools, scripts or Python module.
+cmake_build "$WORK/src/lensfun-$LENSFUN_VERSION" -DBUILD_TESTS=OFF -DBUILD_LENSTOOL=OFF \
+    -DBUILD_DOC=OFF -DINSTALL_PYTHON_MODULE=OFF -DINSTALL_HELPER_SCRIPTS=OFF
 
 # libvips: the formats and colour management PixelFx needs; everything else off so nothing from
 # the host leaks in.

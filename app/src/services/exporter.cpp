@@ -174,7 +174,10 @@ PreparedExport prepareExport(const QString& source,
             loaded = std::move(redeveloped);
         }
     }
-    auto rendered = core::renderPhoto(std::move(loaded.value().image), settings);
+    const pfx::LensFacts lens = pfx::lensFacts(pfx::readExif(out.metadata.exif));
+    pfx::RenderOptions render;
+    render.lens = &lens;
+    auto rendered = core::renderPhoto(std::move(loaded.value().image), settings, render);
     if (!rendered) {
         out.error = QString::fromStdString(rendered.error().message);
         return out;

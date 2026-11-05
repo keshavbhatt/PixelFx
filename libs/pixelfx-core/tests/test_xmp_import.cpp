@@ -16,7 +16,8 @@ const char* const kPreset = R"(<x:xmpmeta xmlns:x="adobe:ns:meta/">
    crs:Vibrance="+22" crs:Saturation="0" crs:Clarity2012="+15" crs:Dehaze="+5" crs:Texture="+20"
    crs:HueAdjustmentYellow="-8" crs:SaturationAdjustmentGreen="-30"
    crs:SplitToningShadowHue="200" crs:SplitToningShadowSaturation="20" crs:SplitToningBalance="+10"
-   crs:PostCropVignetteAmount="-22" crs:GrainAmount="0" crs:LensProfileEnable="1" crs:SharpenRadius="+1.0">
+   crs:PostCropVignetteAmount="-22" crs:GrainAmount="0" crs:LensProfileEnable="1" crs:LensProfileVignettingScale="60"
+   crs:LensProfileName="Canon EF 24-70mm f/2.8L II USM" crs:SharpenRadius="+1.0">
    <crs:Name><rdf:Alt><rdf:li xml:lang="x-default">Clean Travel</rdf:li></rdf:Alt></crs:Name>
    <crs:ToneCurvePV2012><rdf:Seq><rdf:li>0, 10</rdf:li><rdf:li>128, 120</rdf:li><rdf:li>255, 250</rdf:li></rdf:Seq></crs:ToneCurvePV2012>
    <crs:ToneCurvePV2012Red><rdf:Seq><rdf:li>0, 0</rdf:li><rdf:li>255, 255</rdf:li></rdf:Seq></crs:ToneCurvePV2012Red>
@@ -42,6 +43,8 @@ TEST_CASE("xmp import: the settings PixelFx has are mapped")
     CHECK(s.number("grading.shadows.hue", 0) == 200.0);
     CHECK(s.number("effects.vignette.amount", 0) == -22.0);
     CHECK(s.number("detail.sharpen.radius", 0) == doctest::Approx(1.0 / 6000));
+    CHECK(s.boolean("detail.lensProfile.enable", false));
+    CHECK(s.number("detail.lensProfile.vignetting", 0) == 60.0);
     const pfx::Curve rgb = s.curve("curves.rgb");
     REQUIRE(rgb.size() == 3);
     CHECK(rgb[0].y == doctest::Approx(10.0 / 255));
@@ -53,8 +56,9 @@ TEST_CASE("xmp import: what has no equivalent is reported, neutral values are no
     const auto r = pfx::importXmpPreset(kPreset);
     REQUIRE(r.ok());
     const auto& skipped = r.value().skipped;
-    CHECK(std::ranges::find(skipped, "Texture") == skipped.end()); // mapped since P8
-    CHECK(std::ranges::find(skipped, "LensProfileEnable") != skipped.end());
+    CHECK(std::ranges::find(skipped, "Texture") == skipped.end());           // mapped since P8
+    CHECK(std::ranges::find(skipped, "LensProfileEnable") == skipped.end()); // mapped (ADR-013)
+    CHECK(std::ranges::find(skipped, "LensProfileName") == skipped.end());
     CHECK(std::ranges::find(skipped, "Version") == skipped.end());
     CHECK(std::ranges::find(skipped, "GrainAmount") == skipped.end()); // mapped
 }

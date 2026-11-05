@@ -261,13 +261,13 @@ private Q_SLOTS:
         QFile out(file);
         QVERIFY(out.open(QIODevice::WriteOnly));
         out.write(
-            R"(<x:xmpmeta><rdf:Description xmlns:crs="x" crs:Exposure2012="+0.5" crs:LensProfileEnable="1">)"
+            R"(<x:xmpmeta><rdf:Description xmlns:crs="x" crs:Exposure2012="+0.5" crs:LensManualDistortionAmount="+10">)"
             R"(<crs:Name><rdf:Alt><rdf:li xml:lang="x-default">Clean</rdf:li></rdf:Alt></crs:Name>)"
             R"(</rdf:Description></x:xmpmeta>)");
         out.close();
         const auto imported = library.importFile(file);
         QVERIFY2(!imported.path.isEmpty(), qPrintable(imported.error));
-        QCOMPARE(imported.skipped, QStringList{u"LensProfileEnable"_s});
+        QCOMPARE(imported.skipped, QStringList{u"LensManualDistortionAmount"_s});
         const auto entries = library.entries();
         QCOMPARE(entries.front().name, u"Lightroom: Clean"_s);
         QCOMPARE(entries.front().settings.number("light.exposure", 0), 0.5);

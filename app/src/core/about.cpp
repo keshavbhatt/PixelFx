@@ -27,6 +27,8 @@ const QList<Notice>& notices()
         {u"libjpeg-turbo"_s, u"IJG, BSD-3-Clause and Zlib"_s,
          QObject::tr("Making JPEGs smaller without loss"), u"libjpeg-turbo.txt"_s},
         {u"zlib"_s, u"Zlib"_s, QObject::tr("Compression in PNG"), u"zlib.txt"_s},
+        {u"Lensfun"_s, u"LGPL-3.0, its lens database CC-BY-SA-3.0"_s, QObject::tr("Lens profiles"),
+         u"lensfun.txt"_s},
         {u"libheif"_s, u"LGPL-3.0-or-later"_s, QObject::tr("HEIC and AVIF photos"), u"libheif.txt"_s},
         {u"libde265"_s, u"LGPL-3.0-or-later"_s, QObject::tr("HEIC decoding"), u"libde265.txt"_s},
         {u"dav1d"_s, u"BSD-2-Clause"_s, QObject::tr("AVIF decoding"), u"dav1d.txt"_s},

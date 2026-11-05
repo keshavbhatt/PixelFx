@@ -8,6 +8,7 @@
 #include <memory>
 #include <optional>
 #include <pfx/image.h>
+#include <pfx/lens.h>
 #include <pfx/settings.h>
 
 namespace pixelfx::services {
@@ -25,6 +26,8 @@ public:
     ~RenderScheduler() override;
 
     void setSource(std::shared_ptr<const pfx::Image> source);
+    /// The photo's camera and lens, for its lens profile; kept until the next photo's.
+    void setLens(const pfx::LensFacts& lens) { m_lens = lens; }
     void request(const pfx::Settings& settings);
     [[nodiscard]] bool isBusy() const { return m_running; }
 
@@ -38,6 +41,7 @@ private:
     void startNext();
 
     std::shared_ptr<const pfx::Image> m_source;
+    pfx::LensFacts m_lens;
     std::optional<pfx::Settings> m_pending;
     quint64 m_sourceGeneration = 0;
     bool m_running = false;

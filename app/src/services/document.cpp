@@ -205,6 +205,7 @@ Document::Result Document::openOnWorker(Result result,
     result.info.camera = core::cameraName(exif);
     result.info.lens = QString::fromStdString(exif.lens).trimmed();
     result.info.exposure = core::exposureLine(exif);
+    result.info.lensFacts = pfx::lensFacts(exif);
     const auto display = pfx::toSrgb8(loaded.value().image);
     if (!display) {
         result.error = fromStd(display.error().message);
@@ -316,6 +317,8 @@ void Document::deliver(const Result& result)
     m_source = result.source;
     m_beforeMixer = {}; // a new photo: colorBeforeMixer renders again
     m_scheduler->setSource(result.source);
+    m_scheduler->setLens(result.info.lensFacts);
+    m_fullScheduler->setLens(result.info.lensFacts);
     m_hover.reset();
     m_previewExact = false;
     setHoverState(HoverState::Off);
@@ -709,7 +712,9 @@ std::optional<std::array<double, 3>> Document::colorBeforeMixer(QPointF fraction
         if (!small) {
             return std::nullopt;
         }
-        auto rendered = pfx::render(std::move(small).value(), before);
+        pfx::RenderOptions options;
+        options.lens = &m_info.lensFacts;
+        auto rendered = pfx::render(std::move(small).value(), before, options);
         if (!rendered) {
             return std::nullopt;
         }

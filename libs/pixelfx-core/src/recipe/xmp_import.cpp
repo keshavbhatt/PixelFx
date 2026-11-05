@@ -91,7 +91,8 @@ std::optional<Curve> curveFrom(const std::vector<std::string>& points)
     return c;
 }
 
-// crs: settings that are about the preset itself, not the photo: never reported.
+// crs: settings that are about the preset itself, not the photo: never reported. Lightroom's
+// own lens profile names are among them: PixelFx finds each photo's lens itself (ADR-013).
 const std::set<std::string>& bookkeeping()
 {
     static const std::set<std::string> keys = {"Version",
@@ -129,7 +130,11 @@ const std::set<std::string>& bookkeeping()
                                                "Amount",
                                                "RequiresRenditionBehavior",
                                                "ProfileName",
-                                               "LensProfileSetup"};
+                                               "LensProfileSetup",
+                                               "LensProfileName",
+                                               "LensProfileFilename",
+                                               "LensProfileDigest",
+                                               "LensProfileIsEmbedded"};
     return keys;
 }
 
@@ -247,6 +252,8 @@ void addCalibrationAndCurveKeys(KeyMap& m)
     m["ParametricShadowSplit"] = {"curves.parametric.split.shadows", 1.0};
     m["ParametricMidtoneSplit"] = {"curves.parametric.split.midtones", 1.0};
     m["ParametricHighlightSplit"] = {"curves.parametric.split.highlights", 1.0};
+    m["LensProfileDistortionScale"] = {"detail.lensProfile.distortion", 1.0};
+    m["LensProfileVignettingScale"] = {"detail.lensProfile.vignetting", 1.0};
 }
 
 const KeyMap& direct()
@@ -303,6 +310,10 @@ bool mapSpecial(const std::string& key, const std::string& value, Settings& s)
     } else if (key == "AutoLateralCA") {
         if (v && *v != 0.0) {
             s.set("detail.ca.auto", true);
+        }
+    } else if (key == "LensProfileEnable") {
+        if (v && *v != 0.0) {
+            s.set("detail.lensProfile.enable", true);
         }
     } else if (key == "PostCropVignetteStyle") {
         // 1 highlight priority, 2 colour priority, 3 paint overlay.

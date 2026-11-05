@@ -26,12 +26,13 @@ enum class DocumentKind
 // Calibration, the profile, the secondary detail and effects settings, the parametric curve
 // and the lens corrections). Batch recipes are at 3: version 2 added the user's looks
 // embedded, size presets and the watermark, version 3 the same settings as presets. Recipes
-// (sidecars) are at 3: version 2 added healed spots, version 3 the same settings. Older files
-// of every kind read as they always did.
+// (sidecars) are at 3: version 2 added healed spots, version 3 the same settings. The Camera
+// profile raised presets to 3 and the others to 4, lens profiles to 4 and 5. Older files of
+// every kind read as they always did.
 inline constexpr int kDocumentVersion = 1;
-inline constexpr int kPresetVersion = 3;
-inline constexpr int kBatchVersion = 4;
-inline constexpr int kRecipeVersion = 4;
+inline constexpr int kPresetVersion = 4;
+inline constexpr int kBatchVersion = 5;
+inline constexpr int kRecipeVersion = 5;
 [[nodiscard]] int currentVersion(DocumentKind kind);
 
 // A step of a batch recipe's stack (DOCS/presets.md section 4): settings applied onto each

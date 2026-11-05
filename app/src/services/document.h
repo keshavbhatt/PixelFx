@@ -17,6 +17,7 @@
 class QThreadPool;
 class QTimer;
 #include <pfx/image.h>
+#include <pfx/lens.h>
 #include <pfx/settings.h>
 
 namespace pixelfx::services {
@@ -32,9 +33,10 @@ struct DocumentInfo
     int bitsPerSample = 8;
     QString camera; ///< "Canon EOS R5", empty when the photo does not say
     QString lens;
-    QString exposure;     ///< "ISO 100 · f/8 · 1/250 s · 24 mm"
-    bool raw = false;     ///< a camera RAW file
-    int asShotKelvin = 0; ///< a RAW's as-shot white balance, when it says (DNG)
+    QString exposure;         ///< "ISO 100 · f/8 · 1/250 s · 24 mm"
+    bool raw = false;         ///< a camera RAW file
+    int asShotKelvin = 0;     ///< a RAW's as-shot white balance, when it says (DNG)
+    pfx::LensFacts lensFacts; ///< what its lens profile is found by
 };
 
 /// One open photo (PLAN section 6): its decoded preview-size source, its settings and their

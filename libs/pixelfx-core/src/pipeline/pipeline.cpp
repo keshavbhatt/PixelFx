@@ -14,7 +14,8 @@ namespace {
 constexpr int kLookStage = 100; // between grading (90) and sharpen (110)
 
 // Implementations in pipeline order; every id must be in the registry (checked by a test).
-constexpr std::array<detail::OpImpl, 22> kImpls = {{
+constexpr std::array<detail::OpImpl, 23> kImpls = {{
+    {"lens_profile", detail::lensProfileActive, detail::lensProfileApply},
     {"chromatic_aberration", detail::chromaticAberrationActive, detail::chromaticAberrationApply},
     {"defringe", detail::defringeActive, detail::defringeApply},
     {"heal", detail::healActive, detail::healApply},
@@ -56,7 +57,7 @@ Result<Image> render(Image&& input, const Settings& settings, const RenderOption
         detail::log(LogLevel::Debug, line);
     }
     Image image = std::move(input);
-    const detail::OpContext ctx{options.threads};
+    const detail::OpContext ctx{options.threads, options.lens};
     bool lookDone = options.look == nullptr;
     for (const OpSpec& spec : registry().ops()) {
         if (options.cancel != nullptr && options.cancel->load()) {

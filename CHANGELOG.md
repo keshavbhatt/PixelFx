@@ -57,7 +57,8 @@ A new editor, a new image engine, and a new look.
   Export then go to all of them.
 - Bring your Lightroom and Camera Raw presets (.xmp): every setting of the main panels comes
   across, black and white, colour grading, Texture, Calibration and the finer detail and effects
-  settings included, and PixelFx says if it left anything out.
+  settings included, and lens corrections for lenses in the Lensfun database; PixelFx says if
+  it left anything out.
 - Over 400 built-in presets, as pictures of your own photo: film, black and white, slide film,
   cinematic, vintage processes, portrait, landscape, food, seasons and festivals, places and
   more. Keep favourites, find the recent ones, and set how strongly a preset applies with

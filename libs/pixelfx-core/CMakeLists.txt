@@ -23,6 +23,14 @@ pkg_check_modules(LCMS2 REQUIRED IMPORTED_TARGET lcms2>=2.14)
 pkg_check_modules(JPEG REQUIRED IMPORTED_TARGET libjpeg)
 pkg_check_modules(ZLIB REQUIRED IMPORTED_TARGET zlib)
 find_package(Threads REQUIRED)
+# Lens profiles (ADR-013): AUTO uses lensfun when it is found, ON requires it, OFF leaves it out
+# (the lens profile step then does nothing).
+set(PFX_WITH_LENSFUN AUTO CACHE STRING "Lens profiles through lensfun: AUTO, ON or OFF")
+if(PFX_WITH_LENSFUN STREQUAL "ON")
+    pkg_check_modules(LENSFUN REQUIRED IMPORTED_TARGET lensfun>=0.3.2)
+elseif(PFX_WITH_LENSFUN STREQUAL "AUTO")
+    pkg_check_modules(LENSFUN IMPORTED_TARGET lensfun>=0.3.2)
+endif()
 
 # JSON for the document formats (ADR-007). Private: never in the public headers.
 FetchContent_Declare(nlohmann_json
@@ -69,6 +77,7 @@ add_library(pfx_core
     src/ops/bw.cpp
     src/ops/calibration.cpp
     src/ops/lens.cpp
+    src/ops/lens_profile.cpp
     src/ops/heal.cpp
     src/ops/dehaze.cpp
     src/pipeline/pipeline.cpp
@@ -93,6 +102,13 @@ target_link_libraries(pfx_core
             Threads::Threads)
 target_compile_definitions(pfx_core PRIVATE
     PFX_VERSION_STRING="${PROJECT_VERSION}")
+if(LENSFUN_FOUND)
+    target_link_libraries(pfx_core PRIVATE PkgConfig::LENSFUN)
+    target_compile_definitions(pfx_core PRIVATE PFX_HAS_LENSFUN)
+    message(STATUS "libpixelfx: lens profiles through lensfun ${LENSFUN_VERSION}")
+else()
+    message(STATUS "libpixelfx: no lensfun, lens profiles off")
+endif()
 pfx_set_warnings(pfx_core)
 
 if(PFX_BUILD_TOOLS)

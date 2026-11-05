@@ -282,7 +282,10 @@ int apply(int argc, char* const* argv)
         const pfx::Settings settings = args.autoFirst
                                            ? pfx::autoAdjust(loaded.value().image).overlaidWith(args.settings)
                                            : args.settings;
-        auto rendered = pfx::render(std::move(loaded.value().image), settings);
+        const pfx::LensFacts lens = pfx::lensFacts(pfx::readExif(loaded.value().metadata.exif));
+        pfx::RenderOptions options;
+        options.lens = &lens;
+        auto rendered = pfx::render(std::move(loaded.value().image), settings, options);
         if (!rendered) {
             std::cerr << file << ": " << rendered.error().message << "\n";
             status = 1;
