@@ -391,8 +391,7 @@ QWidget* BatchPage::buildStatus(QWidget* parent)
 QWidget* BatchPage::buildPanel()
 {
     auto* panel = new QWidget(this);
-    panel->setObjectName(u"cropPanel"_s);
-    panel->setAttribute(Qt::WA_StyledBackground);
+    makeSidePanel(panel, Qt::LeftEdge);
     panel->setFixedWidth(kPanelWidth);
     auto* content = new QWidget(panel);
     content->setObjectName(u"batchPanelContent"_s);
@@ -454,14 +453,14 @@ QWidget* BatchPage::buildRecipe(QWidget* parent)
 QWidget* BatchPage::buildRecipeCard(QWidget* box)
 {
     auto* card = new QFrame(box);
-    card->setObjectName(u"recipeCard"_s);
+    card->setObjectName(u"card"_s);
     m_cardThumb = new QLabel(card);
     m_cardThumb->setFixedSize(54, 36);
     m_cardThumb->setObjectName(u"cardThumb"_s);
     m_cardName = new ElidedLabel(card);
-    m_cardName->setObjectName(u"presetName"_s);
+    m_cardName->setObjectName(u"itemTitle"_s);
     m_cardDetail = new ElidedLabel(card);
-    m_cardDetail->setObjectName(u"presetSummary"_s);
+    m_cardDetail->setObjectName(u"itemDetail"_s);
     m_cardChange = new QPushButton(tr("Change"), card);
     m_cardChange->setObjectName(u"small"_s);
     connect(m_cardChange, &QPushButton::clicked, this, [this] { showRecipeMenu(m_cardChange, false); });
@@ -483,7 +482,7 @@ QHBoxLayout* BatchPage::buildSecondRow(QWidget* box)
     // "Then add preset Product white   Change"
     m_secondOn = new QCheckBox(tr("Then add preset"), box);
     m_secondName = new ElidedLabel(box);
-    m_secondName->setObjectName(u"presetName"_s);
+    m_secondName->setObjectName(u"itemTitle"_s);
     m_secondChange = new QPushButton(tr("Change"), box);
     m_secondChange->setObjectName(u"link"_s);
     connect(m_secondChange, &QPushButton::clicked, this, [this] { showRecipeMenu(m_secondChange, true); });
@@ -1102,9 +1101,9 @@ QWidget* BatchPage::makeRow(const QString& file)
     auto* row = new QWidget(m_rowsBox);
     row->setObjectName(u"batchRow"_s);
     auto* name = new QLabel(QFileInfo(file).fileName(), row);
-    name->setObjectName(u"presetName"_s);
+    name->setObjectName(u"itemTitle"_s);
     auto* meta = new QLabel(describe(file), row);
-    meta->setObjectName(u"presetSummary"_s);
+    meta->setObjectName(u"itemDetail"_s);
     auto* reason = new QLabel(row); // why a photo was not saved, in plain words (batch-done.html)
     reason->setObjectName(u"batchReason"_s);
     reason->setWordWrap(true);
@@ -1122,7 +1121,7 @@ QWidget* BatchPage::makeRow(const QString& file)
     QWidget* state = makePill(row);
     state->setObjectName(u"pill"_s);
     auto* remove = new QToolButton(row);
-    remove->setObjectName(u"groupReset"_s);
+    remove->setObjectName(u"flatIcon"_s);
     remove->setIcon(icons::themed(u"close"_s, tokens().muted));
     remove->setToolTip(tr("Leave %1 out").arg(QFileInfo(file).fileName()));
     remove->setAccessibleName(tr("Leave %1 out").arg(QFileInfo(file).fileName()));

@@ -76,7 +76,7 @@ QSlider* sliderRow(QWidget* parent, const QString& name, int low, int high, int 
 WatermarkPreview::WatermarkPreview(QWidget* parent)
     : QWidget(parent)
 {
-    setObjectName(u"watermarkPreview"_s);
+    setObjectName(u"previewArea"_s);
     setAttribute(Qt::WA_StyledBackground);
     setMinimumSize(360, 300);
     setCursor(Qt::CrossCursor);
@@ -340,7 +340,7 @@ QWidget* WatermarkSheet::buildKindRow(QWidget* parent)
 QWidget* WatermarkSheet::buildControls()
 {
     auto* panel = new QWidget(this);
-    panel->setObjectName(u"watermarkControls"_s);
+    panel->setObjectName(u"sheetSide"_s);
     panel->setAttribute(Qt::WA_StyledBackground);
     panel->setFixedWidth(340);
     auto* column = new QVBoxLayout(panel);
@@ -509,7 +509,7 @@ QWidget* WatermarkSheet::buildPreview()
         sync();
     });
     auto* bar = new QWidget(side);
-    bar->setObjectName(u"watermarkBar"_s);
+    bar->setObjectName(u"previewBar"_s);
     bar->setAttribute(Qt::WA_StyledBackground);
     auto* on = new QLabel(tr("Preview on"), bar);
     on->setObjectName(u"faint"_s);

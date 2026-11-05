@@ -60,8 +60,9 @@ const QString kSheet = uR"(
         #recentTitle { font-size: 13px; font-weight: 600; }
         QPushButton#link { border: 0; background: transparent; color: {{link}}; font-size: 12px; padding: 2px 4px; }
         QPushButton#link:hover { text-decoration: underline; }
-        #adjustPanel { background: {{panel}}; border-left: 1px solid {{border}}; }
-        #cropPanel { background: {{panel}}; border-left: 1px solid {{border}}; }
+        #sidePanel { background: {{panel}}; }
+        #sidePanel[photoSide="left"] { border-left: 1px solid {{border}}; }
+        #sidePanel[photoSide="right"] { border-right: 1px solid {{border}}; }
         #section { color: {{muted}}; font-size: 11px; font-weight: 700; }
         QToolButton#swatch { border: 2px solid transparent; border-radius: 12px; }
         QToolButton#swatch:checked { border-color: {{text}}; }
@@ -75,14 +76,13 @@ const QString kSheet = uR"(
         QListWidget#settingsPages { background: {{bar}}; border: 0; border-right: 1px solid {{border}}; padding-top: 8px; outline: 0; }
         QListWidget#settingsPages::item { padding: 8px 12px; margin: 0 8px; border-radius: 7px; font-weight: 600; }
         QListWidget#settingsPages::item:selected { background: {{accentSoft}}; color: {{accent}}; }
-        #presetsPanel { background: {{panel}}; border-right: 1px solid {{border}}; }
         QPushButton#panelTab { padding: 7px 10px 9px; border: 0; border-bottom: 2px solid transparent; border-radius: 0; background: transparent; color: {{muted}}; font-weight: 500; }
         QPushButton#panelTab:checked { border-bottom-color: {{accent}}; color: {{text}}; }
         QPushButton#panelTab:hover { color: {{text}}; }
         #lookStrength { background: {{panel}}; border-top: 1px solid {{border}}; }
         #panelTabLine { background: {{border}}; }
-        #presetName { font-weight: 500; }
-        #presetSummary { color: {{muted}}; font-size: 11px; }
+        #itemTitle { font-weight: 500; }
+        #itemDetail { color: {{muted}}; font-size: 11px; }
         QToolButton#stripAdd { border: 1.5px dashed {{faint}}; border-radius: 6px; background: transparent; }
         QToolButton#stripAdd:hover { background: {{hover}}; }
         #accentText { color: {{accent}}; font-size: 12px; }
@@ -95,11 +95,11 @@ const QString kSheet = uR"(
         QToolButton#zoomButton:hover { background: {{hover}}; }
         #strip { background: {{bar}}; border-top: 1px solid {{border}}; }
     )"_s + uR"(
-        #adjustScroll, #adjustContent { background: {{panel}}; }
+        #panelScroll, #panelContent { background: {{panel}}; }
         #adjustGroup { border-top: 1px solid {{border}}; }
         QToolButton#groupToggle { border: 0; background: transparent; font-weight: 600; padding: 2px; }
-        QToolButton#groupReset { border: 0; border-radius: 6px; padding: 3px; background: transparent; }
-        QToolButton#groupReset:hover { background: {{hover}}; }
+        QToolButton#flatIcon { border: 0; border-radius: 6px; padding: 3px; background: transparent; }
+        QToolButton#flatIcon:hover { background: {{hover}}; }
         #changedDot { background: {{accent}}; border-radius: 3px; }
         #adjustName { color: {{muted}}; font-size: 12px; }
         #adjustName[changed="true"] { color: {{text}}; }
@@ -124,9 +124,9 @@ const QString kSheet = uR"(
         QLineEdit, QComboBox, QSpinBox { background: {{input}}; border: 1px solid {{border}}; border-radius: 7px; padding: 5px 8px; }
         QLineEdit:focus, QComboBox:focus, QSpinBox:focus { border-color: {{accent}}; }
         #toast { background: {{elevated}}; border: 1px solid {{border}}; border-radius: 9px; padding: 7px 12px; }
-        #watermarkControls { background: {{panel}}; border-top: 1px solid {{border}}; border-right: 1px solid {{border}}; }
-        #watermarkPreview { background: {{canvas}}; border-top: 1px solid {{border}}; }
-        #watermarkBar { background: {{panel}}; border-top: 1px solid {{border}}; }
+        #sheetSide { background: {{panel}}; border-top: 1px solid {{border}}; border-right: 1px solid {{border}}; }
+        #previewArea { background: {{canvas}}; border-top: 1px solid {{border}}; }
+        #previewBar { background: {{panel}}; border-top: 1px solid {{border}}; }
         QToolButton#positionCell { border: 1px solid {{track}}; border-radius: 5px; background: {{input}}; padding: 0; }
         QToolButton#positionCell:hover { background: {{hover}}; }
         QToolButton#positionCell:checked { background: {{accentStrong}}; border-color: {{accentStrong}}; }
@@ -205,9 +205,7 @@ const QString kControls = uR"(
         QWidget#listRow { border-radius: 7px; }
         QWidget#listRow:hover { background: {{hover}}; }
         QWidget#listRow[selected="true"] { background: {{accentSoft}}; }
-        QLabel#listTitle { font-weight: 500; }
-        QWidget#listRow[selected="true"] QLabel#listTitle { color: {{accent}}; }
-        QLabel#listSubtitle { color: {{muted}}; font-size: 11px; }
+        QWidget#listRow[selected="true"] QLabel#itemTitle { color: {{accent}}; }
         #sheetFoot { background: {{panel}}; border-top: 1px solid {{border}}; }
         pixelfx--ui--Sheet { background: transparent; }
         pixelfx--ui--Sheet #sheetFoot { border-bottom-left-radius: 13px; border-bottom-right-radius: 13px; }
@@ -234,7 +232,7 @@ const QString kControls = uR"(
         QLabel#fieldLabel { color: {{muted}}; }
         QToolButton#segmentIcon { border: 0; border-radius: 6px; padding: 4px 9px; background: transparent; }
         QToolButton#segmentIcon:checked { background: {{accentSoft}}; }
-        QFrame#recipeCard, QFrame#card { border: 1px solid {{border}}; border-radius: 10px; background: {{input}}; }
+        QFrame#card { border: 1px solid {{border}}; border-radius: 10px; background: {{input}}; }
         QLabel#heading { font-weight: 600; }
         QFrame#pill { border-radius: 10px; background: {{hover}}; }
         QFrame#pill[kind="accent"] { background: {{accentSoft}}; }
@@ -494,6 +492,14 @@ QPixmap coverThumbnail(const QImage& image, const QSize& size, int radius, qreal
     painter.end();
     out.setDevicePixelRatio(devicePixelRatio);
     return out;
+}
+
+void makeSidePanel(QWidget* panel, Qt::Edge photoSide)
+{
+    panel->setObjectName(QStringLiteral("sidePanel"));
+    panel->setProperty("photoSide",
+                       photoSide == Qt::LeftEdge ? QStringLiteral("left") : QStringLiteral("right"));
+    panel->setAttribute(Qt::WA_StyledBackground);
 }
 
 QWidget* sheetFootBar(QWidget* sheet, QLayout* foot)

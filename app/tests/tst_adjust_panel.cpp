@@ -204,7 +204,7 @@ private Q_SLOTS:
         QCOMPARE(panel.gradingWheel(0)->amount(), 20.0);
         QCOMPARE(panel.slider(u"grading.balance"_s)->value(), 10.0);
         QToolButton* reset = nullptr;
-        for (auto* b : panel.findChildren<QToolButton*>(u"groupReset"_s)) {
+        for (auto* b : panel.findChildren<QToolButton*>(u"flatIcon"_s)) {
             if (b->accessibleName() == u"Reset Color grading"_s) {
                 reset = b;
             }
@@ -241,7 +241,7 @@ private Q_SLOTS:
         panel.slider(u"geometry.angle"_s)->findChild<QSlider*>()->setValue(30); // tenths at most
         QVERIFY(panel.settings().contains("geometry.angle"));
         QToolButton* reset = nullptr;
-        for (auto* b : panel.findChildren<QToolButton*>(u"groupReset"_s)) {
+        for (auto* b : panel.findChildren<QToolButton*>(u"flatIcon"_s)) {
             if (b->accessibleName() == u"Reset Geometry"_s) {
                 reset = b;
             }
@@ -268,7 +268,7 @@ private Q_SLOTS:
         s.set("light.contrast", 20.0);
         panel.setSettings(s);
         QToolButton* resetCurves = nullptr;
-        for (auto* b : panel.findChildren<QToolButton*>(u"groupReset"_s)) {
+        for (auto* b : panel.findChildren<QToolButton*>(u"flatIcon"_s)) {
             if (b->accessibleName() == u"Reset Curves"_s) {
                 resetCurves = b;
             }

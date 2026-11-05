@@ -74,7 +74,7 @@ AdjustGroup::AdjustGroup(QString id, const QString& name, const QString& glyph, 
     m_dot->setObjectName(u"changedDot"_s);
     m_dot->setFixedSize(6, 6);
     m_dot->setToolTip(tr("Changed"));
-    m_reset->setObjectName(u"groupReset"_s);
+    m_reset->setObjectName(u"flatIcon"_s);
     m_reset->setIcon(icons::themed(u"reset"_s, tokens().muted));
     m_reset->setToolTip(tr("Reset %1").arg(name));
     m_reset->setAccessibleName(tr("Reset %1").arg(name));

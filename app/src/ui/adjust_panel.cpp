@@ -202,15 +202,14 @@ AdjustPanel::AdjustPanel(QWidget* parent)
     : QWidget(parent)
     , m_histogram(new HistogramView(this))
 {
-    setObjectName(u"adjustPanel"_s);
-    setAttribute(Qt::WA_StyledBackground);
+    makeSidePanel(this, Qt::LeftEdge);
     QHBoxLayout* top = buildTopRow();
     auto* histogramBox = new QVBoxLayout;
     histogramBox->setContentsMargins(12, 10, 12, 0);
     histogramBox->addWidget(m_histogram);
 
     auto* content = new QWidget(this);
-    content->setObjectName(u"adjustContent"_s);
+    content->setObjectName(u"panelContent"_s);
     auto* groups = new QVBoxLayout(content);
     groups->setContentsMargins(0, 0, 0, 0);
     groups->setSpacing(0);
@@ -237,7 +236,7 @@ AdjustPanel::AdjustPanel(QWidget* parent)
     groups->addStretch();
 
     auto* scroll = new QScrollArea(this);
-    scroll->setObjectName(u"adjustScroll"_s);
+    scroll->setObjectName(u"panelScroll"_s);
     scroll->setWidget(content);
     scroll->setWidgetResizable(true);
     scroll->setFrameShape(QFrame::NoFrame);

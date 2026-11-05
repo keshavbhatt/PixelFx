@@ -41,8 +41,7 @@ PresetsPanel::PresetsPanel(QWidget* parent)
     , m_pages(new QStackedWidget(this))
     , m_tabs(new QButtonGroup(this))
 {
-    setObjectName(u"presetsPanel"_s);
-    setAttribute(Qt::WA_StyledBackground);
+    makeSidePanel(this, Qt::RightEdge);
     setFixedWidth(kPanelWidth);
 
     QHBoxLayout* tabs = buildTabs();
@@ -55,12 +54,12 @@ PresetsPanel::PresetsPanel(QWidget* parent)
     m_list->setContentsMargins(0, 0, 0, 8);
     m_list->setSpacing(1);
     auto* scroll = new QScrollArea(this);
-    scroll->setObjectName(u"adjustScroll"_s);
+    scroll->setObjectName(u"panelScroll"_s);
     scroll->setWidget(m_listBox);
     scroll->setWidgetResizable(true);
     scroll->setFrameShape(QFrame::NoFrame);
     scroll->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    m_listBox->setObjectName(u"adjustContent"_s);
+    m_listBox->setObjectName(u"panelContent"_s);
 
     auto* save =
         new IconTextButton(icons::themed(u"plus"_s, tokens().text), tr("Save current as preset"), this);
@@ -254,15 +253,15 @@ PresetRow::PresetRow(std::size_t index, const core::PresetEntry& entry, QWidget*
         entry.description.isEmpty() ? core::presetSummary(entry.settings) : entry.description;
     setToolTip(tr("Apply %1. Hover to see it on the photo.").arg(entry.name));
     auto* name = new QLabel(entry.name, this);
-    name->setObjectName(u"presetName"_s);
+    name->setObjectName(u"itemTitle"_s);
     auto* what = new QLabel(summary, this);
-    what->setObjectName(u"presetSummary"_s);
+    what->setObjectName(u"itemDetail"_s);
     auto* text = new QVBoxLayout;
     text->setSpacing(0);
     text->addWidget(name);
     text->addWidget(what);
     auto* more = new QToolButton(this);
-    more->setObjectName(u"groupReset"_s);
+    more->setObjectName(u"flatIcon"_s);
     more->setIcon(icons::themed(u"more"_s, tokens().muted));
     more->setToolTip(tr("More for %1").arg(entry.name));
     more->setAccessibleName(tr("More for %1").arg(entry.name));

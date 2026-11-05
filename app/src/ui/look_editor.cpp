@@ -442,7 +442,7 @@ QHBoxLayout* LookEditor::buildStepButtons(QWidget* side)
 QWidget* LookEditor::buildSteps()
 {
     auto* side = new QWidget(this);
-    side->setObjectName(u"watermarkControls"_s); // the same panel look as the watermark sheet
+    side->setObjectName(u"sheetSide"_s); // the same panel look as the watermark sheet
     side->setAttribute(Qt::WA_StyledBackground);
     side->setFixedWidth(320);
     auto* label = new QLabel(tr("Steps, applied top to bottom").toUpper(), side);
@@ -459,7 +459,7 @@ QWidget* LookEditor::buildSteps()
     });
     connect(m_steps, &StepList::menuRequested, this, &LookEditor::showStepMenu);
     m_stepsScroll = new QScrollArea(side);
-    m_stepsScroll->setObjectName(u"adjustScroll"_s);
+    m_stepsScroll->setObjectName(u"panelScroll"_s);
     m_stepsScroll->setWidget(m_steps);
     m_stepsScroll->setWidgetResizable(true);
     m_stepsScroll->setFrameShape(QFrame::NoFrame);
@@ -475,11 +475,11 @@ QWidget* LookEditor::buildSteps()
     m_paramsTitle = new QLabel(side);
     m_paramsTitle->setObjectName(u"section"_s);
     m_params = new QWidget(side);
-    m_params->setObjectName(u"adjustContent"_s);
+    m_params->setObjectName(u"panelContent"_s);
     m_paramsLayout = new QVBoxLayout(m_params);
     m_paramsLayout->setContentsMargins(14, 0, 14, 8);
     auto* scroll = new QScrollArea(side);
-    scroll->setObjectName(u"adjustScroll"_s);
+    scroll->setObjectName(u"panelScroll"_s);
     scroll->setWidget(m_params);
     scroll->setWidgetResizable(true);
     scroll->setFrameShape(QFrame::NoFrame);
@@ -502,7 +502,7 @@ QWidget* LookEditor::buildSteps()
 QWidget* LookEditor::buildPreviewBar(QWidget* side)
 {
     auto* bar = new QWidget(side);
-    bar->setObjectName(u"watermarkBar"_s);
+    bar->setObjectName(u"previewBar"_s);
     bar->setAttribute(Qt::WA_StyledBackground);
     auto* on = new QLabel(tr("Preview on"), bar);
     on->setObjectName(u"faint"_s);
@@ -549,7 +549,7 @@ QWidget* LookEditor::buildPreview()
 {
     auto* side = new QWidget(this);
     m_preview = new QLabel(side);
-    m_preview->setObjectName(u"watermarkPreview"_s);
+    m_preview->setObjectName(u"previewArea"_s);
     m_preview->setAttribute(Qt::WA_StyledBackground);
     m_preview->setAlignment(Qt::AlignCenter);
     m_preview->setMinimumSize(360, 300);

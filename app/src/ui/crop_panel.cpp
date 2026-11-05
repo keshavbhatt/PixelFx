@@ -120,8 +120,7 @@ CropPanel::CropPanel(QWidget* parent)
     , m_orientation(new QButtonGroup(this))
     , m_overlays(new QButtonGroup(this))
 {
-    setObjectName(u"cropPanel"_s);
-    setAttribute(Qt::WA_StyledBackground);
+    makeSidePanel(this, Qt::LeftEdge);
     setFixedWidth(kPanelWidth);
     auto* column = new QVBoxLayout(this);
     column->setContentsMargins(0, 0, 0, 0);

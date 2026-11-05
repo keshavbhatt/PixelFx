@@ -49,8 +49,7 @@ HealPanel::HealPanel(HealTool* tool, QWidget* parent)
     : QWidget(parent)
     , m_tool(tool)
 {
-    setObjectName(u"healPanel"_s);
-    setAttribute(Qt::WA_StyledBackground);
+    makeSidePanel(this, Qt::LeftEdge);
     setFixedWidth(kPanelWidth);
     auto* reset = new QPushButton(tr("Reset"), this);
     reset->setToolTip(tr("Take off the spots made since Heal opened"));
@@ -173,13 +172,13 @@ QWidget* HealPanel::buildSpots()
     head->addWidget(m_count, 1);
     head->addWidget(m_removeAll);
     auto* listBox = new QWidget(box);
-    listBox->setObjectName(u"adjustContent"_s);
+    listBox->setObjectName(u"panelContent"_s);
     m_list = new QVBoxLayout(listBox);
     m_list->setContentsMargins(8, 0, 8, 8);
     m_list->setSpacing(2);
     m_list->addStretch();
     auto* scroll = new QScrollArea(box);
-    scroll->setObjectName(u"adjustScroll"_s);
+    scroll->setObjectName(u"panelScroll"_s);
     scroll->setWidget(listBox);
     scroll->setWidgetResizable(true);
     scroll->setFrameShape(QFrame::NoFrame);

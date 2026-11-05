@@ -2,6 +2,7 @@
 
 #include <QColor>
 #include <QString>
+#include <Qt>
 
 class QApplication;
 class QDialog;
@@ -70,6 +71,9 @@ void setLabelColumn(const QFormLayout* form, int width);
 /// screen of `devicePixelRatio`.
 [[nodiscard]] QPixmap coverThumbnail(const QImage& image, const QSize& size, int radius,
                                      qreal devicePixelRatio);
+/// Styles `panel` as a panel at the side of the window: the panel colour and a border on the edge
+/// that faces the photo.
+void makeSidePanel(QWidget* panel, Qt::Edge photoSide);
 /// The footer bar alone, for sheets whose body runs edge to edge (Watermark, the look editor).
 QWidget* sheetFootBar(QWidget* sheet, QLayout* foot);
 

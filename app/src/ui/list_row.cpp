@@ -29,8 +29,8 @@ ListRow::ListRow(QWidget* parent)
     setFocusPolicy(Qt::StrongFocus);
     setCursor(Qt::PointingHandCursor);
     m_icon->hide();
-    m_title->setObjectName(u"listTitle"_s);
-    m_subtitle->setObjectName(u"listSubtitle"_s);
+    m_title->setObjectName(u"itemTitle"_s);
+    m_subtitle->setObjectName(u"itemDetail"_s);
     m_subtitle->hide();
     auto* text = new QVBoxLayout;
     text->setSpacing(0);
@@ -67,7 +67,7 @@ void ListRow::setAction(const QString& glyph, const QString& tip)
 {
     if (m_action == nullptr) {
         m_action = new QToolButton(this);
-        m_action->setObjectName(u"groupReset"_s);
+        m_action->setObjectName(u"flatIcon"_s);
         m_row->addWidget(m_action);
         connect(m_action, &QToolButton::clicked, this, &ListRow::actionClicked);
     }

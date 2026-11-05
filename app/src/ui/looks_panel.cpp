@@ -192,12 +192,12 @@ LooksPanel::LooksPanel(QWidget* parent)
     m_list->setContentsMargins(0, 0, 0, 8);
     m_list->setSpacing(0);
     auto* scroll = new QScrollArea(this);
-    scroll->setObjectName(u"adjustScroll"_s);
+    scroll->setObjectName(u"panelScroll"_s);
     scroll->setWidget(m_listBox);
     scroll->setWidgetResizable(true);
     scroll->setFrameShape(QFrame::NoFrame);
     scroll->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    m_listBox->setObjectName(u"adjustContent"_s);
+    m_listBox->setObjectName(u"panelContent"_s);
 
     auto* column = new QVBoxLayout(this);
     column->setContentsMargins(0, 0, 0, 0);
