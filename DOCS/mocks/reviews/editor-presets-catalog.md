@@ -80,6 +80,8 @@ wait with an indicator and for the photo to say it shows a preview.
   Everyday gold 200, click the tile to apply". The accent frame considered instead was left out:
   the accent means selection, focus and "changed" (DESIGN lens 3).
 - Leaving the tiles, a click (which applies), or Escape ends the preview.
+- A slow preview (a large photo, zoomed in) marks the photo only once its picture is on it, and
+  says "Preparing preview" beside the zoom bar meanwhile: see `editor-zoom-loading.md`.
 
 ## Questions for the owner
 

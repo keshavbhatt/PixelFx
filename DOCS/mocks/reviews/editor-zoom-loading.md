@@ -43,6 +43,23 @@ beside the zoom bar, there only while the wait is long enough to see.
 
 Removed: a separator before the ring, part of the first draft inside the bar.
 
+## Slow preview (2026-11-05)
+
+The owner asked what happens when a preset's or a look's preview takes long to render. Until
+now the Preview tag and the line at the top came at once, over the edit still on show: for a
+second or more on a large photo, the photo claimed to be a preview it was not yet.
+
+- **The photo is marked when the preview is on it.** The tag and the line come with the
+  previewed picture, never before; until then the photo is the edit and says nothing else.
+- **The wait shows as the other waits do.** Past 0.3 s the same chip says "Preparing preview",
+  zoomed in or not, and goes when the picture arrives. Zoomed in, the screen-size preview comes
+  first (the tag with it) and the chip then says "Updating" while the sharp one renders.
+- **Only the last tile counts.** Moving on to another tile drops the render of the one left, so
+  the photo never shows a preset the pointer is no longer on, and the chip stays up until the
+  last one arrives.
+- Ending the preview (leaving the tiles, Escape, a click) ends the chip with it.
+- Screen readers hear "Preparing preview" once, politely, then the line's text.
+
 ## Questions for the owner
 
 - None.
