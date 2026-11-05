@@ -14,7 +14,8 @@ enum class ParamType
     Number,
     Boolean,
     Choice,
-    Points, // a curve
+    Points,   // a curve
+    SpotList, // healed spots
 };
 
 // One adjustable parameter. `key` is its full dotted settings key. Spatial parameters are

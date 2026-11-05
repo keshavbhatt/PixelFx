@@ -57,6 +57,8 @@ std::string_view typeName(pfx::ParamType type)
         return "choice";
     case pfx::ParamType::Points:
         return "curve";
+    case pfx::ParamType::SpotList:
+        return "spots";
     }
     return "?";
 }

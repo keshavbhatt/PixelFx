@@ -68,6 +68,13 @@ public:
     /// Leaves Crop mode, keeping the changes as one history step (`apply`) or dropping them.
     void leaveCrop(bool apply);
     [[nodiscard]] bool isCropping() const;
+    /// Heal mode (R): spots and brush strokes healed on the upright photo (mock heal.html).
+    void enterHeal();
+    /// Leaves Heal mode; every spot is already a history step.
+    void leaveHeal();
+    [[nodiscard]] bool isHealing() const { return m_healing; }
+    [[nodiscard]] class HealTool* healTool() const { return m_healTool; }
+    [[nodiscard]] class HealPanel* healPanel() const { return m_healPanel; }
     /// Batch mode (B): the Batch page in place of the photo.
     void enterBatch();
     void leaveBatch();
@@ -124,6 +131,15 @@ private:
     [[nodiscard]] QAction* namedAction(const QString& name) const;
     void setupEditActions();
     void setupCropActions();
+    void setupHeal();
+    void setupHealActions();
+    void healSpotsChanged(const pfx::Spots& spots, bool finished, const QString& label);
+    /// The preview as Heal shows it: the photo, or its Reveal dust view.
+    void showHealImage(const QImage& image);
+    /// Crop, Heal: modes that take the photo's clicks; most editing waits until they end.
+    [[nodiscard]] bool isInTool() const { return isCropping() || isHealing(); }
+    /// Leaves Crop (applying it) and Heal.
+    void leaveTools();
     void setupZoomActions();
     void connectZoom();
     void connectClipboard();
@@ -187,6 +203,13 @@ private:
     QToolButton* m_editMode = nullptr;
     QToolButton* m_cropMode = nullptr;
     QToolButton* m_batchMode = nullptr;
+    QToolButton* m_healMode = nullptr;
+    class HealTool* m_healTool = nullptr;
+    class HealPanel* m_healPanel = nullptr;
+    QList<QAction*> m_healActions;
+    pfx::Settings m_healStart;
+    bool m_healing = false;
+    bool m_revealDust = false;
     BatchPage* m_batch = nullptr;
     QWidget* m_canvasPage = nullptr;
     QWidget* m_cropStrip = nullptr;

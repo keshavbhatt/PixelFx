@@ -11,6 +11,8 @@
 #include "ui/crop_panel.h"
 #include "ui/export_sheet.h"
 #include "ui/filmstrip.h"
+#include "ui/heal_panel.h"
+#include "ui/heal_tool.h"
 #include "ui/icons.h"
 #include "ui/look_editor.h"
 #include "ui/looks_panel.h"
@@ -168,9 +170,7 @@ MainWindow::MainWindow(core::Settings& settings, QWidget* parent)
 void MainWindow::connectDocument()
 {
     connect(&m_document, &services::Document::openStarted, this, [this](const QString& path) {
-        if (isCropping()) {
-            leaveCrop(true);
-        }
+        leaveTools();
         if (isBatching()) {
             leaveBatch();
         }
@@ -181,7 +181,9 @@ void MainWindow::connectDocument()
     connect(&m_document, &services::Document::opened, this,
             [this] { m_canvas->setImage(m_document.preview(), m_document.displaySize()); });
     connect(&m_document, &services::Document::previewReady, this, [this](const QImage& image) {
-        if (!m_showingOriginal) {
+        if (isHealing()) {
+            showHealImage(image);
+        } else if (!m_showingOriginal) {
             m_canvas->setImage(image, m_document.displaySize());
         }
     });
@@ -233,9 +235,7 @@ void MainWindow::exportPhoto()
     if (!m_document.isOpen() || m_exporter.isBusy()) {
         return;
     }
-    if (isCropping()) {
-        leaveCrop(true);
-    }
+    leaveTools();
     // With a selection, every selected photo goes out with its own settings (the current one
     // from the editor, the others from their remembered edits).
     QList<ExportJob> jobs;
@@ -359,7 +359,7 @@ void MainWindow::showHistory()
 
 void MainWindow::showOriginal(bool on)
 {
-    if (!m_document.isOpen() || on == m_showingOriginal || (on && isCropping())) {
+    if (!m_document.isOpen() || on == m_showingOriginal || (on && isInTool())) {
         return;
     }
     m_showingOriginal = on;
@@ -590,6 +590,7 @@ void MainWindow::setupActions()
     addActions({openAction, quitAction, fullScreen, exportAction, settingsAction, clipping});
     setupEditActions();
     setupCropActions();
+    setupHeal();
     setupZoomActions();
 }
 
@@ -676,7 +677,7 @@ void MainWindow::setupCropActions()
     edit->setObjectName(u"edit"_s);
     edit->setShortcut(QKeySequence(Qt::Key_E));
     connect(edit, &QAction::triggered, this, [this] {
-        leaveCrop(true);
+        leaveTools();
         leaveBatch();
     });
     auto* batch = new QAction(tr("Batch"), this);
@@ -736,11 +737,11 @@ void MainWindow::buildRail()
     m_editMode->setChecked(true);
     m_cropMode = railButton(u"crop"_s, tr("Crop"), tr("Crop and rotate (C)"));
     m_cropMode->setEnabled(false);
+    m_healMode = railButton(u"bandage"_s, tr("Heal"), tr("Heal blemishes, dust and small objects (R)"));
+    m_healMode->setEnabled(false);
     m_batchMode = railButton(u"stack"_s, tr("Batch"), tr("Batch: one recipe for many photos (B)"));
     connect(m_editMode, &QToolButton::clicked, this, [this] {
-        if (isCropping()) {
-            leaveCrop(true);
-        }
+        leaveTools();
         leaveBatch();
     });
     connect(m_batchMode, &QToolButton::clicked, this, &MainWindow::enterBatch);
@@ -750,6 +751,7 @@ void MainWindow::buildRail()
     column->setSpacing(4);
     column->addWidget(m_editMode);
     column->addWidget(m_cropMode);
+    column->addWidget(m_healMode);
     column->addWidget(m_batchMode);
     column->addStretch();
 }
@@ -794,7 +796,7 @@ QWidget* MainWindow::buildCanvasPage()
 
 void MainWindow::copySettings()
 {
-    if (m_document.isOpen() && !isCropping()) {
+    if (m_document.isOpen() && !isInTool()) {
         QGuiApplication::clipboard()->setText(core::settingsToClipboard(m_document.settings()));
         showToast(tr("Settings copied"));
     }
@@ -802,7 +804,7 @@ void MainWindow::copySettings()
 
 void MainWindow::pasteSettings()
 {
-    if (!m_document.isOpen() || isCropping()) {
+    if (!m_document.isOpen() || isInTool()) {
         return;
     }
     const auto copied = core::settingsFromClipboard(QGuiApplication::clipboard()->text());
@@ -917,7 +919,7 @@ void MainWindow::connectPresets()
     connect(&m_document, &services::Document::historyChanged, this, [this] { m_thumbnailTimer->start(); });
     connect(m_presets, &PresetsPanel::applyRequested, this, &MainWindow::applyPreset);
     connect(m_presets, &PresetsPanel::previewRequested, this, [this](const core::PresetEntry* entry) {
-        if (entry == nullptr || entry->autoEnhance || !m_document.isOpen() || isCropping()) {
+        if (entry == nullptr || entry->autoEnhance || !m_document.isOpen() || isInTool()) {
             m_document.setHoverSettings(std::nullopt);
             return;
         }
@@ -1017,7 +1019,7 @@ void MainWindow::connectLooks()
             });
     connect(m_thumbnailTimer, &QTimer::timeout, this, &MainWindow::requestLookThumbnails);
     connect(looks, &LooksPanel::lookChosen, this, [this](const QString& id, int strength) {
-        if (!m_document.isOpen() || isCropping()) {
+        if (!m_document.isOpen() || isInTool()) {
             return;
         }
         QString name = tr("No look");
@@ -1184,7 +1186,7 @@ void MainWindow::requestPresetThumbnails()
 
 void MainWindow::applyPreset(const core::PresetEntry& entry)
 {
-    if (!m_document.isOpen() || isCropping()) {
+    if (!m_document.isOpen() || isInTool()) {
         return;
     }
     m_document.setHoverSettings(std::nullopt);
@@ -1241,7 +1243,7 @@ void MainWindow::connectWhiteBalance()
         m_adjust->markWhiteBalanceAuto();
     });
     connect(m_adjust, &AdjustPanel::whiteBalancePickRequested, this, [this](bool on) {
-        on&& m_document.isOpen() && !isCropping() ? m_canvas->startPick() : m_canvas->cancelPick();
+        on&& m_document.isOpen() && !isInTool() ? m_canvas->startPick() : m_canvas->cancelPick();
     });
     connect(m_canvas, &Canvas::pointPicked, this, [this](QPointF fraction) {
         m_adjust->setPicking(false);
@@ -1250,7 +1252,7 @@ void MainWindow::connectWhiteBalance()
     auto* pick = new QAction(tr("Pick a neutral point"), this);
     pick->setShortcut(QKeySequence(Qt::Key_W));
     connect(pick, &QAction::triggered, this, [this] {
-        if (m_document.isOpen() && !isCropping()) {
+        if (m_document.isOpen() && !isInTool()) {
             m_adjust->setPicking(true);
             m_canvas->startPick();
         }
@@ -1302,9 +1304,7 @@ bool MainWindow::isCropping() const
 
 void MainWindow::enterBatch()
 {
-    if (isCropping()) {
-        leaveCrop(true);
-    }
+    leaveTools();
     m_batch->setPresets(m_library.entries());
     m_batch->setSidecarFolder(m_settings.rememberEdits() ? core::SidecarStore::defaultFolder() : QString());
     if (m_batch->files().isEmpty() && m_strip->files().size() > 1) {
@@ -1335,6 +1335,7 @@ bool MainWindow::isBatching() const
 void MainWindow::enterCrop()
 {
     leaveBatch();
+    leaveHeal();
     if (!m_document.isOpen() || isCropping()) {
         m_cropMode->setChecked(isCropping());
         m_editMode->setChecked(!isCropping());
@@ -1443,7 +1444,7 @@ void MainWindow::openFiles(const QStringList& files)
 
 void MainWindow::showPhoto(int index)
 {
-    if (index < 0 || index >= m_strip->files().size() || isCropping()) {
+    if (index < 0 || index >= m_strip->files().size() || isInTool()) {
         return;
     }
     m_strip->setCurrent(index);
@@ -1548,14 +1549,15 @@ void MainWindow::showOpened(const services::DocumentInfo& info)
     m_adjust->setPhotoDetails(info.exposure, QStringList{info.camera, info.lens}.join(u'\n').trimmed());
     m_panels->show();
     m_rail->show();
-    m_presets->setVisible(!isCropping());
-    m_strip->setVisible(!isCropping());
+    m_presets->setVisible(!isInTool());
+    m_strip->setVisible(!isInTool());
     m_original->setEnabled(true);
     m_compare->setEnabled(true);
     m_export->setEnabled(true);
     m_canvas->setOriginal(m_document.original());
     m_showingOriginal = false;
     m_cropMode->setEnabled(true);
+    m_healMode->setEnabled(true);
 }
 
 void MainWindow::showFailed(const QString& path, const QString& message)
@@ -1777,12 +1779,24 @@ bool MainWindow::showWhatsNewIfUpdated()
 
 void MainWindow::keyPressEvent(QKeyEvent* event)
 {
-    if (event->key() == Qt::Key_Space && !event->isAutoRepeat() && !isCropping()) {
+    if (isHealing() && (event->modifiers() & ~(Qt::ShiftModifier | Qt::KeypadModifier)) == Qt::NoModifier) {
+        const double step = event->modifiers().testFlag(Qt::ShiftModifier) ? 0.01 : 0.002;
+        const QHash<int, QPointF> moves = {{Qt::Key_Left, {-step, 0}},
+                                           {Qt::Key_Right, {step, 0}},
+                                           {Qt::Key_Up, {0, -step}},
+                                           {Qt::Key_Down, {0, step}}};
+        if (moves.contains(event->key())) {
+            m_healTool->nudge(moves.value(event->key()));
+            m_canvas->update();
+            return;
+        }
+    }
+    if (event->key() == Qt::Key_Space && !event->isAutoRepeat() && !isInTool()) {
         showOriginal(true);
         return;
     }
     if ((event->key() == Qt::Key_Left || event->key() == Qt::Key_Right) &&
-        event->modifiers() == Qt::NoModifier && m_document.isOpen() && !isCropping()) {
+        event->modifiers() == Qt::NoModifier && m_document.isOpen() && !isInTool()) {
         showPhoto(m_strip->current() + (event->key() == Qt::Key_Right ? 1 : -1));
         return;
     }

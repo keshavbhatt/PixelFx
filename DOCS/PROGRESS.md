@@ -34,26 +34,52 @@ Decisions the work stopped at; everything else went ahead within the approved mo
 3. The theme applies at the next start (icons are tinted when made). Accept, or ask for a live
    switch.
 4. macOS CI skips one curve-editor test (a crash only on the runner, clean under ASan locally).
-5. Spot heal needs a `spots` key in recipes (presets.md, a version bump of recipes).
-6. Real Lightroom `.xmp` exports should be tried on the importer (only hand-made ones so far).
-7. Batch writes beside each original into a folder named "PixelFx": keep the name?
-8. Zoom has no FEATURES row; add one (it is built).
-9. Small departures from approved mocks, until their parts exist: no Favorites chip; the look
+5. Real Lightroom `.xmp` exports should be tried on the importer (only hand-made ones so far).
+6. Batch writes beside each original into a folder named "PixelFx": keep the name?
+7. Zoom has no FEATURES row; add one (it is built).
+8. Small departures from approved mocks, until their parts exist: no Favorites chip; the look
     editor previews on This photo and a colour ramp (no Portrait or Landscape test photos are
-    shipped); the main menu leaves out Save edit with the file and Online guide (item 11);
+    shipped); the main menu leaves out Save edit with the file and Online guide (item 10);
     Copy to clipboard has no shortcut (the mock's
     Ctrl+Shift+C is Copy settings).
-10. Still to plan: monitor profile, GPU preview, sidecars next to the photo, the batch-end
+9. Still to plan: monitor profile, GPU preview, sidecars next to the photo, the batch-end
     notification (needs Qt D-Bus on Linux, a dependency decision).
-11. Online guide: the main menu and About leave it out until there is a guide to point at.
+10. Online guide: the main menu and About leave it out until there is a guide to point at.
     Where should it go (a page on ktechpit.com, the GitHub wiki, the README)?
-12. Small choices made with the approved About, What's new and grading mocks, easy to change:
+11. Small choices made with the approved About, What's new and grading mocks, easy to change:
     What's new does not open on a first install (nothing is new yet), only after an update from
     an earlier version, PixelFx 1 included; Diagnostics leaves out "memory for previews" (there
     is no such limit yet); the Color grading group starts closed, like the Color mixer; the
     open-source notices list what PixelFx ships (THIRD_PARTY.md), not the licensing module.
+12. Small choices made in Heal, easy to change: while Heal is on, the photo shows upright and
+    uncropped (spots live in that frame, so a later crop never moves them; the mock shows no
+    crop either way); spots are named "Spot 1", "Brush stroke 2" rather than by place ("Spot in
+    the sky" in the mock needs scene recognition); Reset takes off the spots made since Heal
+    opened and Done keeps them (each spot is also its own history step, and undo works in
+    Heal); Reveal dust explains itself in its tooltip rather than a first-time line.
 
 ## Sessions (newest first)
+
+### 2026-11-05 (spot heal)
+
+- Spot heal (E20, mock `heal.html`), approved with its format by the owner today.
+- libpixelfx: a `Spots` settings value and the `heal` operation at stage 5, before geometry, so
+  spots are placed on the upright photo and a later crop never moves them. `healSpot` copies
+  the source in, adds the difference between the two surroundings fitted as a plane per channel
+  (a spot on a sky gradient matches both sides) and feathers it; `findHealSource` tries 96
+  places around the spot, keeps those inside the photo and clear of the spot, and picks the one
+  whose surroundings match and whose inside looks like the spot's surroundings (so another
+  blemish is not copied in). Recipes are at version 2 for `heal.spots` (presets.md sections 2,
+  4, 5). Tests: a blemish on a gradient, a stroke over a line, a second blemish avoided, the
+  photo's edge, render with a crop, the format, and 200 random spots on tiny and thin images;
+  clean under ASan and UBSan; the document fuzzer ran 4.7 million inputs with a spots seed.
+- The app: Heal on the rail (R) with its panel (Spot or Brush, size, feather, opacity, Show
+  spots V, Reveal dust D, the list with Remove all, Reset and Done), the canvas draws each spot
+  (white with a dark outline, the selected one with its hollow source and a dashed line), click
+  to heal, drag to brush, drag a spot or its source, [ and ] for size, Delete, the arrow keys to
+  nudge, Escape to leave. Each spot is a history step and undo works in Heal. Copy and paste
+  never carry spots. A `CanvasTool` hook keeps the canvas free of Heal's logic; Heal's part of
+  the window is in `main_window_heal.cpp`. 33 app suites and 114 library tests pass.
 
 ### 2026-11-05 (batch format version 2)
 

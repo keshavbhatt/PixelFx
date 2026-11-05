@@ -14,7 +14,8 @@ namespace {
 constexpr int kLookStage = 100; // between grading (90) and sharpen (110)
 
 // Implementations in pipeline order; every id must be in the registry (checked by a test).
-constexpr std::array<detail::OpImpl, 15> kImpls = {{
+constexpr std::array<detail::OpImpl, 16> kImpls = {{
+    {"heal", detail::healActive, detail::healApply},
     {"geometry", detail::geometryActive, detail::geometryApply},
     {"denoise", detail::denoiseActive, detail::denoiseApply},
     {"white_balance", detail::whiteBalanceActive, detail::whiteBalanceApply},

@@ -19,6 +19,10 @@ qt_add_library(pixelfx_ui STATIC
     filmstrip.cpp
     filmstrip.h
     export_sheet.h
+    heal_panel.cpp
+    heal_panel.h
+    heal_tool.cpp
+    heal_tool.h
     histogram_view.cpp
     histogram_view.h
     icons.cpp
@@ -28,6 +32,7 @@ qt_add_library(pixelfx_ui STATIC
     looks_panel.cpp
     looks_panel.h
     main_window.cpp
+    main_window_heal.cpp
     main_window.h
     paste_sheet.cpp
     paste_sheet.h

@@ -62,6 +62,15 @@ ParamSpec choice(std::string key, std::vector<std::string> choices)
     return p;
 }
 
+void addHeal(std::vector<OpSpec>& ops)
+{
+    ParamSpec spots;
+    spots.key = "heal.spots";
+    spots.type = ParamType::SpotList;
+    // First of all, on the upright photo, so a spot's position never depends on the crop.
+    ops.push_back({"heal", "heal", 1, 5, false, {spots}});
+}
+
 void addGeometry(std::vector<OpSpec>& ops)
 {
     ops.push_back({"geometry",
@@ -120,10 +129,11 @@ void addEffects(std::vector<OpSpec>& ops)
 }
 
 // Stages follow DOCS/presets.md section 5; gaps leave room for the operations of later
-// milestones (geometry 10, dehaze 45, mixer 80, grading 90, look 100, vignette 120 ...).
+// milestones (heal 5, geometry 10, dehaze 45, mixer 80, grading 90, look 100, vignette 120 ...).
 std::vector<OpSpec> builtInOps()
 {
     std::vector<OpSpec> ops;
+    addHeal(ops);
     addGeometry(ops);
     ops.push_back({"denoise",
                    "detail",
@@ -215,6 +225,64 @@ std::optional<std::string> normalizeCurve(const std::string& key, Settings& sett
     return "Clamped points of " + key + " into 0 to 1";
 }
 
+constexpr std::size_t kMaxSpots = 1000;
+constexpr std::size_t kMaxStrokePoints = 4096;
+
+bool finiteSpot(const Spot& s)
+{
+    const auto ok = [](double v) { return std::isfinite(v); };
+    return ok(s.x) && ok(s.y) && ok(s.sourceX) && ok(s.sourceY) && ok(s.radius) && ok(s.feather) &&
+           ok(s.opacity) &&
+           std::ranges::all_of(s.stroke, [&](const CurvePoint& p) { return ok(p.x) && ok(p.y); });
+}
+
+Spot clampedSpot(Spot s)
+{
+    const auto unit = [](double& v) { v = std::clamp(v, 0.0, 1.0); };
+    unit(s.x);
+    unit(s.y);
+    unit(s.sourceX);
+    unit(s.sourceY);
+    s.radius = std::clamp(s.radius, 0.001, 0.25);
+    s.feather = std::clamp(s.feather, 0.0, 100.0);
+    s.opacity = std::clamp(s.opacity, 0.0, 100.0);
+    if (s.stroke.size() == 1) {
+        s.stroke.clear(); // one point is a spot
+    }
+    if (s.stroke.size() > kMaxStrokePoints) {
+        s.stroke.resize(kMaxStrokePoints);
+    }
+    for (CurvePoint& p : s.stroke) {
+        unit(p.x);
+        unit(p.y);
+    }
+    return s;
+}
+
+std::optional<std::string> normalizeSpots(const std::string& key, Settings& settings)
+{
+    const auto* spots = std::get_if<Spots>(settings.find(key));
+    if (spots == nullptr) {
+        settings.erase(key);
+        return "Ignored " + key + ": not a list of spots";
+    }
+    Spots fixed;
+    for (const Spot& s : *spots) {
+        if (finiteSpot(s) && fixed.size() < kMaxSpots) {
+            fixed.push_back(clampedSpot(s));
+        }
+    }
+    if (fixed == *spots) {
+        return std::nullopt;
+    }
+    if (fixed.empty()) {
+        settings.erase(key);
+        return "Ignored " + key + ": no usable spot";
+    }
+    settings.set(key, std::move(fixed));
+    return "Fixed spots of " + key + " (out of range, unreadable or too many)";
+}
+
 // Checks one value against its spec; fixes or drops it and says what happened.
 std::optional<std::string> normalizeOne(const ParamSpec& spec, const std::string& key, Settings& settings)
 {
@@ -251,6 +319,8 @@ std::optional<std::string> normalizeOne(const ParamSpec& spec, const std::string
     }
     case ParamType::Points:
         return normalizeCurve(key, settings);
+    case ParamType::SpotList:
+        return normalizeSpots(key, settings);
     }
     return std::nullopt;
 }
@@ -296,6 +366,8 @@ Value Registry::defaultValue(const ParamSpec& spec)
         return spec.choices.empty() ? std::string() : spec.choices.front();
     case ParamType::Points:
         return Curve{{0.0, 0.0}, {1.0, 1.0}};
+    case ParamType::SpotList:
+        return Spots{};
     }
     return spec.defaultValue;
 }

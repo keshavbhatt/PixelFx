@@ -77,7 +77,7 @@ preview and export use resolution-independent parameters so they match (v1 defec
 | E17 | Edits remembered per photo in a sidecar (app library by default, or next to the photo) | none | KEEP | wip: app library by default, keyed by a file fingerprint so renames and moves keep the edit, written off the GUI thread (`core::SidecarStore`, `Document`); next to the photo and the setting in M3 |
 | E18 | GPU-accelerated preview with automatic CPU fallback | none | KEEP 2.1 (PLAN D14) | |
 | E19 | Local adjustments: brush, linear and radial gradient masks | none | LATER | |
-| E20 | Spot heal: click or brush over a blemish, dust spot or small object; the patch is found automatically and blended; spots are stored in the recipe (relative coordinates), editable and removable | none | KEEP (sells: the app is a "retouching" app, owner 2026-11-04) | todo |
+| E20 | Spot heal: click or brush over a blemish, dust spot or small object; the patch is found automatically and blended; spots are stored in the recipe (relative coordinates), editable and removable | none | KEEP (sells: the app is a "retouching" app, owner 2026-11-04) | done: Heal mode (R) from `heal.html`, spots and brush strokes, patch picked, source draggable, size, feather, opacity, Show spots (V), Reveal dust (D), list, undo; stored as `heal.spots` (recipes version 2) on the upright photo |
 | E20b | Clone brush, red eye removal | none | LATER | |
 | E21 | Layers, text, drawing, compositing | none | DROP (not a raster editor; Krita and GIMP own that) | |
 | E22 | Remove background (subject cut-out to transparent PNG or WebP, or onto a colour), on the user's machine, model downloaded once on first use | none | KEEP 2.1 (sells: product photos, online sellers; an ADR on the model and its licence first) | |

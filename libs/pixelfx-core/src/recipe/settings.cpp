@@ -73,6 +73,15 @@ Curve Settings::curve(std::string_view key) const
     return {};
 }
 
+Spots Settings::spots(std::string_view key) const
+{
+    const Value* v = find(key);
+    if (const auto* c = v == nullptr ? nullptr : std::get_if<Spots>(v)) {
+        return *c;
+    }
+    return {};
+}
+
 std::vector<std::string> Settings::keys() const
 {
     std::vector<std::string> out;

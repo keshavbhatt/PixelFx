@@ -17,7 +17,28 @@ struct CurvePoint
 };
 using Curve = std::vector<CurvePoint>;
 
-using Value = std::variant<double, bool, std::string, Curve>;
+// A healed spot (FEATURES E20, DOCS/presets.md group "heal"): the area around `x`, `y` is
+// covered with the area around `sourceX`, `sourceY`, matched in tone to its surroundings.
+// Positions are fractions of the upright photo's width and height before turns, straightening
+// and the crop, so cropping later never moves a spot; `radius` is a fraction of the long edge.
+// A brush stroke has two or more `stroke` points (fractions too, the first at x, y) and is
+// healed along its length, the source moved by the same offset. `feather` and `opacity` are
+// 0 to 100.
+struct Spot
+{
+    double x = 0.5;
+    double y = 0.5;
+    double sourceX = 0.5;
+    double sourceY = 0.5;
+    double radius = 0.02;
+    double feather = 50.0;
+    double opacity = 100.0;
+    std::vector<CurvePoint> stroke;
+    bool operator==(const Spot&) const = default;
+};
+using Spots = std::vector<Spot>;
+
+using Value = std::variant<double, bool, std::string, Curve, Spots>;
 
 // The settings of a photo (a recipe) or part of them (a preset), keyed by dotted paths such
 // as "light.exposure" or "detail.sharpen.amount". The first segment is the group, as in
@@ -34,6 +55,7 @@ public:
     [[nodiscard]] bool boolean(std::string_view key, bool fallback) const;
     [[nodiscard]] std::string text(std::string_view key, std::string_view fallback) const;
     [[nodiscard]] Curve curve(std::string_view key) const; // empty when absent
+    [[nodiscard]] Spots spots(std::string_view key) const; // empty when absent
 
     [[nodiscard]] bool isEmpty() const { return m_values.empty(); }
     [[nodiscard]] std::vector<std::string> keys() const;

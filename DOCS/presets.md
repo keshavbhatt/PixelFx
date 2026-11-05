@@ -57,7 +57,11 @@ internal units, so a file reads like the panel.
   "effects": { "vignette": { "amount": -22, "midpoint": 50, "roundness": 0 }, "grain": { "amount": 0, "size": 25 }, "fade": 0 },
   "geometry":{ "crop": { "x": 0.04, "y": 0.03, "w": 0.88, "h": 0.87 }, "angle": 1.5, "rotate90": 0, "flipH": false, "flipV": false,
                "perspective": { "vertical": 0, "horizontal": 0, "corners": null } },
-  "look":    { "id": "builtin:golden-hour", "strength": 72 }
+  "look":    { "id": "builtin:golden-hour", "strength": 72 },
+  "heal":    { "spots": [ { "x": 0.31, "y": 0.22, "source": { "x": 0.36, "y": 0.24 }, "radius": 0.015,
+                            "feather": 50, "opacity": 100 },
+                          { "x": 0.6, "y": 0.7, "source": { "x": 0.6, "y": 0.66 }, "radius": 0.01,
+                            "feather": 30, "opacity": 100, "stroke": [[0.6, 0.7], [0.64, 0.71], [0.7, 0.7]] } ] }
 }
 ```
 
@@ -70,6 +74,15 @@ internal units, so a file reads like the panel.
   full-size export (LESSONS row 3).
 - White balance in a preset is `relative` (shift from the photo's own) by default; `absolute`
   (Kelvin) is stored only when the user picked Kelvin.
+- `heal.spots` (recipes version 2, FEATURES E20) lists the photo's healed spots in the order
+  they were made. `x`, `y` and `source` are fractions of the upright photo's width and height
+  **before** turns, flips, straightening, perspective and the crop (healing runs first, section
+  5), so changing the crop later never moves a spot. `radius` is a fraction of the long edge
+  (0.001 to 0.25), `feather` and `opacity` 0 to 100. A `stroke` of two or more points (the
+  first at `x`, `y`) is a brush stroke healed along its length with the source moved by the
+  same offset. Values outside the ranges are clamped; a list that cannot be read is dropped
+  with a warning; at most 1000 spots and 4096 points per stroke are kept. Spots belong to one
+  photo: Save as preset, copy and paste, and batch recipes never carry them.
 - `look.id` refers to a look by id: `builtin:<slug>` for shipped looks, a UUID for the user's.
   A file that must stand alone (export, sharing) embeds the look instead:
   `"look": { "embedded": { ...look body with its id and name... }, "strength": 72 }`; a batch
@@ -136,6 +149,9 @@ internal units, so a file reads like the panel.
 }
 ```
 
+- Recipes are at **version 2**: version 2 added the `heal` group (section 2). A version 1
+  recipe has no spots and reads unchanged; a file above version 2 is refused as made by a newer
+  PixelFx.
 - The fingerprint (size plus a hash of the first and last 64 KiB) re-attaches a sidecar to a
   photo that was moved or renamed within the library folder.
 - History entries store only the changed groups (deltas), capped at 200 steps per photo.
@@ -180,7 +196,7 @@ Batch recipes are at **version 2** (recipes, presets and looks stay at version 1
 
 ## 5. Pipeline order (fixed, documented here and in ADR-004)
 
-Input decode and orientation, RAW development, then: geometry (crop, rotate, perspective, as
+Input decode and orientation, RAW development, then: spot heal -> geometry (crop, rotate, perspective, as
 one resampling) -> noise reduction -> white balance -> exposure -> dehaze -> tone (highlights,
 shadows, whites, blacks, contrast) -> clarity -> curves -> colour mixer -> vibrance and
 saturation -> colour grading -> **look** (blended by strength) -> sharpen -> vignette -> grain

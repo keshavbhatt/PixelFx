@@ -16,6 +16,8 @@
 //                                      when the batch is done
 //   PIXELFX_DEBUG_EXPAND=<group>       open this adjustment group ("Color grading") and close the
 //                                      others
+//   PIXELFX_DEBUG_HEAL=<x,y;x,y...>    enter Heal once the photo is open and heal a spot at each
+//                                      point (fractions of the photo); "-" enters only
 //   PIXELFX_DEBUG_GRAB=<file.png>      grab the window once the photo is shown (or after 2 s
 //                                      with nothing to show) and quit
 #include "app/application.h"
@@ -31,6 +33,7 @@
 #include "ui/canvas.h"
 #include "ui/crop_panel.h"
 #include "ui/export_sheet.h"
+#include "ui/heal_tool.h"
 #include "ui/look_editor.h"
 #include "ui/main_window.h"
 #include "ui/preset_save_sheet.h"
@@ -65,6 +68,23 @@ void applyCropHook(pixelfx::ui::MainWindow& window)
             }
         });
     }
+}
+
+void applyHealHook(pixelfx::ui::MainWindow& window)
+{
+    const QString heal = qEnvironmentVariable("PIXELFX_DEBUG_HEAL");
+    if (heal.isEmpty()) {
+        return;
+    }
+    QObject::connect(&window.document(), &pixelfx::services::Document::opened, &window, [&window, heal] {
+        window.enterHeal();
+        for (const QString& point : heal.split(u';', Qt::SkipEmptyParts)) {
+            if (point.contains(u',')) {
+                window.healTool()->addSpotAt(
+                    {point.section(u',', 0, 0).toDouble(), point.section(u',', 1, 1).toDouble()});
+            }
+        }
+    });
 }
 
 void applyExpandHook(const pixelfx::ui::MainWindow& window)
@@ -225,6 +245,7 @@ void applyDebugHooks(pixelfx::ui::MainWindow& window, QStringList& files)
     }
     applyCropHook(window);
     applyExpandHook(window);
+    applyHealHook(window);
     applyGrabHook(window, files);
 }
 

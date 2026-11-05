@@ -24,6 +24,8 @@ qt_add_library(pixelfx_core STATIC
     photo_details.h
     presets.cpp
     presets.h
+    reveal_dust.cpp
+    reveal_dust.h
     sidecar_store.cpp
     sidecar_store.h
     watermark.cpp

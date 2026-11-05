@@ -80,6 +80,17 @@ pfx::Settings withoutCrop(const pfx::Settings& settings)
     return s;
 }
 
+pfx::Settings withoutGeometry(const pfx::Settings& settings)
+{
+    pfx::Settings out;
+    for (const std::string& key : settings.keys()) {
+        if (pfx::groupOf(key) != "geometry") {
+            out.set(key, *settings.find(key));
+        }
+    }
+    return out;
+}
+
 pfx::Settings geometryOnly(const pfx::Settings& settings)
 {
     return settings.onlyGroups({"geometry"});

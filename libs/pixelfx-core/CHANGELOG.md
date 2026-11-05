@@ -26,6 +26,12 @@ Semantic Versioning (the API may change before 1.0).
 
 ### Added
 
+- Spot heal: `Spot` and `Spots` (a new settings value, `ParamType::SpotList`), the `heal`
+  operation that runs first, on the upright photo, so a later crop never moves a spot;
+  `healSpot` (the source copied in with its tone fitted to the surroundings as a plane per
+  channel, then feathered) and `findHealSource` (a nearby patch whose surroundings match and
+  whose inside is clean). Recipes are at version 2 (`kRecipeVersion`) for `heal.spots`;
+  version 1 recipes read unchanged.
 - Batch documents are at version 2 (`kBatchVersion`, `currentVersion`): `BatchBody` carries the
   user's looks the stack refers to (`looks`, `EmbeddedLook`), a named size (`sizePreset`,
   `fitInside`) and the watermark as JSON text for the app. A look on its own is written as a

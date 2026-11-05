@@ -24,6 +24,8 @@ struct OpImpl
 };
 
 // Implementations, one translation unit per group.
+bool healActive(const Settings& s);
+void healApply(Image& image, const Settings& s, const OpContext& ctx);
 bool geometryActive(const Settings& s);
 void geometryApply(Image& image, const Settings& s, const OpContext& ctx);
 bool exposureActive(const Settings& s);

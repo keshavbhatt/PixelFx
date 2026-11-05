@@ -41,6 +41,10 @@ A new editor, a new image engine, and a new look.
 - Bring your Lightroom and Camera Raw presets (.xmp): light, colour, curves, detail and effects
   come across, and PixelFx says which settings it left out.
 - Color mixer: hue, saturation and luminance for eight colour ranges.
+- Spot heal (R): click a blemish, a dust spot or a small object and it is gone, a matching
+  patch picked for you; paint along a wire or a scratch with the brush. Every spot stays
+  editable: move it, pick another patch, change its size, or take it off. Reveal dust (D)
+  shows specks on skies. Spots stay with their photo when you crop later.
 - Color grading: a wheel for the shadows and one for the highlights to give a photo a colour
   mood, cool shadows and warm light for example, with a balance between them.
 - Dehaze clears distance haze from landscapes and city views, or adds a little mist.

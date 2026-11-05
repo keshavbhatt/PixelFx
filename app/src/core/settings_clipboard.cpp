@@ -6,11 +6,18 @@ namespace pixelfx::core {
 
 namespace {
 
+// What belongs to one photo and never travels: its crop and turns, and its healed spots.
+bool ownToPhoto(const std::string& key)
+{
+    const std::string_view group = pfx::groupOf(key);
+    return group == "geometry" || group == "heal";
+}
+
 pfx::Settings withoutGeometry(const pfx::Settings& settings)
 {
     pfx::Settings out;
     for (const std::string& key : settings.keys()) {
-        if (pfx::groupOf(key) != "geometry") {
+        if (!ownToPhoto(key)) {
             out.set(key, *settings.find(key));
         }
     }
@@ -45,7 +52,7 @@ pfx::Settings pasted(const pfx::Settings& current, const pfx::Settings& copied)
 {
     pfx::Settings out = withoutGeometry(copied);
     for (const std::string& key : current.keys()) {
-        if (pfx::groupOf(key) == "geometry") {
+        if (ownToPhoto(key)) {
             out.set(key, *current.find(key));
         }
     }

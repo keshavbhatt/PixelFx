@@ -15,6 +15,8 @@ namespace pixelfx::core {
 /// Stores `crop`, or removes the crop keys when it covers the whole photo.
 void setCrop(pfx::Settings& settings, const QRectF& crop);
 [[nodiscard]] pfx::Settings withoutCrop(const pfx::Settings& settings);
+/// Everything but the geometry group: the upright photo as Heal shows it.
+[[nodiscard]] pfx::Settings withoutGeometry(const pfx::Settings& settings);
 /// Only the geometry group: what the original needs to line up with the edit.
 [[nodiscard]] pfx::Settings geometryOnly(const pfx::Settings& settings);
 

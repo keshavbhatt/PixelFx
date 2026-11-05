@@ -103,6 +103,10 @@ public:
     /// over it; the crop stays in the settings.
     void setCropEditing(bool on);
     [[nodiscard]] bool isCropEditing() const { return m_cropEditing; }
+    /// While healing, the preview shows the upright photo with no geometry at all, the frame
+    /// spots are placed in (presets.md, group "heal"); the geometry stays in the settings.
+    void setHealEditing(bool on);
+    [[nodiscard]] bool isHealEditing() const { return m_healEditing; }
     /// The size of the photo these settings export: the upright size after turn, straighten
     /// and crop (the uncropped size while cropping).
     [[nodiscard]] QSize displaySize() const;
@@ -159,6 +163,7 @@ private:
     QImage m_plainOriginal; ///< decoded with no settings at all
     pfx::Settings m_originalGeometry;
     bool m_cropEditing = false;
+    bool m_healEditing = false;
     bool m_openAsLeft = true;
     std::optional<pfx::Settings> m_hover;
     std::shared_ptr<const pfx::Image> m_thumbnailSource;

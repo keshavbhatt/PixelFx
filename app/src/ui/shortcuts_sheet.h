@@ -7,7 +7,7 @@ class QLineEdit;
 namespace pixelfx::ui {
 
 /// Keyboard shortcuts (mock shortcuts.html): every shortcut by section, searchable; F1 and
-/// Ctrl+/ open it. Rows for features still to come (Heal) are left out.
+/// Ctrl+/ open it.
 class ShortcutsSheet : public QDialog
 {
     Q_OBJECT

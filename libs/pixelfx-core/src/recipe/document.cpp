@@ -55,6 +55,68 @@ std::optional<Curve> curveFromJson(const Json& j)
     return curve;
 }
 
+// A list of spots (group "heal"): {"x", "y", "source": {"x", "y"}, "radius", "feather",
+// "opacity", "stroke": [[x, y], ...]}. Missing fields take Spot's defaults.
+std::optional<Spots> spotsFromJson(const Json& j)
+{
+    if (!j.is_array()) {
+        return std::nullopt;
+    }
+    Spots spots;
+    for (const Json& item : j) {
+        if (!item.is_object()) {
+            return std::nullopt;
+        }
+        Spot s;
+        const auto num = [](const Json& o, const char* name, double fallback) {
+            const auto it = o.find(name);
+            return it != o.end() && it->is_number() ? it->get<double>() : fallback;
+        };
+        s.x = num(item, "x", s.x);
+        s.y = num(item, "y", s.y);
+        s.sourceX = s.x;
+        s.sourceY = s.y;
+        if (const auto source = item.find("source"); source != item.end() && source->is_object()) {
+            s.sourceX = num(*source, "x", s.x);
+            s.sourceY = num(*source, "y", s.y);
+        }
+        s.radius = num(item, "radius", s.radius);
+        s.feather = num(item, "feather", s.feather);
+        s.opacity = num(item, "opacity", s.opacity);
+        if (const auto stroke = item.find("stroke"); stroke != item.end()) {
+            auto points = curveFromJson(*stroke);
+            if (!points) {
+                return std::nullopt;
+            }
+            s.stroke = std::move(*points);
+        }
+        spots.push_back(std::move(s));
+    }
+    return spots;
+}
+
+// One value at `key`: a number, true or false, text, a curve, or the spots of "heal.spots".
+void readValue(const std::string& key, const Json& child, Settings& out, ParseReport* report)
+{
+    if (child.is_number()) {
+        out.set(key, child.get<double>());
+    } else if (child.is_boolean()) {
+        out.set(key, child.get<bool>());
+    } else if (child.is_string()) {
+        out.set(key, child.get<std::string>());
+    } else if (key == "heal.spots") {
+        if (auto spots = spotsFromJson(child)) {
+            out.set(key, std::move(*spots));
+        } else if (report != nullptr) {
+            report->warnings.push_back("Ignored " + key + ": unreadable spots");
+        }
+    } else if (auto curve = curveFromJson(child)) {
+        out.set(key, std::move(*curve));
+    } else if (report != nullptr) {
+        report->warnings.push_back("Ignored " + key + ": unreadable value");
+    }
+}
+
 // Nested JSON objects become dotted keys ("detail": {"sharpen": {"amount": 30}} becomes
 // "detail.sharpen.amount"). null means "not set" and is skipped.
 void flatten(const Json& node, const std::string& prefix, Settings& out, ParseReport* report)
@@ -76,18 +138,8 @@ void flatten(const Json& node, const std::string& prefix, Settings& out, ParseRe
         key += name;
         if (child.is_object()) {
             flatten(child, key, out, report);
-        } else if (child.is_null()) {
-            continue;
-        } else if (child.is_number()) {
-            out.set(key, child.get<double>());
-        } else if (child.is_boolean()) {
-            out.set(key, child.get<bool>());
-        } else if (child.is_string()) {
-            out.set(key, child.get<std::string>());
-        } else if (auto curve = curveFromJson(child)) {
-            out.set(key, std::move(*curve));
-        } else if (report != nullptr) {
-            report->warnings.push_back("Ignored " + key + ": unreadable value");
+        } else if (!child.is_null()) {
+            readValue(key, child, out, report);
         }
     }
 }
@@ -120,6 +172,25 @@ Json valueToJson(const Value& value)
                     points.push_back(Json::array({p.x, p.y}));
                 }
                 return points;
+            } else if constexpr (std::is_same_v<T, Spots>) {
+                Json spots = Json::array();
+                for (const Spot& s : v) {
+                    Json spot = {{"x", s.x},
+                                 {"y", s.y},
+                                 {"source", {{"x", s.sourceX}, {"y", s.sourceY}}},
+                                 {"radius", s.radius},
+                                 {"feather", s.feather},
+                                 {"opacity", s.opacity}};
+                    if (!s.stroke.empty()) {
+                        Json points = Json::array();
+                        for (const CurvePoint& p : s.stroke) {
+                            points.push_back(Json::array({p.x, p.y}));
+                        }
+                        spot["stroke"] = points;
+                    }
+                    spots.push_back(std::move(spot));
+                }
+                return spots;
             } else {
                 return Json(v);
             }
@@ -180,6 +251,7 @@ std::optional<Error> readEnvelope(const Json& json, Document& doc)
     }
     // Migrations, one step per version, each with a test. Batch 1 to 2: version 2 only added
     // keys (embedded looks, a size preset, the watermark), so a version 1 body reads unchanged.
+    // Recipe 1 to 2: version 2 only added the "heal" group (spots), likewise.
     doc.version = currentVersion(doc.kind);
     doc.id = stringField(json, "id");
     doc.name = stringField(json, "name");
@@ -656,7 +728,16 @@ std::string_view kindName(DocumentKind kind)
 
 int currentVersion(DocumentKind kind)
 {
-    return kind == DocumentKind::Batch ? kBatchVersion : kDocumentVersion;
+    switch (kind) {
+    case DocumentKind::Batch:
+        return kBatchVersion;
+    case DocumentKind::Recipe:
+        return kRecipeVersion;
+    case DocumentKind::Preset:
+    case DocumentKind::Look:
+        break;
+    }
+    return kDocumentVersion;
 }
 
 Result<Document> parseDocument(std::string_view text, ParseReport* report)

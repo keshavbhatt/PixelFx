@@ -21,11 +21,13 @@ enum class DocumentKind
     Batch,
 };
 
-// The version this library writes, per kind (DOCS/presets.md). Recipes, presets and looks are
-// at 1. Batch recipes are at 2: version 2 added the user's looks embedded, size presets and
-// the watermark; a version 1 batch reads as it always did.
+// The version this library writes, per kind (DOCS/presets.md). Presets and looks are at 1.
+// Batch recipes are at 2: version 2 added the user's looks embedded, size presets and the
+// watermark. Recipes (sidecars) are at 2: version 2 added healed spots. Version 1 files of
+// either read as they always did.
 inline constexpr int kDocumentVersion = 1;
 inline constexpr int kBatchVersion = 2;
+inline constexpr int kRecipeVersion = 2;
 [[nodiscard]] int currentVersion(DocumentKind kind);
 
 // A step of a batch recipe's stack (DOCS/presets.md section 4): settings applied onto each

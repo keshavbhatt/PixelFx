@@ -8,9 +8,30 @@
 #include <QWidget>
 
 class QLabel;
+class QMouseEvent;
+class QPainter;
 class QToolButton;
 
 namespace pixelfx::ui {
+
+/// A tool that takes the photo's left clicks and draws over it (Heal). `photo` is where the
+/// photo is drawn, in widget coordinates; the middle button still pans.
+class CanvasTool
+{
+public:
+    CanvasTool() = default;
+    virtual ~CanvasTool() = default;
+    Q_DISABLE_COPY_MOVE(CanvasTool)
+
+    virtual void paint(QPainter& painter, const QRectF& photo) = 0;
+    /// True when the tool takes the press; it then gets the moves and the release.
+    virtual bool press(const QMouseEvent& event, const QRectF& photo) = 0;
+    /// A move while pressed, or hovering (for a brush outline).
+    virtual void move(const QMouseEvent& event, const QRectF& photo) = 0;
+    virtual void release(const QMouseEvent& event, const QRectF& photo) = 0;
+    /// The pointer left the canvas.
+    virtual void leave() {}
+};
 
 /// The photo, fitted to the widget on the canvas colour (DESIGN section 2). Shows a status line
 /// while opening and the reason when opening failed. In crop mode it draws the crop box over
@@ -88,6 +109,9 @@ public:
     void startPick();
     void cancelPick();
     [[nodiscard]] bool isPicking() const { return m_picking; }
+    /// The tool that takes clicks on the photo (Heal), or none.
+    void setTool(CanvasTool* tool);
+    [[nodiscard]] CanvasTool* tool() const { return m_tool; }
     [[nodiscard]] bool isDrawingLevelLine() const { return m_levelLine; }
 
 Q_SIGNALS:
@@ -108,6 +132,7 @@ protected:
     void mouseDoubleClickEvent(QMouseEvent* event) override;
     void wheelEvent(QWheelEvent* event) override;
     void resizeEvent(QResizeEvent* event) override;
+    void leaveEvent(QEvent* event) override;
 
 private:
     [[nodiscard]] QRect fitRect() const;
@@ -140,6 +165,8 @@ private:
     void paintCrop(QPainter& painter, const QRect& target);
     void paintOverlay(QPainter& painter, const QRectF& box) const;
     bool m_cropping = false;
+    CanvasTool* m_tool = nullptr;
+    bool m_toolPressed = false;
     QRectF m_crop{0, 0, 1, 1};
     double m_cropRatio = 0.0;
     CropOverlay m_overlay = CropOverlay::Thirds;

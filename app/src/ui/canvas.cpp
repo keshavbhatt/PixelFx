@@ -516,6 +516,13 @@ void Canvas::mousePressEvent(QMouseEvent* event)
         }
         return;
     }
+    if (m_tool != nullptr && event->button() == Qt::LeftButton) {
+        m_toolPressed = m_tool->press(*event, QRectF(photoRect()));
+        update();
+        if (m_toolPressed) {
+            return;
+        }
+    }
     if (m_cropping && m_levelLine && event->button() == Qt::LeftButton) {
         m_drawingLine = true;
         m_lineStart = event->position();
@@ -547,6 +554,13 @@ void Canvas::mousePressEvent(QMouseEvent* event)
 
 void Canvas::mouseMoveEvent(QMouseEvent* event)
 {
+    if (m_tool != nullptr && !m_panning) {
+        m_tool->move(*event, QRectF(photoRect()));
+        update();
+        if (m_toolPressed) {
+            return;
+        }
+    }
     if (m_drawingLine) {
         m_lineEnd = event->position();
         update();
@@ -590,6 +604,12 @@ void Canvas::mouseMoveEvent(QMouseEvent* event)
 
 void Canvas::mouseReleaseEvent(QMouseEvent* event)
 {
+    if (m_toolPressed && event->button() == Qt::LeftButton) {
+        m_toolPressed = false;
+        m_tool->release(*event, QRectF(photoRect()));
+        update();
+        return;
+    }
     if (m_drawingLine) {
         m_lineEnd = event->position(); // the release decides where the line ends
     }
@@ -766,6 +786,12 @@ void Canvas::paintEvent(QPaintEvent* /*event*/)
         } else if (m_compare && !m_original.isNull()) {
             paintCompare(painter, target);
         }
+        if (m_tool != nullptr) {
+            painter.save();
+            painter.setClipRect(rect());
+            m_tool->paint(painter, QRectF(target));
+            painter.restore();
+        }
     }
     const QString& line = m_error.isEmpty() ? m_status : m_error;
     if (!line.isEmpty()) {
@@ -773,6 +799,24 @@ void Canvas::paintEvent(QPaintEvent* /*event*/)
         painter.drawText(rect().adjusted(kMargin, kMargin, -kMargin, -kMargin),
                          Qt::AlignCenter | Qt::TextWordWrap, line);
     }
+}
+
+void Canvas::setTool(CanvasTool* tool)
+{
+    m_tool = tool;
+    m_toolPressed = false;
+    setMouseTracking(tool != nullptr || m_picking);
+    setCursor(tool != nullptr ? Qt::CrossCursor : Qt::ArrowCursor);
+    update();
+}
+
+void Canvas::leaveEvent(QEvent* event)
+{
+    if (m_tool != nullptr) {
+        m_tool->leave();
+        update();
+    }
+    QWidget::leaveEvent(event);
 }
 
 } // namespace pixelfx::ui

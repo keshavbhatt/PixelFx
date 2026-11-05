@@ -216,6 +216,7 @@ void Document::deliver(const Result& result)
     m_original = result.original;
     m_originalGeometry = {};
     m_cropEditing = false;
+    m_healEditing = false;
     m_fullOn = false;
     m_fullLoaded = false;
     ++m_fullGeneration;
@@ -267,6 +268,9 @@ pfx::Settings Document::renderSettings() const
 {
     if (m_hover) {
         return *m_hover;
+    }
+    if (m_healEditing) {
+        return core::withoutGeometry(m_settings);
     }
     return m_cropEditing ? core::withoutCrop(m_settings) : m_settings;
 }
@@ -353,6 +357,18 @@ void Document::setCropEditing(bool on)
         return;
     }
     m_cropEditing = on;
+    if (isOpen()) {
+        requestRender();
+        refreshOriginal();
+    }
+}
+
+void Document::setHealEditing(bool on)
+{
+    if (on == m_healEditing) {
+        return;
+    }
+    m_healEditing = on;
     if (isOpen()) {
         requestRender();
         refreshOriginal();
