@@ -24,9 +24,10 @@ blends the preset in from 0 to 200, while the real sliders show what it did (own
 - Tiles: two columns of 121 px in the 272 px panel, 3:2 pictures, names 12 px on one line, cut
   with "..." and complete in the tooltip (the first draft let a long name wrap and break the
   row). Name text 14.1:1 dark, 16.0:1 light on the tile.
-- Each open category shows six tiles (three rows, 348 px), so four categories fit in a window
-  900 px high; "All 64" opens the rest. Six is also what the app renders at once per category,
-  so opening the tab stays fast with 451 presets.
+- Each open category shows six tiles (three rows, 348 px); in a window 900 px high about one
+  and a half open categories show at once, and a closed heading is 32 px, so all twelve closed
+  categories fit in one screen. "All 64" opens the rest of a category. Six is also what the app
+  renders at once per category, so opening the tab stays fast with 451 presets.
 - Category headings: 11 px bold muted, 7.0:1 dark and 6.8:1 light; "All 64" in the accent,
   6.9:1 and 5.3:1. The whole heading row is the 32 px target that opens or closes it.
 - Favourite star: #FFD43B on a 55% black chip over the picture: 14.7:1 over black, 3.3:1 over
