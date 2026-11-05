@@ -80,8 +80,14 @@ struct Tokens
 /// The tokens in use. Dark is the default (DESIGN section 1).
 [[nodiscard]] const Tokens& tokens();
 /// Chooses the light or dark tokens; call before applyStyle and before any window is built
-/// (icons are tinted when they are made, so the theme applies at start).
+/// (switchTheme changes it while PixelFx runs).
 void useLightTheme(bool light);
+/// Which token `color` is in the current theme (-1 for none), and that token's colour now: how
+/// icons follow a theme switch.
+[[nodiscard]] int tokenIndex(const QColor& color);
+[[nodiscard]] QColor tokenColor(int index);
+/// Switches the theme while PixelFx runs: tokens, palette, style sheet, icons and glyphs.
+void switchTheme(QApplication& app, bool light);
 
 /// Fusion with a palette and style sheet built from the tokens.
 void applyStyle(QApplication& app);

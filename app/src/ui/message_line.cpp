@@ -72,8 +72,7 @@ void MessageLine::show(Kind kind, const QString& text)
         m_icon->hide();
     } else {
         const QColor colour = kind == Kind::Error ? tokens().danger : tokens().muted;
-        m_icon->setPixmap(
-            icons::pixmap(kind == Kind::Error ? u"alert"_s : u"info"_s, colour, 14, devicePixelRatioF()));
+        icons::setGlyph(m_icon, kind == Kind::Error ? u"alert"_s : u"info"_s, colour, 14);
         m_icon->show();
     }
 }

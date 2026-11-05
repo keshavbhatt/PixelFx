@@ -50,6 +50,7 @@ private:
 
     pfx::Curve m_points;
     QColor m_color;
+    int m_colorToken = -1;
     int m_drag = -1;
 };
 

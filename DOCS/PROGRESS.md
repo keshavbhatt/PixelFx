@@ -43,8 +43,7 @@ Decisions the work stopped at; everything else went ahead within the approved mo
 1. Built-in looks (13) and presets (4): the values are drafts by eye; tune or replace them.
 2. Kelvin white balance presets (Daylight, Cloudy, Shade, Tungsten in the mock) are left out:
    the engine's white balance is relative; keep them out or add absolute Kelvin.
-3. The theme applies at the next start (icons are tinted when made). Accept, or ask for a live
-   switch.
+3. Theme: switches live, done 2026-11-06 (owner).
 4. macOS CI skips one curve-editor test (a crash only on the runner, clean under ASan locally).
 5. Real Lightroom `.xmp` exports should be tried on the importer (EmulsionPresets' 451 so far,
    2026-11-05; a second, real-world set is still wanted for the 95% target of FEATURES P8).
@@ -72,6 +71,17 @@ Decisions the work stopped at; everything else went ahead within the approved mo
     Heal); Reveal dust explains itself in its tooltip rather than a first-time line.
 
 ## Sessions (newest first)
+
+### 2026-11-06 (Online guide, live theme)
+
+- Online guide in the main menu and About, to the GitHub wiki; the web addresses are in one place
+  (`core/links.h`).
+- The theme switches at once from Settings, and System follows the desktop while PixelFx runs.
+  Icons draw through a `GlyphEngine` that keeps the token it was made with and paints in that
+  token's colour now; labels show glyphs through `icons::setGlyph`, redrawn by `switchTheme`;
+  the palette and style sheet are applied again; painted widgets read the tokens as they paint
+  (the curve editor's colour now too). `tst_theme` checks an icon, a glyph and the palette, and
+  `PIXELFX_DEBUG_THEME` grabs a live switch.
 
 ### 2026-11-06 (Batch: the views as their mocks)
 

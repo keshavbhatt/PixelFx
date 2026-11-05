@@ -28,6 +28,7 @@
 //                                      (fractions) and, with steps, drag that far up
 //   PIXELFX_DEBUG_HOVER=<name>[;<name>] preview the first preset or look as after resting on its tile;
 //                                      the second's tile shows the wait half done
+//   PIXELFX_DEBUG_THEME=light|dark    switch the theme once the window is up (the live switch)
 //   PIXELFX_DEBUG_GRAB=<file.png>      grab the window once the photo is shown (or after 2 s
 //                                      with nothing to show) and quit
 #include "app/application.h"
@@ -374,6 +375,12 @@ void applyBatchHook(pixelfx::ui::MainWindow& window, const QString& grab)
 
 void applyDebugHooks(pixelfx::ui::MainWindow& window, QStringList& files)
 {
+    if (const QString theme = qEnvironmentVariable("PIXELFX_DEBUG_THEME"); !theme.isEmpty()) {
+        QTimer::singleShot(0, &window, [&window, theme] {
+            window.settings().setTheme(theme == u"light"_s ? pixelfx::core::Settings::Theme::Light
+                                                           : pixelfx::core::Settings::Theme::Dark);
+        });
+    }
     if (const QString zoom = qEnvironmentVariable("PIXELFX_DEBUG_ZOOM"); !zoom.isEmpty()) {
         QObject::connect(&window.document(), &pixelfx::services::Document::opened, &window, [&window, zoom] {
             QTimer::singleShot(100, &window, [&window, zoom] { window.canvas()->setZoom(zoom.toDouble()); });
@@ -491,12 +498,20 @@ int main(int argc, char** argv)
             return 2;
         }
     }
-    // The theme is chosen before any window exists: icons are tinted when they are made.
-    const auto theme = app.settings().theme();
-    pixelfx::ui::useLightTheme(theme == pixelfx::core::Settings::Theme::Light ||
-                               (theme == pixelfx::core::Settings::Theme::System &&
-                                QGuiApplication::styleHints()->colorScheme() == Qt::ColorScheme::Light));
+    // The theme: chosen before the window exists, then followed as the setting or, for System,
+    // the desktop changes.
+    const auto light = [&app] {
+        const auto theme = app.settings().theme();
+        return theme == pixelfx::core::Settings::Theme::Light ||
+               (theme == pixelfx::core::Settings::Theme::System &&
+                QGuiApplication::styleHints()->colorScheme() == Qt::ColorScheme::Light);
+    };
+    pixelfx::ui::useLightTheme(light());
     pixelfx::ui::applyStyle(app);
+    QObject::connect(&app.settings(), &pixelfx::core::Settings::themeChanged, &app,
+                     [&app, light] { pixelfx::ui::switchTheme(app, light()); });
+    QObject::connect(QGuiApplication::styleHints(), &QStyleHints::colorSchemeChanged, &app,
+                     [&app, light] { pixelfx::ui::switchTheme(app, light()); });
 
     pixelfx::ui::MainWindow window(app.settings());
     QObject::connect(&app, &pixelfx::app::Application::openRequested, &window,

@@ -106,21 +106,9 @@ QWidget* SettingsSheet::buildGeneral()
     form->setVerticalSpacing(kGapGroups);
 
     form->addRow(sectionHeading(tr("Appearance"), page));
-    // The theme applies at the next start: said once it is changed.
-    auto* themeNote = new QLabel(tr("Takes effect the next time PixelFx starts."), page);
-    themeNote->setObjectName(u"faint"_s);
-    themeNote->hide();
-    auto* theme = segments({tr("System"), tr("Dark"), tr("Light")}, static_cast<int>(m_settings.theme()),
-                           page, [this, themeNote](int i) {
-                               m_settings.setTheme(static_cast<S::Theme>(i));
-                               themeNote->show();
-                           });
-    theme->setToolTip(themeNote->text());
-    auto* themeBox = new QVBoxLayout;
-    themeBox->setSpacing(kGapTight);
-    themeBox->addWidget(theme);
-    themeBox->addWidget(themeNote);
-    form->addRow(tr("Theme"), themeBox);
+    form->addRow(tr("Theme"),
+                 segments({tr("System"), tr("Dark"), tr("Light")}, static_cast<int>(m_settings.theme()), page,
+                          [this](int i) { m_settings.setTheme(static_cast<S::Theme>(i)); }));
     form->addRow(tr("Canvas background"),
                  segments({tr("Dark gray"), tr("Middle gray"), tr("Black"), tr("White")},
                           static_cast<int>(m_settings.canvasBackground()), page, [this](int i) {

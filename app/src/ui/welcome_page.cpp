@@ -54,7 +54,7 @@ void WelcomePage::buildDropZone()
     m_dropZone->setMaximumWidth(760);
 
     auto* glyph = new QLabel(m_dropZone);
-    glyph->setPixmap(icons::pixmap(u"images"_s, tokens().muted, 48, devicePixelRatioF()));
+    icons::setGlyph(glyph, u"images"_s, tokens().muted, 48);
     glyph->setAlignment(Qt::AlignCenter);
     glyph->setFixedHeight(62);
     glyph->setAlignment(Qt::AlignHCenter | Qt::AlignTop);

@@ -320,7 +320,7 @@ QWidget* BatchPage::buildPreview(QWidget* parent)
     m_before = new QLabel(m_preview);
     m_after = new QLabel(m_preview);
     auto* arrow = new QLabel(m_preview);
-    arrow->setPixmap(icons::pixmap(u"chevron-right"_s, tokens().muted, 15, devicePixelRatioF()));
+    icons::setGlyph(arrow, u"chevron-right"_s, tokens().muted, 15);
     auto* caption = new QLabel(tr("The first photo, before and after the recipe"), m_preview);
     caption->setObjectName(u"muted"_s);
     auto* larger = new QPushButton(tr("View larger"), m_preview);
@@ -918,7 +918,7 @@ void BatchPage::refreshRecipeCard()
                                                     Qt::KeepAspectRatioByExpanding,
                                                     Qt::SmoothTransformation));
     } else {
-        m_cardThumb->setPixmap(icons::pixmap(u"sliders"_s, tokens().faint, 20, devicePixelRatioF()));
+        icons::setGlyph(m_cardThumb, u"sliders"_s, tokens().faint, 20);
         m_cardThumb->setAlignment(Qt::AlignCenter);
     }
     m_secondName->setText(m_second);
@@ -1520,9 +1520,8 @@ void BatchPage::showRunning(int done, int total)
 void BatchPage::showDone(int saved, int failed)
 {
     const int total = m_runner.total();
-    m_statusIcon->setPixmap(icons::pixmap(failed > 0 ? u"alert"_s : u"check"_s,
-                                          failed > 0 ? tokens().danger : tokens().success, 16,
-                                          devicePixelRatioF()));
+    icons::setGlyph(m_statusIcon, failed > 0 ? u"alert"_s : u"check"_s,
+                    failed > 0 ? tokens().danger : tokens().success, 16);
     m_statusText->setText(failed > 0 ? tr("%1 saved, %2 not saved").arg(saved).arg(failed)
                                      : tr("%n saved", nullptr, saved));
     qint64 bytes = 0;
@@ -1551,9 +1550,8 @@ void BatchPage::showCompressDone(int failed)
         return QLocale().formattedDataSize(bytes, 0, QLocale::DataSizeSIFormat);
     };
     const qint64 percent = before > 0 ? (100 * (before - after) + (before / 2)) / before : 0;
-    m_statusIcon->setPixmap(icons::pixmap(failed > 0 ? u"alert"_s : u"check"_s,
-                                          failed > 0 ? tokens().danger : tokens().success, 16,
-                                          devicePixelRatioF()));
+    icons::setGlyph(m_statusIcon, failed > 0 ? u"alert"_s : u"check"_s,
+                    failed > 0 ? tokens().danger : tokens().success, 16);
     //: After Compress only: "Saved 54 MB of 108 MB (50%)".
     QString text = tr("Saved %1 of %2 (%3%)").arg(size(before - after), size(before)).arg(percent);
     if (failed > 0) {

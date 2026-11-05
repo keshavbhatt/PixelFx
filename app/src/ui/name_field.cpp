@@ -72,7 +72,7 @@ NameField::NameField(QWidget* parent)
     m_more->setObjectName(u"faintSmall"_s);
 
     auto* clashIcon = new QLabel(m_clash);
-    clashIcon->setPixmap(icons::pixmap(u"alert"_s, tokens().warning, 14, devicePixelRatioF()));
+    icons::setGlyph(clashIcon, u"alert"_s, tokens().warning, 14);
     auto* clashText =
         new QLabel(tr("Every photo gets this name, so numbers are added. Add {n} to choose where."), m_clash);
     clashText->setObjectName(u"warningText"_s);

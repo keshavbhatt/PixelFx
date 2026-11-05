@@ -67,7 +67,7 @@ public:
     [[nodiscard]] int batchAtOnce() const;
     void setBatchAtOnce(int count);
 
-    /// Appearance. The theme applies when PixelFx starts.
+    /// Appearance. The theme applies at once (themeChanged).
     enum class Theme
     {
         System,
@@ -131,6 +131,7 @@ Q_SIGNALS:
     void rememberEditsChanged(bool on);
     void openAsLeftChanged(bool on);
     void clippingWarningsChanged(bool on);
+    void themeChanged(pixelfx::core::Settings::Theme theme);
     void batchAtOnceChanged(int count);
 
 private:

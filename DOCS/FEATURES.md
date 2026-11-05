@@ -32,7 +32,7 @@ look; a **batch recipe** is a preset plus resize and save options.
 | S7 | Crash handler, log file, diagnostics copy, Report a bug sheet | none | KEEP | wip: log file done (`LogSink`); the rest M6 |
 | S8 | What's new once per version from the bundled changelog, Version picker, link in About; Online guide | none | KEEP | done: What's new (once after an update, menu, About); Online guide waits for a URL |
 | S9 | Keyboard shortcuts sheet (F1, Ctrl+/); every action shows its shortcut in its tooltip | 3 shortcuts | KEEP | wip: the shortcuts sheet from `shortcuts.html` (F1, Ctrl+/, searchable); tooltips name their shortcut where set |
-| S10 | Theme: System, Dark (default), Light; neutral grey chrome | dark only | KEEP | done: System, Dark, Light in Settings, applied at start |
+| S10 | Theme: System, Dark (default), Light; neutral grey chrome | dark only | KEEP | done: System, Dark, Light in Settings, switched at once, and System follows the desktop while PixelFx runs (2026-11-06) |
 | S11 | About with version, links, open-source notices, diagnostics | wrong source link | KEEP | done: version, What's new, source, bug report, notices with licence texts, diagnostics |
 | S12 | Full screen (F11) and a distraction-free view (Tab hides the panels) | none | KEEP | done: F11, Tab while the photo has the focus, both in the View menu |
 | S13 | Translations | none | LATER | |

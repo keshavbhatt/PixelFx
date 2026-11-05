@@ -37,7 +37,7 @@ void StepList::setRows(const QList<Row>& rows)
     for (const Row& r : rows) {
         auto* row = new ListRow(this);
         auto* handle = new QLabel(row);
-        handle->setPixmap(icons::pixmap(u"grip-vertical"_s, tokens().faint, 14, devicePixelRatioF()));
+        icons::setGlyph(handle, u"grip-vertical"_s, tokens().faint, 14);
         handle->setCursor(Qt::SizeVerCursor);
         handle->setToolTip(tr("Drag to reorder"));
         handle->installEventFilter(this);

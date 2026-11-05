@@ -272,7 +272,10 @@ Settings::Theme Settings::theme() const
 
 void Settings::setTheme(Theme theme)
 {
-    m_settings->setValue(key(keys::kTheme), static_cast<int>(theme));
+    if (theme != this->theme()) {
+        m_settings->setValue(key(keys::kTheme), static_cast<int>(theme));
+        Q_EMIT themeChanged(theme);
+    }
 }
 
 Settings::CanvasBackground Settings::canvasBackground() const

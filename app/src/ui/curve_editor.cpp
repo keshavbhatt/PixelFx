@@ -26,6 +26,7 @@ CurveEditor::CurveEditor(QWidget* parent)
     : QWidget(parent)
     , m_points(identity())
     , m_color(tokens().text)
+    , m_colorToken(tokenIndex(m_color))
 {
     setMinimumHeight(160);
     setMouseTracking(true);
@@ -50,6 +51,7 @@ bool CurveEditor::isIdentity() const
 void CurveEditor::setColor(const QColor& color)
 {
     m_color = color;
+    m_colorToken = tokenIndex(color); // a theme colour follows a theme switch
     update();
 }
 
@@ -107,11 +109,12 @@ void CurveEditor::paintEvent(QPaintEvent* /*event*/)
                                 std::clamp(values[static_cast<std::size_t>(i)], 0.0, 1.0)};
         i == 0 ? path.moveTo(toWidget(c)) : path.lineTo(toWidget(c));
     }
-    p.setPen(QPen(m_color, 1.6));
+    const QColor colour = m_colorToken >= 0 ? tokenColor(m_colorToken) : m_color;
+    p.setPen(QPen(colour, 1.6));
     p.setBrush(Qt::NoBrush);
     p.drawPath(path);
     p.setPen(QPen(t.input, 1.5));
-    p.setBrush(m_color);
+    p.setBrush(colour);
     for (const pfx::CurvePoint& point : m_points) {
         p.drawEllipse(toWidget(point), 4.5, 4.5);
     }

@@ -50,7 +50,7 @@ ListRow::~ListRow() = default;
 
 void ListRow::setIcon(const QString& glyph)
 {
-    m_icon->setPixmap(icons::pixmap(glyph, tokens().muted, 15, devicePixelRatioF()));
+    icons::setGlyph(m_icon, glyph, tokens().muted, 15);
     m_icon->show();
 }
 

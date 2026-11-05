@@ -78,7 +78,7 @@ AdjustGroup::AdjustGroup(QString id, const QString& name, const QString& glyph, 
     m_toggle->setCheckable(true);
     m_toggle->setChecked(true);
     auto* icon = new QLabel(header);
-    icon->setPixmap(icons::pixmap(glyph, tokens().muted, 15, devicePixelRatioF()));
+    icons::setGlyph(icon, glyph, tokens().muted, 15);
     m_dot->setObjectName(u"changedDot"_s);
     m_dot->setFixedSize(6, 6);
     m_dot->setToolTip(tr("Changed"));
@@ -240,8 +240,7 @@ void AdjustGroup::setChanged(bool changed)
 
 void AdjustGroup::updateChevron()
 {
-    m_chevron->setPixmap(icons::pixmap(m_toggle->isChecked() ? u"expanded"_s : u"collapsed"_s, tokens().muted,
-                                       14, devicePixelRatioF()));
+    icons::setGlyph(m_chevron, m_toggle->isChecked() ? u"expanded"_s : u"collapsed"_s, tokens().muted, 14);
 }
 
 } // namespace pixelfx::ui

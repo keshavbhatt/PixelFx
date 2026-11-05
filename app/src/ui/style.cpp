@@ -12,6 +12,7 @@
 #include <QFocusEvent>
 #include <QFormLayout>
 #include <QHBoxLayout>
+#include <QHash>
 #include <QImage>
 #include <QLabel>
 #include <QMenu>
@@ -28,6 +29,7 @@
 #include <QWidgetAction>
 
 #include <algorithm>
+#include <array>
 #include <memory>
 
 using namespace Qt::StringLiterals;
@@ -495,6 +497,35 @@ const Tokens& tokens()
 
 namespace {
 
+constexpr std::array<QColor Tokens::*, 22> kTokenFields = {
+    &Tokens::accent,     &Tokens::accentStrong, &Tokens::accentHover, &Tokens::accentSoft, &Tokens::bg,
+    &Tokens::canvas,     &Tokens::bar,          &Tokens::panel,       &Tokens::elevated,   &Tokens::hover,
+    &Tokens::input,      &Tokens::border,       &Tokens::track,       &Tokens::text,       &Tokens::muted,
+    &Tokens::faint,      &Tokens::danger,       &Tokens::link,        &Tokens::success,    &Tokens::warning,
+    &Tokens::channelRed, &Tokens::channelGreen};
+
+} // namespace
+
+int tokenIndex(const QColor& color)
+{
+    const Tokens& t = tokens();
+    for (std::size_t i = 0; i < kTokenFields.size(); ++i) {
+        if ((t.*kTokenFields.at(i)).rgb() == color.rgb()) {
+            return static_cast<int>(i);
+        }
+    }
+    return -1;
+}
+
+QColor tokenColor(int index)
+{
+    return index < 0 || static_cast<std::size_t>(index) >= kTokenFields.size()
+               ? QColor()
+               : tokens().*kTokenFields.at(static_cast<std::size_t>(index));
+}
+
+namespace {
+
 // Marks each widget that takes the focus with whether the keyboard gave it ("focusVisible"), as
 // browsers do with :focus-visible: a click focuses without drawing a ring.
 class FocusVisibility : public QObject
@@ -532,11 +563,12 @@ bool showsFocusRing(const QWidget* widget)
     return widget->hasFocus() && widget->property("focusVisible").toBool();
 }
 
-void applyStyle(QApplication& app)
+namespace {
+
+// The palette and the style sheet of the current tokens.
+void applyColours(QApplication& app)
 {
     const Tokens& t = tokens();
-    QApplication::setStyle(new PixelFxStyle); // the application owns it
-    app.installEventFilter(new FocusVisibility(&app));
     QPalette p;
     p.setColor(QPalette::Window, t.bg);
     p.setColor(QPalette::WindowText, t.text);
@@ -556,6 +588,40 @@ void applyStyle(QApplication& app)
     p.setColor(QPalette::Disabled, QPalette::WindowText, t.faint);
     QApplication::setPalette(p);
     app.setStyleSheet(sheet(t));
+}
+
+} // namespace
+
+void applyStyle(QApplication& app)
+{
+    QApplication::setStyle(new PixelFxStyle); // the application owns it
+    app.installEventFilter(new FocusVisibility(&app));
+    applyColours(app);
+}
+
+void switchTheme(QApplication& app, bool light)
+{
+    if (light == g_light) {
+        return;
+    }
+    // Glyphs remember their token in the theme they were drawn for.
+    QHash<QLabel*, int> glyphs;
+    for (QWidget* w : QApplication::allWidgets()) {
+        if (auto* label = qobject_cast<QLabel*>(w); label != nullptr && label->property("glyph").isValid()) {
+            glyphs.insert(label, tokenIndex(label->property("glyphColor").value<QColor>()));
+        }
+    }
+    g_light = light;
+    applyColours(app);
+    for (auto it = glyphs.constBegin(); it != glyphs.constEnd(); ++it) {
+        const QColor colour =
+            it.value() >= 0 ? tokenColor(it.value()) : it.key()->property("glyphColor").value<QColor>();
+        icons::setGlyph(it.key(), it.key()->property("glyph").toString(), colour,
+                        it.key()->property("glyphSize").toInt());
+    }
+    for (QWidget* w : QApplication::allWidgets()) {
+        w->update();
+    }
 }
 
 QVBoxLayout* sheetLayout(QDialog* sheet, QLayout* foot)
