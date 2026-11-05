@@ -3,10 +3,13 @@
 #include "ui/style.h"
 
 #include <QEvent>
+#include <QLayout>
 #include <QMouseEvent>
 #include <QPainter>
 #include <QPainterPath>
 #include <QWindow>
+
+#include <algorithm>
 
 namespace pixelfx::ui {
 
@@ -68,6 +71,38 @@ Sheet::Sheet(QWidget* parent)
 }
 
 Sheet::~Sheet() = default;
+
+void Sheet::setSize(Size size)
+{
+    switch (size) {
+    case Size::Narrow:
+        setFixedWidth(440);
+        break;
+    case Size::Regular:
+        setFixedWidth(560);
+        break;
+    case Size::Wide:
+        setFixedWidth(820);
+        break;
+    case Size::Editor:
+        setFixedSize(980, 640);
+        return;
+    }
+    fitHeight();
+}
+
+void Sheet::fitHeight()
+{
+    // Measured at the sheet's own width: text that wraps is as tall as it is at this width.
+    QLayout* content = layout();
+    if (content == nullptr) {
+        return;
+    }
+    content->activate();
+    const int height = content->hasHeightForWidth() ? content->totalHeightForWidth(width())
+                                                    : content->totalSizeHint().height();
+    resize(width(), std::max(height, content->totalMinimumSize().height()));
+}
 
 void Sheet::paintEvent(QPaintEvent* /*event*/)
 {

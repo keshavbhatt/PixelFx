@@ -259,10 +259,8 @@ LookEditor::LookEditor(const std::shared_ptr<const pfx::Image>& source, const pf
     }
     setWindowTitle(entry.look ? tr("Edit look") : tr("New look"));
     setModal(true);
-    resize(960, 640);
+    setSize(Size::Editor);
 
-    auto* title = new QLabel(windowTitle(), this);
-    title->setObjectName(u"sheetTitle"_s);
     m_name = new QLineEdit(entry.look ? entry.name : tr("My look"), this);
     m_name->setFixedWidth(220);
     m_name->setAccessibleName(tr("Name"));
@@ -272,15 +270,7 @@ LookEditor::LookEditor(const std::shared_ptr<const pfx::Image>& source, const pf
     }
     m_category->setCurrentIndex(std::max(0, m_category->findData(QString::fromStdString(m_look.category))));
     m_category->setAccessibleName(tr("Category"));
-    auto* head = new QHBoxLayout;
-    head->setContentsMargins(20, 14, 20, 12);
-    head->setSpacing(8);
-    head->addWidget(title);
-    head->addSpacing(8);
-    head->addWidget(m_name);
-    head->addWidget(m_category);
-    head->addStretch();
-    head->addWidget(sheetCloseButton(this));
+    QWidget* head = sheetHeaderBar(this, sheetTitleRow(this, windowTitle(), {m_name, m_category}));
 
     auto* body = new QHBoxLayout;
     body->setContentsMargins(0, 0, 0, 0);
@@ -291,7 +281,7 @@ LookEditor::LookEditor(const std::shared_ptr<const pfx::Image>& source, const pf
     auto* column = new QVBoxLayout(this);
     column->setContentsMargins(0, 0, 0, 0);
     column->setSpacing(0);
-    column->addLayout(head);
+    column->addWidget(head);
     column->addLayout(body, 1);
     buildFooter(column);
 
@@ -578,7 +568,6 @@ void LookEditor::buildFooter(QVBoxLayout* column)
     m_save->setDefault(true);
     connect(m_save, &QPushButton::clicked, this, &LookEditor::saveLook);
     auto* foot = new QHBoxLayout;
-    foot->setContentsMargins(20, 10, 20, 14);
     foot->addWidget(m_export);
     foot->addWidget(m_bake);
     foot->addStretch();

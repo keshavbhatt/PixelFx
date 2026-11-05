@@ -28,7 +28,6 @@ QLabel* section(const QString& text, QWidget* parent)
     return label;
 }
 
-constexpr QSize kSize(820, 600);
 constexpr int kLabelColumn = 160;
 
 /// A segmented control across the column, one segment checked; `chosen(index)` on click.
@@ -64,15 +63,7 @@ SettingsSheet::SettingsSheet(core::Settings& settings, QWidget* parent)
     , m_settings(settings)
 {
     setWindowTitle(tr("Settings"));
-    resize(kSize);
-    auto* title = new QLabel(tr("Settings"), this);
-    title->setObjectName(u"sheetTitle"_s);
-    auto* close = sheetCloseButton(this);
-    auto* head = new QHBoxLayout;
-    head->setContentsMargins(20, 14, 14, 10);
-    head->addWidget(title);
-    head->addStretch();
-    head->addWidget(close);
+    QWidget* head = sheetHeaderBar(this, sheetTitleRow(this, tr("Settings")));
 
     auto* pages = new QListWidget(this);
     pages->setObjectName(u"settingsPages"_s);
@@ -92,8 +83,9 @@ SettingsSheet::SettingsSheet(core::Settings& settings, QWidget* parent)
     auto* column = new QVBoxLayout(this);
     column->setContentsMargins(0, 0, 0, 0);
     column->setSpacing(0);
-    column->addLayout(head);
+    column->addWidget(head);
     column->addLayout(body, 1);
+    setSize(Size::Wide);
 }
 
 SettingsSheet::~SettingsSheet() = default;

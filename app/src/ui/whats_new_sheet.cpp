@@ -2,6 +2,7 @@
 
 #include "core/changelog.h"
 #include "ui/style.h"
+#include "ui/text_view.h"
 
 #include <QCheckBox>
 #include <QComboBox>
@@ -17,18 +18,20 @@ using namespace Qt::StringLiterals;
 
 namespace pixelfx::ui {
 
+namespace {
+constexpr int kTextHeight = 480; // the notes scroll past this
+} // namespace
+
 WhatsNewSheet::WhatsNewSheet(const QString& markdown, const QString& version, bool showAfterUpdates,
                              QWidget* parent)
     : Sheet(parent)
     , m_markdown(markdown)
     , m_versions(new QComboBox(this))
-    , m_text(new QTextBrowser(this))
+    , m_text(new TextView(kTextHeight, this))
     , m_more(new QLabel(this))
     , m_show(new QCheckBox(tr("Show this after each update"), this))
 {
     setWindowTitle(tr("What's new"));
-    auto* title = new QLabel(tr("What's new"), this);
-    title->setObjectName(u"sheetTitle"_s);
     m_versions->setToolTip(tr("Version"));
     m_versions->setAccessibleName(tr("Version"));
     m_versions->setFixedWidth(150);
@@ -37,12 +40,7 @@ WhatsNewSheet::WhatsNewSheet(const QString& markdown, const QString& version, bo
     }
     m_versions->setVisible(m_versions->count() > 1);
     connect(m_versions, &QComboBox::currentTextChanged, this, &WhatsNewSheet::showVersion);
-    auto* head = new QHBoxLayout;
-    head->setSpacing(8);
-    head->addWidget(title);
-    head->addWidget(m_versions);
-    head->addStretch();
-    head->addWidget(sheetCloseButton(this));
+    QHBoxLayout* head = sheetTitleRow(this, tr("What's new"), {m_versions});
 
     m_text->setObjectName(u"whatsNewText"_s);
     m_text->setOpenExternalLinks(true);
@@ -68,9 +66,8 @@ WhatsNewSheet::WhatsNewSheet(const QString& markdown, const QString& version, bo
     layout->addLayout(head);
     layout->addWidget(m_text, 1);
     layout->addWidget(m_more);
-    setFixedWidth(600);
-    resize(600, 520);
     showVersion(version);
+    setSize(Size::Regular);
 }
 
 WhatsNewSheet::~WhatsNewSheet() = default;
@@ -144,6 +141,7 @@ void WhatsNewSheet::render()
     html += u"</div>"_s;
     m_text->setHtml(html);
     m_more->setVisible(!m_all && total > shown);
+    fitHeight();
 }
 
 } // namespace pixelfx::ui

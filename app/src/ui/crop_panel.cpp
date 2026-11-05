@@ -9,7 +9,6 @@
 
 #include <QButtonGroup>
 #include <QDialog>
-#include <QDialogButtonBox>
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QPushButton>
@@ -349,18 +348,27 @@ void CropPanel::askCustomRatio()
     height->setValue(m_customHeight);
     width->setAccessibleName(tr("Width"));
     height->setAccessibleName(tr("Height"));
-    auto* buttons = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, &sheet);
-    buttons->button(QDialogButtonBox::Ok)->setText(tr("Use ratio"));
-    buttons->button(QDialogButtonBox::Ok)->setObjectName(u"primary"_s);
-    connect(buttons, &QDialogButtonBox::accepted, &sheet, &QDialog::accept);
-    connect(buttons, &QDialogButtonBox::rejected, &sheet, &QDialog::reject);
-    auto* row = new QHBoxLayout;
-    row->addWidget(width);
-    row->addWidget(new QLabel(u":"_s, &sheet));
-    row->addWidget(height);
-    auto* column = new QVBoxLayout(&sheet);
-    column->addLayout(row);
-    column->addWidget(buttons);
+    auto* cancel = new QPushButton(tr("Cancel"), &sheet);
+    auto* use = new QPushButton(tr("Use ratio"), &sheet);
+    use->setObjectName(u"primary"_s);
+    use->setDefault(true);
+    connect(cancel, &QPushButton::clicked, &sheet, &QDialog::reject);
+    connect(use, &QPushButton::clicked, &sheet, &QDialog::accept);
+    auto* foot = new QHBoxLayout;
+    foot->addStretch();
+    foot->addWidget(cancel);
+    foot->addWidget(use);
+    auto* ratio = new QHBoxLayout;
+    ratio->addWidget(width, 1);
+    ratio->addWidget(new QLabel(u":"_s, &sheet));
+    ratio->addWidget(height, 1);
+    QVBoxLayout* column = sheetLayout(&sheet, foot);
+    column->addLayout(sheetTitleRow(&sheet, tr("Custom ratio")));
+    column->addWidget(new QLabel(tr("Width to height, for example 16 : 9 or 5 : 4."), &sheet));
+    column->addLayout(ratio);
+    sheet.setSize(Sheet::Size::Narrow);
+    width->setFocus();
+    width->selectAll();
     if (sheet.exec() == QDialog::Accepted) {
         setCustomRatio(width->value(), height->value());
     } else {

@@ -3,6 +3,7 @@
 #include "core/looks.h"
 #include "core/presets.h"
 #include "ui/adjust_panel.h"
+#include "ui/elided_label.h"
 
 #include <QCheckBox>
 #include <QHBoxLayout>
@@ -104,7 +105,9 @@ QLabel* PartChecklist::note(const pfx::Settings& settings, const QString& part)
     if (text.isEmpty()) {
         return nullptr;
     }
-    auto* label = new QLabel(text, this);
+    auto* label = new ElidedLabel(this);
+    label->setText(text);
+    label->setToolTip(text);
     label->setObjectName(u"faint"_s);
     return label;
 }

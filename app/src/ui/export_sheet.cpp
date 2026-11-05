@@ -81,20 +81,11 @@ ExportSheet::ExportSheet(const QString& source, const QSize& photoSize, const co
 {
     setWindowTitle(tr("Export"));
     setModal(true);
-    setMinimumWidth(560);
 
-    auto* title = new QLabel(tr("Export"), this);
-    title->setObjectName(u"sheetTitle"_s);
-    m_title = title;
-    auto* file = new QLabel(QFileInfo(source).fileName(), this);
-    m_file = file;
-    file->setObjectName(u"muted"_s);
-    auto* heading = new QHBoxLayout;
-    heading->addWidget(title);
-    heading->addSpacing(8);
-    heading->addWidget(file);
-    heading->addStretch();
-    heading->addWidget(sheetCloseButton(this));
+    m_file = new QLabel(QFileInfo(source).fileName(), this);
+    m_file->setObjectName(u"muted"_s);
+    QHBoxLayout* heading = sheetTitleRow(this, tr("Export"), {m_file});
+    m_title = findChild<QLabel*>(u"sheetTitle"_s);
 
     auto* form = new QFormLayout;
     form->setHorizontalSpacing(16);
@@ -134,6 +125,7 @@ ExportSheet::ExportSheet(const QString& source, const QSize& photoSize, const co
     column->addLayout(heading);
     column->addLayout(form);
     updateForFormat();
+    setSize(Size::Regular);
 }
 
 ExportSheet::~ExportSheet() = default;
@@ -264,18 +256,12 @@ bool ExportSheet::askLongEdge()
     foot->addWidget(cancel);
     foot->addWidget(use);
     QVBoxLayout* column = sheetLayout(&sheet, foot);
-    auto* title = new QLabel(tr("Custom size"), &sheet);
-    title->setObjectName(u"sheetTitle"_s);
-    auto* titleRow = new QHBoxLayout;
-    titleRow->addWidget(title);
-    titleRow->addStretch();
-    titleRow->addWidget(sheetCloseButton(&sheet));
     auto* form = new QFormLayout;
     form->addRow(tr("Long edge"), edge);
-    column->addLayout(titleRow);
+    column->addLayout(sheetTitleRow(&sheet, tr("Custom size")));
     column->addWidget(new QLabel(tr("The longer side of the photo; the other follows its shape."), &sheet));
     column->addLayout(form);
-    sheet.setMinimumWidth(400);
+    sheet.setSize(Size::Narrow);
     edge->setFocus();
     edge->selectAll();
     if (sheet.exec() != QDialog::Accepted) {

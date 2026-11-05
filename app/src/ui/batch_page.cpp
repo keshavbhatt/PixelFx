@@ -688,15 +688,9 @@ void BatchPage::editSaveOptions()
     foot->addWidget(cancel);
     foot->addWidget(done);
     QVBoxLayout* column = sheetLayout(&sheet, foot);
-    auto* title = new QLabel(tr("Save options"), &sheet);
-    title->setObjectName(u"sheetTitle"_s);
-    auto* titleRow = new QHBoxLayout;
-    titleRow->addWidget(title);
-    titleRow->addStretch();
-    titleRow->addWidget(sheetCloseButton(&sheet));
-    column->addLayout(titleRow);
+    column->addLayout(sheetTitleRow(&sheet, tr("Save options")));
     column->addLayout(form);
-    sheet.setMinimumWidth(440);
+    sheet.setSize(Sheet::Size::Narrow);
     if (sheet.exec() != QDialog::Accepted) {
         return;
     }

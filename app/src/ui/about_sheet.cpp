@@ -31,7 +31,6 @@ namespace {
 const auto kSourceUrl = u"https://github.com/keshavbhatt/PixelFx"_s;
 const auto kIssuesUrl = u"https://github.com/keshavbhatt/PixelFx/issues"_s;
 
-constexpr int kWidth = 520;
 constexpr int kNoticesHeight = 400;
 
 // "5 November 2026", in the language of the app.
@@ -79,8 +78,6 @@ AboutSheet::AboutSheet(QWidget* parent)
     , m_pages(new QStackedWidget(this))
 {
     setWindowTitle(tr("About PixelFx"));
-    auto* title = new QLabel(tr("About PixelFx"), this);
-    title->setObjectName(u"sheetTitle"_s);
     auto* tabRow = new QHBoxLayout;
     tabRow->setSpacing(0);
     const QStringList names = {tr("About"), tr("Open-source notices"), tr("Diagnostics")};
@@ -104,14 +101,10 @@ AboutSheet::AboutSheet(QWidget* parent)
     foot->addWidget(close);
 
     QVBoxLayout* layout = sheetLayout(this, foot);
-    auto* titleRow = new QHBoxLayout;
-    titleRow->addWidget(title);
-    titleRow->addStretch();
-    titleRow->addWidget(sheetCloseButton(this));
-    layout->addLayout(titleRow);
+    layout->addLayout(sheetTitleRow(this, tr("About PixelFx")));
     layout->addLayout(tabRow);
     layout->addWidget(m_pages, 1);
-    setFixedWidth(kWidth);
+    setSize(Size::Regular);
     showPage(AboutPage);
 }
 
@@ -252,7 +245,7 @@ void AboutSheet::showPage(Page page)
     // Each page as tall as it needs; the notices get room to read a licence.
     m_pages->setFixedHeight(page == NoticesPage ? kNoticesHeight
                                                 : m_pages->currentWidget()->sizeHint().height());
-    adjustSize();
+    fitHeight();
 }
 
 AboutSheet::Page AboutSheet::page() const

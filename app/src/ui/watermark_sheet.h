@@ -89,7 +89,7 @@ public:
     void setBatchPhotos(const QStringList& paths);
 
 private:
-    QLayout* buildHeader();
+    QWidget* buildHeader();
     QLayout* buildFooter();
     QWidget* buildKindRow(QWidget* parent);
     QWidget* buildLogoPage();

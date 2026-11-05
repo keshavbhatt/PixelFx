@@ -70,6 +70,8 @@ qt_add_library(pixelfx_ui STATIC
     step_list.h
     straighten_dial.cpp
     straighten_dial.h
+    text_view.cpp
+    text_view.h
     watermark_sheet.cpp
     watermark_sheet.h
     welcome_page.cpp

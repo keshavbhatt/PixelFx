@@ -183,9 +183,9 @@ WatermarkSheet::WatermarkSheet(const QImage& photo, const QString& current, cons
 {
     setWindowTitle(tr("Watermark"));
     setModal(true);
-    resize(980, 640);
+    setSize(Size::Editor);
 
-    auto* head = buildHeader();
+    QWidget* head = buildHeader();
 
     auto* body = new QHBoxLayout;
     body->setContentsMargins(0, 0, 0, 0);
@@ -198,7 +198,7 @@ WatermarkSheet::WatermarkSheet(const QImage& photo, const QString& current, cons
     auto* column = new QVBoxLayout(this);
     column->setContentsMargins(0, 0, 0, 0);
     column->setSpacing(0);
-    column->addLayout(head);
+    column->addWidget(head);
     column->addLayout(body, 1);
     column->addWidget(sheetFootBar(this, foot));
 
@@ -226,26 +226,15 @@ WatermarkSheet::WatermarkSheet(const QImage& photo, const QString& current, cons
 
 WatermarkSheet::~WatermarkSheet() = default;
 
-QLayout* WatermarkSheet::buildHeader()
+QWidget* WatermarkSheet::buildHeader()
 {
-    auto* title = new QLabel(tr("Watermark"), this);
-    title->setObjectName(u"sheetTitle"_s);
     m_list = new QComboBox(this);
     m_list->setFixedWidth(200);
     m_list->setAccessibleName(tr("Saved watermarks"));
     auto* saveAs = new QPushButton(tr("Save as..."), this);
     saveAs->setObjectName(u"small"_s);
     connect(saveAs, &QPushButton::clicked, this, &WatermarkSheet::saveAs);
-    auto* head = new QHBoxLayout;
-    head->setContentsMargins(20, 14, 20, 12);
-    head->addWidget(title);
-    head->addSpacing(8);
-    head->addWidget(m_list);
-    head->addSpacing(6);
-    head->addWidget(saveAs);
-    head->addStretch();
-    head->addWidget(sheetCloseButton(this));
-    return head;
+    return sheetHeaderBar(this, sheetTitleRow(this, tr("Watermark"), {m_list, saveAs}));
 }
 
 QLayout* WatermarkSheet::buildFooter()
@@ -259,7 +248,6 @@ QLayout* WatermarkSheet::buildFooter()
     use->setDefault(true);
     connect(use, &QPushButton::clicked, this, &WatermarkSheet::useWatermark);
     auto* foot = new QHBoxLayout;
-    foot->setContentsMargins(20, 10, 20, 14);
     foot->addWidget(note);
     foot->addStretch();
     foot->addWidget(cancel);

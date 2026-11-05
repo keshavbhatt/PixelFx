@@ -13,18 +13,12 @@ using namespace Qt::StringLiterals;
 
 namespace pixelfx::ui {
 
-namespace {
-constexpr int kWidth = 440;
-} // namespace
-
 PasteSheet::PasteSheet(const pfx::Settings& copied, int photos, QWidget* parent)
     : Sheet(parent)
     , m_parts(new PartChecklist(copied, core::unitsIn(copied), 1, this))
     , m_source(new QLabel(this))
 {
     setWindowTitle(tr("Paste settings"));
-    auto* title = new QLabel(tr("Paste settings to %n photos", nullptr, photos), this);
-    title->setObjectName(u"sheetTitle"_s);
     m_source->setObjectName(u"muted"_s);
     m_source->hide();
     auto* hint = new QLabel(tr("Parts left out keep what each photo already has."), this);
@@ -42,16 +36,11 @@ PasteSheet::PasteSheet(const pfx::Settings& copied, int photos, QWidget* parent)
     buttons->addWidget(cancel);
     buttons->addWidget(paste);
     QVBoxLayout* column = sheetLayout(this, buttons);
-    auto* titleRow = new QHBoxLayout;
-    titleRow->addWidget(title);
-    titleRow->addStretch();
-    titleRow->addWidget(sheetCloseButton(this));
-    column->addLayout(titleRow);
+    column->addLayout(sheetTitleRow(this, tr("Paste settings to %n photos", nullptr, photos)));
     column->addWidget(m_source);
     column->addWidget(m_parts);
     column->addWidget(hint);
-    setFixedWidth(kWidth);
-    adjustSize(); // the height for this width
+    setSize(Size::Narrow);
 }
 
 PasteSheet::~PasteSheet() = default;

@@ -6,6 +6,7 @@
 #include <QDialog>
 #include <QFile>
 #include <QFormLayout>
+#include <QHBoxLayout>
 #include <QImage>
 #include <QLabel>
 #include <QMenu>
@@ -421,13 +422,17 @@ void applyStyle(QApplication& app)
     app.setStyleSheet(sheet(t));
 }
 
+namespace {
+constexpr int kSheetPadding = 20; // the sides of a sheet's title row, body and footer
+} // namespace
+
 QVBoxLayout* sheetLayout(QDialog* sheet, QLayout* foot)
 {
     auto* root = new QVBoxLayout(sheet);
     root->setContentsMargins(0, 0, 0, 0);
     root->setSpacing(0);
     auto* body = new QVBoxLayout;
-    body->setContentsMargins(20, 16, 20, 16);
+    body->setContentsMargins(kSheetPadding, 16, kSheetPadding, 16);
     body->setSpacing(12);
     root->addLayout(body, 1);
     if (foot != nullptr) {
@@ -446,6 +451,31 @@ QWidget* sheetCloseButton(QDialog* sheet)
     close->setAccessibleName(QObject::tr("Close"));
     QObject::connect(close, &QToolButton::clicked, sheet, &QDialog::reject);
     return close;
+}
+
+QHBoxLayout* sheetTitleRow(QDialog* sheet, const QString& title, const QList<QWidget*>& extras)
+{
+    auto* label = new QLabel(title, sheet);
+    label->setObjectName(QStringLiteral("sheetTitle"));
+    auto* row = new QHBoxLayout;
+    row->setContentsMargins(0, 0, 0, 0);
+    row->setSpacing(8);
+    row->addWidget(label);
+    row->addSpacing(4);
+    for (QWidget* extra : extras) {
+        row->addWidget(extra);
+    }
+    row->addStretch();
+    row->addWidget(sheetCloseButton(sheet));
+    return row;
+}
+
+QWidget* sheetHeaderBar(QDialog* sheet, QLayout* titleRow)
+{
+    auto* bar = new QWidget(sheet);
+    titleRow->setContentsMargins(kSheetPadding, 16, kSheetPadding, 12);
+    bar->setLayout(titleRow);
+    return bar;
 }
 
 QLabel* sectionLabel(const QString& text, QWidget* parent)
@@ -514,7 +544,7 @@ QWidget* sheetFootBar(QWidget* sheet, QLayout* foot)
     auto* bar = new QWidget(sheet);
     bar->setObjectName(QStringLiteral("sheetFoot"));
     bar->setAttribute(Qt::WA_StyledBackground);
-    foot->setContentsMargins(20, 12, 20, 12);
+    foot->setContentsMargins(kSheetPadding, 12, kSheetPadding, 12);
     bar->setLayout(foot);
     return bar;
 }

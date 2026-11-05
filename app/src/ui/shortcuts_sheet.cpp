@@ -78,20 +78,11 @@ ShortcutsSheet::ShortcutsSheet(QWidget* parent)
     , m_search(new QLineEdit(this))
 {
     setWindowTitle(tr("Keyboard shortcuts"));
-    auto* title = new QLabel(tr("Keyboard shortcuts"), this);
-    title->setObjectName(u"sheetTitle"_s);
     m_search->setPlaceholderText(tr("Search"));
     m_search->setClearButtonEnabled(true);
     m_search->addAction(icons::themed(u"search"_s, tokens().muted), QLineEdit::LeadingPosition);
     m_search->setFixedWidth(240);
     connect(m_search, &QLineEdit::textChanged, this, &ShortcutsSheet::filter);
-    auto* close = sheetCloseButton(this);
-    auto* head = new QHBoxLayout;
-    head->addWidget(title);
-    head->addSpacing(12);
-    head->addWidget(m_search);
-    head->addStretch();
-    head->addWidget(close);
 
     auto* grid = new QGridLayout;
     grid->setHorizontalSpacing(32);
@@ -120,11 +111,10 @@ ShortcutsSheet::ShortcutsSheet(QWidget* parent)
         column->addStretch();
         grid->addLayout(column, static_cast<int>(s / 2), static_cast<int>(s % 2));
     }
-    auto* layout = new QVBoxLayout(this);
-    layout->setContentsMargins(22, 18, 22, 18);
-    layout->addLayout(head);
+    QVBoxLayout* layout = sheetLayout(this, nullptr);
+    layout->addLayout(sheetTitleRow(this, tr("Keyboard shortcuts"), {m_search}));
     layout->addLayout(grid);
-    setFixedWidth(820);
+    setSize(Size::Wide);
 }
 
 ShortcutsSheet::~ShortcutsSheet() = default;

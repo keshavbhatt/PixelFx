@@ -5,9 +5,10 @@
 class QCheckBox;
 class QComboBox;
 class QLabel;
-class QTextBrowser;
 
 namespace pixelfx::ui {
+
+class TextView;
 
 /// What's new: the running version's section of the bundled changelog,
 /// written for people. The first few items show, then "The full list of changes" shows them all.
@@ -45,7 +46,7 @@ private:
     QString m_version;
     bool m_all = false;
     QComboBox* m_versions = nullptr;
-    QTextBrowser* m_text = nullptr;
+    TextView* m_text = nullptr;
     QLabel* m_more = nullptr;
     QCheckBox* m_show = nullptr;
 };

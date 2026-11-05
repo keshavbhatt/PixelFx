@@ -19,6 +19,20 @@ public:
 
     static constexpr int kRadius = 14;
 
+    /// The sheet sizes: widths for sheets as tall as their content, and one fixed size for the
+    /// sheets that are mostly a live preview (Watermark, the look editor).
+    enum class Size
+    {
+        Narrow,  ///< 440 px: a short question (Paste, Custom size)
+        Regular, ///< 560 px: a form (Export, Save as preset, About)
+        Wide,    ///< 820 px: two columns or a sidebar (Settings, Keyboard shortcuts)
+        Editor,  ///< 980 by 640 px: controls beside a preview
+    };
+    /// Gives the sheet its size; call once its content is built.
+    void setSize(Size size);
+    /// Makes the sheet as tall as its content at its width (after the content changes).
+    void fitHeight();
+
 protected:
     void paintEvent(QPaintEvent* event) override;
     void mousePressEvent(QMouseEvent* event) override;

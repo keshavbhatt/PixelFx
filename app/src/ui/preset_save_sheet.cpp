@@ -7,7 +7,6 @@
 #include "ui/style.h"
 
 #include <QComboBox>
-#include <QDialogButtonBox>
 #include <QFileDialog>
 #include <QFormLayout>
 #include <QHBoxLayout>
@@ -24,7 +23,6 @@ using namespace Qt::StringLiterals;
 namespace pixelfx::ui {
 
 namespace {
-constexpr int kWidth = 560;
 constexpr int kLabelColumn = 100;
 constexpr QSize kThumbnail(150, 100);
 } // namespace
@@ -36,8 +34,6 @@ PresetSaveSheet::PresetSaveSheet(const pfx::Settings& settings, const QStringLis
     , m_thumbnail(new QLabel(this))
 {
     setWindowTitle(tr("Save as preset"));
-    auto* title = new QLabel(tr("Save as preset"), this);
-    title->setObjectName(u"sheetTitle"_s);
     QHBoxLayout* top = buildTop(groups);
 
     auto* note =
@@ -50,16 +46,12 @@ PresetSaveSheet::PresetSaveSheet(const pfx::Settings& settings, const QStringLis
     QHBoxLayout* buttons = buildButtons();
 
     QVBoxLayout* column = sheetLayout(this, buttons);
-    auto* titleRow = new QHBoxLayout;
-    titleRow->addWidget(title);
-    titleRow->addStretch();
-    titleRow->addWidget(sheetCloseButton(this));
-    column->addLayout(titleRow);
+    column->addLayout(sheetTitleRow(this, tr("Save as preset")));
     column->addLayout(top);
     column->addSpacing(2);
     buildInclude(column, settings);
     column->addWidget(note);
-    setFixedWidth(kWidth);
+    setSize(Size::Regular);
     refreshSave();
 }
 
