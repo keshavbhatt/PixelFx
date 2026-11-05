@@ -876,7 +876,7 @@ void MainWindow::buildRail()
         auto* b = new QToolButton(m_rail);
         b->setObjectName(u"railButton"_s);
         b->setIcon(icons::toggle(glyph, tokens().muted, tokens().accent, tokens().faint));
-        b->setIconSize(QSize(20, 20));
+        b->setIconSize(QSize(18, 18));
         b->setText(text);
         b->setToolTip(tip);
         b->setAccessibleName(text);
@@ -911,7 +911,7 @@ void MainWindow::buildRail()
     auto* gear = new QToolButton(m_rail);
     gear->setObjectName(u"railButton"_s);
     gear->setIcon(icons::themed(u"settings"_s, tokens().muted));
-    gear->setIconSize(QSize(20, 20));
+    gear->setIconSize(QSize(18, 18));
     gear->setFixedSize(44, 40);
     gear->setToolTip(tr("Settings (Ctrl+,)"));
     gear->setAccessibleName(tr("Settings"));
@@ -958,7 +958,8 @@ QWidget* MainWindow::buildCanvasPage()
 void MainWindow::copySettings()
 {
     if (m_document.isOpen() && !isInTool()) {
-        QGuiApplication::clipboard()->setText(core::settingsToClipboard(m_document.settings()));
+        QGuiApplication::clipboard()->setText(
+            core::settingsToClipboard(m_document.settings(), QFileInfo(m_document.info().path).fileName()));
         showToast(tr("Settings copied"));
     }
 }
@@ -978,6 +979,7 @@ void MainWindow::pasteSettings()
     if (photos > 1) {
         // Several photos: ask which parts (apply-to-selected.html), as a preset of those parts.
         PasteSheet sheet(settings, photos, this);
+        sheet.setSource(core::clipboardSource(QGuiApplication::clipboard()->text()));
         if (sheet.exec() != QDialog::Accepted || sheet.units().isEmpty()) {
             return;
         }

@@ -11,10 +11,13 @@
 // replaced, as in other editors.
 namespace pixelfx::core {
 
-/// The settings as clipboard text, without their geometry.
-[[nodiscard]] QString settingsToClipboard(const pfx::Settings& settings);
+/// The settings as clipboard text, without their geometry, named after the photo `from` ("sunset-lake.jpg").
+[[nodiscard]] QString settingsToClipboard(const pfx::Settings& settings, const QString& from = {});
 /// The settings in clipboard text, when it is a PixelFx preset or recipe; without geometry.
 [[nodiscard]] std::optional<pfx::Settings> settingsFromClipboard(const QString& text);
+/// Where the settings in clipboard text came from: the photo they were copied from, or the
+/// preset's name; empty when unknown.
+[[nodiscard]] QString clipboardSource(const QString& text);
 /// `current` with everything but its geometry replaced by `copied`.
 [[nodiscard]] pfx::Settings pasted(const pfx::Settings& current, const pfx::Settings& copied);
 

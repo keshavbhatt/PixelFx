@@ -65,7 +65,7 @@ QIcon themed(const QString& name, const QColor& color, const QColor& disabledCol
     QIcon icon;
     const QColor disabled =
         disabledColor.isValid() ? disabledColor : QColor(color.red(), color.green(), color.blue(), 90);
-    for (const int size : {16, 20, 24, 32, 48}) {
+    for (const int size : {16, 18, 20, 24, 32, 48}) {
         for (const qreal dpr : {1.0, 2.0}) {
             icon.addPixmap(pixmap(name, color, size, dpr), QIcon::Normal);
             icon.addPixmap(pixmap(name, disabled, size, dpr), QIcon::Disabled);
@@ -77,7 +77,7 @@ QIcon themed(const QString& name, const QColor& color, const QColor& disabledCol
 QIcon toggle(const QString& name, const QColor& color, const QColor& onColor, const QColor& disabledColor)
 {
     QIcon icon = themed(name, color, disabledColor);
-    for (const int size : {16, 20, 24, 32, 48}) {
+    for (const int size : {16, 18, 20, 24, 32, 48}) {
         for (const qreal dpr : {1.0, 2.0}) {
             icon.addPixmap(pixmap(name, onColor, size, dpr), QIcon::Normal, QIcon::On);
         }

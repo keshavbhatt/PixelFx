@@ -4,10 +4,8 @@
 
 #include <QStringList>
 
-#include <map>
 #include <pfx/settings.h>
 
-class QCheckBox;
 class QComboBox;
 class QHBoxLayout;
 class QImage;
@@ -17,6 +15,8 @@ class QPushButton;
 class QVBoxLayout;
 
 namespace pixelfx::ui {
+
+class PartChecklist;
 
 /// Save as preset: a name, a group, and which parts of the settings the
 /// preset holds. Changed parts are ticked, except White balance and Crop and rotate, which
@@ -47,18 +47,13 @@ private:
     /// The thumbnail beside the name and group.
     QHBoxLayout* buildTop(const QStringList& groups);
     void buildInclude(QVBoxLayout* column, const pfx::Settings& settings);
-    /// A check box per part, in two columns, with what changed in each.
-    QWidget* buildParts(const pfx::Settings& settings);
-    [[nodiscard]] QLabel* unitNote(const QString& unit, const pfx::Settings& settings, int changed);
-    [[nodiscard]] static QString changedText(const pfx::Settings& settings, const QString& unit, int changed);
     QHBoxLayout* buildButtons();
     void refreshSave();
     QLineEdit* m_name = nullptr;
     QComboBox* m_group = nullptr;
     QPushButton* m_save = nullptr;
     QLabel* m_thumbnail = nullptr;
-    std::map<QString, QCheckBox*> m_boxes;
-    QStringList m_changed;
+    PartChecklist* m_parts = nullptr;
     QString m_fileCopy;
 };
 

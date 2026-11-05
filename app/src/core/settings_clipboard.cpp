@@ -24,13 +24,15 @@ pfx::Settings withoutGeometry(const pfx::Settings& settings)
     return out;
 }
 
+constexpr auto kUnnamed = "Copied settings";
+
 } // namespace
 
-QString settingsToClipboard(const pfx::Settings& settings)
+QString settingsToClipboard(const pfx::Settings& settings, const QString& from)
 {
     pfx::Document doc;
     doc.kind = pfx::DocumentKind::Preset;
-    doc.name = "Copied settings";
+    doc.name = from.isEmpty() ? std::string(kUnnamed) : from.toStdString();
     doc.settings = withoutGeometry(settings);
     return QString::fromStdString(pfx::serializeDocument(doc));
 }
@@ -46,6 +48,15 @@ std::optional<pfx::Settings> settingsFromClipboard(const QString& text)
         return std::nullopt;
     }
     return withoutGeometry(doc.value().settings);
+}
+
+QString clipboardSource(const QString& text)
+{
+    if (!settingsFromClipboard(text)) {
+        return {};
+    }
+    const std::string name = pfx::parseDocument(text.toStdString()).value().name;
+    return name == kUnnamed ? QString() : QString::fromStdString(name);
 }
 
 pfx::Settings pasted(const pfx::Settings& current, const pfx::Settings& copied)

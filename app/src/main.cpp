@@ -156,7 +156,9 @@ bool grabSheet(pixelfx::ui::MainWindow& window, const QString& grab, bool export
         about->showPage(page);
         sheet = about;
     } else if (qEnvironmentVariable("PIXELFX_DEBUG_SHEET") == u"paste"_s && window.document().isOpen()) {
-        sheet = new pixelfx::ui::PasteSheet(window.document().settings(), 6, &window);
+        auto* paste = new pixelfx::ui::PasteSheet(window.document().settings(), 6, &window);
+        paste->setSource(QFileInfo(window.document().info().path).fileName());
+        sheet = paste;
     } else if (qEnvironmentVariable("PIXELFX_DEBUG_SHEET") == u"whatsnew"_s) {
         sheet = new pixelfx::ui::WhatsNewSheet(pixelfx::ui::WhatsNewSheet::bundledChangelog(),
                                                QApplication::applicationVersion(), true, &window);

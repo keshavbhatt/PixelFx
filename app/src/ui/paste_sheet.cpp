@@ -1,9 +1,9 @@
 #include "ui/paste_sheet.h"
 
 #include "core/presets.h"
+#include "ui/part_checklist.h"
 #include "ui/style.h"
 
-#include <QCheckBox>
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QPushButton>
@@ -13,32 +13,30 @@ using namespace Qt::StringLiterals;
 
 namespace pixelfx::ui {
 
+namespace {
+constexpr int kWidth = 440;
+} // namespace
+
 PasteSheet::PasteSheet(const pfx::Settings& copied, int photos, QWidget* parent)
     : Sheet(parent)
+    , m_parts(new PartChecklist(copied, core::unitsIn(copied), 1, this))
+    , m_source(new QLabel(this))
 {
     setWindowTitle(tr("Paste settings"));
-    auto* title = new QLabel(tr("Paste to %n photos", nullptr, photos), this);
+    auto* title = new QLabel(tr("Paste settings to %n photos", nullptr, photos), this);
     title->setObjectName(u"sheetTitle"_s);
+    m_source->setObjectName(u"muted"_s);
+    m_source->hide();
     auto* hint = new QLabel(tr("Parts left out keep what each photo already has."), this);
     hint->setObjectName(u"faint"_s);
-    auto* boxes = new QVBoxLayout;
-    boxes->setSpacing(4);
-    const QStringList held = core::unitsIn(copied);
-    for (const core::PresetUnit& unit : core::presetUnits()) {
-        if (!held.contains(unit.id)) {
-            continue;
-        }
-        auto* box = new QCheckBox(unit.label, this);
-        box->setChecked(unit.id != u"wb"_s && unit.id != u"crop"_s);
-        boxes->addWidget(box);
-        m_boxes[unit.id] = box;
-    }
+    hint->setWordWrap(true);
     auto* cancel = new QPushButton(tr("Cancel"), this);
     auto* paste = new QPushButton(tr("Paste to %n photos", nullptr, photos), this);
     paste->setObjectName(u"primary"_s);
     paste->setDefault(true);
     connect(cancel, &QPushButton::clicked, this, &QDialog::reject);
     connect(paste, &QPushButton::clicked, this, &QDialog::accept);
+    connect(m_parts, &PartChecklist::toggled, this, [this, paste] { paste->setEnabled(!units().isEmpty()); });
     auto* buttons = new QHBoxLayout;
     buttons->addStretch();
     buttons->addWidget(cancel);
@@ -49,29 +47,29 @@ PasteSheet::PasteSheet(const pfx::Settings& copied, int photos, QWidget* parent)
     titleRow->addStretch();
     titleRow->addWidget(sheetCloseButton(this));
     column->addLayout(titleRow);
-    column->addLayout(boxes);
+    column->addWidget(m_source);
+    column->addWidget(m_parts);
     column->addWidget(hint);
-    setMinimumWidth(360);
+    setFixedWidth(kWidth);
+    adjustSize(); // the height for this width
 }
 
 PasteSheet::~PasteSheet() = default;
 
+void PasteSheet::setSource(const QString& source)
+{
+    m_source->setText(tr("From %1").arg(source));
+    m_source->setVisible(!source.isEmpty());
+}
+
 QStringList PasteSheet::units() const
 {
-    QStringList out;
-    for (const auto& [id, box] : m_boxes) {
-        if (box->isChecked()) {
-            out << id;
-        }
-    }
-    return out;
+    return m_parts->ticked();
 }
 
 void PasteSheet::tick(const QStringList& units)
 {
-    for (const auto& [id, box] : m_boxes) {
-        box->setChecked(units.contains(id));
-    }
+    m_parts->tick(units);
 }
 
 } // namespace pixelfx::ui

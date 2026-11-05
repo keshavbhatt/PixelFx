@@ -30,6 +30,15 @@ private Q_SLOTS:
         QVERIFY(!settingsFromClipboard(u"hello"_s).has_value());
         QVERIFY(!settingsFromClipboard(u"{\"a\": 1}"_s).has_value());
         QVERIFY(!settingsFromClipboard(QString()).has_value());
+        QVERIFY(clipboardSource(u"hello"_s).isEmpty());
+    }
+
+    void theCopyNamesThePhotoItCameFrom()
+    {
+        pfx::Settings s;
+        s.set("light.exposure", 0.5);
+        QCOMPARE(clipboardSource(settingsToClipboard(s, u"sunset-lake.jpg"_s)), u"sunset-lake.jpg"_s);
+        QVERIFY(clipboardSource(settingsToClipboard(s)).isEmpty());
     }
 
     void pasteKeepsThePhotosOwnCrop()
