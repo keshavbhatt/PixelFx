@@ -2,9 +2,11 @@
 // Lens profiles (ADR-013), on a lens database written here: one camera and one lens with a
 // strong vignetting and a barrel distortion, so the tests do not depend on the system's.
 #include "fixtures.h"
+#include "pfx/io.h"
 #include "pfx/lens.h"
 #include "pfx/pipeline.h"
 
+#include <cstdlib>
 #include <doctest/doctest.h>
 #include <fstream>
 
@@ -113,4 +115,35 @@ TEST_CASE("lens facts come from Exif")
     exif.fNumber = 4.0;
     const pfx::LensFacts facts = pfx::lensFacts(exif);
     CHECK(facts == pfx::LensFacts{"Testmaker", "Model 7", "Test 24mm f/2.8", 24.0, 4.0});
+}
+
+TEST_CASE("golden image: the lens profile's output is unchanged")
+{
+    const fixtures::TempDir dir;
+    std::ofstream(dir.path() / "test.xml") << kDatabase;
+    pfx::setLensDatabaseFolder(dir.path());
+    if (!pfx::lensProfilesAvailable()) {
+        pfx::setLensDatabaseFolder({});
+        return;
+    }
+    pfx::Settings on;
+    on.set("detail.lensProfile.enable", true);
+    pfx::RenderOptions withLens;
+    withLens.lens = &kFacts;
+    const auto rendered = pfx::render(fixtures::scene(), on, withLens);
+    REQUIRE(rendered.ok());
+    const std::filesystem::path golden = std::filesystem::path(PFX_GOLDEN_DIR) / "lens_profile.png";
+    pfx::SaveOptions sixteen;
+    sixteen.bitsPerSample = 16;
+    if (std::getenv("PFX_GOLDEN_UPDATE") != nullptr) {
+        REQUIRE(pfx::save(rendered.value(), golden, sixteen).ok());
+    }
+    const auto expected = pfx::load(golden);
+    REQUIRE_MESSAGE(expected.ok(), "missing golden image; run with PFX_GOLDEN_UPDATE=1 once and review it");
+    // Through a 16-bit PNG, as the golden file went.
+    REQUIRE(pfx::save(rendered.value(), dir.path() / "actual.png", sixteen).ok());
+    const auto actual = pfx::load(dir.path() / "actual.png");
+    REQUIRE(actual.ok());
+    CHECK(fixtures::compare(actual.value().image, expected.value().image).max < 2e-3);
+    pfx::setLensDatabaseFolder({});
 }
