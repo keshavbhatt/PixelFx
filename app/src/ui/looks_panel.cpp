@@ -323,6 +323,8 @@ void LooksPanel::addSection(const QString& title, QWidget* extra, const std::vec
     grid->setContentsMargins(kToolRowPadding, 2, kToolRowPadding, 6);
     grid->setHorizontalSpacing(kGapControls);
     grid->setVerticalSpacing(kGapControls);
+    grid->setColumnStretch(0, 1);
+    grid->setColumnStretch(1, 1);
     int at = 0;
     const auto place = [&](LookTile* tile) {
         tile->setSelected(tile->id() == m_current);
@@ -362,6 +364,10 @@ void LooksPanel::addSection(const QString& title, QWidget* extra, const std::vec
             });
         }
         place(tile);
+    }
+    if (at % 2 == 1) {
+        // A blank in the free column keeps the gap, so a lone tile is as wide as the others.
+        grid->addWidget(new QWidget(m_listBox), at / 2, 1);
     }
     m_list->addLayout(grid);
 }

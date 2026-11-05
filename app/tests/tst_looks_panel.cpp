@@ -60,6 +60,28 @@ private Q_SLOTS:
         QCOMPARE(chosen.size(), 2);
     }
 
+    void aSingleLookOfMyOwnIsAsWideAsTheOthers()
+    {
+        auto entries = pixelfx::core::builtInLooks();
+        pixelfx::core::LookEntry mine = entries.front();
+        mine.id = u"user:mine"_s;
+        mine.name = u"Mine"_s;
+        mine.path = u"/looks/mine.pfxlook"_s;
+        entries.insert(entries.begin(), mine);
+        LooksPanel panel;
+        panel.resize(272, 800);
+        panel.setEntries(entries);
+        panel.show();
+        QVERIFY(QTest::qWaitForWindowExposed(&panel));
+        int mineWidth = 0;
+        int builtInWidth = 0;
+        for (auto* t : panel.visibleTiles()) {
+            (t->id() == u"user:mine"_s ? mineWidth : builtInWidth) = t->width();
+        }
+        QVERIFY(mineWidth > 0);
+        QCOMPARE(mineWidth, builtInWidth);
+    }
+
     void lookEditorSaysWhatWentWrongInItsFooter()
     {
         QTemporaryDir dir;
