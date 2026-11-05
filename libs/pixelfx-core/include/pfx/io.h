@@ -53,6 +53,9 @@ struct SaveOptions
 // written by people) is kept. Malformed blocks are returned as they are.
 [[nodiscard]] Metadata withoutLocation(const Metadata& metadata);
 [[nodiscard]] std::vector<std::uint8_t> exifWithoutLocation(std::vector<std::uint8_t> exif);
+// Exif without its thumbnail (IFD1): unlinked, and cut off when it sits at the end, as writers
+// put it.
+[[nodiscard]] std::vector<std::uint8_t> exifWithoutThumbnail(std::vector<std::uint8_t> exif);
 
 // What the camera wrote in Exif, for the photo's details and watermark tokens. Fields the block
 // does not have stay empty or zero; a malformed block gives an empty summary.

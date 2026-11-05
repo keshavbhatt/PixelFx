@@ -2,13 +2,16 @@
 // Removing location from metadata without a metadata library (ADR-003): the Exif GPS block is
 // unlinked and zeroed, and XMP's exif:GPS properties are dropped. Anything malformed is left as
 // it is rather than guessed at.
+#include "io/compress_internal.h"
 #include "pfx/io.h"
 
+#include <algorithm>
 #include <array>
 #include <cstddef>
 #include <optional>
 #include <regex>
 #include <string>
+#include <string_view>
 
 namespace pfx {
 
@@ -72,6 +75,15 @@ public:
         m_bytes[p] = m_little ? a : b;
         m_bytes[p + 1] = m_little ? b : a;
     }
+
+    void write32(std::size_t at, std::uint32_t value)
+    {
+        write16(at + (m_little ? 0 : 2), value & 0xFFFFU);
+        write16(at + (m_little ? 2 : 0), value >> 16U);
+    }
+
+    // Where the TIFF header starts in the bytes (after "Exif\0\0" when there is one).
+    [[nodiscard]] std::size_t base() const { return m_base; }
 
     [[nodiscard]] std::optional<std::uint8_t> byte(std::size_t at) const
     {
@@ -284,6 +296,66 @@ std::vector<std::uint8_t> exifWithoutLocation(std::vector<std::uint8_t> exif)
     return exif;
 }
 
+namespace {
+
+constexpr std::uint32_t kExifPointer = 0x8769;
+constexpr std::uint32_t kInteropPointer = 0xA005;
+
+// The end of the bytes `directory` and what it points to use, as an offset from the TIFF header.
+std::size_t usedEnd(const Tiff& tiff, std::uint32_t directory, int depth)
+{
+    const auto count = tiff.read16(directory);
+    if (!count || *count > 1024 || depth > 3) {
+        return 0;
+    }
+    std::size_t end = directory + 2 + (12 * static_cast<std::size_t>(*count)) + 4;
+    for (std::uint32_t i = 0; i < *count; ++i) {
+        const std::size_t entry = directory + 2 + (12 * static_cast<std::size_t>(i));
+        const auto tag = tiff.read16(entry);
+        const auto type = tiff.read16(entry + 2);
+        const auto n = tiff.read32(entry + 4);
+        const auto value = tiff.read32(entry + 8);
+        if (!tag || !type || !n || !value) {
+            continue;
+        }
+        const std::size_t size = typeSize(*type) * *n;
+        if (size > 4) {
+            end = std::max(end, std::size_t{*value} + size);
+        }
+        if (*tag == kExifPointer || *tag == kGpsPointer || *tag == kInteropPointer) {
+            end = std::max(end, usedEnd(tiff, *value, depth + 1));
+        }
+    }
+    return end;
+}
+
+} // namespace
+
+std::vector<std::uint8_t> exifWithoutThumbnail(std::vector<std::uint8_t> exif)
+{
+    Tiff tiff(exif);
+    if (!tiff.valid()) {
+        return exif;
+    }
+    const auto ifd0 = tiff.read32(4);
+    const auto count = ifd0 ? tiff.read16(*ifd0) : std::nullopt;
+    if (!count || *count > 1024) {
+        return exif;
+    }
+    const std::size_t next = *ifd0 + 2 + (12 * static_cast<std::size_t>(*count));
+    const auto ifd1 = tiff.read32(next);
+    if (!ifd1 || *ifd1 == 0) {
+        return exif;
+    }
+    tiff.write32(next, 0); // unlinked: IFD1 holds the thumbnail
+    // Writers put the thumbnail last; then the block can end where the rest ends.
+    const std::size_t end = usedEnd(tiff, *ifd0, 0);
+    if (end > 8 && *ifd1 >= end && tiff.base() + end < exif.size()) {
+        exif.resize(tiff.base() + end);
+    }
+    return exif;
+}
+
 std::vector<std::uint8_t> xmpWithoutLocation(const std::vector<std::uint8_t>& xmp)
 {
     std::string text(xmp.begin(), xmp.end());
@@ -299,5 +371,62 @@ Metadata withoutLocation(const Metadata& metadata)
 {
     return {exifWithoutLocation(metadata.exif), xmpWithoutLocation(metadata.xmp), metadata.iptc};
 }
+
+namespace detail {
+
+std::vector<std::uint8_t> exifWithoutExtras(std::vector<std::uint8_t> exif)
+{
+    return exifWithoutThumbnail(exifWithoutLocation(std::move(exif)));
+}
+
+std::vector<std::uint8_t> xmpWithoutExtras(const std::vector<std::uint8_t>& xmp)
+{
+    const std::vector<std::uint8_t> located = xmpWithoutLocation(xmp);
+    std::string text(located.begin(), located.end());
+    static const std::regex kThumbnails(R"(<(xmp|xap):Thumbnails\b[\s\S]*?</\1:Thumbnails\s*>)");
+    text = std::regex_replace(text, kThumbnails, "");
+    return {text.begin(), text.end()};
+}
+
+std::vector<std::uint8_t> photoshopWithoutPreviews(const std::vector<std::uint8_t>& payload)
+{
+    // "Photoshop 3.0\0", then 8BIM resources: id, a Pascal name padded to even, a size, the
+    // data padded to even. 0x0409 and 0x040C are thumbnails.
+    constexpr std::size_t kHeader = 14;
+    if (payload.size() < kHeader) {
+        return payload;
+    }
+    std::vector<std::uint8_t> out(payload.begin(), payload.begin() + kHeader);
+    std::size_t at = kHeader;
+    while (at < payload.size()) {
+        if (at + 7 > payload.size() || !std::equal(payload.begin() + static_cast<std::ptrdiff_t>(at),
+                                                   payload.begin() + static_cast<std::ptrdiff_t>(at + 4),
+                                                   std::string_view("8BIM").begin())) {
+            return payload;
+        }
+        const std::uint32_t id = (std::uint32_t{payload[at + 4]} << 8U) | payload[at + 5];
+        std::size_t name = 1 + payload[at + 6];
+        name += name % 2;
+        const std::size_t sizeAt = at + 6 + name;
+        if (sizeAt + 4 > payload.size()) {
+            return payload;
+        }
+        std::size_t size = (std::size_t{payload[sizeAt]} << 24U) | (std::size_t{payload[sizeAt + 1]} << 16U) |
+                           (std::size_t{payload[sizeAt + 2]} << 8U) | payload[sizeAt + 3];
+        size += size % 2;
+        const std::size_t end = sizeAt + 4 + size;
+        if (end > payload.size() + 1) {
+            return payload;
+        }
+        if (id != 0x0409 && id != 0x040C) {
+            out.insert(out.end(), payload.begin() + static_cast<std::ptrdiff_t>(at),
+                       payload.begin() + static_cast<std::ptrdiff_t>(std::min(end, payload.size())));
+        }
+        at = end;
+    }
+    return out;
+}
+
+} // namespace detail
 
 } // namespace pfx

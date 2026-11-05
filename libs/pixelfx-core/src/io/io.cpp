@@ -5,6 +5,7 @@
 
 #include "core/log_internal.h"
 #include "core/parallel.h"
+#include "io/compress_internal.h"
 #include "ops/value_table.h"
 #include "pfx/color.h"
 
@@ -294,6 +295,9 @@ std::string readFailure(const std::string& detail)
         has("out of order read") || has("Corrupt") || has("corrupt")) {
         return "The file is damaged or incomplete.";
     }
+    if (has("unable to unpack") || has("Unsupported file format or not RAW")) {
+        return "This RAW file is compressed in a way PixelFx cannot read yet.";
+    }
     if (has("Permission denied")) {
         return "PixelFx is not allowed to read this file.";
     }
@@ -536,6 +540,15 @@ Result<Rgba8Image> toSrgb8(const Image& image)
     });
     return out;
 }
+
+namespace detail {
+
+void startVips()
+{
+    ensureVips();
+}
+
+} // namespace detail
 
 std::vector<std::string> writableExtensions()
 {

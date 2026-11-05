@@ -19,6 +19,9 @@ include(FetchContent)
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(VIPS REQUIRED IMPORTED_TARGET vips-cpp>=8.15)
 pkg_check_modules(LCMS2 REQUIRED IMPORTED_TARGET lcms2>=2.14)
+# libjpeg-turbo's coefficient API and zlib for compressing files (ADR-010).
+pkg_check_modules(JPEG REQUIRED IMPORTED_TARGET libjpeg)
+pkg_check_modules(ZLIB REQUIRED IMPORTED_TARGET zlib)
 find_package(Threads REQUIRED)
 
 # JSON for the document formats (ADR-007). Private: never in the public headers.
@@ -72,13 +75,20 @@ add_library(pfx_core
     src/pipeline/look.cpp
     src/io/io.cpp
     src/io/metadata.cpp
+    src/io/compress.cpp
+    src/io/quantize.cpp
+    src/io/png_writer.cpp
+    src/io/gif_writer.cpp
+    src/io/jpeg_lossless.cpp
+    src/io/riff.cpp
 )
 add_library(pfx::core ALIAS pfx_core)
 target_include_directories(pfx_core
     PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
 target_link_libraries(pfx_core
-    PRIVATE PkgConfig::VIPS PkgConfig::LCMS2 nlohmann_json::nlohmann_json Threads::Threads)
+    PRIVATE PkgConfig::VIPS PkgConfig::LCMS2 PkgConfig::JPEG PkgConfig::ZLIB nlohmann_json::nlohmann_json
+            Threads::Threads)
 target_compile_definitions(pfx_core PRIVATE
     PFX_VERSION_STRING="${PROJECT_VERSION}")
 pfx_set_warnings(pfx_core)

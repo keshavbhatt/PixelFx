@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: Apache-2.0
 // pfx: the libpixelfx command line tool. Lists the operations, describes images, applies
-// presets and recipes to files, and turns Lightroom presets into PixelFx ones.
+// presets and recipes to files, makes files smaller, and turns Lightroom presets into PixelFx
+// ones.
 #include "pfx/auto.h"
+#include "pfx/compress.h"
 #include "pfx/document.h"
 #include "pfx/io.h"
 #include "pfx/log.h"
@@ -30,6 +32,12 @@ constexpr const char* kUsage = R"(Usage:
   pfx apply [options] FILE...               apply settings and save copies
   pfx import XMP OUT [NAME [GROUP]]         a Lightroom or Camera Raw preset as a .pfxpreset;
                                             what PixelFx has no equivalent for is listed
+  pfx compress [options] FILE OUT           the file made smaller in its own format
+
+Options for compress:
+  --jpeg-quality N   encode JPEGs again at N (default: lossless only)
+  --png-quality N    allow PNGs a palette of 256 colours down to quality N (default: lossless)
+  --keep-extras      keep the location and embedded previews
 
 Options for apply:
   --preset FILE      apply a .pfxpreset or .pfx recipe (repeatable, later ones win)
@@ -320,6 +328,58 @@ int importXmp(const std::vector<std::string>& args)
     return 0;
 }
 
+int compressFile(const std::vector<std::string>& args)
+{
+    pfx::CompressOptions options;
+    std::vector<std::string> files;
+    for (std::size_t i = 0; i < args.size(); ++i) {
+        const std::string& a = args[i];
+        const bool valued = a == "--jpeg-quality" || a == "--png-quality";
+        int value = 0;
+        if (valued) {
+            if (i + 1 >= args.size()) {
+                return fail(a + " needs a number");
+            }
+            const std::string& text = args[++i];
+            const auto parsed = std::from_chars(text.data(), text.data() + text.size(), value);
+            if (parsed.ec != std::errc{} || value < 0 || value > 100) {
+                return fail(a + " takes 0 to 100");
+            }
+        }
+        if (a == "--jpeg-quality") {
+            options.jpeg = pfx::JpegCompression::Quality;
+            options.jpegQuality = std::max(1, value);
+        } else if (a == "--png-quality") {
+            options.png = pfx::PngCompression::FewerColours;
+            options.pngQuality = value;
+        } else if (a == "--keep-extras") {
+            options.removeExtras = false;
+        } else {
+            files.push_back(a);
+        }
+    }
+    if (files.size() != 2) {
+        return fail("compress needs a file to read and a file to write");
+    }
+    const auto c = pfx::compress(files[0], options);
+    if (!c) {
+        return fail(c.error().message);
+    }
+    std::FILE* out = std::fopen(files[1].c_str(), "wb");
+    if (out == nullptr ||
+        std::fwrite(c.value().bytes.data(), 1, c.value().bytes.size(), out) != c.value().bytes.size()) {
+        if (out != nullptr) {
+            std::fclose(out);
+        }
+        return fail("could not write " + files[1]);
+    }
+    std::fclose(out);
+    std::cout << files[0] << ": " << c.value().originalSize << " -> " << c.value().bytes.size()
+              << " bytes, method " << static_cast<int>(c.value().method) << ", note "
+              << static_cast<int>(c.value().note) << "\n";
+    return 0;
+}
+
 } // namespace
 
 int run(int argc, char* const* argv)
@@ -345,6 +405,9 @@ int run(int argc, char* const* argv)
     }
     if (command == "import") {
         return importXmp({argv + 2, argv + argc});
+    }
+    if (command == "compress") {
+        return compressFile({argv + 2, argv + argc});
     }
     if (command == "--version") {
         std::cout << "pfx " << pfx::versionString() << "\n";

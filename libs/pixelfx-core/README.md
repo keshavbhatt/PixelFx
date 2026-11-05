@@ -18,12 +18,15 @@ Apache-2.0. Part of the PixelFx repository (`libs/pixelfx-core`), built and test
 - Reads and writes PixelFx preset and recipe files (`DOCS/presets.md` in the repository).
 - Saves JPEG, PNG and TIFF (8 or 16 bit), WebP, AVIF and JPEG XL with an embedded sRGB profile,
   keeping Exif, XMP and IPTC metadata.
-- `pfx`, a command line tool: `pfx ops`, `pfx info`, `pfx apply`.
+- Makes files smaller in their own format: lossless JPEG optimisation, the smallest lossless PNG,
+  PNG palettes with a quality floor (its own quantiser), GIF, TIFF and lossless WebP stored
+  again without loss, location and embedded previews removed on request (`pfx/compress.h`).
+- `pfx`, a command line tool: `pfx ops`, `pfx info`, `pfx apply`, `pfx import`, `pfx compress`.
 
 ## Build
 
-Needs CMake 3.21, a C++20 compiler, libvips 8.15 or later (`vips-cpp`) and LittleCMS 2.14 or
-later. nlohmann/json and doctest are fetched at pinned versions when the system has none.
+Needs CMake 3.21, a C++20 compiler, libvips 8.15 or later (`vips-cpp`), LittleCMS 2.14 or
+later, libjpeg-turbo and zlib. nlohmann/json and doctest are fetched at pinned versions when the system has none.
 
 ```sh
 cmake -S libs/pixelfx-core -B build/lib -G Ninja -DPFX_WERROR=ON

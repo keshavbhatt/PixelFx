@@ -29,6 +29,7 @@ add_executable(pfx_tests
     test_lut.cpp
     test_look.cpp
     test_heal.cpp
+    test_compress.cpp
 )
 target_include_directories(pfx_tests PRIVATE ${PROJECT_SOURCE_DIR}/src)
 target_link_libraries(pfx_tests PRIVATE pfx::core doctest::doctest PkgConfig::VIPS PkgConfig::LCMS2)
