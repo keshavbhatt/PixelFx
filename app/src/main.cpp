@@ -16,6 +16,7 @@
 //                                      itself, a submenu's title such as View, or History)
 //   PIXELFX_DEBUG_ZOOM=<scale>         zoom to this scale (1 is 100%) once the photo is open; with
 //                                      GRAB, grab once the full-size render is shown
+//   PIXELFX_DEBUG_BUSY=1               with ZOOM and GRAB, grab while the busy chip shows instead
 //   PIXELFX_DEBUG_BATCH=<folder>       open Batch with this folder and process it; with GRAB, grab
 //                                      when the batch is done
 //   PIXELFX_DEBUG_EXPAND=<group>       open this adjustment group ("Color grading") and close the
@@ -290,6 +291,14 @@ void applyGrabHook(pixelfx::ui::MainWindow& window, const QStringList& files)
         window.grab().save(grab);
         QCoreApplication::quit();
     };
+    if (qEnvironmentVariableIsSet("PIXELFX_DEBUG_BUSY")) { // the wait for it, beside the zoom bar
+        QObject::connect(window.canvas(), &pixelfx::ui::Canvas::busyChanged, &window, [save](bool shown) {
+            if (shown) {
+                save();
+            }
+        });
+        return;
+    }
     if (qEnvironmentVariableIsSet("PIXELFX_DEBUG_ZOOM")) { // the sharp full-size picture is what counts
         QObject::connect(&window.document(), &pixelfx::services::Document::fullReady, &window,
                          [save, &window] { QTimer::singleShot(300, &window, save); });

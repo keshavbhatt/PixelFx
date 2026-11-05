@@ -9,6 +9,8 @@ qt_add_library(pixelfx_ui STATIC
     adjust_panel.h
     batch_page.cpp
     batch_page.h
+    busy_ring.cpp
+    busy_ring.h
     canvas.cpp
     canvas.h
     crop_overlay.h

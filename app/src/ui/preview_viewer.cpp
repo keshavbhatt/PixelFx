@@ -149,7 +149,13 @@ void PreviewViewer::showPhoto(int index)
     m_next->setVisible(m_count > 1);
     m_previous->setEnabled(index > 0);
     m_next->setEnabled(index < m_count - 1);
-    m_canvas->setStatus(tr("Rendering..."));
+    // The first photo has nothing to show yet; going to the next one shows the chip beside the
+    // zoom bar over the photo still on show, as the editor does.
+    if (m_photo.after.isNull()) {
+        m_canvas->setStatus(tr("Rendering..."));
+    } else {
+        m_canvas->setBusy(tr("Loading"));
+    }
     // Big enough for the screen at its pixel density, and for 1:1 on most photos.
     const QScreen* screen = this->screen() != nullptr ? this->screen() : QGuiApplication::primaryScreen();
     const QSize pixels = screen->size() * screen->devicePixelRatio();
@@ -164,6 +170,7 @@ void PreviewViewer::showPhoto(int index)
         }
         m_photo = photo;
         m_canvas->setStatus(QString());
+        m_canvas->setBusy(QString());
         if (photo.after.isNull()) {
             m_canvas->setError(tr("This photo could not be shown."));
             return;

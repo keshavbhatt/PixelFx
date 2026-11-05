@@ -97,7 +97,8 @@ const QString kSheet = uR"(
         #accentText { color: {{accent}}; font-size: 12px; }
         #batchReason { color: {{danger}}; font-size: 12px; }
         #kbd { font-size: 11px; color: {{text}}; background: {{panel}}; border: 1px solid {{border}}; border-bottom-width: 2px; border-radius: 5px; padding: 1px 6px; }
-        #zoomBar { background: {{elevated}}; border: 1px solid {{border}}; border-radius: 10px; }
+        #zoomBar, #zoomChip { background: {{elevated}}; border: 1px solid {{border}}; border-radius: 10px; }
+        #zoomBusy { color: {{muted}}; font-size: 12px; }
         #zoomDivider { background: {{border}}; }
         #zoomLevel { font-size: 12px; }
         QToolButton#zoomButton { border: 0; border-radius: 6px; padding: 4px; background: transparent; font-size: 12px; }
@@ -520,6 +521,11 @@ protected:
 };
 
 } // namespace
+
+bool animationsWanted()
+{
+    return QApplication::isEffectEnabled(Qt::UI_General);
+}
 
 bool showsFocusRing(const QWidget* widget)
 {

@@ -1,15 +1,18 @@
 #include "ui/canvas.h"
 
+#include "ui/busy_ring.h"
 #include "ui/icons.h"
 #include "ui/straighten_dial.h"
 #include "ui/style.h"
 
+#include <QAccessible>
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QMouseEvent>
 #include <QPainter>
 #include <QPainterPath>
 #include <QPushButton>
+#include <QTimer>
 #include <QToolButton>
 #include <QWheelEvent>
 
@@ -175,6 +178,33 @@ void Canvas::buildZoomBar()
     row->addWidget(m_actual);
     row->addWidget(fullScreen);
     m_zoomBar->hide();
+    buildBusyChip();
+}
+
+void Canvas::buildBusyChip()
+{
+    // Beside the bar, not in it: the bar is centred, and growing it would move its buttons.
+    m_busy = new QWidget(this);
+    m_busy->setObjectName(u"zoomChip"_s);
+    m_busy->setAttribute(Qt::WA_StyledBackground);
+    auto* busyRow = new QHBoxLayout(m_busy);
+    busyRow->setContentsMargins(9, 0, 11, 0);
+    busyRow->setSpacing(kGapRelated);
+    busyRow->addWidget(new BusyRing(m_busy));
+    m_busyText = new QLabel(m_busy);
+    m_busyText->setObjectName(u"zoomBusy"_s);
+    busyRow->addWidget(m_busyText);
+    m_busy->hide();
+    m_busyTimer = new QTimer(this);
+    m_busyTimer->setSingleShot(true);
+    m_busyTimer->setInterval(kBusyDelay);
+    connect(m_busyTimer, &QTimer::timeout, this, [this] {
+        m_busy->show();
+        updateZoomBar();
+        Q_EMIT busyChanged(true);
+        QAccessibleAnnouncementEvent said(m_busy, m_busyText->accessibleName());
+        QAccessible::updateAccessibility(&said);
+    });
 }
 
 void Canvas::updateZoomBar()
@@ -188,6 +218,15 @@ void Canvas::updateZoomBar()
     m_zoomBar->adjustSize();
     m_zoomBar->move((width() - m_zoomBar->width()) / 2, height() - m_zoomBar->height() - 12);
     m_zoomBar->raise();
+    if (m_busy != nullptr) {
+        if (m_image.isNull()) {
+            m_busy->hide();
+        }
+        m_busy->setFixedHeight(m_zoomBar->height());
+        m_busy->adjustSize();
+        m_busy->move(m_zoomBar->geometry().right() + 1 + kGapControls, m_zoomBar->y());
+        m_busy->raise();
+    }
     m_dial->setVisible(m_cropping && !m_image.isNull());
     m_dial->move((width() - m_dial->width()) / 2, m_zoomBar->y() - m_dial->height() - 8);
     m_dial->raise();
@@ -840,6 +879,30 @@ void Canvas::paintSideBySide(QPainter& painter)
         painter.drawImage(target, *images[i]);
         drawTag(painter, target, names[i], false);
     }
+}
+
+void Canvas::setBusy(const QString& text)
+{
+    if (text.isEmpty()) {
+        m_busyTimer->stop();
+        if (!m_busy->isHidden()) {
+            m_busy->hide();
+            Q_EMIT busyChanged(false);
+        }
+        return;
+    }
+    m_busyText->setText(text);
+    //: Read by screen readers while the zoomed picture loads, "Loading full size".
+    m_busyText->setAccessibleName(text == tr("Loading") ? tr("Loading full size") : text);
+    if (m_busy->isHidden() && !m_busyTimer->isActive()) {
+        m_busyTimer->start();
+    }
+    updateZoomBar();
+}
+
+bool Canvas::showsBusy() const
+{
+    return !m_busy->isHidden();
 }
 
 void Canvas::setPreviewName(const QString& name)

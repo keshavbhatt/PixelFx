@@ -121,6 +121,16 @@ public:
     /// this goes off.
     void setFullResolution(bool on);
     [[nodiscard]] bool isFullResolution() const { return m_fullOn; }
+    /// Where the full-size picture is: not wanted, reading the photo at full size, redrawing
+    /// it after a change, or on show.
+    enum class FullState
+    {
+        Off,
+        Loading,
+        Updating,
+        Ready,
+    };
+    [[nodiscard]] FullState fullState() const { return m_fullState; }
     /// The newest full-size render matching the settings; null while one is being made.
     [[nodiscard]] const QImage& fullImage() const { return m_full; }
 
@@ -134,6 +144,7 @@ Q_SIGNALS:
     /// The full-size render for zoomed-in views, and the moment the one shown stops matching.
     void fullReady(const QImage& image);
     void fullStale();
+    void fullStateChanged(pixelfx::services::Document::FullState state);
     /// The settings changed from outside the editing controls (open, undo, redo).
     void settingsReplaced(const pfx::Settings& settings);
     void historyChanged();
@@ -176,6 +187,12 @@ private:
     RenderScheduler* m_fullScheduler = nullptr;
     QTimer* m_fullTimer = nullptr;
     bool m_fullLoaded = false;
+    FullState m_fullState = FullState::Off;
+    // The full-size picture of the edit itself, kept while a preset's preview shows, so it is
+    // back at once when the preview ends.
+    QImage m_fullOfEdit;
+    pfx::Settings m_fullOfEditSettings;
+    void setFullState(FullState state);
     quint64 m_fullGeneration = 0;
     std::shared_ptr<const pfx::Image> m_source;
     // colorBeforeMixer's small render and the settings it was made with.

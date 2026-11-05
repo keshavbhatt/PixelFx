@@ -64,6 +64,11 @@ public:
     [[nodiscard]] double split() const { return m_split; }
     void setSplit(double split);
     void setStatus(const QString& text);
+    /// Work under way on the picture ("Loading", "Updating"), said beside the zoom bar once it
+    /// has taken longer than kBusyDelay; empty when it is done.
+    void setBusy(const QString& text);
+    [[nodiscard]] bool showsBusy() const;
+    static constexpr int kBusyDelay = 300;
     /// The photo shows a preset's preview, not the edit: a Preview tag and a line naming it.
     /// An empty name ends it.
     void setPreviewName(const QString& name);
@@ -131,6 +136,8 @@ Q_SIGNALS:
     void zoomChanged();
     /// A level line was drawn; `degrees` is its tilt on screen, positive clockwise.
     void levelLineDrawn(double degrees);
+    /// The busy chip came on show (after the delay) or went.
+    void busyChanged(bool shown);
     /// A click while picking, as fractions of the photo.
     void pointPicked(QPointF fraction);
     void fullScreenRequested();
@@ -150,11 +157,16 @@ private:
     [[nodiscard]] QSizeF zoomedSize() const;
     void clampCentre();
     void buildZoomBar();
+    /// The chip beside the zoom bar that says the picture is being made (setBusy).
+    void buildBusyChip();
     void updateZoomBar();
     class StraightenDial* m_dial = nullptr;
     bool m_levelLine = false;
     bool m_picking = false;
     QString m_previewName;
+    QWidget* m_busy = nullptr;
+    class QLabel* m_busyText = nullptr;
+    class QTimer* m_busyTimer = nullptr;
     QColor m_background;
     bool m_clipping = false;
     QImage m_clipOverlay;

@@ -246,6 +246,38 @@ private Q_SLOTS:
         QVERIFY(doc.fullImage().isNull());
     }
 
+    void theFullSizeStateSaysLoadingThenUpdatingAndAPreviewIsDrawnSharpToo()
+    {
+        QTemporaryDir dir;
+        const QString path = writePhoto(dir, u"photo.png"_s, 400, 300);
+        Document doc;
+        QSignalSpy ready(&doc, &Document::previewReady);
+        doc.open(path, 100);
+        QVERIFY(ready.wait(10000));
+        QCOMPARE(doc.fullState(), Document::FullState::Off);
+        QSignalSpy full(&doc, &Document::fullReady);
+        doc.setFullResolution(true);
+        QCOMPARE(doc.fullState(), Document::FullState::Loading); // the photo is read at full size
+        QVERIFY(full.wait(10000));
+        QCOMPARE(doc.fullState(), Document::FullState::Ready);
+        const QImage edit = doc.fullImage();
+        // A preset's preview, zoomed in, is drawn at full size too.
+        pfx::Settings bright;
+        bright.set("light.exposure", 1.5);
+        doc.setHoverSettings(bright);
+        QCOMPARE(doc.fullState(), Document::FullState::Updating);
+        QVERIFY(full.wait(10000));
+        QVERIFY(doc.fullImage() != edit);
+        // When it ends, the edit's own sharp picture is back at once, without a render.
+        const int before = static_cast<int>(full.count());
+        doc.setHoverSettings(std::nullopt);
+        QCOMPARE(static_cast<int>(full.count()), before + 1);
+        QCOMPARE(doc.fullImage(), edit);
+        QCOMPARE(doc.fullState(), Document::FullState::Ready);
+        doc.setFullResolution(false);
+        QCOMPARE(doc.fullState(), Document::FullState::Off);
+    }
+
     void whiteBalancePickerNeutralisesTheCast()
     {
         QTemporaryDir dir;

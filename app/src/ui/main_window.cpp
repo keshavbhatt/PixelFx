@@ -1597,6 +1597,13 @@ void MainWindow::connectZoom()
     });
     connect(&m_document, &services::Document::fullReady, m_canvas, &Canvas::setDetail);
     connect(&m_document, &services::Document::fullStale, this, [this] { m_canvas->setDetail(QImage()); });
+    connect(&m_document, &services::Document::fullStateChanged, this,
+            [this](services::Document::FullState state) {
+                using State = services::Document::FullState;
+                m_canvas->setBusy(state == State::Loading    ? tr("Loading")
+                                  : state == State::Updating ? tr("Updating")
+                                                             : QString());
+            });
     connect(m_canvas, &Canvas::fullScreenRequested, this,
             [this] { isFullScreen() ? showNormal() : showFullScreen(); });
 }

@@ -86,6 +86,11 @@ Document::Document(QObject* parent)
             [this](const QImage& image, const pfx::Settings& settings, const core::Histogram&) {
                 if (m_fullOn && settings == renderSettings()) {
                     m_full = image;
+                    if (!m_hover) {
+                        m_fullOfEdit = image;
+                        m_fullOfEditSettings = settings;
+                    }
+                    setFullState(FullState::Ready);
                     Q_EMIT fullReady(image);
                 }
             });
@@ -225,6 +230,8 @@ void Document::deliver(const Result& result)
     m_fullTimer->stop();
     m_fullScheduler->setSource(nullptr);
     m_full = QImage();
+    m_fullOfEdit = QImage();
+    setFullState(FullState::Off);
     m_preview = result.original;
     m_histogram = result.histogram;
     m_fingerprint = result.fingerprint;
@@ -284,7 +291,25 @@ void Document::setHoverSettings(const std::optional<pfx::Settings>& settings)
         return;
     }
     m_hover = settings;
-    m_scheduler->request(renderSettings()); // no full-size render for a passing hover
+    // A preview comes after a deliberate wait on its tile, so zoomed in it is drawn at full size
+    // too; when it ends, the edit's own full-size picture comes straight back if it still holds.
+    if (!m_hover && m_fullOn && !m_fullOfEdit.isNull() && m_fullOfEditSettings == renderSettings()) {
+        m_scheduler->request(renderSettings());
+        m_fullTimer->stop();
+        m_full = m_fullOfEdit;
+        setFullState(FullState::Ready);
+        Q_EMIT fullReady(m_full);
+        return;
+    }
+    requestRender();
+}
+
+void Document::setFullState(FullState state)
+{
+    if (state != m_fullState) {
+        m_fullState = state;
+        Q_EMIT fullStateChanged(state);
+    }
 }
 
 void Document::requestRender()
@@ -298,6 +323,7 @@ void Document::scheduleFull()
     if (m_fullOn) {
         m_full = QImage();
         Q_EMIT fullStale();
+        setFullState(m_fullLoaded ? FullState::Updating : FullState::Loading);
         m_fullTimer->start();
     }
 }
@@ -313,8 +339,11 @@ void Document::setFullResolution(bool on)
         m_fullScheduler->setSource(nullptr); // frees the full-size photo
         m_fullLoaded = false;
         m_full = QImage();
+        m_fullOfEdit = QImage();
+        setFullState(FullState::Off);
         return;
     }
+    setFullState(FullState::Loading);
     // Decode the full photo on a worker, then render it.
     const quint64 generation = ++m_fullGeneration;
     auto* watcher = new QFutureWatcher<std::shared_ptr<const pfx::Image>>(this);
@@ -322,7 +351,11 @@ void Document::setFullResolution(bool on)
             [this, watcher, generation] {
                 const auto image = watcher->result();
                 watcher->deleteLater();
-                if (!m_fullOn || generation != m_fullGeneration || !image) {
+                if (!m_fullOn || generation != m_fullGeneration) {
+                    return;
+                }
+                if (!image) {
+                    setFullState(FullState::Off); // the enlarged preview stays: nothing to wait for
                     return;
                 }
                 m_fullScheduler->setSource(image);

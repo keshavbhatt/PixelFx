@@ -29,6 +29,7 @@
 | `editor-presets-catalog.html` | 2026-11-05 (`mocks/reviews/editor-presets-catalog.md`) | approved 2026-11-05 |
 | `editor-mixer-target.html` | 2026-11-05 (`mocks/reviews/editor-mixer-target.md`) | approved 2026-11-05 |
 | `editor-collapse-all.html` | 2026-11-05 (`mocks/reviews/editor-collapse-all.md`) | approved 2026-11-05 |
+| `editor-zoom-loading.html` | 2026-11-05 (`mocks/reviews/editor-zoom-loading.md`) | approved 2026-11-05 |
 | `editor-presets-catalog.html`, hover preview | 2026-11-05 (same review, "Hover preview, reworked") | approved 2026-11-05 |
 
 ## Waiting for the owner (2026-11-05)
@@ -68,6 +69,19 @@ Decisions the work stopped at; everything else went ahead within the approved mo
     Heal); Reveal dust explains itself in its tooltip rather than a first-time line.
 
 ## Sessions (newest first)
+
+### 2026-11-05 (zoom: loading the sharp picture)
+
+- The approved `editor-zoom-loading.html`: zoomed in past the preview, a chip beside the zoom bar
+  says "Loading" while the photo is read at full size and "Updating" while an edit is redrawn,
+  once the wait passes 0.3 s; the bar itself never moves. `Document::FullState` reports where the
+  full-size picture is; `BusyRing` turns, and stands still when the desktop wants no animation
+  (`animationsWanted`); screen readers hear it as an announcement. The full-screen viewer shows
+  the chip when going to the next photo.
+- Owner's finding: zoomed in, a preset's preview did not show (only the small preview and the
+  histogram changed, the sharp picture of the edit stayed on top). A preview now comes after a
+  deliberate wait, so it is drawn at full size too; when it ends, the edit's sharp picture is
+  kept and comes straight back.
 
 ### 2026-11-05 (hover preview, Collapse all)
 
