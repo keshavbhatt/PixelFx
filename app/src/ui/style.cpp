@@ -35,6 +35,7 @@ const QString kSheet = uR"(
         #docMeta { color: {{muted}}; font-size: 11px; }
         QToolButton#headerButton { border: 0; border-radius: 7px; padding: 6px; background: transparent; }
         QToolButton#headerButton:hover { background: {{hover}}; }
+        QToolButton#headerButton:checked { background: {{accentSoft}}; }
         QToolButton#headerButton::menu-indicator { image: none; width: 0; }
         QPushButton { border: 1px solid {{border}}; border-radius: 7px; padding: 7px 14px; background: {{panel}}; }
         QPushButton:hover { background: {{hover}}; }

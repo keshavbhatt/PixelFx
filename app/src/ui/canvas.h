@@ -52,6 +52,9 @@ public:
     /// Before and after: the original left of a draggable divider, the edit to the right.
     void setCompare(bool on);
     [[nodiscard]] bool isComparing() const { return m_compare; }
+    /// Before and after next to each other instead of split by a divider.
+    void setSideBySide(bool on);
+    [[nodiscard]] bool isSideBySide() const { return m_sideBySide; }
     void setOriginal(const QImage& original);
     /// Divider position, 0 (all edited) to 1 (all original); starts in the middle.
     [[nodiscard]] double split() const { return m_split; }
@@ -161,7 +164,12 @@ private:
     QToolButton* m_zoomOut = nullptr;
     QToolButton* m_zoomIn = nullptr;
     QToolButton* m_actual = nullptr;
+    void paintPhoto(QPainter& painter);
     void paintCompare(class QPainter& painter, const QRect& target);
+    void paintSideBySide(QPainter& painter);
+    /// A "Before" or "After" label in a top corner of `photo`.
+    void drawTag(QPainter& painter, const QRect& photo, const QString& text, bool right) const;
+    static constexpr double kKnobRadius = 17.0;
     void paintCrop(QPainter& painter, const QRect& target);
     void paintOverlay(QPainter& painter, const QRectF& box) const;
     bool m_cropping = false;
@@ -175,6 +183,7 @@ private:
     QRectF m_pressBox;
     QImage m_original;
     bool m_compare = false;
+    bool m_sideBySide = false;
     bool m_dragging = false;
     double m_split = 0.5;
     QImage m_image;

@@ -372,8 +372,14 @@ void Canvas::showImage(const QImage& image)
 void Canvas::setCompare(bool on)
 {
     m_compare = on;
-    setCursor(on ? Qt::SplitHCursor : Qt::ArrowCursor);
+    setCursor(on && !m_sideBySide ? Qt::SplitHCursor : Qt::ArrowCursor);
     update();
+}
+
+void Canvas::setSideBySide(bool on)
+{
+    m_sideBySide = on;
+    setCompare(m_compare);
 }
 
 void Canvas::setOriginal(const QImage& original)
@@ -395,31 +401,32 @@ void Canvas::paintCompare(QPainter& painter, const QRect& target)
     painter.setClipRect(QRect(target.left(), target.top(), x - target.left(), target.height()));
     painter.drawImage(target, m_original);
     painter.restore();
+    painter.save();
     painter.setRenderHint(QPainter::Antialiasing);
+    // The divider and its knob, each with a soft shadow so they read on light and dark photos.
+    for (int spread = 3; spread >= 1; --spread) {
+        painter.setPen(QPen(QColor(0, 0, 0, 40), 2 + (2 * spread)));
+        painter.drawLine(x, target.top(), x, target.bottom());
+    }
     painter.setPen(QPen(Qt::white, 2));
     painter.drawLine(x, target.top(), x, target.bottom());
+    const QPointF knob(x, target.center().y());
     painter.setPen(Qt::NoPen);
+    for (int spread = 4; spread >= 1; --spread) {
+        painter.setBrush(QColor(0, 0, 0, 30));
+        painter.drawEllipse(knob + QPointF(0, 2), kKnobRadius + spread, kKnobRadius + spread);
+    }
     painter.setBrush(Qt::white);
-    const QPoint knob(x, target.center().y());
-    painter.drawEllipse(knob, 15, 15);
-    // A left-right arrow, as in editor-compare.html.
-    painter.setBrush(QColor(0x22, 0x22, 0x22));
-    painter.drawPolygon(QPolygon({knob + QPoint(-9, 0), knob + QPoint(-3, -5), knob + QPoint(-3, 5)}));
-    painter.drawPolygon(QPolygon({knob + QPoint(9, 0), knob + QPoint(3, -5), knob + QPoint(3, 5)}));
-    const auto tag = [&painter](const QRect& box, const QString& text) {
-        painter.setPen(Qt::NoPen);
-        painter.setBrush(QColor(0, 0, 0, 140));
-        painter.drawRoundedRect(box, 6, 6);
-        painter.setPen(Qt::white);
-        painter.drawText(box, Qt::AlignCenter, text);
-    };
-    const QFontMetrics fm(font());
-    const QString before = tr("Before");
-    const QString after = tr("After");
-    tag(QRect(target.left() + 10, target.top() + 10, fm.horizontalAdvance(before) + 16, fm.height() + 6),
-        before);
-    const int afterWidth = fm.horizontalAdvance(after) + 16;
-    tag(QRect(target.right() - 10 - afterWidth, target.top() + 10, afterWidth, fm.height() + 6), after);
+    painter.drawEllipse(knob, kKnobRadius, kKnobRadius);
+    painter.setPen(QColor(0x22, 0x22, 0x22));
+    QFont arrow = font();
+    arrow.setPixelSize(16);
+    painter.setFont(arrow);
+    painter.drawText(QRectF(knob.x() - kKnobRadius, knob.y() - kKnobRadius, 2 * kKnobRadius, 2 * kKnobRadius),
+                     Qt::AlignCenter, u"\u2194"_s);
+    painter.restore();
+    drawTag(painter, target, tr("Before"), false);
+    drawTag(painter, target, tr("After"), true);
 }
 
 void Canvas::setCropMode(bool on)
@@ -544,7 +551,7 @@ void Canvas::mousePressEvent(QMouseEvent* event)
         setCursor(Qt::ClosedHandCursor);
         return;
     }
-    if (m_compare && event->button() == Qt::LeftButton && photoRect().isValid()) {
+    if (m_compare && !m_sideBySide && event->button() == Qt::LeftButton && photoRect().isValid()) {
         m_dragging = true;
         mouseMoveEvent(event);
     }
@@ -753,42 +760,10 @@ void Canvas::paintEvent(QPaintEvent* /*event*/)
     QPainter painter(this);
     painter.fillRect(rect(), m_background.isValid() ? m_background : t.canvas);
     if (!m_image.isNull()) {
-        const QRect target = photoRect();
-        painter.fillRect(target.translated(0, 6).adjusted(-2, -2, 2, 2), QColor(0, 0, 0, 90));
-        painter.setRenderHint(QPainter::SmoothPixmapTransform);
-        const bool sharp = !m_detail.isNull() && needsDetail();
-        const QImage& shown = sharp ? m_detail : m_image;
-        // Only the part on screen: a 400% view never scales the whole picture.
-        const QRectF visible = QRectF(target).intersected(QRectF(rect()));
-        const double sx = shown.width() / static_cast<double>(target.width());
-        const double sy = shown.height() / static_cast<double>(target.height());
-        const QRectF source((visible.left() - target.left()) * sx, (visible.top() - target.top()) * sy,
-                            visible.width() * sx, visible.height() * sy);
-        painter.drawImage(visible, shown, source);
-        if (m_clipping && !m_cropping) {
-            if (shown.cacheKey() != m_clipKey) {
-                m_clipOverlay = clippingOverlay(shown);
-                m_clipKey = shown.cacheKey();
-            }
-            painter.drawImage(visible, m_clipOverlay, source);
-        }
-        if (m_cropping) {
-            paintCrop(painter, target);
-            if (m_drawingLine) {
-                painter.setRenderHint(QPainter::Antialiasing);
-                painter.setPen(QPen(QColor(0, 0, 0, 160), 4));
-                painter.drawLine(m_lineStart, m_lineEnd);
-                painter.setPen(QPen(Qt::white, 2));
-                painter.drawLine(m_lineStart, m_lineEnd);
-            }
-        } else if (m_compare && !m_original.isNull()) {
-            paintCompare(painter, target);
-        }
-        if (m_tool != nullptr) {
-            painter.save();
-            painter.setClipRect(rect());
-            m_tool->paint(painter, QRectF(target));
-            painter.restore();
+        if (m_compare && m_sideBySide && !m_original.isNull() && !m_cropping) {
+            paintSideBySide(painter);
+        } else {
+            paintPhoto(painter);
         }
     }
     const QString& line = m_error.isEmpty() ? m_status : m_error;
@@ -797,6 +772,88 @@ void Canvas::paintEvent(QPaintEvent* /*event*/)
         painter.drawText(rect().adjusted(kMargin, kMargin, -kMargin, -kMargin),
                          Qt::AlignCenter | Qt::TextWordWrap, line);
     }
+}
+
+void Canvas::paintPhoto(QPainter& painter)
+{
+    const QRect target = photoRect();
+    painter.fillRect(target.translated(0, 6).adjusted(-2, -2, 2, 2), QColor(0, 0, 0, 90));
+    painter.setRenderHint(QPainter::SmoothPixmapTransform);
+    const bool sharp = !m_detail.isNull() && needsDetail();
+    const QImage& shown = sharp ? m_detail : m_image;
+    // Only the part on screen: a 400% view never scales the whole picture.
+    const QRectF visible = QRectF(target).intersected(QRectF(rect()));
+    const double sx = shown.width() / static_cast<double>(target.width());
+    const double sy = shown.height() / static_cast<double>(target.height());
+    const QRectF source((visible.left() - target.left()) * sx, (visible.top() - target.top()) * sy,
+                        visible.width() * sx, visible.height() * sy);
+    painter.drawImage(visible, shown, source);
+    if (m_clipping && !m_cropping) {
+        if (shown.cacheKey() != m_clipKey) {
+            m_clipOverlay = clippingOverlay(shown);
+            m_clipKey = shown.cacheKey();
+        }
+        painter.drawImage(visible, m_clipOverlay, source);
+    }
+    if (m_cropping) {
+        paintCrop(painter, target);
+        if (m_drawingLine) {
+            painter.setRenderHint(QPainter::Antialiasing);
+            painter.setPen(QPen(QColor(0, 0, 0, 160), 4));
+            painter.drawLine(m_lineStart, m_lineEnd);
+            painter.setPen(QPen(Qt::white, 2));
+            painter.drawLine(m_lineStart, m_lineEnd);
+        }
+    } else if (m_compare && !m_original.isNull()) {
+        paintCompare(painter, target);
+    }
+    if (m_tool != nullptr) {
+        painter.save();
+        painter.setClipRect(rect());
+        m_tool->paint(painter, QRectF(target));
+        painter.restore();
+    }
+}
+
+void Canvas::paintSideBySide(QPainter& painter)
+{
+    const int gap = kMargin / 2;
+    const QRect area = rect().adjusted(kMargin, kMargin, -kMargin, -kMargin);
+    const QRect halves[2] = {
+        QRect(area.left(), area.top(), (area.width() - gap) / 2, area.height()),
+        QRect(area.left() + ((area.width() + gap) / 2), area.top(), (area.width() - gap) / 2, area.height())};
+    const QImage* images[2] = {&m_original, &m_image};
+    const QString names[2] = {tr("Before"), tr("After")};
+    painter.setRenderHint(QPainter::SmoothPixmapTransform);
+    for (std::size_t i = 0; i < 2; ++i) {
+        QSize size = images[i]->size();
+        size.scale(halves[i].size(), Qt::KeepAspectRatio);
+        QRect target(QPoint(0, 0), size);
+        target.moveCenter(halves[i].center());
+        painter.fillRect(target.translated(0, 6).adjusted(-2, -2, 2, 2), QColor(0, 0, 0, 90));
+        painter.drawImage(target, *images[i]);
+        drawTag(painter, target, names[i], false);
+    }
+}
+
+void Canvas::drawTag(QPainter& painter, const QRect& photo, const QString& text, bool right) const
+{
+    QFont small = font();
+    small.setPixelSize(11);
+    const QFontMetrics fm(small);
+    const QSize size(fm.horizontalAdvance(text) + 16, fm.height() + 6); // padding 3 by 8
+    const QPoint corner = right ? QPoint(photo.right() - 10 - size.width(), photo.top() + 10)
+                                : QPoint(photo.left() + 10, photo.top() + 10);
+    const QRect box(corner, size);
+    painter.save();
+    painter.setRenderHint(QPainter::Antialiasing);
+    painter.setPen(Qt::NoPen);
+    painter.setBrush(QColor(0, 0, 0, 140));
+    painter.drawRoundedRect(box, 6, 6);
+    painter.setPen(Qt::white);
+    painter.setFont(small);
+    painter.drawText(box, Qt::AlignCenter, text);
+    painter.restore();
 }
 
 void Canvas::setTool(CanvasTool* tool)

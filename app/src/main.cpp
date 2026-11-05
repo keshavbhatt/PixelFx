@@ -4,7 +4,8 @@
 //   PIXELFX_DEBUG_OPEN=<file>          open this photo at start
 //   PIXELFX_DEBUG_WINDOW_SIZE=<w>x<h>  window size
 //   PIXELFX_DEBUG_PRESET=<file>        apply this preset or recipe once the photo is open
-//   PIXELFX_DEBUG_COMPARE=1            turn on before and after once the photo is open
+//   PIXELFX_DEBUG_COMPARE=1|side       turn on before and after once the photo is open (side: side
+//                                      by side)
 //   PIXELFX_DEBUG_CROP=<ratio>[,<deg>] enter Crop mode with a ratio chip ("Free", "3:2") and
 //                                      a straightening angle once the photo is open
 //   PIXELFX_DEBUG_SHEET=<name>         with GRAB, grab that sheet instead of the window: export,
@@ -270,9 +271,12 @@ void applyDebugHooks(pixelfx::ui::MainWindow& window, QStringList& files)
                 }
             });
     }
-    if (qEnvironmentVariableIsSet("PIXELFX_DEBUG_COMPARE")) {
+    if (const QString compare = qEnvironmentVariable("PIXELFX_DEBUG_COMPARE"); !compare.isEmpty()) {
         QObject::connect(&window.document(), &pixelfx::services::Document::opened, &window,
-                         [&window] { window.setCompare(true); });
+                         [&window, compare] {
+                             window.setCompare(true);
+                             window.canvas()->setSideBySide(compare == u"side"_s);
+                         });
     }
     applyCropHook(window);
     applyExpandHook(window);

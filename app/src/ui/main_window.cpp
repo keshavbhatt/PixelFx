@@ -120,7 +120,11 @@ QToolButton* headerButton(QWidget* parent, const QString& glyph, const QString& 
 {
     auto* b = new QToolButton(parent);
     b->setObjectName(u"headerButton"_s);
-    b->setIcon(icons::themed(glyph, tokens().text, tokens().faint));
+    QIcon icon = icons::themed(glyph, tokens().text, tokens().faint);
+    for (const qreal dpr : {1.0, 2.0}) { // a toggle that is on shows in the accent
+        icon.addPixmap(icons::pixmap(glyph, tokens().accent, 18, dpr), QIcon::Normal, QIcon::On);
+    }
+    b->setIcon(icon);
     b->setIconSize(QSize(18, 18));
     b->setToolTip(tip);
     b->setAccessibleName(tip);
@@ -305,6 +309,14 @@ void MainWindow::setupMenuActions()
     QAction* original = add(u"showOriginal"_s, tr("Show original\tSpace"), [] {});
     original->setCheckable(true);
     connect(original, &QAction::toggled, this, &MainWindow::showOriginal);
+    QAction* sideBySide = add(u"sideBySide"_s, tr("Side by side"), [] {});
+    sideBySide->setCheckable(true);
+    connect(sideBySide, &QAction::toggled, this, [this](bool on) {
+        m_canvas->setSideBySide(on);
+        if (on) {
+            setCompare(true);
+        }
+    });
     add(u"rotateLeft"_s, tr("Rotate left"),
         [this] { editGeometry([](pfx::Settings& s) { core::turn(s, false); }, tr("Rotate left")); });
     add(u"rotateRight"_s, tr("Rotate right"),
@@ -1944,6 +1956,7 @@ constexpr std::array kEditEntries{MenuEntry{"undo", "undo"},
                                   kSeparator,
                                   MenuEntry{"resetAll", "reset"}};
 constexpr std::array kViewEntries{MenuEntry{"compare", "compare"},
+                                  MenuEntry{"sideBySide", "images"},
                                   MenuEntry{"showOriginal", "eye"},
                                   MenuEntry{"clipping", "alert"},
                                   kSeparator,
