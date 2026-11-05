@@ -97,6 +97,15 @@ struct Rgba8Image
 // the loader. Documents, vector and scientific formats libvips also reads are left out.
 [[nodiscard]] std::vector<std::string> readableExtensions();
 
+// The engines this build runs on, for an About box or a bug report: {"libvips", "8.18.7"},
+// {"Little CMS", "2.16"}. Versions are those of the libraries loaded at run time.
+struct EngineVersion
+{
+    std::string name;
+    std::string version;
+};
+[[nodiscard]] std::vector<EngineVersion> engineVersions();
+
 // Converts working-space pixels to 8-bit sRGB for display, through the same colour engine as
 // save(). Values outside 0..1 are clipped.
 [[nodiscard]] Result<Rgba8Image> toSrgb8(const Image& image);

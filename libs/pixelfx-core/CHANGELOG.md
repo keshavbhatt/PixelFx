@@ -26,6 +26,8 @@ Semantic Versioning (the API may change before 1.0).
 
 ### Added
 
+- `engineVersions` names the libvips and Little CMS versions loaded at run time, for an About
+  box or a bug report.
 - `blendOverlay` lays an 8-bit sRGB picture with premultiplied alpha (a watermark drawn by the
   caller) over an image in linear light; `meanLuminance` of a rectangle.
 - `readExif` reads the camera, lens, date taken, ISO, aperture, shutter speed and focal length

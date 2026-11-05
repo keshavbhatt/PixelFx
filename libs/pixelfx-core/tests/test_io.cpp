@@ -445,3 +445,17 @@ TEST_CASE("a file that is not a photo fails in plain words, without its path")
     CHECK(loaded.error().message == "This file is not a photo PixelFx can read.");
     CHECK(loaded.error().message.find(path.string()) == std::string::npos);
 }
+
+TEST_CASE("engine versions: libvips and Little CMS, as dotted numbers")
+{
+    const auto engines = pfx::engineVersions();
+    REQUIRE(engines.size() == 2);
+    CHECK(engines[0].name == "libvips");
+    CHECK(engines[1].name == "Little CMS");
+    for (const auto& e : engines) {
+        CAPTURE(e.name);
+        CHECK(e.version.size() >= 3);
+        CHECK(e.version.find('.') != std::string::npos);
+        CHECK(e.version.find_first_not_of("0123456789.") == std::string::npos);
+    }
+}

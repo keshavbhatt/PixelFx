@@ -610,4 +610,13 @@ std::vector<std::string> readableExtensions()
     return scan.extensions;
 }
 
+std::vector<EngineVersion> engineVersions()
+{
+    ensureVips();
+    // Little CMS encodes 2.16 as 2160.
+    const int cms = cmsGetEncodedCMMversion();
+    return {{"libvips", vips_version_string()},
+            {"Little CMS", std::to_string(cms / 1000) + "." + std::to_string((cms % 1000) / 10)}};
+}
+
 } // namespace pfx
