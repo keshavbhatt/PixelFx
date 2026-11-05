@@ -1,6 +1,8 @@
+#include "ui/canvas.h"
 #include "ui/look_editor.h"
 #include "ui/looks_panel.h"
 #include "ui/message_line.h"
+#include "ui/preview_viewer.h"
 #include "ui/slider_row.h"
 #include "ui/step_list.h"
 #include "ui/style.h"
@@ -81,6 +83,44 @@ private Q_SLOTS:
         }
         QVERIFY(mineWidth > 0);
         QCOMPARE(mineWidth, builtInWidth);
+    }
+
+    void theLargePreviewStepsThroughPhotosAndComparesThem()
+    {
+        // Three photos of one colour each; before is darker than after.
+        const auto render = [](int index, int longEdge) {
+            pixelfx::ui::PreviewViewer::Photo photo;
+            photo.fullSize = QSize(600, 400);
+            photo.before = QImage(longEdge / 8, longEdge / 12, QImage::Format_RGB32);
+            photo.after = photo.before.copy();
+            photo.before.fill(QColor(20, 20, 20 + index));
+            photo.after.fill(QColor(200, 200, 200 + index));
+            return photo;
+        };
+        pixelfx::ui::PreviewViewer viewer(
+            3, [](int i) { return u"photo %1"_s.arg(i + 1); }, u"Batch preview"_s, render, nullptr);
+        QSignalSpy shown(&viewer, &pixelfx::ui::PreviewViewer::photoShown);
+        viewer.show();
+        QVERIFY(QTest::qWaitForWindowExposed(&viewer));
+        QVERIFY(shown.wait(5000));
+        QCOMPARE(viewer.current(), 0);
+        QCOMPARE(viewer.canvas()->image().pixelColor(0, 0).red(), 200); // after
+        QTest::keyClick(&viewer, Qt::Key_Right);
+        QVERIFY(shown.wait(5000));
+        QCOMPARE(viewer.current(), 1);
+        QCOMPARE(viewer.canvas()->image().pixelColor(0, 0).blue(), 201);
+        // Space held shows before; \ turns the split on.
+        QTest::keyPress(&viewer, Qt::Key_Space);
+        QCOMPARE(viewer.canvas()->image().pixelColor(0, 0).red(), 20);
+        QTest::keyRelease(&viewer, Qt::Key_Space);
+        QCOMPARE(viewer.canvas()->image().pixelColor(0, 0).red(), 200);
+        QTest::keyClick(&viewer, Qt::Key_Backslash);
+        QVERIFY(viewer.canvas()->isComparing());
+        // The first photo has no previous one.
+        QTest::keyClick(&viewer, Qt::Key_Left);
+        QVERIFY(shown.wait(5000));
+        QTest::keyClick(&viewer, Qt::Key_Left);
+        QCOMPARE(viewer.current(), 0);
     }
 
     void lookEditorSaysWhatWentWrongInItsFooter()

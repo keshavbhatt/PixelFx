@@ -31,10 +31,12 @@ struct PreparedExport
 };
 
 /// Decodes `source`, renders the settings `settingsFor` works out from the decoded photo, then
-/// resizes and lays the watermark under `options`. Blocking: call on a worker.
+/// resizes and lays the watermark under `options`. `load` can decode a smaller copy, for a preview
+/// of what would be written. Blocking: call on a worker.
 [[nodiscard]] PreparedExport prepareExport(const QString& source,
                                            const std::function<pfx::Settings(const pfx::Image&)>& settingsFor,
-                                           const core::ExportOptions& options);
+                                           const core::ExportOptions& options,
+                                           const pfx::LoadOptions& load = {});
 
 /// Decodes `source`, renders the settings `settingsFor` works out from the decoded photo (Auto
 /// enhance needs it), resizes and writes it under `options`. Blocking: call on a worker.

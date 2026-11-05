@@ -56,6 +56,8 @@ qt_add_library(pixelfx_ui STATIC
     part_checklist.h
     paste_sheet.cpp
     paste_sheet.h
+    preview_viewer.cpp
+    preview_viewer.h
     presets_panel.cpp
     presets_panel.h
     preset_save_sheet.cpp

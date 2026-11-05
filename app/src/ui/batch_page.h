@@ -96,6 +96,7 @@ Q_SIGNALS:
     void summaryChanged(const QString& summary);
 
 protected:
+    bool eventFilter(QObject* watched, QEvent* event) override;
     void dragEnterEvent(QDragEnterEvent* event) override;
     void dropEvent(QDropEvent* event) override;
 
@@ -138,6 +139,8 @@ private:
     void refreshRecipeCard();
     void refreshFormats();
     void schedulePreview();
+    /// The large preview: every photo before and after the recipe, as Batch writes it.
+    void openLargePreview();
     void renderPreview();
     void showRecipeMenu(QWidget* anchor, bool second);
     void editSaveOptions();

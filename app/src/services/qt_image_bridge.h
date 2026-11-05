@@ -9,5 +9,8 @@ namespace pixelfx::services {
 
 /// An sRGB QImage (RGBA8888, tagged sRGB) holding a copy of `image`.
 [[nodiscard]] QImage toQImage(const pfx::Rgba8Image& image);
+/// A rendered photo (working space) as an sRGB QImage for the screen; null when it failed.
+[[nodiscard]] QImage toDisplayImage(const pfx::Result<pfx::Image>& rendered);
+[[nodiscard]] QImage toDisplayImage(const pfx::Image& image);
 
 } // namespace pixelfx::services

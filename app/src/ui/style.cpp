@@ -5,6 +5,7 @@
 #include "ui/menu_style.h"
 
 #include <QApplication>
+#include <QButtonGroup>
 #include <QDialog>
 #include <QFile>
 #include <QFocusEvent>
@@ -107,6 +108,10 @@ const QString kSheet = uR"(
         QToolButton#groupToggle { border: 0; background: transparent; font-weight: 600; padding: 2px; }
         QToolButton#flatIcon { border: 0; border-radius: 6px; padding: 3px; background: transparent; }
         QToolButton#flatIcon:hover { background: {{hover}}; }
+        #viewerStage { background: {{canvas}}; }
+        QToolButton#navButton { border: 1px solid {{border}}; border-radius: 20px; background: {{elevated}}; }
+        QToolButton#navButton:hover { background: {{hover}}; }
+        QToolButton#navButton:disabled { background: {{panel}}; }
         #changedDot { background: {{accent}}; border-radius: 3px; }
         #adjustName { color: {{muted}}; font-size: 12px; }
         #adjustName[changed="true"] { color: {{text}}; }
@@ -564,6 +569,30 @@ QWidget* sheetHeaderBar(QDialog* sheet, QLayout* titleRow)
     titleRow->setContentsMargins(kSheetPadding, 16, kSheetPadding, 12);
     bar->setLayout(titleRow);
     return bar;
+}
+
+QFrame* segmentBox(const QStringList& names, int checked, QButtonGroup* group, QWidget* parent, bool fill)
+{
+    auto* box = new QFrame(parent);
+    box->setObjectName(QStringLiteral("segmentBox"));
+    auto* row = new QHBoxLayout(box);
+    row->setContentsMargins(1, 1, 1, 1);
+    row->setSpacing(0);
+    for (int i = 0; i < names.size(); ++i) {
+        auto* b = new QPushButton(names.at(i), box);
+        b->setObjectName(QStringLiteral("segment"));
+        b->setCheckable(true);
+        b->setChecked(i == checked);
+        if (i == 0) {
+            b->setProperty("edge", QStringLiteral("first"));
+        }
+        group->addButton(b, i);
+        row->addWidget(b);
+    }
+    if (fill) {
+        row->addStretch();
+    }
+    return box;
 }
 
 QLabel* sectionLabel(const QString& text, QWidget* parent)

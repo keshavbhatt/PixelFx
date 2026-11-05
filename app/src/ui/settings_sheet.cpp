@@ -27,24 +27,8 @@ constexpr int kLabelColumn = 160;
 template <typename Chosen>
 QWidget* segments(const QStringList& names, int current, QWidget* parent, Chosen chosen)
 {
-    auto* box = new QFrame(parent);
-    box->setObjectName(u"segmentBox"_s);
-    auto* row = new QHBoxLayout(box);
-    row->setContentsMargins(1, 1, 1, 1);
-    row->setSpacing(0);
-    auto* group = new QButtonGroup(box);
-    for (int i = 0; i < names.size(); ++i) {
-        auto* b = new QPushButton(names.at(i), box);
-        b->setObjectName(u"segment"_s);
-        b->setCheckable(true);
-        b->setChecked(i == current);
-        if (i == 0) {
-            b->setProperty("edge", u"first"_s);
-        }
-        group->addButton(b, i);
-        row->addWidget(b);
-    }
-    row->addStretch();
+    auto* group = new QButtonGroup(parent);
+    QFrame* box = segmentBox(names, current, group, parent, true);
     QObject::connect(group, &QButtonGroup::idClicked, box, chosen);
     return box;
 }

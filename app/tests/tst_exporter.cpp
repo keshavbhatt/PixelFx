@@ -45,6 +45,23 @@ private Q_SLOTS:
         QVERIFY(written.value().image.pixel(10, 10)[0] > 0.3F); // 0.1 * 4
     }
 
+    void aPreviewOfTheExportIsPreparedSmall()
+    {
+        QTemporaryDir dir;
+        pfx::Image img(600, 400);
+        img.fill(0.1F, 0.1F, 0.1F);
+        const QString source = dir.filePath(u"photo.png"_s);
+        QVERIFY(pfx::save(img, source.toStdString()).ok());
+        ExportOptions o; // full size, no watermark
+        pfx::Settings brighter;
+        brighter.set("light.exposure", 2.0);
+        const auto prepared = pixelfx::services::prepareExport(
+            source, [&brighter](const pfx::Image&) { return brighter; }, o, {150});
+        QVERIFY(prepared.error.isEmpty());
+        QCOMPARE(prepared.image.width(), 150);
+        QVERIFY(prepared.image.pixel(10, 10)[0] > 0.3F); // the settings are on it
+    }
+
     void sizePresetsGiveExactFrames()
     {
         QTemporaryDir dir;

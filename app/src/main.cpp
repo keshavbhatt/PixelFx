@@ -9,8 +9,8 @@
 //   PIXELFX_DEBUG_CROP=<ratio>[,<deg>] enter Crop mode with a ratio chip ("Free", "3:2") and
 //                                      a straightening angle once the photo is open
 //   PIXELFX_DEBUG_SHEET=<name>         with GRAB, grab the window with that sheet open: export,
-//                                      settings, preset, shortcuts, watermark, look, newlook, about,
-//                                      notices, diagnostics, whatsnew, paste
+//                                      settings, preset, shortcuts, watermark, look, newlook, preview,
+//                                      about, notices, diagnostics, whatsnew, paste
 //   PIXELFX_DEBUG_TAB=presets          show the Presets tab of the left panel
 //   PIXELFX_DEBUG_MENU=<submenu>       with GRAB, grab the main menu open ("-" for the menu
 //                                      itself, a submenu's title such as View, or History)
@@ -43,6 +43,7 @@
 #include "ui/paste_sheet.h"
 #include "ui/preset_save_sheet.h"
 #include "ui/presets_panel.h"
+#include "ui/preview_viewer.h"
 #include "ui/settings_sheet.h"
 #include "ui/shortcuts_sheet.h"
 #include "ui/style.h"
@@ -187,6 +188,18 @@ QDialog* photoSheet(pixelfx::ui::MainWindow& window, const QString& name)
         }
         return new pixelfx::ui::LookEditor(doc.previewSource(), doc.settings(), entry,
                                            pixelfx::core::LookLibrary::defaultFolder(), &window);
+    }
+    if (name == u"preview"_s) { // the large preview on the open photo, as three photos of a batch
+        const QImage before = doc.original();
+        const QImage after = doc.preview();
+        const QSize full = doc.outputSize();
+        return new pixelfx::ui::PreviewViewer(
+            3, [name = QFileInfo(doc.info().path).fileName()](int) { return name; },
+            QStringLiteral("Batch preview \u00B7 Golden hour"),
+            [before, after, full](int, int) {
+                return pixelfx::ui::PreviewViewer::Photo{before, after, full};
+            },
+            &window);
     }
     if (name == u"export"_s) {
         return new pixelfx::ui::ExportSheet(doc.info().path, doc.outputSize(),

@@ -85,10 +85,10 @@ std::string resize(pfx::Image& image, const core::ExportOptions& options)
 
 PreparedExport prepareExport(const QString& source,
                              const std::function<pfx::Settings(const pfx::Image&)>& settingsFor,
-                             const core::ExportOptions& options)
+                             const core::ExportOptions& options, const pfx::LoadOptions& load)
 {
     PreparedExport out;
-    auto loaded = pfx::load(QFileInfo(source).absoluteFilePath().toStdString());
+    auto loaded = pfx::load(QFileInfo(source).absoluteFilePath().toStdString(), load);
     if (!loaded) {
         out.error = QString::fromStdString(loaded.error().message);
         return out;

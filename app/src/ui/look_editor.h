@@ -16,6 +16,7 @@ class QLabel;
 class QLineEdit;
 class QPushButton;
 class QScrollArea;
+class QToolButton;
 class QVBoxLayout;
 class QWidget;
 
@@ -54,6 +55,9 @@ public:
 Q_SIGNALS:
     void previewRendered();
 
+protected:
+    bool eventFilter(QObject* watched, QEvent* event) override;
+
 private:
     QWidget* buildSteps();
     QWidget* buildPreview();
@@ -72,6 +76,7 @@ private:
     void bakeCube();
     void schedulePreview();
     void renderPreview();
+    void openLargePreview();
     [[nodiscard]] static QString stepName(const QString& op);
     [[nodiscard]] QString stepSummary(const pfx::LookStep& step) const;
     [[nodiscard]] static QString gradingSummary(const pfx::Settings& params);
@@ -81,7 +86,8 @@ private:
     QString m_folder;
     QString m_savedId;
     pfx::Settings m_photoSettings;
-    std::shared_ptr<const pfx::Image> m_photo;
+    std::shared_ptr<const pfx::Image> m_source; // the photo at full size, for the large preview
+    std::shared_ptr<const pfx::Image> m_photo;  // a small copy, quick to render while editing
     std::shared_ptr<const pfx::Image> m_ramp;
     bool m_onRamp = false;
     QImage m_previewImage;
@@ -101,6 +107,7 @@ private:
     QWidget* m_params = nullptr;
     QVBoxLayout* m_paramsLayout = nullptr;
     QLabel* m_preview = nullptr;
+    QToolButton* m_enlarge = nullptr;
     SliderRow* m_strength = nullptr;
     class QTimer* m_previewTimer = nullptr;
 };

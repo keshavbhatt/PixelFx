@@ -3,10 +3,13 @@
 #include "core/batch_resources.h"
 #include "core/looks.h"
 #include "core/sidecar_store.h"
+#include "services/exporter.h"
+#include "services/qt_image_bridge.h"
 #include "ui/elided_label.h"
 #include "ui/export_sheet.h"
 #include "ui/icon_text_button.h"
 #include "ui/icons.h"
+#include "ui/preview_viewer.h"
 #include "ui/sheet.h"
 #include "ui/slider_row.h"
 #include "ui/style.h"
@@ -20,6 +23,7 @@
 #include <QDialog>
 #include <QDirIterator>
 #include <QDragEnterEvent>
+#include <QEvent>
 #include <QFileDialog>
 #include <QFileInfo>
 #include <QFormLayout>
@@ -311,6 +315,15 @@ QWidget* BatchPage::buildPreview(QWidget* parent)
     arrow->setPixmap(icons::pixmap(u"chevron-right"_s, tokens().muted, 15, devicePixelRatioF()));
     auto* caption = new QLabel(tr("The first photo, before and after the recipe"), m_preview);
     caption->setObjectName(u"muted"_s);
+    auto* larger = new QPushButton(tr("View larger"), m_preview);
+    larger->setObjectName(u"link"_s);
+    larger->setToolTip(tr("Every photo of the batch with the recipe, larger"));
+    connect(larger, &QPushButton::clicked, this, &BatchPage::openLargePreview);
+    for (QLabel* picture : {m_before, m_after}) {
+        picture->setCursor(Qt::PointingHandCursor);
+        picture->setToolTip(larger->toolTip());
+        picture->installEventFilter(this);
+    }
     auto* row = new QHBoxLayout(m_preview);
     row->setContentsMargins(kPanelPadding, 10, kPanelPadding, 10);
     row->setSpacing(kGapItems);
@@ -319,6 +332,7 @@ QWidget* BatchPage::buildPreview(QWidget* parent)
     row->addWidget(arrow);
     row->addWidget(m_after);
     row->addWidget(caption, 1);
+    row->addWidget(larger);
     m_preview->hide();
     return m_preview;
 }
@@ -1142,6 +1156,54 @@ void BatchPage::rebuildRows()
     m_watermark->setBatchPhotos(m_files.mid(0, 50)); // the sheet's "Preview on: Batch photos"
     Q_EMIT summaryChanged(summary());
     schedulePreview();
+}
+
+bool BatchPage::eventFilter(QObject* watched, QEvent* event)
+{
+    if ((watched == m_before || watched == m_after) && event->type() == QEvent::MouseButtonRelease) {
+        openLargePreview();
+        return true;
+    }
+    return QWidget::eventFilter(watched, event);
+}
+
+void BatchPage::openLargePreview()
+{
+    if (m_files.isEmpty()) {
+        return;
+    }
+    const services::BatchRecipe r = recipe();
+    const QString sidecars = r.keepEdits ? m_sidecarFolder : QString();
+    const QStringList files = m_files;
+    QString what = recipeCardText().first;
+    if (m_secondOn->isChecked() && !m_second.isEmpty()) {
+        what = tr("%1, then %2").arg(what, m_second);
+    }
+    // Each photo before and after the recipe, prepared as Batch writes it (size, watermark).
+    const auto render = [files, r, sidecars](int index, int longEdge) {
+        PreviewViewer::Photo photo;
+        const QString& file = files.at(index);
+        auto loaded = pfx::load(file.toStdString(), {longEdge});
+        if (!loaded) {
+            return photo;
+        }
+        photo.fullSize = QSize(loaded.value().info.width, loaded.value().info.height);
+        const pfx::Settings own =
+            sidecars.isEmpty()
+                ? pfx::Settings{}
+                : core::SidecarStore(sidecars).read(core::fileFingerprint(file)).value_or(pfx::Settings{});
+        photo.before = services::toDisplayImage(core::renderPhoto(loaded.value().image, own));
+        const services::PreparedExport after = services::prepareExport(
+            file,
+            [&r, &own](const pfx::Image& image) { return services::BatchRunner::settingsFor(r, own, image); },
+            r.output, {longEdge});
+        photo.after = after.error.isEmpty() ? services::toDisplayImage(after.image) : QImage();
+        return photo;
+    };
+    PreviewViewer viewer(
+        static_cast<int>(files.size()), [files](int i) { return QFileInfo(files.at(i)).fileName(); },
+        tr("Batch preview \u00B7 %1").arg(what), render, this);
+    viewer.exec();
 }
 
 void BatchPage::schedulePreview()

@@ -5,6 +5,7 @@
 #include "ui/icon_text_button.h"
 #include "ui/icons.h"
 #include "ui/message_line.h"
+#include "ui/preview_viewer.h"
 #include "ui/slider_row.h"
 #include "ui/step_list.h"
 #include "ui/style.h"
@@ -12,6 +13,7 @@
 #include <QButtonGroup>
 #include <QComboBox>
 #include <QDir>
+#include <QEvent>
 #include <QFile>
 #include <QFileDialog>
 #include <QFileInfo>
@@ -25,6 +27,7 @@
 #include <QScrollArea>
 #include <QSlider>
 #include <QTimer>
+#include <QToolButton>
 #include <QUuid>
 #include <QVBoxLayout>
 #include <QtConcurrent/QtConcurrentRun>
@@ -236,6 +239,15 @@ QString stepGlyph(const std::string& op)
     return u"sliders"_s;
 }
 
+// `source` with `settings` and `look` on top at its default strength, for the screen.
+QImage renderLook(const pfx::Image& source, const pfx::Settings& settings, const pfx::Look* look)
+{
+    pfx::RenderOptions options;
+    options.look = look;
+    options.lookStrength = look != nullptr ? static_cast<float>(look->defaultStrength) / 100.0F : 1.0F;
+    return services::toDisplayImage(pfx::render(source, settings, options));
+}
+
 } // namespace
 
 LookEditor::LookEditor(const std::shared_ptr<const pfx::Image>& source, const pfx::Settings& settings,
@@ -254,6 +266,7 @@ LookEditor::LookEditor(const std::shared_ptr<const pfx::Image>& source, const pf
     }
     // The preview at a fixed, modest size: quick to render while sliders move.
     if (source) {
+        m_source = source;
         m_photo = source;
         if (auto small = pfx::fitLongEdge(*source, 900)) {
             m_photo = std::make_shared<pfx::Image>(std::move(small.value()));
@@ -546,6 +559,14 @@ QWidget* LookEditor::buildPreview()
     m_preview->setAlignment(Qt::AlignCenter);
     m_preview->setMinimumSize(360, 300);
     m_preview->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
+    m_preview->setToolTip(tr("Double-click for a larger preview"));
+    m_preview->installEventFilter(this);
+    m_enlarge = new QToolButton(m_preview);
+    m_enlarge->setObjectName(u"iconButton"_s);
+    m_enlarge->setIcon(icons::themed(u"maximize"_s, tokens().text));
+    m_enlarge->setToolTip(tr("Larger preview (double-click the photo)"));
+    m_enlarge->setAccessibleName(tr("Larger preview"));
+    connect(m_enlarge, &QToolButton::clicked, this, &LookEditor::openLargePreview);
 
     QWidget* bar = buildPreviewBar(side);
 
@@ -796,6 +817,44 @@ bool LookEditor::saveLook()
     return true;
 }
 
+bool LookEditor::eventFilter(QObject* watched, QEvent* event)
+{
+    if (watched == m_preview) {
+        if (event->type() == QEvent::Resize) {
+            constexpr int kInset = 12;
+            m_enlarge->adjustSize();
+            m_enlarge->move(m_preview->width() - m_enlarge->width() - kInset, kInset);
+        } else if (event->type() == QEvent::MouseButtonDblClick) {
+            openLargePreview();
+            return true;
+        }
+    }
+    return Sheet::eventFilter(watched, event);
+}
+
+void LookEditor::openLargePreview()
+{
+    const std::shared_ptr<const pfx::Image> source = m_onRamp ? m_ramp : m_source;
+    if (!source) {
+        return;
+    }
+    const pfx::Settings settings = m_onRamp ? pfx::Settings{} : m_photoSettings;
+    QString name = m_name->text().trimmed().isEmpty() ? tr("New look") : m_name->text().trimmed();
+    const auto render = [source, settings, look = m_look](int /*index*/, int longEdge) {
+        PreviewViewer::Photo photo;
+        photo.fullSize = QSize(source->width(), source->height());
+        auto fitted = pfx::fitLongEdge(*source, longEdge);
+        const pfx::Image& image = fitted ? fitted.value() : *source;
+        photo.before = renderLook(image, settings, nullptr);
+        photo.after = renderLook(image, settings, &look);
+        return photo;
+    };
+    PreviewViewer viewer(
+        1, [name = std::move(name)](int) { return name; },
+        m_onRamp ? tr("Look preview on the ramp") : tr("Look preview"), render, this);
+    viewer.exec();
+}
+
 void LookEditor::schedulePreview()
 {
     if (m_message != nullptr && m_message->isError()) {
@@ -835,15 +894,8 @@ void LookEditor::renderPreview()
         }
     });
     const pfx::Settings settings = m_onRamp ? pfx::Settings{} : m_photoSettings;
-    watcher->setFuture(QtConcurrent::run([source, settings, look = m_look] {
-        pfx::RenderOptions options;
-        options.look = &look;
-        options.lookStrength = static_cast<float>(look.defaultStrength) / 100.0F;
-        const auto rendered = pfx::render(*source, settings, options);
-        const auto pixels =
-            rendered ? pfx::toSrgb8(rendered.value()) : pfx::Result<pfx::Rgba8Image>(pfx::Error{});
-        return pixels ? services::toQImage(pixels.value()) : QImage();
-    }));
+    watcher->setFuture(QtConcurrent::run(
+        [source, settings, look = m_look] { return renderLook(*source, settings, &look); }));
 }
 
 } // namespace pixelfx::ui

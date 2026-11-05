@@ -20,4 +20,15 @@ QImage toQImage(const pfx::Rgba8Image& image)
     return out;
 }
 
+QImage toDisplayImage(const pfx::Result<pfx::Image>& rendered)
+{
+    return rendered ? toDisplayImage(rendered.value()) : QImage();
+}
+
+QImage toDisplayImage(const pfx::Image& image)
+{
+    const auto pixels = pfx::toSrgb8(image);
+    return pixels ? toQImage(pixels.value()) : QImage();
+}
+
 } // namespace pixelfx::services

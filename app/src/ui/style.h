@@ -3,10 +3,13 @@
 #include <QColor>
 #include <QList>
 #include <QString>
+#include <QStringList>
 #include <Qt>
 
 class QApplication;
+class QButtonGroup;
 class QDialog;
+class QFrame;
 class QImage;
 class QPixmap;
 class QSize;
@@ -95,6 +98,11 @@ QHBoxLayout* sheetTitleRow(QDialog* sheet, const QString& title, const QList<QWi
 /// The title row on a bar of its own, padded as a sheet's body, for sheets whose body runs edge
 /// to edge (Settings, Watermark, the look editor).
 QWidget* sheetHeaderBar(QDialog* sheet, QLayout* titleRow);
+/// A segmented control: `names` as joined segments in a box, the one at `checked` on, each added
+/// to `group` with its index as id. With `fill` the box runs across its column and the segments
+/// keep their own width.
+QFrame* segmentBox(const QStringList& names, int checked, QButtonGroup* group, QWidget* parent,
+                   bool fill = false);
 /// A section heading of a panel or sheet ("SPOTS (3)", "1. RECIPE"): small, bold, muted capitals.
 QLabel* sectionLabel(const QString& text, QWidget* parent);
 /// A section heading on a line of its own: 12 px above it, 4 px below, `sides` px from the edges
