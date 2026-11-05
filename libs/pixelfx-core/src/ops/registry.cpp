@@ -68,7 +68,7 @@ void addHeal(std::vector<OpSpec>& ops)
     spots.key = "heal.spots";
     spots.type = ParamType::SpotList;
     // First of all, on the upright photo, so a spot's position never depends on the crop.
-    ops.push_back({"heal", "heal", 1, 5, false, {spots}});
+    ops.push_back({"heal", "heal", 1, 5, false, {spots}, false});
 }
 
 void addGeometry(std::vector<OpSpec>& ops)
@@ -82,7 +82,8 @@ void addGeometry(std::vector<OpSpec>& ops)
                     number("geometry.angle", -45, 45, 0, "degrees"), fraction("geometry.crop.x", 0.0),
                     fraction("geometry.crop.y", 0.0), fraction("geometry.crop.w", 1.0),
                     fraction("geometry.crop.h", 1.0), number("geometry.perspective.vertical", -100, 100),
-                    number("geometry.perspective.horizontal", -100, 100)}});
+                    number("geometry.perspective.horizontal", -100, 100)},
+                   false});
 }
 
 void addMixer(std::vector<OpSpec>& ops)
@@ -145,7 +146,8 @@ void addLensCorrections(std::vector<OpSpec>& ops)
          2,
          false,
          {boolean("detail.lensProfile.enable"), number("detail.lensProfile.distortion", 0, 200, 100),
-          number("detail.lensProfile.vignetting", 0, 200, 100)}});
+          number("detail.lensProfile.vignetting", 0, 200, 100)},
+         false});
     ops.push_back({"chromatic_aberration", "detail", 1, 3, false, {boolean("detail.ca.auto")}});
     ops.push_back(
         {"defringe",

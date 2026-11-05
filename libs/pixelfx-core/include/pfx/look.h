@@ -34,8 +34,8 @@ struct Look
 };
 
 // Runs the look's enabled steps on the image, then blends the result with the input by
-// `strength` (0 to 1) in linear light. Geometry is never a look step; an unknown operation or a
-// missing LUT is skipped.
+// `strength` (0 to 1) in linear light. Operations that are not look steps (OpSpec::lookStep:
+// geometry, heal, the lens profile), unknown operations and missing LUTs are skipped.
 void applyLook(Image& image, const Look& look, float strength, int threads = 0);
 
 // "Bake to .cube" (presets.md section 3): the look's colour-only steps (pointwise registry

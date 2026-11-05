@@ -289,8 +289,14 @@ LookEditor::~LookEditor() = default;
 
 QString LookEditor::stepName(const QString& op)
 {
-    static const std::array<std::pair<const char*, const char*>, 15> names = {{
+    static const std::array<std::pair<const char*, const char*>, 21> names = {{
+        {"chromatic_aberration", QT_TRANSLATE_NOOP("LookEditor", "Chromatic aberration")},
+        {"defringe", QT_TRANSLATE_NOOP("LookEditor", "Defringe")},
         {"denoise", QT_TRANSLATE_NOOP("LookEditor", "Noise reduction")},
+        {"calibration", QT_TRANSLATE_NOOP("LookEditor", "Calibration")},
+        {"profile", QT_TRANSLATE_NOOP("LookEditor", "Profile")},
+        {"texture", QT_TRANSLATE_NOOP("LookEditor", "Texture")},
+        {"bw", QT_TRANSLATE_NOOP("LookEditor", "Black and white")},
         {"white_balance", QT_TRANSLATE_NOOP("LookEditor", "White balance")},
         {"exposure", QT_TRANSLATE_NOOP("LookEditor", "Exposure")},
         {"dehaze", QT_TRANSLATE_NOOP("LookEditor", "Dehaze")},
@@ -404,7 +410,7 @@ QHBoxLayout* LookEditor::buildStepButtons(QWidget* side)
     add->setObjectName(u"small"_s);
     auto* addMenu = new QMenu(add);
     for (const pfx::OpSpec& op : pfx::registry().ops()) {
-        if (op.id != "geometry" && op.id != "heal") { // a look never moves or heals pixels
+        if (op.lookStep) {
             const QString id = QString::fromStdString(op.id);
             connect(addMenu->addAction(stepName(id)), &QAction::triggered, this, [this, id] { addStep(id); });
         }

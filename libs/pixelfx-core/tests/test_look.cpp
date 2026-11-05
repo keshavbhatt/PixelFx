@@ -37,7 +37,7 @@ TEST_CASE("a look runs its steps and blends by strength in linear light")
     CHECK(none == image);
 }
 
-TEST_CASE("disabled, unknown, geometry and LUT steps")
+TEST_CASE("disabled, unknown, geometry, lens profile and LUT steps")
 {
     pfx::Image image(4, 4);
     image.fill(0.2F, 0.2F, 0.2F);
@@ -50,6 +50,10 @@ TEST_CASE("disabled, unknown, geometry and LUT steps")
     turn.op = "geometry";
     turn.params.set("geometry.rotate90", 1.0);
     look.steps.push_back(turn);
+    pfx::LookStep lens; // needs the photo's lens, which a look does not have
+    lens.op = "lens_profile";
+    lens.params.set("detail.lensProfile.enable", true);
+    look.steps.push_back(lens);
     pfx::LookStep missing;
     missing.op = "lut";
     missing.params.set("resource", std::string("nowhere"));

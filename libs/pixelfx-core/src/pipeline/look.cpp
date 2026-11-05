@@ -32,7 +32,7 @@ void applyLook(Image& image, const Look& look, float strength, int threads)
             }
             continue;
         }
-        if (step.op != "geometry") {
+        if (const OpSpec* spec = registry().op(step.op); spec != nullptr && spec->lookStep) {
             detail::applyOperation(step.op, image, step.params, ctx);
         }
     }

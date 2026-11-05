@@ -64,3 +64,12 @@ TEST_CASE("a curve whose points meet once clamped is dropped, not kept broken")
     CHECK_FALSE(s.contains("curves.rgb"));
     CHECK_FALSE(lines.empty());
 }
+
+TEST_CASE("looks may use every operation but those that move pixels or need the photo's facts")
+{
+    for (const pfx::OpSpec& op : pfx::registry().ops()) {
+        CAPTURE(op.id);
+        const bool notInLooks = op.id == "geometry" || op.id == "heal" || op.id == "lens_profile";
+        CHECK(op.lookStep == !notInLooks);
+    }
+}

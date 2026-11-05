@@ -33,7 +33,9 @@ struct ParamSpec
 };
 
 // An operation of the pipeline, registered once (ADR-005). `stage` is its place in the fixed
-// order of DOCS/presets.md section 5; `pointwise` operations can be baked into a LUT.
+// order of DOCS/presets.md section 5; `pointwise` operations can be baked into a LUT. A look may
+// use any operation as a step except those that move pixels or need the photo's own facts
+// (`lookStep` false: geometry, heal, the lens profile).
 struct OpSpec
 {
     std::string id;
@@ -42,6 +44,7 @@ struct OpSpec
     int stage = 0;
     bool pointwise = true;
     std::vector<ParamSpec> params;
+    bool lookStep = true;
 };
 
 class Registry

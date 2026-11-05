@@ -13,6 +13,7 @@
 #include <QLabel>
 #include <QLineEdit>
 #include <QListWidget>
+#include <QMenu>
 #include <QPushButton>
 #include <QSignalSpy>
 #include <QSlider>
@@ -143,6 +144,29 @@ private Q_SLOTS:
         QCOMPARE(message->text(), u"Name the look first."_s);
         QTest::keyClicks(name, u"Dusk"_s); // typing a name puts it right
         QVERIFY(!message->isError());
+    }
+
+    void addStepOffersLookStepsByName()
+    {
+        QTemporaryDir dir;
+        auto photo = std::make_shared<pfx::Image>(40, 30);
+        pixelfx::ui::LookEditor editor(photo, {}, {}, dir.filePath(u"looks"_s));
+        QStringList offered;
+        for (const QPushButton* b : editor.findChildren<QPushButton*>()) {
+            if (b->menu() != nullptr && b->text() == u"Add step"_s) {
+                for (const QAction* a : b->menu()->actions()) {
+                    offered << a->text();
+                }
+            }
+        }
+        QVERIFY(offered.contains(u"Chromatic aberration"_s));
+        QVERIFY(offered.contains(u"Black and white"_s));
+        for (const QString& name : offered) {
+            QVERIFY2(!name.contains(u'_') && name.front().isUpper(), qPrintable(name)); // a name, not an id
+        }
+        for (const char* never : {"geometry", "heal", "lens_profile", "Geometry"}) {
+            QVERIFY(!offered.contains(QString::fromLatin1(never)));
+        }
     }
 
     void lookEditorMakesALook()
