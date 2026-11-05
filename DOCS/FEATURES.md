@@ -60,7 +60,7 @@ preview and export use resolution-independent parameters so they match (v1 defec
 |---|---|---|---|---|
 | E1 | Light: Exposure (stops), Contrast, Highlights, Shadows, Whites, Blacks | Brightness, Contrast, Sigmoidal contrast, Gamma | KEEP | wip: library done (tone v1 is a global curve; a local version may follow as v2); UI M3 |
 | E2 | Color: White balance (As shot, Auto, presets, Temperature, Tint, picker), Vibrance, Saturation | Saturation, Color balance R/G/B | KEEP | wip: relative temperature and tint, vibrance, saturation, the As shot / Auto / Custom menu and the picker (W) done; Kelvin presets (Daylight, Cloudy ...) come with RAW, where the camera white balance is known |
-| E3 | Color mixer: hue, saturation, luminance for 8 colour bands | Hue shift | KEEP | done: library (`mixer`, stage 80) and the Color mixer group of `editor.html` |
+| E3 | Color mixer: hue, saturation, luminance for 8 colour bands | Hue shift | KEEP | done: library (`mixer`, stage 80) and the Color mixer group of `editor.html`; picking a colour on the photo (T) moves its bands by their shares, in the B&W mix too (`editor-mixer-target.html`, 2026-11-05) |
 | E4 | Curves: RGB and per channel, points, double-click removes | none | KEEP | done (`CurveEditor`, `AdjustPanel`; drawn with `pfx::sampleCurve`) |
 | E5 | Levels (black, mid, white point per channel) | none | LATER | |
 | E6 | Detail: Clarity (local contrast), Sharpen (amount, radius, masking), Noise reduction (luminance, colour), Dehaze | Sharpen, Blur, Mean, Median | KEEP | done: clarity, sharpen, noise reduction and dehaze in the library and the Detail group |

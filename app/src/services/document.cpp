@@ -17,6 +17,8 @@
 #include <pfx/auto.h>
 #include <pfx/color.h>
 #include <pfx/io.h>
+#include <pfx/pipeline.h>
+#include <pfx/registry.h>
 #include <pfx/resample.h>
 
 using namespace Qt::StringLiterals;
@@ -228,6 +230,7 @@ void Document::deliver(const Result& result)
     m_fingerprint = result.fingerprint;
     m_snapshots = result.snapshots;
     m_source = result.source;
+    m_beforeMixer = {}; // a new photo: colorBeforeMixer renders again
     m_scheduler->setSource(result.source);
     m_hover.reset();
     if (auto small = pfx::fitLongEdge(*result.source, 120)) {
@@ -513,6 +516,44 @@ void Document::pickWhiteBalance(QPointF fraction)
         pfx::color::transform(pfx::color::kSrgbToRec2020, {sum[0] / n, sum[1] / n, sum[2] / n});
     apply(withWhiteBalance(m_settings, pfx::neutralWhiteBalance(rec2020[0], rec2020[1], rec2020[2])),
           tr("White balance picker"));
+}
+
+std::optional<std::array<double, 3>> Document::colorBeforeMixer(QPointF fraction)
+{
+    if (!isOpen() || !m_source) {
+        return std::nullopt;
+    }
+    // Small is enough to read a colour, and cheap to redo when an earlier setting changes;
+    // spatial settings are shares of the photo, so the small render lines up with the shown one.
+    constexpr int kLongEdge = 640;
+    const pfx::Settings before = pfx::settingsBefore(m_settings, "mixer");
+    if (m_beforeMixer.empty() || !(before == m_beforeMixerSettings)) {
+        auto small = pfx::fitLongEdge(*m_source, kLongEdge);
+        if (!small) {
+            return std::nullopt;
+        }
+        auto rendered = pfx::render(std::move(small).value(), before);
+        if (!rendered) {
+            return std::nullopt;
+        }
+        m_beforeMixer = std::move(rendered).value();
+        m_beforeMixerSettings = before;
+    }
+    const pfx::Image& img = m_beforeMixer;
+    const int cx = std::clamp(static_cast<int>(fraction.x() * img.width()), 0, img.width() - 1);
+    const int cy = std::clamp(static_cast<int>(fraction.y() * img.height()), 0, img.height() - 1);
+    std::array<double, 3> sum{};
+    int n = 0;
+    for (int y = std::max(0, cy - 1); y <= std::min(img.height() - 1, cy + 1); ++y) {
+        for (int x = std::max(0, cx - 1); x <= std::min(img.width() - 1, cx + 1); ++x) {
+            const float* p = img.pixel(x, y);
+            for (std::size_t c = 0; c < 3; ++c) {
+                sum.at(c) += double{p[c]};
+            }
+            ++n;
+        }
+    }
+    return std::array<double, 3>{sum[0] / n, sum[1] / n, sum[2] / n};
 }
 
 void Document::replaceSettings(const pfx::Settings& settings, bool render)

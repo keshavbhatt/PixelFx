@@ -6,6 +6,7 @@
 #include "ui/color_wheel.h"
 #include "ui/curve_editor.h"
 #include "ui/grading_range_button.h"
+#include "ui/icons.h"
 #include "ui/region_curve.h"
 #include "ui/style.h"
 
@@ -14,11 +15,14 @@
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QPushButton>
+#include <QSignalBlocker>
 #include <QSlider>
+#include <QToolButton>
 #include <QVBoxLayout>
 
 #include <algorithm>
 #include <array>
+#include <cmath>
 #include <string>
 #include <string_view>
 
@@ -142,6 +146,32 @@ constexpr std::array<double, 3> kSplitDefaults = {25.0, 50.0, 75.0};
 
 // --- Color mixer and the B&W mix ---------------------------------------------------------------
 
+QWidget* AdjustPanel::buildMixerSwatches(QWidget* parent)
+{
+    auto* swatches = new QWidget(parent);
+    auto* swatchRow = new QHBoxLayout(swatches);
+    swatchRow->setContentsMargins(0, 0, 0, 6);
+    swatchRow->setSpacing(kGapRelated);
+    m_mixerBands = new QButtonGroup(this);
+    const std::vector<MixerBand>& bands = mixerBands();
+    for (std::size_t i = 0; i < bands.size(); ++i) {
+        auto* s = new ColorSwatch(bands.at(i).swatch, tr(bands.at(i).label), swatches);
+        s->setChecked(i == 0);
+        m_mixerBands->addButton(s, static_cast<int>(i));
+        swatchRow->addWidget(s);
+    }
+    swatchRow->addStretch();
+    m_target = new QToolButton(swatches);
+    m_target->setObjectName(u"iconButton"_s);
+    m_target->setIcon(icons::themed(u"target"_s, tokens().text));
+    m_target->setCheckable(true);
+    m_target->setAccessibleName(tr("Pick a colour on the photo"));
+    m_target->setToolTip(tr("Pick a colour on the photo and drag up or down to change it (T)"));
+    connect(m_target, &QToolButton::toggled, this, &AdjustPanel::targetToggled);
+    swatchRow->addWidget(m_target);
+    return swatches;
+}
+
 void AdjustPanel::buildMixerGroup(QWidget* content, QVBoxLayout* groups)
 {
     auto* group = new AdjustGroup(u"Color mixer"_s, tr("Color mixer"), u"palette"_s, content);
@@ -161,19 +191,8 @@ void AdjustPanel::buildMixerGroup(QWidget* content, QVBoxLayout* groups)
         m_mixerModes->addButton(b, i);
         modeRow->addWidget(b, 1);
     }
-    auto* swatches = new QWidget(group);
-    auto* swatchRow = new QHBoxLayout(swatches);
-    swatchRow->setContentsMargins(0, 0, 0, 6);
-    swatchRow->setSpacing(kGapRelated);
-    m_mixerBands = new QButtonGroup(this);
+    QWidget* swatches = buildMixerSwatches(group);
     const std::vector<MixerBand>& bands = mixerBands();
-    for (std::size_t i = 0; i < bands.size(); ++i) {
-        auto* s = new ColorSwatch(bands.at(i).swatch, tr(bands.at(i).label), swatches);
-        s->setChecked(i == 0);
-        m_mixerBands->addButton(s, static_cast<int>(i));
-        swatchRow->addWidget(s);
-    }
-    swatchRow->addStretch();
     group->addContent(m_mixerModeRow);
     group->addContent(swatches);
     for (std::size_t m = 0; m < kMixerModes.size(); ++m) {
@@ -193,14 +212,157 @@ void AdjustPanel::buildMixerGroup(QWidget* content, QVBoxLayout* groups)
         s->slider()->setObjectName(u"bwTrack"_s);
         m_bwSliders.push_back(s);
     }
+    m_targetAlso = new QLabel(group);
+    m_targetAlso->setObjectName(u"muted"_s);
+    m_targetAlso->hide();
+    group->addContent(m_targetAlso);
     connect(m_mixerModes, &QButtonGroup::idClicked, this, &AdjustPanel::showMixerSlider);
     connect(m_mixerBands, &QButtonGroup::idClicked, this, &AdjustPanel::showMixerSlider);
     addGroup(group, groups);
     showMixerSlider();
 }
 
+// --- Picking a colour on the photo ---------------------------------------------------------------
+
+void AdjustPanel::setTargeting(bool on)
+{
+    const QSignalBlocker block(m_target);
+    m_target->setChecked(on);
+    m_target->setToolTip(
+        on ? tr("Drag on the photo to change the colour under the pointer (T). Escape stops.")
+           : tr("Pick a colour on the photo and drag up or down to change it (T)"));
+    if (on) {
+        m_mixerGroup->setExpanded(true);
+    } else {
+        m_targetDrag.reset();
+        m_targetAlso->hide();
+    }
+}
+
+bool AdjustPanel::isTargeting() const
+{
+    return m_target->isChecked();
+}
+
+QString AdjustPanel::targetKey(std::size_t band) const
+{
+    const char* name = mixerBands().at(band).key;
+    if (isBlackAndWhite()) {
+        return u"bw.mix.%1"_s.arg(QLatin1StringView(name));
+    }
+    const auto mode = static_cast<std::size_t>(std::max(0, m_mixerModes->checkedId()));
+    return u"mixer.%1.%2"_s.arg(QLatin1StringView(kMixerModes.at(mode)), QLatin1StringView(name));
+}
+
+QString AdjustPanel::mixerModeWord() const
+{
+    const std::array<QString, 3> modes = {tr("hue"), tr("saturation"), tr("luminance")};
+    return modes.at(static_cast<std::size_t>(std::max(0, m_mixerModes->checkedId())));
+}
+
+QString AdjustPanel::targetDragWords() const
+{
+    if (isBlackAndWhite()) {
+        return tr("Drag up or down: lighter or darker");
+    }
+    //: Beside the colour picked on the photo, "Drag up or down: luminance".
+    return tr("Drag up or down: %1").arg(mixerModeWord());
+}
+
+QString AdjustPanel::targetBanner() const
+{
+    if (isBlackAndWhite()) {
+        return tr("Drag on a colour to make it lighter or darker in black and white");
+    }
+    //: The line at the top while picking a colour, "Drag on a colour to change its luminance".
+    return tr("Drag on a colour to change its %1").arg(mixerModeWord());
+}
+
+QString AdjustPanel::targetName(const pfx::HueBands& bands)
+{
+    constexpr double kGrey = 0.05;  // the mixer barely acts below this
+    constexpr double kAlone = 0.15; // a neighbour with less than this share is not named
+    if (bands.weight < kGrey) {
+        return tr("No colour here");
+    }
+    const bool second = bands.secondShare > 0.5;
+    QString main = tr(mixerBands().at(second ? bands.second : bands.first).label);
+    const double otherShare = second ? 1.0 - bands.secondShare : bands.secondShare;
+    if (otherShare < kAlone) {
+        return main;
+    }
+    const QString other = tr(mixerBands().at(second ? bands.first : bands.second).label);
+    //: Two colour bands under the pointer, "Blues and aquas".
+    return tr("%1 and %2").arg(main, other.toLower());
+}
+
+void AdjustPanel::pickTarget(const pfx::HueBands& bands)
+{
+    constexpr double kGrey = 0.05;
+    m_targetAlso->hide();
+    if (bands.weight < kGrey) {
+        m_targetDrag.reset();
+        return;
+    }
+    const bool secondFirst = bands.secondShare > 0.5;
+    TargetDrag drag;
+    drag.bands = {secondFirst ? bands.second : bands.first, secondFirst ? bands.first : bands.second};
+    const double main = secondFirst ? bands.secondShare : 1.0 - bands.secondShare;
+    drag.ratio = (1.0 - main) / main;
+    for (std::size_t i = 0; i < 2; ++i) {
+        drag.start.at(i) = m_settings.number(targetKey(drag.bands.at(i)).toStdString(), 0.0);
+    }
+    m_targetDrag = drag;
+    m_mixerBands->button(static_cast<int>(drag.bands[0]))->setChecked(true);
+    showMixerSlider();
+}
+
+void AdjustPanel::dragTarget(double steps, bool finished)
+{
+    if (!m_targetDrag) {
+        return;
+    }
+    TargetDrag& d = *m_targetDrag;
+    std::array<double, 2> values{};
+    for (std::size_t i = 0; i < 2; ++i) {
+        const double change = std::round(steps * (i == 0 ? 1.0 : d.ratio));
+        values.at(i) = std::clamp(d.start.at(i) + change, -100.0, 100.0);
+        const std::string key = targetKey(d.bands.at(i)).toStdString();
+        values.at(i) == 0.0 ? m_settings.erase(key) : m_settings.set(key, values.at(i));
+        if (AdjustSlider* s = slider(targetKey(d.bands.at(i)))) {
+            s->setValue(values.at(i));
+        }
+    }
+    const bool moves = d.ratio > 0.0 && std::round(steps * d.ratio) != 0.0;
+    const AdjustSlider* other = slider(targetKey(d.bands[1]));
+    const QString otherName = isBlackAndWhite() ? tr(mixerBands().at(d.bands[1]).label) : other->label();
+    const auto signedValue = [](double v) { return v > 0.0 ? u"+%1"_s.arg(v) : QString::number(v); };
+    //: Under the colour mixer while dragging on the photo, "Also moves Aquas luminance -10".
+    m_targetAlso->setText(tr("Also moves %1 %2").arg(otherName, signedValue(values[1])));
+    m_targetAlso->setVisible(moves);
+    refreshGroups();
+    Q_EMIT settingsChanged(m_settings);
+    if (finished) {
+        const AdjustSlider* main = slider(targetKey(d.bands[0]));
+        QString name = isBlackAndWhite() ? tr(mixerBands().at(d.bands[0]).label) : main->label();
+        if (moves) {
+            const QString both = tr("%1 and %2")
+                                     .arg(tr(mixerBands().at(d.bands[0]).label),
+                                          tr(mixerBands().at(d.bands[1]).label).toLower());
+            name = isBlackAndWhite() ? both : u"%1 %2"_s.arg(both, mixerModeWord());
+        }
+        //: A history step of the colour picked on the photo, "Blues and aquas luminance -24".
+        Q_EMIT editFinished(isBlackAndWhite()
+                                ? tr("%1 in black and white %2").arg(name, signedValue(values[0]))
+                                : u"%1 %2"_s.arg(name, signedValue(values[0])));
+        // The next drag starts from here.
+        d.start = values;
+    }
+}
+
 void AdjustPanel::showMixerSlider()
 {
+    Q_EMIT targetModeChanged();
     const bool bw = isBlackAndWhite();
     const auto band = static_cast<std::size_t>(m_mixerBands->checkedId());
     const std::size_t shown =

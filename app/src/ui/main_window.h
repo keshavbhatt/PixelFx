@@ -58,6 +58,11 @@ public:
     [[nodiscard]] AdjustPanel* adjustPanel() const { return m_adjust; }
     [[nodiscard]] CropPanel* cropPanel() const { return m_cropPanel; }
     [[nodiscard]] QAction* namedAction(const QString& name) const;
+    /// Picking a colour on the photo for the Color mixer (T), and back to plain editing.
+    void startColorTarget();
+    void stopColorTarget();
+    [[nodiscard]] bool isColorTargeting() const;
+    [[nodiscard]] class ColorTargetTool* colorTargetTool() const { return m_colorTarget; }
     [[nodiscard]] PresetsPanel* presetsPanel() const { return m_presets; }
     /// Re-reads the preset library and redraws the preset pictures.
     void refreshPresets();
@@ -156,6 +161,7 @@ private:
     void leaveTools();
     void setupZoomActions();
     void connectPresetAmount();
+    void connectColorTarget();
     /// The preset just applied at `amount` (0 to 200) over the photo as it was before it.
     void blendAppliedPreset(double amount, bool finished);
     /// Color or black and white (V), the menu item following the photo.
@@ -246,6 +252,8 @@ private:
     QToolButton* m_batchMode = nullptr;
     QToolButton* m_healMode = nullptr;
     class HealTool* m_healTool = nullptr;
+    class ColorTargetTool* m_colorTarget = nullptr;
+    QAction* m_colorTargetStop = nullptr;
     class HealPanel* m_healPanel = nullptr;
     QList<QAction*> m_healActions;
     pfx::Settings m_healStart;

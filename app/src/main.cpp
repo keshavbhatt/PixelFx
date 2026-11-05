@@ -22,6 +22,8 @@
 //                                      others
 //   PIXELFX_DEBUG_HEAL=<x,y;x,y...>    enter Heal once the photo is open and heal a spot at each
 //                                      point (fractions of the photo); "-" enters only
+//   PIXELFX_DEBUG_TARGET=<x,y[,steps]> pick a colour on the photo for the Color mixer at x,y
+//                                      (fractions) and, with steps, drag that far up
 //   PIXELFX_DEBUG_GRAB=<file.png>      grab the window once the photo is shown (or after 2 s
 //                                      with nothing to show) and quit
 #include "app/application.h"
@@ -35,6 +37,7 @@
 #include "ui/about_sheet.h"
 #include "ui/batch_page.h"
 #include "ui/canvas.h"
+#include "ui/color_target_tool.h"
 #include "ui/crop_panel.h"
 #include "ui/export_sheet.h"
 #include "ui/heal_tool.h"
@@ -94,6 +97,22 @@ void applyHealHook(pixelfx::ui::MainWindow& window)
                     {point.section(u',', 0, 0).toDouble(), point.section(u',', 1, 1).toDouble()});
             }
         }
+    });
+}
+
+void applyTargetHook(pixelfx::ui::MainWindow& window)
+{
+    const QStringList target = qEnvironmentVariable("PIXELFX_DEBUG_TARGET").split(u',');
+    if (target.size() < 2) {
+        return;
+    }
+    QObject::connect(&window.document(), &pixelfx::services::Document::opened, &window, [&window, target] {
+        window.startColorTarget();
+        const QPointF at(target[0].toDouble(), target[1].toDouble());
+        if (target.size() > 2) {
+            window.colorTargetTool()->dragAt(at, target[2].toDouble());
+        }
+        window.colorTargetTool()->hoverAt(at);
     });
 }
 
@@ -328,6 +347,7 @@ void applyDebugHooks(pixelfx::ui::MainWindow& window, QStringList& files)
         window.presetsPanel()->showTab(1);
     }
     applyHealHook(window);
+    applyTargetHook(window);
     applyGrabHook(window, files);
 }
 

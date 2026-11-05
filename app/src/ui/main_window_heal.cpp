@@ -97,6 +97,7 @@ void MainWindow::setupHealActions()
 
 void MainWindow::enterHeal()
 {
+    stopColorTarget();
     leaveBatch();
     if (isCropping()) {
         leaveCrop(true);

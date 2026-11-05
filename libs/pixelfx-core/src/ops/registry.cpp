@@ -413,6 +413,25 @@ const Registry& registry()
     return instance;
 }
 
+Settings settingsBefore(const Settings& settings, std::string_view opId)
+{
+    const OpSpec* until = registry().op(opId);
+    Settings out;
+    if (until == nullptr) {
+        return out;
+    }
+    for (const std::string& key : settings.keys()) {
+        for (const OpSpec& o : registry().ops()) {
+            const bool owns =
+                std::ranges::any_of(o.params, [&key](const ParamSpec& p) { return p.key == key; });
+            if (owns && o.stage < until->stage) {
+                out.set(key, *settings.find(key));
+            }
+        }
+    }
+    return out;
+}
+
 const OpSpec* Registry::op(std::string_view id) const
 {
     const auto it = std::ranges::find_if(m_ops, [&](const OpSpec& o) { return o.id == id; });

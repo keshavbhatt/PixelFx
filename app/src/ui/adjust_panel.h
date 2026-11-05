@@ -7,6 +7,8 @@
 
 #include <array>
 #include <functional>
+#include <optional>
+#include <pfx/mixer.h>
 #include <pfx/settings.h>
 #include <vector>
 
@@ -73,6 +75,19 @@ public:
     [[nodiscard]] AdjustGroup* group(const QString& id) const;
     [[nodiscard]] ChoiceRow* choiceRow(const QString& key) const;
     [[nodiscard]] CheckRow* checkRow(const QString& key) const;
+    /// The target of the Color mixer (T): pick a colour on the photo, drag to change it.
+    void setTargeting(bool on);
+    [[nodiscard]] bool isTargeting() const;
+    /// What a drag on the photo does now, for the line at the top and the hint.
+    [[nodiscard]] QString targetBanner() const;
+    [[nodiscard]] QString targetDragWords() const;
+    /// The bands of a colour ("Blues and aquas"), or "No colour here" for a grey.
+    [[nodiscard]] static QString targetName(const pfx::HueBands& bands);
+    /// A press on the photo: shows the colour's main band and remembers where both bands start.
+    void pickTarget(const pfx::HueBands& bands);
+    /// A drag `steps` from the press: both bands move, the second by its share. `finished` is
+    /// a history step.
+    void dragTarget(double steps, bool finished);
     /// Color or Black & white (V): one step in the history.
     void setBlackAndWhite(bool on);
     [[nodiscard]] bool isBlackAndWhite() const;
@@ -108,6 +123,10 @@ Q_SIGNALS:
     void pasteRequested();
     /// "Crop and perspective" in the Geometry group.
     void cropRequested();
+    /// The target button was toggled.
+    void targetToggled(bool on);
+    /// The mixer's mode or black and white changed: what a drag does changed.
+    void targetModeChanged();
 
 private:
     struct Bound
@@ -135,6 +154,8 @@ private:
     /// Shows the settings in the controls that are not sliders (curve, wheels).
     void refreshControls();
     void buildMixerGroup(QWidget* content, QVBoxLayout* groups);
+    /// The eight swatches and the target button at their end.
+    QWidget* buildMixerSwatches(QWidget* parent);
     void buildGeometryGroup(QWidget* content, QVBoxLayout* groups);
     /// A change to the turns, flips or straightening, through crop_geometry so the crop stays
     /// on the same part of the photo; a history step when `label` is given.
@@ -167,6 +188,18 @@ private:
     std::vector<AdjustSlider*> m_sliders;
     std::vector<AdjustSlider*> m_mixerSliders;
     std::vector<AdjustSlider*> m_bwSliders;
+    QToolButton* m_target = nullptr;
+    QLabel* m_targetAlso = nullptr;
+    struct TargetDrag
+    {
+        std::array<std::size_t, 2> bands{};
+        double ratio = 0.0; // the second band moves by this share of the first's change
+        std::array<double, 2> start{};
+    };
+    std::optional<TargetDrag> m_targetDrag;
+    [[nodiscard]] QString targetKey(std::size_t band) const;
+    /// "hue", "saturation" or "luminance": the mixer's mode on show.
+    [[nodiscard]] QString mixerModeWord() const;
     QWidget* m_mixerModeRow = nullptr;
     QButtonGroup* m_mixerModes = nullptr;
     QButtonGroup* m_mixerBands = nullptr;

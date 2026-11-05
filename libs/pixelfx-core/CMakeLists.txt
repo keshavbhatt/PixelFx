@@ -61,6 +61,7 @@ add_library(pfx_core
     src/ops/geometry.cpp
     src/ops/effects.cpp
     src/ops/mixer.cpp
+    src/ops/mixer_public.cpp
     src/ops/grading.cpp
     src/ops/bw.cpp
     src/ops/calibration.cpp

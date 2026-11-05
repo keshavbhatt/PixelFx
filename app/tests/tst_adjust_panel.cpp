@@ -1,5 +1,6 @@
 #include "ui/adjust_group.h"
 #include "ui/adjust_panel.h"
+#include "ui/color_target_tool.h"
 #include "ui/color_wheel.h"
 #include "ui/curve_editor.h"
 #include "ui/region_curve.h"
@@ -564,6 +565,62 @@ private Q_SLOTS:
             QTest::keyClick(&view, Qt::Key_Right, Qt::ShiftModifier);
         }
         QCOMPARE(view.split(0), 45.0); // 5 short of the next split
+    }
+
+    void aColourPickedOnThePhotoMovesItsBandsByTheirShares()
+    {
+        AdjustPanel panel;
+        QSignalSpy finished(&panel, &AdjustPanel::editFinished);
+        panel.setTargeting(true);
+        QVERIFY(panel.isTargeting());
+        QVERIFY(panel.group(u"Color mixer"_s)->isExpanded());
+        const pfx::HueBands sky{4, 5, 0.7, 1.0}; // between aqua and blue, nearer blue
+        QCOMPARE(panel.targetName(sky), u"Blues and aquas"_s);
+        QCOMPARE(panel.targetName(pfx::HueBands{4, 5, 0.95, 1.0}), u"Blues"_s);
+        QCOMPARE(panel.targetName(pfx::HueBands{4, 5, 0.5, 0.0}), u"No colour here"_s);
+        panel.pickTarget(sky);
+        QCOMPARE(panel.mixerSlider()->key(), u"mixer.hue.blue"_s); // the main band's swatch
+        panel.dragTarget(24, true);
+        QCOMPARE(panel.settings().number("mixer.hue.blue", 0), 24.0);
+        QCOMPARE(panel.settings().number("mixer.hue.aqua", 0), 10.0); // 24 times 0.3 / 0.7
+        QCOMPARE(finished.last().first().toString(), u"Blues and aquas hue +24"_s);
+        panel.dragTarget(-6, true); // the next drag goes on from there
+        QCOMPARE(panel.settings().number("mixer.hue.blue", 0), 18.0);
+        // A grey picks nothing, and a drag then changes nothing.
+        const pfx::Settings before = panel.settings();
+        panel.pickTarget(pfx::HueBands{0, 1, 0.5, 0.0});
+        panel.dragTarget(40, true);
+        QCOMPARE(panel.settings(), before);
+        // In black and white the drag moves the B&W mix.
+        panel.setBlackAndWhite(true);
+        panel.pickTarget(sky);
+        panel.dragTarget(-40, true);
+        QCOMPARE(panel.settings().number("bw.mix.blue", 0), -40.0);
+        QCOMPARE(panel.settings().number("bw.mix.aqua", 0), -17.0);
+        QCOMPARE(finished.last().first().toString(), u"Blues and aquas in black and white -40"_s);
+        panel.setTargeting(false);
+        QVERIFY(!panel.isTargeting());
+    }
+
+    void theTargetToolCountsStepsFromThePress()
+    {
+        pixelfx::ui::ColorTargetTool tool;
+        QSignalSpy dragged(&tool, &pixelfx::ui::ColorTargetTool::dragged);
+        QSignalSpy pressed(&tool, &pixelfx::ui::ColorTargetTool::pressed);
+        const QRectF photo(0, 0, 400, 300);
+        const auto mouse = [](QEvent::Type type, QPointF at, Qt::KeyboardModifiers mods = {}) {
+            return QMouseEvent(type, at, at, Qt::LeftButton, Qt::LeftButton, mods);
+        };
+        QVERIFY(!tool.press(mouse(QEvent::MouseButtonPress, {500, 100}), photo)); // off the photo
+        QVERIFY(tool.press(mouse(QEvent::MouseButtonPress, {100, 150}), photo));
+        QCOMPARE(pressed.first().first().toPointF(), QPointF(0.25, 0.5));
+        tool.move(mouse(QEvent::MouseMove, {300, 130}), photo); // only the height counts
+        QCOMPARE(dragged.last().at(0).toDouble(), 10.0);
+        tool.move(mouse(QEvent::MouseMove, {100, 190}, Qt::ShiftModifier), photo);
+        QCOMPARE(dragged.last().at(0).toDouble(), -5.0); // 40 px down, finer
+        tool.release(mouse(QEvent::MouseButtonRelease, {100, 190}), photo);
+        QCOMPARE(dragged.last().at(1).toBool(), true);
+        QCOMPARE(*tool.marker(), QPointF(0.25, 0.5)); // the marker stays on the colour picked
     }
 
     void setSettingsDoesNotEmit()

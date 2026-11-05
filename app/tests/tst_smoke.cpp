@@ -185,6 +185,15 @@ private Q_SLOTS:
             QCOMPARE(window.document().history().undoLabel(), u"Crisp at 50%"_s);
             window.document().undo();
             QVERIFY(amount->parentWidget()->isHidden()); // the Amount belonged to that step
+            // T picks a colour on the photo, Escape or T again stops; Crop stops it too.
+            window.namedAction(u"colorTarget"_s)->trigger();
+            QVERIFY(window.isColorTargeting());
+            window.namedAction(u"colorTarget"_s)->trigger();
+            QVERIFY(!window.isColorTargeting());
+            window.startColorTarget();
+            window.enterCrop();
+            QVERIFY(!window.isColorTargeting());
+            window.leaveCrop(false);
             QFile::remove(presetPath);
             window.document().apply({}, u"Clear"_s);
         }

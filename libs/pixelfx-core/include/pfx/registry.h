@@ -67,4 +67,9 @@ private:
 // The library's registry. Immutable after the first call.
 [[nodiscard]] const Registry& registry();
 
+// The settings of `settings` that belong to operations before `opId` in the pipeline: what a
+// pixel looks like when that operation receives it (the colour the mixer sees, for picking a
+// colour on the photo). Keys of no operation are left out.
+[[nodiscard]] Settings settingsBefore(const Settings& settings, std::string_view opId);
+
 } // namespace pfx

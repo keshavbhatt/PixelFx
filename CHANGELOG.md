@@ -40,15 +40,26 @@ A new editor, a new image engine, and a new look.
 - Open many photos at once: they line up in a strip under the photo; Left and Right step
   through them, Ctrl or Shift click (or Ctrl+A) selects several, and a preset, pasted settings or
   Export then go to all of them.
-- Bring your Lightroom and Camera Raw presets (.xmp): light, colour, curves, detail and effects
-  come across, and PixelFx says which settings it left out.
-- Color mixer: hue, saturation and luminance for eight colour ranges.
+- Bring your Lightroom and Camera Raw presets (.xmp): every setting of the main panels comes
+  across, black and white, colour grading, Texture, Calibration and the finer detail and effects
+  settings included, and PixelFx says if it left anything out.
+- Over 400 built-in presets, as pictures of your own photo: film, black and white, slide film,
+  cinematic, vintage processes, portrait, landscape, food, seasons and festivals, places and
+  more. Keep favourites, find the recent ones, and set how strongly a preset applies with
+  Amount, from none to twice as strong.
+- Color mixer: hue, saturation and luminance for eight colour ranges. Pick a colour on the
+  photo (T) and drag up or down to change it, a sky or a dress, without guessing its range.
+- Black and white (V), with a B&W mix that makes each colour lighter or darker in grey: darken
+  a blue sky, brighten skin.
 - Spot heal (R): click a blemish, a dust spot or a small object and it is gone, a matching
   patch picked for you; paint along a wire or a scratch with the brush. Every spot stays
   editable: move it, pick another patch, change its size, or take it off. Reveal dust (D)
   shows specks on skies. Spots stay with their photo when you crop later.
-- Color grading: a wheel for the shadows and one for the highlights to give a photo a colour
-  mood, cool shadows and warm light for example, with a balance between them.
+- Color grading: colour for the shadows, midtones, highlights and the whole photo, each with
+  its own brightness, to give a photo a colour mood, cool shadows and warm light for example.
+- Texture brings out skin, foliage and fabric; Curves can also lift or lower four ranges of
+  tones; Optics removes colour fringes along edges; Calibration fine-tunes the colours of a
+  camera. Each group keeps its finer settings under More.
 - Dehaze clears distance haze from landscapes and city views, or adds a little mist.
 - Effects: vignette, film grain and fade.
 - The camera's settings (ISO, aperture, shutter speed, focal length) under the histogram.

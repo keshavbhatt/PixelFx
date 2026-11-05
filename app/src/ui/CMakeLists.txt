@@ -16,6 +16,8 @@ qt_add_library(pixelfx_ui STATIC
     crop_panel.h
     color_swatch.cpp
     color_swatch.h
+    color_target_tool.cpp
+    color_target_tool.h
     color_wheel.cpp
     color_wheel.h
     grading_range_button.cpp
@@ -48,6 +50,7 @@ qt_add_library(pixelfx_ui STATIC
     looks_panel.h
     main_window.cpp
     main_window_heal.cpp
+    main_window_target.cpp
     main_window.h
     menu_style.cpp
     menu_style.h

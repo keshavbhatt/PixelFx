@@ -67,6 +67,18 @@ Decisions the work stopped at; everything else went ahead within the approved mo
 
 ## Sessions (newest first)
 
+### 2026-11-05 (a colour picked on the photo)
+
+- The approved `editor-mixer-target.html`: the target at the end of the Color mixer's swatches
+  (T, and in the Photo menu) picks the colour under the pointer and a vertical drag changes it in
+  the mode on show, or in the B&W mix; a colour between two bands moves both by their shares,
+  the panel names the second ("Also moves Aquas hue +7"), one drag is one history step. The
+  colour is read before the mixer (`pfx::settingsBefore`, `Document::colorBeforeMixer`, a 640 px
+  render cached until an earlier setting changes) and its bands come from the library
+  (`pfx::hueBands`), as the mixer weighs them. Escape, T, Crop, Heal and Batch stop it.
+- The CHANGELOG now tells today's work: Lightroom presets in full, the catalog, black and white,
+  colour grading in four ranges, Texture, Regions, Optics and Calibration.
+
 ### 2026-11-05 (the preset catalog)
 
 - The Presets tab of the approved `editor-presets-catalog.html`: search, All, Favorites (F),

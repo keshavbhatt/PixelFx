@@ -10,6 +10,7 @@
 #include <QSize>
 #include <QString>
 
+#include <array>
 #include <memory>
 #include <optional>
 
@@ -29,7 +30,7 @@ struct DocumentInfo
     QSize size;     ///< full size, upright
     QString format; ///< loader name, for example "jpegload"
     int bitsPerSample = 8;
-    QString camera;   ///< "Canon EOS R5", empty when the photo does not say
+    QString camera; ///< "Canon EOS R5", empty when the photo does not say
     QString lens;
     QString exposure; ///< "ISO 100 · f/8 · 1/250 s · 24 mm"
 };
@@ -92,6 +93,9 @@ public:
     /// White balance that makes the photo grey at `fraction` (of the photo as shown, geometry
     /// applied), sampled from the original around it; one history step.
     void pickWhiteBalance(QPointF fraction);
+    /// The colour at `fraction` of the photo as shown (working space), as the colour mixer
+    /// receives it: with every setting before the mixer, none of the mixer's or after it.
+    [[nodiscard]] std::optional<std::array<double, 3>> colorBeforeMixer(QPointF fraction);
     [[nodiscard]] const core::History& history() const { return m_history; }
     /// Named states kept with the photo's edits.
     [[nodiscard]] const std::vector<pfx::BatchStep>& snapshots() const { return m_snapshots; }
@@ -174,6 +178,9 @@ private:
     bool m_fullLoaded = false;
     quint64 m_fullGeneration = 0;
     std::shared_ptr<const pfx::Image> m_source;
+    // colorBeforeMixer's small render and the settings it was made with.
+    pfx::Image m_beforeMixer;
+    pfx::Settings m_beforeMixerSettings;
     std::optional<core::SidecarStore> m_sidecars;
     QString m_fingerprint;
     QTimer* m_saveTimer = nullptr;

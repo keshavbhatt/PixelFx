@@ -5,7 +5,9 @@
 #include "pfx/color.h"
 #include "pfx/curve.h"
 #include "pfx/document.h"
+#include "pfx/mixer.h"
 #include "pfx/pipeline.h"
+#include "pfx/registry.h"
 
 #include <algorithm>
 #include <cmath>
@@ -297,4 +299,24 @@ TEST_CASE("black and white: the colour mixer stands aside; the parametric sample
     const double in = pfx::color::srgbEncode(ramp.pixel(40, 0)[1]);
     const auto at = static_cast<std::size_t>(std::lround(in * 255.0));
     CHECK(pfx::color::srgbEncode(out.pixel(40, 0)[1]) == doctest::Approx(curve.at(at)).epsilon(0.01));
+}
+
+TEST_CASE("picking a colour: its hue bands and shares, and the settings before the mixer")
+{
+    // A sky between blue (240) and aqua (180), nearer blue.
+    const pfx::color::Vec3 sky = {pfx::color::perceptualDecode(0.35), pfx::color::perceptualDecode(0.6),
+                                  pfx::color::perceptualDecode(0.9)};
+    const pfx::HueBands bands = pfx::hueBands(sky[0], sky[1], sky[2]);
+    CHECK(bands.first == 4);  // aqua
+    CHECK(bands.second == 5); // blue
+    CHECK(bands.secondShare > 0.5);
+    CHECK(bands.weight == doctest::Approx(1.0));
+    CHECK(pfx::hueBands(0.2, 0.2, 0.2).weight == 0.0); // a grey has no band to move
+    pfx::Settings s = with({{"light.exposure", 0.5}, {"mixer.hue.blue", 20}, {"grading.balance", 10}});
+    s.set("bw.enabled", true);
+    const pfx::Settings before = pfx::settingsBefore(s, "mixer");
+    CHECK(before.number("light.exposure", 0) == 0.5);
+    CHECK_FALSE(before.contains("mixer.hue.blue"));
+    CHECK_FALSE(before.contains("bw.enabled"));
+    CHECK_FALSE(before.contains("grading.balance"));
 }

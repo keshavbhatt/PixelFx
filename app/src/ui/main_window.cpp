@@ -176,6 +176,7 @@ MainWindow::MainWindow(core::Settings& settings, QWidget* parent)
     connectZoom();
     connectClipboard();
     connectWhiteBalance();
+    connectColorTarget();
     buildMainMenu(); // last: it lists the actions made above
     updateHeader();
 }
@@ -1615,6 +1616,7 @@ bool MainWindow::isCropping() const
 
 void MainWindow::enterBatch()
 {
+    stopColorTarget();
     leaveTools();
     m_batch->setPresets(m_library.entries());
     m_batch->setSidecarFolder(m_settings.rememberEdits() ? core::SidecarStore::defaultFolder() : QString());
@@ -1677,6 +1679,7 @@ bool MainWindow::isBatching() const
 
 void MainWindow::enterCrop()
 {
+    stopColorTarget();
     leaveBatch();
     leaveHeal();
     if (!m_document.isOpen() || isCropping()) {
@@ -2079,6 +2082,7 @@ constexpr std::array kViewEntries{MenuEntry{"compare", "compare"},
                                   MenuEntry{"fullScreen", "maximize"}};
 constexpr std::array kPhotoEntries{MenuEntry{"auto", "auto"},
                                    MenuEntry{"blackAndWhite", "contrast"},
+                                   MenuEntry{"colorTarget", "target"},
                                    kSeparator,
                                    MenuEntry{"rotateLeft", "rotate-ccw"},
                                    MenuEntry{"rotateRight", "rotate-cw"},
