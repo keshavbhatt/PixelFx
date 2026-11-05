@@ -15,6 +15,7 @@ QColor hex(const char* value)
     return {QString::fromLatin1(value)};
 }
 
+// In two parts: MSVC refuses a string literal over 16 KB (error C2026).
 const QString kSheet = uR"(
         #header { background: {{bar}}; border-bottom: 1px solid {{border}}; }
         #docName { font-weight: 600; }
@@ -73,6 +74,7 @@ const QString kSheet = uR"(
         QToolButton#zoomButton { border: 0; border-radius: 6px; padding: 4px; background: transparent; font-size: 12px; }
         QToolButton#zoomButton:hover { background: {{hover}}; }
         #strip { background: {{bar}}; border-top: 1px solid {{border}}; }
+    )"_s + uR"(
         #adjustScroll, #adjustContent { background: {{panel}}; }
         #adjustGroup { border-top: 1px solid {{border}}; }
         QToolButton#groupToggle { border: 0; background: transparent; font-weight: 600; padding: 2px; }
