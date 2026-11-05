@@ -228,6 +228,10 @@ const QString kControls = uR"(
         #batchHead { border-bottom: 1px solid {{border}}; }
         #batchBar { background: {{panel}}; border-top: 1px solid {{border}}; }
         QFrame#segmentBox { border: 1px solid {{border}}; border-radius: 7px; background: {{input}}; }
+        QFrame#segmentBox QPushButton#segment { border: 0; border-right: 1px solid {{border}}; background: transparent; }
+        QFrame#segmentBox QPushButton#segment:checked { background: {{accentSoft}}; }
+        QFrame#segmentBox QPushButton#segment[edge="first"] { border-top-left-radius: 6px; border-bottom-left-radius: 6px; }
+        QLabel#fieldLabel { color: {{muted}}; }
         QToolButton#segmentIcon { border: 0; border-radius: 6px; padding: 4px 9px; background: transparent; }
         QToolButton#segmentIcon:checked { background: {{accentSoft}}; }
         QFrame#recipeCard, QFrame#card { border: 1px solid {{border}}; border-radius: 10px; background: {{input}}; }
@@ -464,6 +468,7 @@ void setLabelColumn(const QFormLayout* form, int width)
     for (int row = 0; row < form->rowCount(); ++row) {
         const QLayoutItem* item = form->itemAt(row, QFormLayout::LabelRole);
         if (QWidget* label = item != nullptr ? item->widget() : nullptr; label != nullptr) {
+            label->setObjectName(QStringLiteral("fieldLabel"));
             label->setMinimumWidth(width - std::max(0, form->horizontalSpacing()));
         }
     }

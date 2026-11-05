@@ -63,7 +63,8 @@ QLabel* sectionLabel(const QString& text, QWidget* parent);
 /// A heading inside a menu ("History"): Qt draws a menu section as a bare line under a style
 /// sheet, so the heading is a label of its own.
 void addMenuHeading(QMenu* menu, const QString& text);
-/// Gives the labels of `form` one column `width` px wide, the gap to the fields included.
+/// Draws the labels of `form` as the mocks' fields: muted, in one column `width` px wide, the gap
+/// to the fields included.
 void setLabelColumn(const QFormLayout* form, int width);
 /// `image` cut to fill `size` (the middle kept) with rounded corners, for a sharp thumbnail on a
 /// screen of `devicePixelRatio`.

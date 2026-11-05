@@ -7,6 +7,7 @@
 #include <QCheckBox>
 #include <QComboBox>
 #include <QFormLayout>
+#include <QFrame>
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QListWidget>
@@ -27,13 +28,17 @@ QLabel* section(const QString& text, QWidget* parent)
     return label;
 }
 
-/// A row of segment buttons, one checked; `chosen(index)` on click.
+constexpr QSize kSize(820, 600);
+constexpr int kLabelColumn = 160;
+
+/// A segmented control across the column, one segment checked; `chosen(index)` on click.
 template <typename Chosen>
 QWidget* segments(const QStringList& names, int current, QWidget* parent, Chosen chosen)
 {
-    auto* box = new QWidget(parent);
+    auto* box = new QFrame(parent);
+    box->setObjectName(u"segmentBox"_s);
     auto* row = new QHBoxLayout(box);
-    row->setContentsMargins(0, 0, 0, 0);
+    row->setContentsMargins(1, 1, 1, 1);
     row->setSpacing(0);
     auto* group = new QButtonGroup(box);
     for (int i = 0; i < names.size(); ++i) {
@@ -41,6 +46,9 @@ QWidget* segments(const QStringList& names, int current, QWidget* parent, Chosen
         b->setObjectName(u"segment"_s);
         b->setCheckable(true);
         b->setChecked(i == current);
+        if (i == 0) {
+            b->setProperty("edge", u"first"_s);
+        }
         group->addButton(b, i);
         row->addWidget(b);
     }
@@ -56,7 +64,7 @@ SettingsSheet::SettingsSheet(core::Settings& settings, QWidget* parent)
     , m_settings(settings)
 {
     setWindowTitle(tr("Settings"));
-    resize(760, 560);
+    resize(kSize);
     auto* title = new QLabel(tr("Settings"), this);
     title->setObjectName(u"sheetTitle"_s);
     auto* close = sheetCloseButton(this);
@@ -97,14 +105,20 @@ QWidget* SettingsSheet::buildGeneral()
     auto* form = new QFormLayout(page);
     form->setContentsMargins(22, 4, 22, 16);
     form->setLabelAlignment(Qt::AlignLeft | Qt::AlignVCenter);
-    form->setHorizontalSpacing(18);
-    form->setVerticalSpacing(10);
+    form->setHorizontalSpacing(10);
+    form->setVerticalSpacing(11);
 
     form->addRow(section(tr("Appearance"), page));
-    auto* theme = segments({tr("System"), tr("Dark"), tr("Light")}, static_cast<int>(m_settings.theme()),
-                           page, [this](int i) { m_settings.setTheme(static_cast<S::Theme>(i)); });
+    // The theme applies at the next start: said once it is changed.
     auto* themeNote = new QLabel(tr("Takes effect the next time PixelFx starts."), page);
     themeNote->setObjectName(u"faint"_s);
+    themeNote->hide();
+    auto* theme = segments({tr("System"), tr("Dark"), tr("Light")}, static_cast<int>(m_settings.theme()),
+                           page, [this, themeNote](int i) {
+                               m_settings.setTheme(static_cast<S::Theme>(i));
+                               themeNote->show();
+                           });
+    theme->setToolTip(themeNote->text());
     auto* themeBox = new QVBoxLayout;
     themeBox->setSpacing(2);
     themeBox->addWidget(theme);
@@ -137,6 +151,7 @@ QWidget* SettingsSheet::buildGeneral()
     connect(clipping, &QCheckBox::toggled, this, [this](bool on) { m_settings.setClippingWarnings(on); });
     connect(&m_settings, &S::clippingWarningsChanged, clipping, &QCheckBox::setChecked);
     form->addRow(tr("Clipping warnings"), clipping);
+    setLabelColumn(form, kLabelColumn);
     return page;
 }
 
