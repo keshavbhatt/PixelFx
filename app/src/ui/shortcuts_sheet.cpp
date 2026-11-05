@@ -85,12 +85,12 @@ ShortcutsSheet::ShortcutsSheet(QWidget* parent)
     connect(m_search, &QLineEdit::textChanged, this, &ShortcutsSheet::filter);
 
     auto* grid = new QGridLayout;
-    grid->setHorizontalSpacing(32);
-    grid->setVerticalSpacing(4);
+    grid->setHorizontalSpacing(kGapColumns);
+    grid->setVerticalSpacing(kGapSmall);
     for (std::size_t s = 0; s < sections().size(); ++s) {
         const Section& section = sections().at(s);
         auto* column = new QVBoxLayout;
-        column->setSpacing(4);
+        column->setSpacing(kGapSmall);
         auto* label = new QLabel(tr(section.title).toUpper(), this);
         label->setObjectName(u"section"_s);
         label->setContentsMargins(0, 10, 0, 2);

@@ -268,7 +268,7 @@ QWidget* WatermarkSheet::buildLogoPage()
     logoHint->setWordWrap(true);
     auto* logoColumn = new QVBoxLayout(logoPage);
     logoColumn->setContentsMargins(0, 0, 0, 0);
-    logoColumn->setSpacing(6);
+    logoColumn->setSpacing(kGapRelated);
     auto* logoRow = new QHBoxLayout;
     logoRow->addWidget(m_logoName, 1);
     logoRow->addWidget(chooseLogo);
@@ -283,7 +283,7 @@ QWidget* WatermarkSheet::buildKindRow(QWidget* parent)
     auto* panel = box;
     auto* column = new QVBoxLayout(box);
     column->setContentsMargins(0, 0, 0, 0);
-    column->setSpacing(10);
+    column->setSpacing(kGapItems);
     // Text or Logo.
     m_kind = new QButtonGroup(panel);
     auto* kinds = new QHBoxLayout;
@@ -307,7 +307,7 @@ QWidget* WatermarkSheet::buildKindRow(QWidget* parent)
     tokensHint->setObjectName(u"faint"_s);
     auto* textColumn = new QVBoxLayout(textPage);
     textColumn->setContentsMargins(0, 0, 0, 0);
-    textColumn->setSpacing(6);
+    textColumn->setSpacing(kGapRelated);
     textColumn->addWidget(m_text);
     textColumn->addWidget(tokensHint);
     auto* logoPage = buildLogoPage();
@@ -326,7 +326,7 @@ QWidget* WatermarkSheet::buildControls()
     panel->setFixedWidth(340);
     auto* column = new QVBoxLayout(panel);
     column->setContentsMargins(kPanelPadding, 12, kPanelPadding, 12);
-    column->setSpacing(10);
+    column->setSpacing(kGapItems);
 
     column->addWidget(buildKindRow(panel));
     connect(m_kind, &QButtonGroup::idClicked, this, [this](int id) {
@@ -343,7 +343,7 @@ QWidget* WatermarkSheet::buildControls()
     m_opacity = sliderRow(panel, tr("Opacity"), 0, 100, percent(defaults.opacity), QString());
     m_margin = sliderRow(panel, tr("Margin"), 0, 10, percent(defaults.margin), u"%"_s);
     auto* sliders = new QVBoxLayout;
-    sliders->setSpacing(4);
+    sliders->setSpacing(kGapSmall);
     for (const QSlider* slider : {m_size, m_opacity, m_margin}) {
         sliders->addWidget(slider->parentWidget());
         connect(slider, &QSlider::valueChanged, this, &WatermarkSheet::sync);
@@ -398,7 +398,7 @@ QWidget* WatermarkSheet::buildColorRow()
     });
     auto* layout = new QHBoxLayout(row);
     layout->setContentsMargins(0, 0, 0, 0);
-    layout->setSpacing(6);
+    layout->setSpacing(kGapRelated);
     layout->addWidget(m_font, 1);
     layout->addWidget(autoButton);
     layout->addWidget(white);
@@ -416,7 +416,7 @@ QWidget* WatermarkSheet::buildPositionRow()
     gridBox->setObjectName(u"positionBox"_s);
     auto* grid = new QGridLayout(gridBox);
     grid->setContentsMargins(6, 6, 6, 6);
-    grid->setSpacing(4);
+    grid->setSpacing(kGapSmall);
     m_anchors = new QButtonGroup(row);
     static const std::array<const char*, 9> names = {
         QT_TR_NOOP("Top left"),    QT_TR_NOOP("Top"),    QT_TR_NOOP("Top right"),
@@ -436,10 +436,6 @@ QWidget* WatermarkSheet::buildPositionRow()
         m_mark.position.reset(); // a cell undoes a free placement
         sync();
     });
-    auto* left = new QVBoxLayout;
-    left->setSpacing(4);
-    left->addWidget(label);
-    left->addWidget(gridBox);
 
     m_repeat = new QCheckBox(tr("Repeat across the photo"), row);
     m_shadow = new QCheckBox(tr("Soft shadow"), row);
@@ -452,19 +448,22 @@ QWidget* WatermarkSheet::buildPositionRow()
                         u"\u00B0"_s);
     m_angleRow = m_angle->parentWidget();
     connect(m_angle, &QSlider::valueChanged, this, &WatermarkSheet::sync);
-    auto* right = new QVBoxLayout;
-    right->setSpacing(6);
-    right->addSpacing(18);
-    right->addWidget(m_repeat);
-    right->addWidget(m_shadow);
-    right->addWidget(m_angleRow);
-    right->addStretch();
-
-    auto* layout = new QHBoxLayout(row);
+    auto* options = new QVBoxLayout;
+    options->setSpacing(kGapRelated);
+    options->addWidget(m_repeat);
+    options->addWidget(m_shadow);
+    options->addWidget(m_angleRow);
+    options->addStretch();
+    auto* columns = new QHBoxLayout;
+    columns->setSpacing(kGapColumns);
+    columns->addWidget(gridBox, 0, Qt::AlignTop);
+    columns->addLayout(options, 1);
+    // "Position" heads both columns, so the switches start level with the grid.
+    auto* layout = new QVBoxLayout(row);
     layout->setContentsMargins(0, 0, 0, 0);
-    layout->setSpacing(16);
-    layout->addLayout(left);
-    layout->addLayout(right, 1);
+    layout->setSpacing(kGapSmall);
+    layout->addWidget(label);
+    layout->addLayout(columns);
     return row;
 }
 
@@ -491,7 +490,7 @@ QWidget* WatermarkSheet::buildPreview()
     barLayout->setContentsMargins(kPanelPadding, 8, kPanelPadding, 8);
     barLayout->setSpacing(0);
     barLayout->addWidget(on);
-    barLayout->addSpacing(6);
+    barLayout->addSpacing(kGapRelated);
     const std::array<QString, 4> shapeNames = {tr("This photo"), tr("Portrait"), tr("Square"),
                                                tr("Batch photos")};
     for (int i = 0; i < 4; ++i) {

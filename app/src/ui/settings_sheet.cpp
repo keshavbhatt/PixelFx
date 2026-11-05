@@ -97,8 +97,8 @@ QWidget* SettingsSheet::buildGeneral()
     auto* form = new QFormLayout(page);
     form->setContentsMargins(22, 4, 22, 16);
     form->setLabelAlignment(Qt::AlignLeft | Qt::AlignVCenter);
-    form->setHorizontalSpacing(10);
-    form->setVerticalSpacing(11);
+    form->setHorizontalSpacing(kGapItems);
+    form->setVerticalSpacing(kGapGroups);
 
     form->addRow(section(tr("Appearance"), page));
     // The theme applies at the next start: said once it is changed.
@@ -112,7 +112,7 @@ QWidget* SettingsSheet::buildGeneral()
                            });
     theme->setToolTip(themeNote->text());
     auto* themeBox = new QVBoxLayout;
-    themeBox->setSpacing(2);
+    themeBox->setSpacing(kGapTight);
     themeBox->addWidget(theme);
     themeBox->addWidget(themeNote);
     form->addRow(tr("Theme"), themeBox);

@@ -431,7 +431,7 @@ QVBoxLayout* sheetLayout(QDialog* sheet, QLayout* foot)
     root->setSpacing(0);
     auto* body = new QVBoxLayout;
     body->setContentsMargins(kSheetPadding, 16, kSheetPadding, 16);
-    body->setSpacing(12);
+    body->setSpacing(kGapGroups);
     root->addLayout(body, 1);
     if (foot != nullptr) {
         root->addWidget(footBar(sheet, foot));
@@ -457,9 +457,9 @@ QHBoxLayout* sheetTitleRow(QDialog* sheet, const QString& title, const QList<QWi
     label->setObjectName(QStringLiteral("sheetTitle"));
     auto* row = new QHBoxLayout;
     row->setContentsMargins(0, 0, 0, 0);
-    row->setSpacing(8);
+    row->setSpacing(kGapControls);
     row->addWidget(label);
-    row->addSpacing(4);
+    row->addSpacing(kGapSmall);
     for (QWidget* extra : extras) {
         row->addWidget(extra);
     }
@@ -541,7 +541,7 @@ FootButtons footButtons(QWidget* parent, const QString& primary, const QList<QWi
                         bool withCancel)
 {
     auto* row = new QHBoxLayout;
-    row->setSpacing(8);
+    row->setSpacing(kGapControls);
     for (QWidget* w : leading) {
         row->addWidget(w);
     }

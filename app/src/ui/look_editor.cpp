@@ -477,7 +477,7 @@ QWidget* LookEditor::buildSteps()
 
     auto* column = new QVBoxLayout(side);
     column->setContentsMargins(0, 10, 0, 0);
-    column->setSpacing(4);
+    column->setSpacing(kGapSmall);
     column->addWidget(label);
     label->setContentsMargins(kPanelPadding, 0, kPanelPadding, 0);
     column->addWidget(m_noSteps);
@@ -501,7 +501,7 @@ QWidget* LookEditor::buildPreviewBar(QWidget* side)
     layout->setContentsMargins(kPanelPadding, 8, kPanelPadding, 8);
     layout->setSpacing(0);
     layout->addWidget(on);
-    layout->addSpacing(6);
+    layout->addSpacing(kGapRelated);
     const std::array<QString, 2> names = {tr("This photo"), tr("Ramp")};
     for (int i = 0; i < 2; ++i) {
         auto* b = new QPushButton(names.at(static_cast<std::size_t>(i)), bar);

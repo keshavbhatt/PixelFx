@@ -165,13 +165,13 @@ void Canvas::buildZoomBar()
     connect(fullScreen, &QToolButton::clicked, this, &Canvas::fullScreenRequested);
     auto* row = new QHBoxLayout(m_zoomBar);
     row->setContentsMargins(4, 4, 4, 4);
-    row->setSpacing(2);
+    row->setSpacing(kGapTight);
     row->addWidget(m_zoomOut);
     row->addWidget(m_zoomLabel);
     row->addWidget(m_zoomIn);
-    row->addSpacing(4);
+    row->addSpacing(kGapSmall);
     row->addWidget(divider);
-    row->addSpacing(4);
+    row->addSpacing(kGapSmall);
     row->addWidget(m_actual);
     row->addWidget(fullScreen);
     m_zoomBar->hide();

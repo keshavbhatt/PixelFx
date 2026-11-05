@@ -539,14 +539,14 @@ void MainWindow::buildHeader()
     QWidget* sepView = separator();
     auto* header = new QHBoxLayout(m_header);
     header->setContentsMargins(12, 0, 10, 0);
-    header->setSpacing(6);
+    header->setSpacing(kGapRelated);
     header->addWidget(new BrandMark(m_header));
     m_wordmark = new QLabel(u"PixelFx"_s, m_header);
     m_wordmark->setObjectName(u"wordmark"_s);
     header->addWidget(m_wordmark);
-    header->addSpacing(4);
+    header->addSpacing(kGapSmall);
     header->addWidget(open);
-    header->addSpacing(4);
+    header->addSpacing(kGapSmall);
     header->addLayout(doc);
     header->addStretch();
     header->addWidget(m_undo);
@@ -901,7 +901,7 @@ void MainWindow::buildRail()
     connect(m_cropMode, &QToolButton::clicked, this, &MainWindow::enterCrop);
     auto* column = new QVBoxLayout(m_rail);
     column->setContentsMargins(6, 8, 6, 8);
-    column->setSpacing(4);
+    column->setSpacing(kGapSmall);
     column->addWidget(m_editMode);
     column->addWidget(m_cropMode);
     column->addWidget(m_healMode);
@@ -934,7 +934,7 @@ QWidget* MainWindow::buildCanvasPage()
     m_modeHint->setObjectName(u"muted"_s);
     auto* row = new QHBoxLayout(m_modeStrip);
     row->setContentsMargins(10, 0, 10, 0);
-    row->setSpacing(16);
+    row->setSpacing(kGapGroups);
     row->addStretch();
     row->addWidget(m_modeDetail);
     row->addWidget(m_modeHint);

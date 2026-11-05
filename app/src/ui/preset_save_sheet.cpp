@@ -48,7 +48,7 @@ PresetSaveSheet::PresetSaveSheet(const pfx::Settings& settings, const QStringLis
     QVBoxLayout* column = sheetLayout(this, buttons);
     column->addLayout(sheetTitleRow(this, tr("Save as preset")));
     column->addLayout(top);
-    column->addSpacing(2);
+    column->addSpacing(kGapTight);
     buildInclude(column, settings);
     column->addWidget(note);
     setSize(Size::Regular);
@@ -80,15 +80,15 @@ QHBoxLayout* PresetSaveSheet::buildTop(const QStringList& groups)
     });
 
     auto* form = new QFormLayout;
-    form->setHorizontalSpacing(16);
-    form->setVerticalSpacing(20);
+    form->setHorizontalSpacing(kGapItems);
+    form->setVerticalSpacing(kGapColumns);
     form->addRow(tr("Name"), m_name);
     form->addRow(tr("Group"), m_group);
     setLabelColumn(form, kLabelColumn);
     m_thumbnail->setFixedSize(kThumbnail);
     m_thumbnail->hide();
     auto* top = new QHBoxLayout;
-    top->setSpacing(14);
+    top->setSpacing(kGapGroups);
     top->addWidget(m_thumbnail, 0, Qt::AlignTop);
     top->addLayout(form, 1);
     top->setAlignment(form, Qt::AlignVCenter);
@@ -131,7 +131,7 @@ void PresetSaveSheet::buildInclude(QVBoxLayout* column, const pfx::Settings& set
     auto* heading = new QLabel(tr("Include"), this);
     heading->setObjectName(u"heading"_s);
     auto* links = new QHBoxLayout;
-    links->setSpacing(4);
+    links->setSpacing(kGapSmall);
     links->addWidget(heading);
     links->addStretch();
     links->addWidget(changedOnly);

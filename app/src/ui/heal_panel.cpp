@@ -105,7 +105,7 @@ QWidget* HealPanel::buildBrush()
     auto* box = new QWidget(this);
     auto* column = new QVBoxLayout(box);
     column->setContentsMargins(kPanelPadding, 0, kPanelPadding, 4);
-    column->setSpacing(8);
+    column->setSpacing(kGapControls);
     column->addLayout(buildModes(box));
     m_size = new SliderRow(tr("Size"), box);
     m_size->setRange(qRound(HealTool::kMinSize * kSizeTicks), qRound(HealTool::kMaxSize * kSizeTicks), 40);
@@ -175,7 +175,7 @@ QWidget* HealPanel::buildSpots()
     listBox->setObjectName(u"panelContent"_s);
     m_list = new QVBoxLayout(listBox);
     m_list->setContentsMargins(8, 0, 8, 8);
-    m_list->setSpacing(2);
+    m_list->setSpacing(kGapTight);
     m_list->addStretch();
     auto* scroll = new QScrollArea(box);
     scroll->setObjectName(u"panelScroll"_s);

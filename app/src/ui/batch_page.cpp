@@ -140,7 +140,7 @@ QWidget* makePill(QWidget* parent)
     text->setObjectName(u"pillText"_s);
     auto* row = new QHBoxLayout(pill);
     row->setContentsMargins(8, 2, 8, 2);
-    row->setSpacing(4);
+    row->setSpacing(kGapSmall);
     row->addWidget(glyph);
     row->addWidget(text);
     pill->hide();
@@ -259,7 +259,7 @@ QWidget* BatchPage::buildListHead(QWidget* parent)
     });
     auto* row = new QHBoxLayout(head);
     row->setContentsMargins(16, 10, 16, 10);
-    row->setSpacing(8);
+    row->setSpacing(kGapControls);
     row->addWidget(title);
     row->addWidget(hint);
     row->addStretch();
@@ -319,7 +319,7 @@ QWidget* BatchPage::buildPreview(QWidget* parent)
     caption->setObjectName(u"muted"_s);
     auto* row = new QHBoxLayout(m_preview);
     row->setContentsMargins(16, 10, 16, 10);
-    row->setSpacing(10);
+    row->setSpacing(kGapItems);
     row->addWidget(previewLabel);
     row->addWidget(m_before);
     row->addWidget(arrow);
@@ -366,7 +366,7 @@ QWidget* BatchPage::buildStatus(QWidget* parent)
     m_progress = new QProgressBar(m_status);
     m_progress->setTextVisible(false);
     auto* line = new QHBoxLayout;
-    line->setSpacing(8);
+    line->setSpacing(kGapControls);
     line->addWidget(m_statusIcon);
     line->addWidget(m_statusText);
     line->addWidget(m_statusDetail);
@@ -377,7 +377,7 @@ QWidget* BatchPage::buildStatus(QWidget* parent)
     }
     auto* column = new QVBoxLayout(m_status);
     column->setContentsMargins(16, 10, 16, 12);
-    column->setSpacing(8);
+    column->setSpacing(kGapControls);
     column->addLayout(line);
     column->addWidget(m_progress);
     m_status->hide();
@@ -396,7 +396,7 @@ QWidget* BatchPage::buildPanel()
     content->setObjectName(u"batchPanelContent"_s);
     auto* sections = new QVBoxLayout(content);
     sections->setContentsMargins(kPanelPadding, 0, kPanelPadding, 12);
-    sections->setSpacing(6);
+    sections->setSpacing(kGapRelated);
     sections->addWidget(buildRecipe(content));
     sections->addWidget(buildResize(content));
     sections->addWidget(sectionTitle(tr("3. Watermark"), content));
@@ -423,7 +423,7 @@ QWidget* BatchPage::buildRecipe(QWidget* parent)
     auto* box = new QWidget(parent);
     auto* column = new QVBoxLayout(box);
     column->setContentsMargins(0, 0, 0, 0);
-    column->setSpacing(8);
+    column->setSpacing(kGapControls);
     column->addWidget(sectionTitle(tr("1. Recipe"), box));
     auto* sources = new QHBoxLayout;
     sources->setSpacing(0);
@@ -469,7 +469,7 @@ QWidget* BatchPage::buildRecipeCard(QWidget* box)
     text->addWidget(m_cardDetail);
     auto* cardRow = new QHBoxLayout(card);
     cardRow->setContentsMargins(8, 8, 8, 8);
-    cardRow->setSpacing(10);
+    cardRow->setSpacing(kGapItems);
     cardRow->addWidget(m_cardThumb);
     cardRow->addLayout(text, 1);
     cardRow->addWidget(m_cardChange);
@@ -492,7 +492,7 @@ QHBoxLayout* BatchPage::buildSecondRow(QWidget* box)
         refreshRecipeCard();
     });
     auto* secondRow = new QHBoxLayout;
-    secondRow->setSpacing(6);
+    secondRow->setSpacing(kGapRelated);
     secondRow->addWidget(m_secondOn);
     secondRow->addWidget(m_secondName, 1);
     secondRow->addWidget(m_secondChange);
@@ -523,7 +523,7 @@ QWidget* BatchPage::buildResize(QWidget* parent)
     auto* box = new QWidget(parent);
     auto* column = new QVBoxLayout(box);
     column->setContentsMargins(0, 0, 0, 0);
-    column->setSpacing(8);
+    column->setSpacing(kGapControls);
     column->addWidget(sectionTitle(tr("2. Resize"), box));
     m_size = buildSizes(box);
     showSize(m_output.sizePreset, m_output.longEdge);
@@ -542,7 +542,7 @@ QWidget* BatchPage::buildSaveAs(QWidget* parent)
     auto* box = new QWidget(parent);
     auto* column = new QVBoxLayout(box);
     column->setContentsMargins(0, 0, 0, 0);
-    column->setSpacing(8);
+    column->setSpacing(kGapControls);
     column->addWidget(sectionTitle(tr("4. Save as"), box));
     m_format = new QComboBox(box);
     m_format->setAccessibleName(tr("Format"));
@@ -1116,7 +1116,7 @@ QWidget* BatchPage::makeRow(const QString& file)
     });
     auto* line = new QHBoxLayout(row);
     line->setContentsMargins(0, 7, 0, 7);
-    line->setSpacing(10);
+    line->setSpacing(kGapItems);
     line->addWidget(thumb);
     line->addLayout(text, 1);
     line->addWidget(state, 0, Qt::AlignVCenter);

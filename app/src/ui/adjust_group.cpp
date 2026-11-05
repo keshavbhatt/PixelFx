@@ -80,7 +80,7 @@ AdjustGroup::AdjustGroup(QString id, const QString& name, const QString& glyph, 
     m_reset->setAccessibleName(tr("Reset %1").arg(name));
     auto* row = new QHBoxLayout(header);
     row->setContentsMargins(kPanelPadding, 10, kPanelPadding, 10);
-    row->setSpacing(8);
+    row->setSpacing(kGapControls);
     row->addWidget(m_chevron);
     row->addWidget(icon);
     row->addWidget(m_toggle);

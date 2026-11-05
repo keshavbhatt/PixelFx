@@ -52,7 +52,7 @@ PresetsPanel::PresetsPanel(QWidget* parent)
 
     QHBoxLayout* head = buildHead();
     m_list->setContentsMargins(0, 0, 0, 8);
-    m_list->setSpacing(1);
+    m_list->setSpacing(kGapTight);
     auto* scroll = new QScrollArea(this);
     scroll->setObjectName(u"panelScroll"_s);
     scroll->setWidget(m_listBox);
@@ -107,7 +107,7 @@ QHBoxLayout* PresetsPanel::buildTabs()
 {
     auto* tabs = new QHBoxLayout;
     tabs->setContentsMargins(kToolRowPadding, 8, kToolRowPadding, 0);
-    tabs->setSpacing(4);
+    tabs->setSpacing(kGapSmall);
     for (const QString& name : {tr("Looks"), tr("Presets")}) {
         auto* tab = new QPushButton(name, this);
         tab->setObjectName(u"panelTab"_s);
@@ -138,7 +138,7 @@ QHBoxLayout* PresetsPanel::buildHead()
     connect(import, &QToolButton::clicked, this, &PresetsPanel::importRequested);
     auto* head = new QHBoxLayout;
     head->setContentsMargins(kToolRowPadding, 10, kToolRowPadding, 6);
-    head->setSpacing(6);
+    head->setSpacing(kGapRelated);
     head->addWidget(m_search, 1);
     head->addWidget(import);
 
@@ -269,7 +269,7 @@ PresetRow::PresetRow(std::size_t index, const core::PresetEntry& entry, QWidget*
     m_more = more;
     auto* row = new QHBoxLayout(this);
     row->setContentsMargins(18 + kThumbWidth + 10, 8, 14, 9);
-    row->setSpacing(10);
+    row->setSpacing(kGapItems);
     row->addLayout(text, 1);
     row->addWidget(more);
     setMinimumHeight(kThumbHeight + 14);

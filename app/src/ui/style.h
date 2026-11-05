@@ -29,6 +29,16 @@ inline constexpr int kSheetPadding = 20;
 inline constexpr int kPanelPadding = 14;
 inline constexpr int kToolRowPadding = 10;
 
+/// The gaps between items, by how closely they belong together (0 is for segments that touch).
+inline constexpr int kGapTight = 2; ///< rows of one list
+inline constexpr int kGapSmall = 4; ///< a label and its control
+inline constexpr int kGapRelated =
+    6; ///< controls that work together: chips, swatches, a field and its button
+inline constexpr int kGapControls = 8; ///< controls in a row, footer buttons
+inline constexpr int kGapItems = 10;   ///< a picture or icon and its text; a form's label and field
+inline constexpr int kGapGroups = 12;  ///< groups in a column: a sheet's parts, a form's rows
+inline constexpr int kGapColumns = 20; ///< columns side by side
+
 /// The design tokens of DOCS/DESIGN.md section 1.
 struct Tokens
 {

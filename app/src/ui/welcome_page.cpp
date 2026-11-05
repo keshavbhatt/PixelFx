@@ -79,11 +79,11 @@ void WelcomePage::buildDropZone()
 
     auto* zone = new QVBoxLayout(m_dropZone);
     zone->setContentsMargins(20, 44, 20, 40);
-    zone->setSpacing(8);
+    zone->setSpacing(kGapControls);
     zone->addWidget(glyph);
     zone->addWidget(title);
     zone->addWidget(hint);
-    zone->addSpacing(10);
+    zone->addSpacing(kGapItems);
     auto* openFolder =
         new IconTextButton(icons::themed(u"folder"_s, tokens().text), tr("Open folder"), m_dropZone);
     openFolder->setToolTip(tr("Every photo in a folder, ready for Batch"));
@@ -92,14 +92,14 @@ void WelcomePage::buildDropZone()
     batch->setToolTip(tr("One recipe for many photos (B)"));
     connect(batch, &QPushButton::clicked, this, &WelcomePage::batchRequested);
     auto* buttons = new QHBoxLayout;
-    buttons->setSpacing(10);
+    buttons->setSpacing(kGapItems);
     buttons->addStretch();
     buttons->addWidget(open);
     buttons->addWidget(openFolder);
     buttons->addWidget(batch);
     buttons->addStretch();
     zone->addLayout(buttons);
-    zone->addSpacing(6);
+    zone->addSpacing(kGapRelated);
     zone->addWidget(formats);
 }
 
@@ -116,11 +116,11 @@ void WelcomePage::buildRecent()
     heading->addWidget(recentTitle);
     heading->addStretch();
     heading->addWidget(clear);
-    m_cards->setSpacing(12);
+    m_cards->setSpacing(kGapGroups);
     m_cards->addStretch();
     auto* recentColumn = new QVBoxLayout(m_recent);
     recentColumn->setContentsMargins(0, 24, 0, 0);
-    recentColumn->setSpacing(10);
+    recentColumn->setSpacing(kGapItems);
     recentColumn->addLayout(heading);
     recentColumn->addLayout(m_cards);
     m_recent->hide();

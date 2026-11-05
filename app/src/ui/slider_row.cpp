@@ -1,6 +1,7 @@
 #include "ui/slider_row.h"
 
 #include "ui/panel_slider.h"
+#include "ui/style.h"
 
 #include <QEvent>
 #include <QFont>
@@ -62,8 +63,8 @@ SliderRow::SliderRow(const QString& label, QWidget* parent)
     top->addWidget(m_value);
     top->addWidget(m_field);
     auto* column = new QVBoxLayout(this);
-    column->setContentsMargins(0, 6, 0, 6);
-    column->setSpacing(3);
+    column->setContentsMargins(0, 6, 0, 7); // the value's 1 px hover border fills the top pixel
+    column->setSpacing(kGapTight);
     column->addLayout(top);
     column->addWidget(m_slider);
     connect(m_slider, &QSlider::valueChanged, this, [this](int ticks) {

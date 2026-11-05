@@ -76,7 +76,7 @@ QWidget* chipRows(const QList<QAbstractButton*>& chips, QWidget* parent)
     auto* box = new QWidget(parent);
     auto* column = new QVBoxLayout(box);
     column->setContentsMargins(kToolRowPadding, 6, kToolRowPadding, 6);
-    column->setSpacing(6);
+    column->setSpacing(kGapRelated);
     const int width = kPanelWidth - (2 * kToolRowPadding);
     QHBoxLayout* row = nullptr;
     int used = 0;
@@ -88,7 +88,7 @@ QWidget* chipRows(const QList<QAbstractButton*>& chips, QWidget* parent)
                 row->addStretch();
             }
             row = new QHBoxLayout;
-            row->setSpacing(6);
+            row->setSpacing(kGapRelated);
             column->addLayout(row);
             used = -6;
         }
@@ -206,10 +206,10 @@ QLayout* CropPanel::buildStraighten()
     connect(flipV, &QPushButton::clicked, this, [this] { flip(Qt::Vertical); });
     auto* straighten = new QVBoxLayout;
     straighten->setContentsMargins(kPanelPadding, 0, kPanelPadding, 0);
-    straighten->setSpacing(6);
+    straighten->setSpacing(kGapRelated);
     straighten->addWidget(m_angle);
     auto* turns = new QHBoxLayout;
-    turns->setSpacing(6);
+    turns->setSpacing(kGapRelated);
     for (QPushButton* b : {turnLeft, turnRight, flipH, flipV}) {
         turns->addWidget(b);
     }

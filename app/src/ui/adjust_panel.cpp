@@ -191,7 +191,7 @@ QHBoxLayout* AdjustPanel::buildTopRow()
     connect(autoButton, &QPushButton::clicked, this, &AdjustPanel::autoRequested);
     auto* top = new QHBoxLayout;
     top->setContentsMargins(kPanelPadding, 6, kPanelPadding, 8);
-    top->setSpacing(6);
+    top->setSpacing(kGapRelated);
     top->addWidget(autoButton, 1);
     top->addWidget(copy);
     top->addWidget(m_paste);
@@ -322,7 +322,7 @@ QWidget* AdjustPanel::buildWhiteBalanceRow(QWidget* parent)
     });
     auto* layout = new QHBoxLayout(row);
     layout->setContentsMargins(0, 5, 0, 5);
-    layout->setSpacing(6);
+    layout->setSpacing(kGapRelated);
     layout->addWidget(label);
     layout->addStretch();
     layout->addWidget(m_wbMode);
@@ -453,7 +453,7 @@ void AdjustPanel::buildMixerGroup(QWidget* content, QVBoxLayout* groups)
     auto* swatches = new QWidget(group);
     auto* swatchRow = new QHBoxLayout(swatches);
     swatchRow->setContentsMargins(0, 0, 0, 6);
-    swatchRow->setSpacing(6);
+    swatchRow->setSpacing(kGapRelated);
     m_mixerBands = new QButtonGroup(this);
     const std::vector<MixerBand>& bands = mixerBands();
     for (std::size_t i = 0; i < bands.size(); ++i) {
@@ -511,7 +511,7 @@ void AdjustPanel::buildGradingGroup(QWidget* content, QVBoxLayout* groups)
     auto* wheels = new QWidget(group);
     auto* row = new QHBoxLayout(wheels);
     row->setContentsMargins(0, 6, 0, 4);
-    row->setSpacing(8);
+    row->setSpacing(kGapControls);
     for (int zone = 0; zone < 2; ++zone) {
         row->addWidget(buildWheel(zone, wheels), 1);
     }
@@ -532,7 +532,7 @@ QWidget* AdjustPanel::buildWheel(int zone, QWidget* parent)
     auto* box = new QWidget(parent);
     auto* column = new QVBoxLayout(box);
     column->setContentsMargins(0, 0, 0, 0);
-    column->setSpacing(6);
+    column->setSpacing(kGapRelated);
     auto* title = new QLabel(tr(z.label), box);
     title->setObjectName(u"wheelTitle"_s);
     title->setAlignment(Qt::AlignCenter);
@@ -641,7 +641,7 @@ void AdjustPanel::buildGeometryGroup(QWidget* content, QVBoxLayout* groups)
     auto* row = new QWidget(group);
     auto* buttons = new QHBoxLayout(row);
     buttons->setContentsMargins(0, 6, 0, 0);
-    buttons->setSpacing(6);
+    buttons->setSpacing(kGapRelated);
     for (const Turn& t : turns) {
         auto* b = new QToolButton(row);
         b->setObjectName(u"iconButton"_s);

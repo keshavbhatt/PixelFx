@@ -37,7 +37,7 @@ ListRow::ListRow(QWidget* parent)
     text->addWidget(m_title);
     text->addWidget(m_subtitle);
     m_row->setContentsMargins(10, 7, 10, 7);
-    m_row->setSpacing(10);
+    m_row->setSpacing(kGapItems);
     m_row->addWidget(m_icon);
     m_row->addLayout(text, 1);
 }

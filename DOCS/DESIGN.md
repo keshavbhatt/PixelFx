@@ -46,6 +46,12 @@ Slider tracks carry meaning where it helps: Temperature blue to amber, Tint gree
 Saturation from grey through the hues (as v1's gradient tracks did). Type: the system UI
 font, 13 px UI, 12 px labels, 11 px section headings in capitals. Shape: 7 px controls, 10 px
 cards, 14 px sheets.
+Space (`style.h`): sheets are padded 20 px, panel content and footers 14 px, compact rows of
+tools (tabs, search, chips, the tile grid) 10 px. Gaps go by how closely things belong
+together: 2 rows of one list, 4 a label and its control, 6 controls that work together, 8
+controls in a row, 10 a picture and its text or a form's label and field, 12 groups in a
+column, 20 columns side by side; 0 only for segments that touch. Sheets come in four sizes:
+narrow 440, regular 560, wide 820, and editor 980 by 640 for controls beside a preview.
 
 ## 2. Layout
 

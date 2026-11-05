@@ -121,12 +121,12 @@ QWidget* AboutSheet::buildAboutPage()
     build->setTextInteractionFlags(Qt::TextSelectableByMouse);
     build->setToolTip(revision());
     auto* text = new QVBoxLayout;
-    text->setSpacing(2);
+    text->setSpacing(kGapTight);
     text->addWidget(name);
     text->addWidget(tagline);
     text->addWidget(build);
     auto* head = new QHBoxLayout;
-    head->setSpacing(14);
+    head->setSpacing(kGapGroups);
     head->addWidget(icon, 0, Qt::AlignVCenter);
     head->addLayout(text, 1);
 
@@ -138,7 +138,7 @@ QWidget* AboutSheet::buildAboutPage()
     bug->setToolTip(tr("Opens the issue tracker. Diagnostics has text to paste into the report."));
     connect(bug, &QPushButton::clicked, this, [] { QDesktopServices::openUrl(QUrl(kIssuesUrl)); });
     auto* links = new QHBoxLayout;
-    links->setSpacing(6);
+    links->setSpacing(kGapRelated);
     links->addWidget(whatsNew);
     links->addWidget(source);
     links->addWidget(bug);
@@ -157,7 +157,7 @@ QWidget* AboutSheet::buildAboutPage()
 
     auto* column = new QVBoxLayout(page);
     column->setContentsMargins(0, 4, 0, 0);
-    column->setSpacing(12);
+    column->setSpacing(kGapGroups);
     column->addLayout(head);
     column->addLayout(links);
     column->addWidget(divider);
@@ -185,7 +185,7 @@ QWidget* AboutSheet::buildNoticesPage()
     connect(m_components, &QListWidget::currentRowChanged, this, &AboutSheet::showNotice);
     auto* column = new QVBoxLayout(page);
     column->setContentsMargins(0, 4, 0, 0);
-    column->setSpacing(8);
+    column->setSpacing(kGapControls);
     column->addWidget(m_components);
     column->addWidget(m_notice, 1);
     m_components->setCurrentRow(0);
@@ -221,13 +221,13 @@ QWidget* AboutSheet::buildDiagnosticsPage()
     connect(logs, &QPushButton::clicked, this,
             [logFile] { QDesktopServices::openUrl(QUrl::fromLocalFile(QFileInfo(logFile).absolutePath())); });
     auto* buttons = new QHBoxLayout;
-    buttons->setSpacing(6);
+    buttons->setSpacing(kGapRelated);
     buttons->addWidget(copy);
     buttons->addWidget(logs);
     buttons->addStretch();
     auto* column = new QVBoxLayout(page);
     column->setContentsMargins(0, 4, 0, 0);
-    column->setSpacing(8);
+    column->setSpacing(kGapControls);
     column->addWidget(hint);
     column->addWidget(m_diagnostics, 1);
     column->addLayout(buttons);

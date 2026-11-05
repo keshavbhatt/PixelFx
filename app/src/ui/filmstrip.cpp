@@ -33,7 +33,7 @@ Filmstrip::Filmstrip(QWidget* parent)
     setFixedHeight(kHeight);
     m_row->setObjectName(u"stripRow"_s);
     m_tiles->setContentsMargins(0, 0, 0, 0);
-    m_tiles->setSpacing(8);
+    m_tiles->setSpacing(kGapControls);
     m_scroll->setWidget(m_row);
     m_scroll->setWidgetResizable(true);
     m_scroll->setFrameShape(QFrame::NoFrame);
@@ -57,7 +57,7 @@ Filmstrip::Filmstrip(QWidget* parent)
     connect(clear, &QPushButton::clicked, this, &Filmstrip::clearSelection);
     auto* bar = new QHBoxLayout(m_selectionBar);
     bar->setContentsMargins(0, 0, 0, 0);
-    bar->setSpacing(2);
+    bar->setSpacing(kGapTight);
     bar->addWidget(all);
     bar->addWidget(new QLabel(u"·"_s, m_selectionBar));
     bar->addWidget(clear);
@@ -65,7 +65,7 @@ Filmstrip::Filmstrip(QWidget* parent)
 
     auto* layout = new QHBoxLayout(this);
     layout->setContentsMargins(10, 0, 12, 0);
-    layout->setSpacing(8);
+    layout->setSpacing(kGapControls);
     layout->addWidget(m_scroll, 1);
     layout->addWidget(m_info);
     layout->addWidget(m_selectionBar);

@@ -19,7 +19,7 @@ StepList::StepList(QWidget* parent)
     , m_column(new QVBoxLayout(this))
 {
     m_column->setContentsMargins(6, 0, 6, 0);
-    m_column->setSpacing(2);
+    m_column->setSpacing(kGapTight);
     m_column->addStretch();
 }
 

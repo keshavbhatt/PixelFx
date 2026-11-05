@@ -172,7 +172,7 @@ LooksPanel::LooksPanel(QWidget* parent)
     connect(add, &QToolButton::clicked, this, &LooksPanel::newLookRequested);
     auto* head = new QHBoxLayout;
     head->setContentsMargins(kToolRowPadding, 10, kToolRowPadding, 4);
-    head->setSpacing(6);
+    head->setSpacing(kGapRelated);
     head->addWidget(m_search, 1);
     head->addWidget(add);
 
@@ -329,8 +329,8 @@ void LooksPanel::addSection(const QString& title, QWidget* extra, const std::vec
     m_list->addLayout(head);
     auto* grid = new QGridLayout;
     grid->setContentsMargins(kToolRowPadding, 2, kToolRowPadding, 6);
-    grid->setHorizontalSpacing(8);
-    grid->setVerticalSpacing(8);
+    grid->setHorizontalSpacing(kGapControls);
+    grid->setVerticalSpacing(kGapControls);
     int at = 0;
     const auto place = [&](LookTile* tile) {
         tile->setSelected(tile->id() == m_current);

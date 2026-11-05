@@ -88,8 +88,8 @@ ExportSheet::ExportSheet(const QString& source, const QSize& photoSize, const co
     m_title = findChild<QLabel*>(u"sheetTitle"_s);
 
     auto* form = new QFormLayout;
-    form->setHorizontalSpacing(16);
-    form->setVerticalSpacing(12);
+    form->setHorizontalSpacing(kGapItems);
+    form->setVerticalSpacing(kGapGroups);
     form->setLabelAlignment(Qt::AlignLeft | Qt::AlignVCenter);
     form->addRow(tr("Format"), formatRow(options.extension));
 
@@ -121,7 +121,7 @@ ExportSheet::ExportSheet(const QString& source, const QSize& photoSize, const co
     QHBoxLayout* foot = addFooter(form);
     setLabelColumn(form, kLabelColumn);
     QVBoxLayout* column = sheetLayout(this, foot);
-    column->setSpacing(14);
+    column->setSpacing(kGapGroups);
     column->addLayout(heading);
     column->addLayout(form);
     updateForFormat();
@@ -165,7 +165,7 @@ QWidget* ExportSheet::qualityRow(int quality)
     top->addWidget(m_qualityValue);
     auto* qualityLayout = new QVBoxLayout(m_qualityRow);
     qualityLayout->setContentsMargins(0, 0, 0, 0);
-    qualityLayout->setSpacing(2);
+    qualityLayout->setSpacing(kGapTight);
     qualityLayout->addLayout(top);
     qualityLayout->addWidget(m_quality);
     connect(m_quality, &QSlider::valueChanged, m_qualityValue, qOverload<int>(&QLabel::setNum));
@@ -279,7 +279,7 @@ QWidget* ExportSheet::fitRow(bool fitInside)
     buttons->addStretch();
     auto* column = new QVBoxLayout(m_fitRow);
     column->setContentsMargins(0, 0, 0, 0);
-    column->setSpacing(4);
+    column->setSpacing(kGapSmall);
     column->addWidget(m_fitNote);
     column->addLayout(buttons);
     return m_fitRow;
@@ -468,7 +468,7 @@ QWidget* ExportSheet::metadataRow(const core::ExportOptions& options)
     auto* box = new QWidget(this);
     auto* metadata = new QVBoxLayout(box);
     metadata->setContentsMargins(0, 0, 0, 0);
-    metadata->setSpacing(4);
+    metadata->setSpacing(kGapSmall);
     metadata->addWidget(m_metadata);
     metadata->addWidget(m_location);
     return box;

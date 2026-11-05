@@ -47,11 +47,11 @@ PartChecklist::PartChecklist(const pfx::Settings& settings, const QStringList& p
     setObjectName(u"card"_s);
     auto* row = new QHBoxLayout(this);
     row->setContentsMargins(kPanelPadding, 10, kPanelPadding, 10);
-    row->setSpacing(20);
+    row->setSpacing(kGapColumns);
     std::vector<QVBoxLayout*> halves;
     for (int i = 0; i < std::max(1, columns); ++i) {
         auto* half = new QVBoxLayout;
-        half->setSpacing(6);
+        half->setSpacing(kGapRelated);
         row->addLayout(half, 1);
         halves.push_back(half);
     }
@@ -67,7 +67,7 @@ PartChecklist::PartChecklist(const pfx::Settings& settings, const QStringList& p
         }
         auto* box = new QCheckBox(label, this);
         auto* line = new QHBoxLayout;
-        line->setSpacing(6);
+        line->setSpacing(kGapRelated);
         line->addWidget(box);
         if (QLabel* text = note(settings, part)) {
             line->addWidget(text, 1);

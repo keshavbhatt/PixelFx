@@ -56,7 +56,7 @@ WhatsNewSheet::WhatsNewSheet(const QString& markdown, const QString& version, bo
     connect(buttons.primary, &QPushButton::clicked, this, &QDialog::accept);
 
     QVBoxLayout* layout = sheetLayout(this, buttons.row);
-    layout->setSpacing(10);
+    layout->setSpacing(kGapItems);
     layout->addLayout(head);
     layout->addWidget(m_text, 1);
     layout->addWidget(m_more);
