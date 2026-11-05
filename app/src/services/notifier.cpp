@@ -42,7 +42,7 @@ Notifier::Notifier(QObject* parent)
 
 Notifier::~Notifier() = default;
 
-bool Notifier::isAvailable() const
+bool Notifier::isAvailable()
 {
 #ifdef PIXELFX_HAS_DBUS
     const QDBusConnectionInterface* bus = QDBusConnection::sessionBus().interface();

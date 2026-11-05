@@ -20,7 +20,7 @@ public:
     /// Shows one notification, replacing the last one this sent.
     void notify(const QString& title, const QString& body);
     /// Whether a notification service can be reached.
-    [[nodiscard]] bool isAvailable() const;
+    [[nodiscard]] static bool isAvailable();
 
 Q_SIGNALS:
     /// The notification was clicked: the window should come forward.
