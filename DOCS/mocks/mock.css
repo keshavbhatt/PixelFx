@@ -145,7 +145,7 @@ select.input { width: auto; padding-right: 26px; }
 .looks { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 6px 10px 12px; }
 .looks .tile { border-radius: 8px; overflow: hidden; border: 2px solid transparent; position: relative; background: var(--hover); }
 .looks .tile img { width: 100%; aspect-ratio: 3 / 2; object-fit: cover; display: block; }
-.looks .tile span { display: block; padding: 4px 7px 5px; font-size: 12px; }
+.looks .tile span { display: block; padding: 4px 7px 5px; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .looks .tile.selected { border-color: var(--accent); }
 .looks .tile .own { position: absolute; top: 5px; right: 5px; }
 .chips { display: flex; gap: 6px; padding: 6px 10px; flex-wrap: wrap; }
@@ -279,3 +279,8 @@ body.clean .pin, body.clean .notes { display: none; }
    the colour at that end (the same fix as the grading wheel's rim). */
 .adj:is(.temp, .tint, .sat, .rh, .gh2, .bh, .rs, .gs, .bs, .bwband) input::-webkit-slider-runnable-track { box-shadow: 0 0 0 1px var(--faint); }
 .adj:is(.temp, .tint, .sat, .rh, .gh2, .bh, .rs, .gs, .bs, .bwband) input::-moz-range-track { box-shadow: 0 0 0 1px var(--faint); }
+/* Preset catalog: collapsible category sections of tiles, a favourite star on a tile. */
+.catsec .sec { cursor: default; }
+.catsec .sec .ic { color: var(--muted); margin-left: -4px; }
+.looks .tile .fav { position: absolute; top: 5px; right: 5px; width: 22px; height: 22px; border-radius: 6px; display: grid; place-items: center; background: rgba(0,0,0,.55); color: #FFD43B; }
+.looks .tile .fav .ic { fill: currentColor; }
