@@ -20,10 +20,9 @@ namespace pixelfx::ui {
 
 namespace {
 
-QLabel* sectionLabel(const QString& text, QWidget* parent)
+QLabel* section(const QString& text, QWidget* parent)
 {
-    auto* label = new QLabel(text.toUpper(), parent);
-    label->setObjectName(u"section"_s);
+    QLabel* label = sectionLabel(text, parent);
     label->setContentsMargins(0, 14, 0, 4);
     return label;
 }
@@ -101,7 +100,7 @@ QWidget* SettingsSheet::buildGeneral()
     form->setHorizontalSpacing(18);
     form->setVerticalSpacing(10);
 
-    form->addRow(sectionLabel(tr("Appearance"), page));
+    form->addRow(section(tr("Appearance"), page));
     auto* theme = segments({tr("System"), tr("Dark"), tr("Light")}, static_cast<int>(m_settings.theme()),
                            page, [this](int i) { m_settings.setTheme(static_cast<S::Theme>(i)); });
     auto* themeNote = new QLabel(tr("Takes effect the next time PixelFx starts."), page);
@@ -117,7 +116,7 @@ QWidget* SettingsSheet::buildGeneral()
                               m_settings.setCanvasBackground(static_cast<S::CanvasBackground>(i));
                           }));
 
-    form->addRow(sectionLabel(tr("Editing"), page));
+    form->addRow(section(tr("Editing"), page));
     auto* remember = new QCheckBox(tr("Keep each photo's settings in the app's library"), page);
     remember->setObjectName(u"switch"_s);
     remember->setChecked(m_settings.rememberEdits());
@@ -131,7 +130,7 @@ QWidget* SettingsSheet::buildGeneral()
     connect(onOpen, &QComboBox::activated, this, [this](int i) { m_settings.setOpenAsLeft(i == 0); });
     form->addRow(tr("On open"), onOpen);
 
-    form->addRow(sectionLabel(tr("Display"), page));
+    form->addRow(section(tr("Display"), page));
     auto* clipping = new QCheckBox(tr("Show clipped highlights and shadows (J)"), page);
     clipping->setObjectName(u"switch"_s);
     clipping->setChecked(m_settings.clippingWarnings());

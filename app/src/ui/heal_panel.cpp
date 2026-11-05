@@ -1,13 +1,17 @@
 #include "ui/heal_panel.h"
 
 #include "ui/heal_tool.h"
+#include "ui/icons.h"
+#include "ui/list_row.h"
+#include "ui/slider_row.h"
+#include "ui/style.h"
 
 #include <QButtonGroup>
 #include <QCheckBox>
 #include <QHBoxLayout>
 #include <QLabel>
-#include <QListWidget>
 #include <QPushButton>
+#include <QScrollArea>
 #include <QSlider>
 #include <QVBoxLayout>
 
@@ -19,26 +23,23 @@ namespace pixelfx::ui {
 
 namespace {
 
-constexpr int kPanelWidth = 316; // as the adjust and crop panels
+constexpr int kPanelWidth = 316;
 constexpr int kSide = 14;
+constexpr int kSizeTicks = 1000; // the size slider counts tenths of a percent
 
-QLabel* section(const QString& text, QWidget* parent)
-{
-    auto* label = new QLabel(text.toUpper(), parent);
-    label->setObjectName(u"section"_s);
-    QFont f = label->font();
-    f.setLetterSpacing(QFont::AbsoluteSpacing, 0.66);
-    label->setFont(f);
-    label->setContentsMargins(kSide, 12, kSide, 4);
-    return label;
-}
-
-// Size as people read it: "4%", "2.5%".
+// A size as a share of the long edge, as people read it: "4%", "2.5%".
 QString percent(double share)
 {
     const double p = share * 100.0;
     return std::abs(p - std::round(p)) < 0.05 ? HealPanel::tr("%1%").arg(qRound(p))
                                               : HealPanel::tr("%1%").arg(p, 0, 'f', 1);
+}
+
+QLabel* heading(const QString& text, QWidget* parent)
+{
+    QLabel* label = sectionLabel(text, parent);
+    label->setContentsMargins(kSide, 12, kSide, 4);
+    return label;
 }
 
 } // namespace
@@ -58,17 +59,16 @@ HealPanel::HealPanel(HealTool* tool, QWidget* parent)
     connect(reset, &QPushButton::clicked, this, &HealPanel::resetRequested);
     connect(done, &QPushButton::clicked, this, &HealPanel::doneRequested);
     auto* foot = new QHBoxLayout;
-    foot->setContentsMargins(kSide, 10, kSide, 12);
     foot->addWidget(reset);
     foot->addStretch();
     foot->addWidget(done);
     auto* column = new QVBoxLayout(this);
     column->setContentsMargins(0, 0, 0, 0);
     column->setSpacing(0);
-    column->addWidget(section(tr("Heal"), this));
+    column->addWidget(heading(tr("Heal"), this));
     column->addWidget(buildBrush());
     column->addWidget(buildSpots(), 1);
-    column->addLayout(foot);
+    column->addWidget(sheetFootBar(this, foot));
     connect(m_tool, &HealTool::spotsChanged, this, [this](const pfx::Spots& /*spots*/, bool finished) {
         if (finished) {
             refresh();
@@ -81,38 +81,21 @@ HealPanel::HealPanel(HealTool* tool, QWidget* parent)
 
 HealPanel::~HealPanel() = default;
 
-QSlider* HealPanel::addSlider(const QString& name, int minimum, int maximum, QWidget* parent, QLabel** value)
-{
-    auto* label = new QLabel(name, parent);
-    *value = new QLabel(parent);
-    (*value)->setObjectName(u"sliderValue"_s);
-    auto* slider = new QSlider(Qt::Horizontal, parent);
-    slider->setRange(minimum, maximum);
-    slider->setAccessibleName(name);
-    auto* row = new QHBoxLayout;
-    row->addWidget(label);
-    row->addStretch();
-    row->addWidget(*value);
-    auto* box = qobject_cast<QVBoxLayout*>(parent->layout());
-    box->addLayout(row);
-    box->addWidget(slider);
-    return slider;
-}
-
 QWidget* HealPanel::buildBrush()
 {
     auto* box = new QWidget(this);
     auto* column = new QVBoxLayout(box);
     column->setContentsMargins(kSide, 0, kSide, 4);
-    column->setSpacing(4);
+    column->setSpacing(8);
     auto* modes = new QHBoxLayout;
     modes->setSpacing(0);
     m_modes = new QButtonGroup(this);
     const QStringList names = {tr("Spot"), tr("Brush")};
+    const QStringList glyphs = {u"circle-dot"_s, u"brush"_s};
     const QStringList tips = {tr("Click a blemish to heal it; a patch is picked for you"),
                               tr("Paint along a longer mark (a wire, a scratch, a hair) to heal it")};
     for (int i = 0; i < 2; ++i) {
-        auto* b = new QPushButton(names.at(i), box);
+        auto* b = new QPushButton(icons::themed(glyphs.at(i), tokens().text), names.at(i), box);
         b->setObjectName(u"segment"_s);
         b->setCheckable(true);
         b->setChecked(i == 0);
@@ -120,68 +103,89 @@ QWidget* HealPanel::buildBrush()
         m_modes->addButton(b, i);
         modes->addWidget(b, 1);
     }
-    column->addLayout(modes);
-    column->addSpacing(6);
     connect(m_modes, &QButtonGroup::idClicked, this,
             [this](int id) { m_tool->setMode(id == 0 ? HealTool::Mode::Spot : HealTool::Mode::Brush); });
-    m_size = addSlider(tr("Size"), qRound(HealTool::kMinSize * 1000), qRound(HealTool::kMaxSize * 1000), box,
-                       &m_sizeValue);
+    column->addLayout(modes);
+    m_size = new SliderRow(tr("Size"), box);
+    m_size->setRange(qRound(HealTool::kMinSize * kSizeTicks), qRound(HealTool::kMaxSize * kSizeTicks), 40);
+    m_size->setFormat([](int ticks) { return percent(static_cast<double>(ticks) / kSizeTicks); });
     m_size->setToolTip(tr("[ and ] change the size"));
-    m_feather = addSlider(tr("Feather"), 0, 100, box, &m_featherValue);
-    m_opacity = addSlider(tr("Opacity"), 1, 100, box, &m_opacityValue);
-    // Live while dragging, one history step on release (as the adjustment sliders).
-    const auto wire = [this](QSlider* slider, const std::function<void(double, bool)>& set, double scale) {
-        connect(slider, &QSlider::valueChanged, this, [this, slider, set, scale](int v) {
-            if (!m_refreshing) {
-                set(v / scale, !slider->isSliderDown());
+    m_feather = new SliderRow(tr("Feather"), box);
+    m_feather->setRange(0, 100, 50);
+    m_opacity = new SliderRow(tr("Opacity"), box);
+    m_opacity->setRange(1, 100, 100);
+    // Live while dragging, one history step when let go, as the adjustment sliders.
+    const auto wire = [this](SliderRow* row, void (HealTool::*set)(double, bool), double scale) {
+        connect(row, &SliderRow::ticksMoved, this, [this, row, set, scale](int t) {
+            if (!m_refreshing && row->slider()->isSliderDown()) {
+                (m_tool->*set)(t / scale, false);
             }
         });
-        connect(slider, &QSlider::sliderReleased, this,
-                [slider, set, scale] { set(slider->value() / scale, true); });
+        connect(row, &SliderRow::ticksReleased, this, [this, set, scale](int t) {
+            if (!m_refreshing) {
+                (m_tool->*set)(t / scale, true);
+            }
+        });
     };
-    wire(m_size, [this](double v, bool f) { m_tool->setSize(v, f); }, 1000.0);
-    wire(m_feather, [this](double v, bool f) { m_tool->setFeather(v, f); }, 1.0);
-    wire(m_opacity, [this](double v, bool f) { m_tool->setOpacity(v, f); }, 1.0);
-    m_show = new QCheckBox(tr("Show spots (V)"), box);
+    wire(m_size, &HealTool::setSize, kSizeTicks);
+    wire(m_feather, &HealTool::setFeather, 1.0);
+    wire(m_opacity, &HealTool::setOpacity, 1.0);
+    for (SliderRow* row : {m_size, m_feather, m_opacity}) {
+        column->addWidget(row);
+    }
+    column->addWidget(buildSwitch(tr("Show spots"), u"V"_s, &m_show));
+    column->addWidget(buildSwitch(tr("Reveal dust"), u"D"_s, &m_reveal));
     m_show->setChecked(true);
-    m_reveal = new QCheckBox(tr("Reveal dust (D)"), box);
-    m_show->setObjectName(u"switch"_s);
-    m_reveal->setObjectName(u"switch"_s);
     m_reveal->setToolTip(tr("A view where dust and specks stand out, for skies and plain walls. "
                             "Only the view changes, not the photo."));
     connect(m_show, &QCheckBox::toggled, this, &HealPanel::showSpotsToggled);
     connect(m_reveal, &QCheckBox::toggled, this, &HealPanel::revealDustToggled);
-    column->addSpacing(6);
-    column->addWidget(m_show);
-    column->addWidget(m_reveal);
     return box;
+}
+
+QWidget* HealPanel::buildSwitch(const QString& label, const QString& key, QCheckBox** box)
+{
+    auto* row = new QWidget(this);
+    *box = new QCheckBox(label, row);
+    (*box)->setObjectName(u"switch"_s);
+    auto* keycap = new QLabel(key, row);
+    keycap->setObjectName(u"kbd"_s);
+    auto* line = new QHBoxLayout(row);
+    line->setContentsMargins(0, 0, 0, 0);
+    line->addWidget(*box);
+    line->addStretch();
+    line->addWidget(keycap);
+    return row;
 }
 
 QWidget* HealPanel::buildSpots()
 {
     auto* box = new QWidget(this);
+    m_count = sectionLabel(QString(), box);
+    m_removeAll = new QPushButton(tr("Remove all"), box);
+    m_removeAll->setObjectName(u"link"_s);
+    connect(m_removeAll, &QPushButton::clicked, m_tool, &HealTool::removeAll);
+    auto* head = new QHBoxLayout;
+    head->setContentsMargins(kSide, 12, kSide - 4, 4);
+    head->addWidget(m_count, 1);
+    head->addWidget(m_removeAll);
+    auto* listBox = new QWidget(box);
+    listBox->setObjectName(u"adjustContent"_s);
+    m_list = new QVBoxLayout(listBox);
+    m_list->setContentsMargins(8, 0, 8, 8);
+    m_list->setSpacing(2);
+    m_list->addStretch();
+    auto* scroll = new QScrollArea(box);
+    scroll->setObjectName(u"adjustScroll"_s);
+    scroll->setWidget(listBox);
+    scroll->setWidgetResizable(true);
+    scroll->setFrameShape(QFrame::NoFrame);
+    scroll->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     auto* column = new QVBoxLayout(box);
     column->setContentsMargins(0, 0, 0, 0);
     column->setSpacing(0);
-    m_count = section(QString(), box);
-    m_removeAll = new QPushButton(tr("Remove all"), box);
-    m_removeAll->setObjectName(u"small"_s);
-    connect(m_removeAll, &QPushButton::clicked, m_tool, &HealTool::removeAll);
-    auto* head = new QHBoxLayout;
-    head->setContentsMargins(0, 0, kSide, 0);
-    head->addWidget(m_count, 1);
-    head->addWidget(m_removeAll);
-    m_list = new QListWidget(box);
-    m_list->setObjectName(u"spotList"_s);
-    m_list->setAccessibleName(tr("Spots"));
-    m_list->setToolTip(tr("Delete removes the selected spot; the arrow keys on the photo move it"));
-    connect(m_list, &QListWidget::currentRowChanged, this, [this](int row) {
-        if (!m_refreshing) {
-            m_tool->select(row);
-        }
-    });
     column->addLayout(head);
-    column->addWidget(m_list, 1);
+    column->addWidget(scroll, 1);
     return box;
 }
 
@@ -190,16 +194,31 @@ void HealPanel::refresh()
     m_refreshing = true;
     const pfx::Spots& spots = m_tool->spots();
     m_count->setText(tr("Spots (%1)").arg(spots.size()).toUpper());
-    m_removeAll->setEnabled(!spots.empty());
-    m_list->clear();
+    m_removeAll->setVisible(!spots.empty());
+    // A row may be the one being clicked: it goes once the event is over.
+    for (ListRow* row : m_rows) {
+        row->hide();
+        row->deleteLater();
+    }
+    m_rows.clear();
     for (std::size_t i = 0; i < spots.size(); ++i) {
         const pfx::Spot& s = spots[i];
-        //: A row of Heal's list of spots: "Spot 2 · size 3%".
-        const QString name =
-            s.stroke.size() >= 2 ? tr("Brush stroke %1").arg(i + 1) : tr("Spot %1").arg(i + 1);
-        m_list->addItem(tr("%1 · size %2").arg(name, percent(s.radius * 2.0)));
+        const bool stroke = s.stroke.size() >= 2;
+        auto* row = new ListRow(m_list->parentWidget());
+        row->setIcon(stroke ? u"brush"_s : u"circle-dot"_s);
+        row->setTitle(stroke ? tr("Brush stroke %1").arg(i + 1) : tr("Spot %1").arg(i + 1));
+        row->setSubtitle(tr("Size %1").arg(percent(s.radius * 2.0)));
+        row->setAction(u"close"_s, tr("Remove this spot"));
+        const int index = static_cast<int>(i);
+        row->setSelected(index == m_tool->selected());
+        connect(row, &ListRow::clicked, this, [this, index] { m_tool->select(index); });
+        connect(row, &ListRow::actionClicked, this, [this, index] {
+            m_tool->select(index);
+            m_tool->removeSelected();
+        });
+        m_list->insertWidget(m_list->count() - 1, row); // before the stretch
+        m_rows.push_back(row);
     }
-    m_list->setCurrentRow(m_tool->selected());
     m_refreshing = false;
     refreshValues();
 }
@@ -207,12 +226,9 @@ void HealPanel::refresh()
 void HealPanel::refreshValues()
 {
     m_refreshing = true;
-    m_size->setValue(qRound(m_tool->size() * 1000));
-    m_feather->setValue(qRound(m_tool->feather()));
-    m_opacity->setValue(qRound(m_tool->opacity()));
-    m_sizeValue->setText(percent(m_tool->size()));
-    m_featherValue->setText(QString::number(qRound(m_tool->feather())));
-    m_opacityValue->setText(QString::number(qRound(m_tool->opacity())));
+    m_size->setTicks(qRound(m_tool->size() * kSizeTicks));
+    m_feather->setTicks(qRound(m_tool->feather()));
+    m_opacity->setTicks(qRound(m_tool->opacity()));
     m_refreshing = false;
 }
 

@@ -123,6 +123,8 @@ void MainWindow::enterHeal()
     m_panels->setCurrentWidget(m_healPanel);
     m_presets->hide();
     m_strip->hide();
+    showModeStrip(tr("Click to heal · drag to brush · [ and ] change the size · Delete removes the selected "
+                     "spot · Escape leaves Heal"));
     for (QAction* a : std::as_const(m_healActions)) {
         a->setEnabled(true);
     }
@@ -145,6 +147,7 @@ void MainWindow::leaveHeal()
     m_panels->setCurrentWidget(m_adjust);
     m_presets->show();
     m_strip->show();
+    hideModeStrip();
     m_compare->setEnabled(true);
     updateHistoryButtons();
     m_editMode->setChecked(true);

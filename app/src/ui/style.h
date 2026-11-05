@@ -5,6 +5,7 @@
 
 class QApplication;
 class QDialog;
+class QLabel;
 class QLayout;
 class QToolButton;
 class QVBoxLayout;
@@ -52,6 +53,8 @@ void applyStyle(QApplication& app);
 QVBoxLayout* sheetLayout(QDialog* sheet, QLayout* foot);
 /// The flat close button of a sheet's title row; it rejects the sheet.
 QWidget* sheetCloseButton(QDialog* sheet);
+/// A section heading of a panel or sheet ("SPOTS (3)", "1. RECIPE"): small, bold, muted capitals.
+QLabel* sectionLabel(const QString& text, QWidget* parent);
 /// The footer bar alone, for sheets whose body runs edge to edge (Watermark, the look editor).
 QWidget* sheetFootBar(QWidget* sheet, QLayout* foot);
 

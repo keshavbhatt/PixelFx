@@ -56,11 +56,7 @@ constexpr int kSide = 14;
 
 QLabel* sectionTitle(const QString& text, QWidget* parent)
 {
-    auto* label = new QLabel(text.toUpper(), parent);
-    label->setObjectName(u"section"_s);
-    QFont f = label->font();
-    f.setLetterSpacing(QFont::AbsoluteSpacing, 0.66);
-    label->setFont(f);
+    QLabel* label = sectionLabel(text, parent);
     label->setContentsMargins(0, 12, 0, 4);
     return label;
 }

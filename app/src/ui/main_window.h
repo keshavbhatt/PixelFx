@@ -223,8 +223,12 @@ private:
     bool m_revealDust = false;
     BatchPage* m_batch = nullptr;
     QWidget* m_canvasPage = nullptr;
-    QWidget* m_cropStrip = nullptr;
-    QLabel* m_cropSize = nullptr;
+    /// The bar under the photo in Crop and Heal: a detail (the crop's size) and the mode's keys.
+    QWidget* m_modeStrip = nullptr;
+    QLabel* m_modeDetail = nullptr;
+    QLabel* m_modeHint = nullptr;
+    void showModeStrip(const QString& hint);
+    void hideModeStrip();
     pfx::Settings m_cropStart;
     QList<QAction*> m_cropActions;
     QToolButton* m_undo = nullptr;

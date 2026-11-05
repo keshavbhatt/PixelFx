@@ -33,6 +33,8 @@ qt_add_library(pixelfx_ui STATIC
     icons.h
     look_editor.cpp
     look_editor.h
+    list_row.cpp
+    list_row.h
     looks_panel.cpp
     looks_panel.h
     main_window.cpp
@@ -48,6 +50,8 @@ qt_add_library(pixelfx_ui STATIC
     settings_sheet.h
     shortcuts_sheet.cpp
     shortcuts_sheet.h
+    slider_row.cpp
+    slider_row.h
     style.cpp
     style.h
     straighten_dial.cpp

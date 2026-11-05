@@ -1,0 +1,118 @@
+#include "ui/list_row.h"
+
+#include "ui/icons.h"
+#include "ui/style.h"
+
+#include <QHBoxLayout>
+#include <QKeyEvent>
+#include <QLabel>
+#include <QMouseEvent>
+#include <QStyle>
+#include <QToolButton>
+#include <QVBoxLayout>
+
+using namespace Qt::StringLiterals;
+
+namespace pixelfx::ui {
+
+ListRow::ListRow(QWidget* parent)
+    : QWidget(parent)
+    , m_row(new QHBoxLayout(this))
+    , m_icon(new QLabel(this))
+    , m_title(new QLabel(this))
+    , m_subtitle(new QLabel(this))
+{
+    setObjectName(u"listRow"_s);
+    setAttribute(Qt::WA_StyledBackground);
+    setAttribute(Qt::WA_Hover);
+    setFocusPolicy(Qt::StrongFocus);
+    setCursor(Qt::PointingHandCursor);
+    m_icon->hide();
+    m_title->setObjectName(u"listTitle"_s);
+    m_subtitle->setObjectName(u"listSubtitle"_s);
+    m_subtitle->hide();
+    auto* text = new QVBoxLayout;
+    text->setSpacing(0);
+    text->addWidget(m_title);
+    text->addWidget(m_subtitle);
+    m_row->setContentsMargins(10, 7, 10, 7);
+    m_row->setSpacing(10);
+    m_row->addWidget(m_icon);
+    m_row->addLayout(text, 1);
+}
+
+ListRow::~ListRow() = default;
+
+void ListRow::setIcon(const QString& glyph)
+{
+    m_icon->setPixmap(icons::pixmap(glyph, tokens().muted, 15, devicePixelRatioF()));
+    m_icon->show();
+}
+
+void ListRow::setTitle(const QString& title)
+{
+    m_title->setText(title);
+    setAccessibleName(title);
+}
+
+void ListRow::setSubtitle(const QString& subtitle)
+{
+    m_subtitle->setText(subtitle);
+    m_subtitle->setVisible(!subtitle.isEmpty());
+}
+
+void ListRow::setAction(const QString& glyph, const QString& tip)
+{
+    if (m_action == nullptr) {
+        m_action = new QToolButton(this);
+        m_action->setObjectName(u"groupReset"_s);
+        m_row->addWidget(m_action);
+        connect(m_action, &QToolButton::clicked, this, &ListRow::actionClicked);
+    }
+    m_action->setIcon(icons::themed(glyph, tokens().muted));
+    m_action->setToolTip(tip);
+    m_action->setAccessibleName(tip);
+}
+
+void ListRow::addLeading(QWidget* widget)
+{
+    widget->setParent(this);
+    m_row->insertWidget(m_leading++, widget);
+}
+
+void ListRow::setSelected(bool selected)
+{
+    if (selected == m_selected) {
+        return;
+    }
+    m_selected = selected;
+    setProperty("selected", selected);
+    for (QWidget* w : {static_cast<QWidget*>(this), static_cast<QWidget*>(m_title)}) {
+        w->style()->unpolish(w);
+        w->style()->polish(w);
+    }
+}
+
+QString ListRow::title() const
+{
+    return m_title->text();
+}
+
+void ListRow::mouseReleaseEvent(QMouseEvent* event)
+{
+    if (event->button() == Qt::LeftButton && rect().contains(event->position().toPoint())) {
+        Q_EMIT clicked();
+    }
+    QWidget::mouseReleaseEvent(event);
+}
+
+void ListRow::keyPressEvent(QKeyEvent* event)
+{
+    if (event->key() == Qt::Key_Space || event->key() == Qt::Key_Return || event->key() == Qt::Key_Enter) {
+        Q_EMIT clicked();
+        return;
+    }
+    QWidget::keyPressEvent(event);
+}
+
+} // namespace pixelfx::ui

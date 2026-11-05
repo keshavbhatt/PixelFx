@@ -82,61 +82,26 @@ const std::vector<GroupSpec>& groupSpecs()
     return specs;
 }
 
-void repolish(QWidget* widget)
-{
-    widget->style()->unpolish(widget);
-    widget->style()->polish(widget);
-}
 
 } // namespace
 
 // ---------------------------------------------------------------------------------------------
 
 AdjustSlider::AdjustSlider(const QString& key, const QString& label, QWidget* parent)
-    : QWidget(parent)
+    : SliderRow(label, parent)
     , m_key(key)
-    , m_label(label)
-    , m_slider(new QSlider(Qt::Horizontal, this))
-    , m_name(new QLabel(label, this))
-    , m_value(new QLabel(this))
 {
     const pfx::ParamSpec* spec = pfx::registry().param(key.toStdString());
     Q_ASSERT(spec != nullptr);
     m_default = spec->defaultValue;
-    // Small ranges (exposure in stops) get hundredths; the rest whole numbers.
     m_minimum = spec->minimum;
     m_maximum = spec->maximum;
     m_degrees = spec->unit == "degrees";
+    setFormat([this](int ticks) { return format(ticks); });
+    // Small ranges (exposure in stops) get hundredths; the rest whole numbers.
     setStepsPerUnit((spec->maximum - spec->minimum) <= 20.0 ? 100.0 : 1.0);
-    m_slider->setAccessibleName(label);
-    m_slider->setToolTip(tr("%1. Double-click to reset.").arg(label));
-    m_slider->installEventFilter(this);
-    m_name->setObjectName(u"adjustName"_s);
-    m_value->setObjectName(u"adjustValue"_s);
-    m_value->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
-    m_value->setMinimumWidth(44);
-    m_name->setBuddy(m_slider);
-
-    auto* top = new QHBoxLayout;
-    top->setContentsMargins(0, 0, 0, 0);
-    top->addWidget(m_name);
-    top->addStretch();
-    top->addWidget(m_value);
-    auto* column = new QVBoxLayout(this);
-    column->setContentsMargins(0, 7, 0, 7);
-    column->setSpacing(4);
-    column->addLayout(top);
-    column->addWidget(m_slider);
-
-    connect(m_slider, &QSlider::valueChanged, this, [this](int) {
-        refresh();
-        Q_EMIT moved(value());
-        if (!m_slider->isSliderDown()) { // keyboard and wheel changes are complete at once
-            Q_EMIT released(value());
-        }
-    });
-    connect(m_slider, &QSlider::sliderReleased, this, [this] { Q_EMIT released(value()); });
-    setValue(m_default);
+    connect(this, &SliderRow::ticksMoved, this, [this](int ticks) { Q_EMIT moved(fromTicks(ticks)); });
+    connect(this, &SliderRow::ticksReleased, this, [this](int ticks) { Q_EMIT released(fromTicks(ticks)); });
 }
 
 AdjustSlider::~AdjustSlider() = default;
@@ -145,11 +110,9 @@ void AdjustSlider::setStepsPerUnit(double steps)
 {
     const double current = value();
     m_scale = steps;
-    const QSignalBlocker block(m_slider);
-    m_slider->setRange(toTicks(m_minimum), toTicks(m_maximum));
-    m_slider->setPageStep(static_cast<int>(m_scale > 1.0 ? m_scale : 10));
-    m_slider->setValue(toTicks(current));
-    refresh();
+    setRange(toTicks(m_minimum), toTicks(m_maximum), toTicks(m_default));
+    slider()->setPageStep(static_cast<int>(m_scale > 1.0 ? m_scale : 10));
+    setTicks(toTicks(current));
 }
 
 int AdjustSlider::toTicks(double value) const
@@ -164,24 +127,17 @@ double AdjustSlider::fromTicks(int ticks) const
 
 double AdjustSlider::value() const
 {
-    return fromTicks(m_slider->value());
-}
-
-bool AdjustSlider::isChanged() const
-{
-    return toTicks(value()) != toTicks(m_default);
+    return fromTicks(ticks());
 }
 
 void AdjustSlider::setValue(double value)
 {
-    const QSignalBlocker block(m_slider);
-    m_slider->setValue(toTicks(value));
-    refresh();
+    setTicks(toTicks(value));
 }
 
-QString AdjustSlider::valueText() const
+QString AdjustSlider::format(int ticks) const
 {
-    const double v = value();
+    const double v = fromTicks(ticks);
     int decimals = 0;
     if (m_scale >= 100.0) {
         decimals = 2;
@@ -193,27 +149,6 @@ QString AdjustSlider::valueText() const
         number += u'\u00B0';
     }
     return v > 0.0 ? u"+"_s + number : number;
-}
-
-void AdjustSlider::refresh()
-{
-    m_value->setText(valueText());
-    const bool changed = isChanged();
-    if (m_value->property("changed").toBool() != changed) {
-        for (QLabel* label : {m_name, m_value}) {
-            label->setProperty("changed", changed);
-            repolish(label);
-        }
-    }
-}
-
-bool AdjustSlider::eventFilter(QObject* watched, QEvent* event)
-{
-    if (watched == m_slider && event->type() == QEvent::MouseButtonDblClick) {
-        m_slider->setValue(toTicks(m_default)); // emits moved and released
-        return true;
-    }
-    return QWidget::eventFilter(watched, event);
 }
 
 // ---------------------------------------------------------------------------------------------

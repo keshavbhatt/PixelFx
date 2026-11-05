@@ -827,29 +827,27 @@ QWidget* MainWindow::buildCanvasPage()
     auto* page = new QWidget(this);
     m_canvas = new Canvas(page);
     m_canvas->setFocusPolicy(Qt::ClickFocus); // a click on the photo lets Tab hide the panels
-    m_cropStrip = new QWidget(page);
-    m_cropStrip->setObjectName(u"strip"_s);
-    m_cropStrip->setAttribute(Qt::WA_StyledBackground);
-    m_cropStrip->setFixedHeight(92);
-    m_cropSize = new QLabel(m_cropStrip);
-    m_cropSize->setObjectName(u"mono"_s);
-    auto* hint = new QLabel(
-        tr("Enter applies, Escape cancels, X swaps orientation, Shift keeps the ratio while dragging"),
-        m_cropStrip);
-    hint->setObjectName(u"muted"_s);
-    auto* row = new QHBoxLayout(m_cropStrip);
+    m_modeStrip = new QWidget(page);
+    m_modeStrip->setObjectName(u"strip"_s);
+    m_modeStrip->setAttribute(Qt::WA_StyledBackground);
+    m_modeStrip->setFixedHeight(92);
+    m_modeDetail = new QLabel(m_modeStrip);
+    m_modeDetail->setObjectName(u"mono"_s);
+    m_modeHint = new QLabel(m_modeStrip);
+    m_modeHint->setObjectName(u"muted"_s);
+    auto* row = new QHBoxLayout(m_modeStrip);
     row->setContentsMargins(10, 0, 10, 0);
     row->setSpacing(16);
     row->addStretch();
-    row->addWidget(m_cropSize);
-    row->addWidget(hint);
+    row->addWidget(m_modeDetail);
+    row->addWidget(m_modeHint);
     row->addStretch();
-    m_cropStrip->hide();
+    m_modeStrip->hide();
     auto* column = new QVBoxLayout(page);
     column->setContentsMargins(0, 0, 0, 0);
     column->setSpacing(0);
     column->addWidget(m_canvas, 1);
-    column->addWidget(m_cropStrip);
+    column->addWidget(m_modeStrip);
     m_stripDock = new QWidget(page);
     auto* stripRow = new QVBoxLayout(m_stripDock);
     stripRow->setContentsMargins(0, 0, 0, 0);
@@ -1492,7 +1490,8 @@ void MainWindow::enterCrop()
     m_canvas->setImage(m_document.preview(), m_document.displaySize());
     m_panels->setCurrentWidget(m_cropPanel);
     m_presets->hide();
-    m_cropStrip->show();
+    showModeStrip(
+        tr("Enter applies, Escape cancels, X swaps orientation, Shift keeps the ratio while dragging"));
     m_strip->hide();
     updateCropStrip();
     for (QAction* a : std::as_const(m_cropActions)) {
@@ -1520,17 +1519,30 @@ void MainWindow::leaveCrop(bool apply)
     m_adjust->setSettings(m_document.settings());
     m_panels->setCurrentWidget(m_adjust);
     m_presets->show();
-    m_cropStrip->hide();
+    hideModeStrip();
     m_strip->show();
     m_compare->setEnabled(true);
     updateHistoryButtons();
     m_editMode->setChecked(true);
 }
 
+void MainWindow::showModeStrip(const QString& hint)
+{
+    m_modeHint->setText(hint);
+    m_modeDetail->hide(); // a mode that has a detail shows it after this
+    m_modeStrip->show();
+}
+
+void MainWindow::hideModeStrip()
+{
+    m_modeStrip->hide();
+}
+
 void MainWindow::updateCropStrip()
 {
     const QSize size = m_document.outputSize();
-    m_cropSize->setText(tr("%1 x %2 px").arg(size.width()).arg(size.height()));
+    m_modeDetail->setText(tr("%1 x %2 px").arg(size.width()).arg(size.height()));
+    m_modeDetail->show();
 }
 
 bool MainWindow::isSupported(const QString& path)

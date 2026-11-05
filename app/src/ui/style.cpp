@@ -5,6 +5,7 @@
 #include <QApplication>
 #include <QDialog>
 #include <QFile>
+#include <QLabel>
 #include <QPalette>
 #include <QProxyStyle>
 #include <QStyleFactory>
@@ -114,10 +115,10 @@ const QString kSheet = uR"(
         QToolButton#positionCell { border: 1px solid {{faint}}; border-radius: 5px; background: {{input}}; }
         QToolButton#positionCell:hover { background: {{hover}}; }
         QToolButton#positionCell:checked { background: {{accent}}; border-color: {{accent}}; }
-        QListWidget#lookSteps, QListWidget#spotList { background: {{panel}}; border: 0; outline: 0; }
-        QListWidget#lookSteps::item, QListWidget#spotList::item { padding: 6px 8px; border-radius: 7px; margin: 1px 6px; }
-        QListWidget#lookSteps::item:selected, QListWidget#spotList::item:selected { background: {{accentSoft}}; color: {{text}}; }
-        QListWidget#lookSteps::item:hover:!selected, QListWidget#spotList::item:hover:!selected { background: {{hover}}; }
+        QListWidget#lookSteps { background: {{panel}}; border: 0; outline: 0; }
+        QListWidget#lookSteps::item { padding: 6px 8px; border-radius: 7px; margin: 1px 6px; }
+        QListWidget#lookSteps::item:selected { background: {{accentSoft}}; color: {{text}}; }
+        QListWidget#lookSteps::item:hover:!selected { background: {{hover}}; }
         QMenu { background: {{elevated}}; border: 1px solid {{border}}; border-radius: 10px; padding: 5px; }
         QMenu::item { padding: 6px 28px 6px 10px; border-radius: 6px; }
         QMenu::item:selected { background: {{hover}}; }
@@ -176,6 +177,12 @@ const QString kControls = uR"(
         QProgressBar { background: {{track}}; border: 0; border-radius: 2px; max-height: 4px; text-align: center; color: transparent; }
         QProgressBar::chunk { background: {{accentStrong}}; border-radius: 2px; }
         QSlider::handle:horizontal:disabled { background: {{faint}}; }
+        QWidget#listRow { border-radius: 7px; }
+        QWidget#listRow:hover { background: {{hover}}; }
+        QWidget#listRow[selected="true"] { background: {{accentSoft}}; }
+        QLabel#listTitle { font-weight: 500; }
+        QWidget#listRow[selected="true"] QLabel#listTitle { color: {{accent}}; }
+        QLabel#listSubtitle { color: {{muted}}; font-size: 11px; }
         #sheetFoot { background: {{panel}}; border-top: 1px solid {{border}}; }
         QCheckBox#switch::indicator { width: 34px; height: 20px; border: 0; border-radius: 10px; background: transparent; image: url({{glyphs}}/switch-off.svg); }
         QCheckBox#switch::indicator:checked { image: url({{glyphs}}/switch-on.svg); }
@@ -390,6 +397,16 @@ QWidget* sheetCloseButton(QDialog* sheet)
     close->setAccessibleName(QObject::tr("Close"));
     QObject::connect(close, &QToolButton::clicked, sheet, &QDialog::reject);
     return close;
+}
+
+QLabel* sectionLabel(const QString& text, QWidget* parent)
+{
+    auto* label = new QLabel(text.toUpper(), parent);
+    label->setObjectName(QStringLiteral("section"));
+    QFont font = label->font();
+    font.setLetterSpacing(QFont::AbsoluteSpacing, 0.66);
+    label->setFont(font);
+    return label;
 }
 
 QWidget* sheetFootBar(QWidget* sheet, QLayout* foot)

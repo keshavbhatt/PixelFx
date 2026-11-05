@@ -1,6 +1,7 @@
 #pragma once
 
 #include "core/histogram.h"
+#include "ui/slider_row.h"
 
 #include <QWidget>
 
@@ -120,8 +121,8 @@ private:
     std::array<QLabel*, 2> m_wheelValues{};
 };
 
-/// One labelled slider for one numeric setting. Values are in the registry's units.
-class AdjustSlider : public QWidget
+/// The slider of one numeric setting, in the registry's units (stops, degrees) and range.
+class AdjustSlider : public SliderRow
 {
     Q_OBJECT
     Q_DISABLE_COPY_MOVE(AdjustSlider)
@@ -131,14 +132,12 @@ public:
     ~AdjustSlider() override;
 
     [[nodiscard]] const QString& key() const { return m_key; }
-    [[nodiscard]] const QString& label() const { return m_label; }
     [[nodiscard]] double value() const;
     [[nodiscard]] double defaultValue() const { return m_default; }
-    [[nodiscard]] bool isChanged() const;
     /// Shows `value` without emitting.
     void setValue(double value);
     /// The value as the panel shows it: "+12", "-0.35", "+1.5°".
-    [[nodiscard]] QString valueText() const;
+    [[nodiscard]] QString valueText() const { return text(); }
     /// Steps of 1/`steps` of a unit (the default is hundredths for small ranges, else whole).
     void setStepsPerUnit(double steps);
 
@@ -146,24 +145,17 @@ Q_SIGNALS:
     void moved(double value);
     void released(double value);
 
-protected:
-    bool eventFilter(QObject* watched, QEvent* event) override;
-
 private:
-    void refresh();
     [[nodiscard]] int toTicks(double value) const;
     [[nodiscard]] double fromTicks(int ticks) const;
+    [[nodiscard]] QString format(int ticks) const;
 
     QString m_key;
-    QString m_label;
     double m_default = 0.0;
     double m_scale = 1.0;
     double m_minimum = 0.0;
     double m_maximum = 0.0;
     bool m_degrees = false;
-    QSlider* m_slider = nullptr;
-    QLabel* m_name = nullptr;
-    QLabel* m_value = nullptr;
 };
 
 } // namespace pixelfx::ui

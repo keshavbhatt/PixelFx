@@ -1,5 +1,7 @@
 #include "ui/heal_tool.h"
 
+#include "ui/style.h"
+
 #include <QMouseEvent>
 #include <QPainter>
 #include <QPainterPath>
@@ -23,12 +25,23 @@ double longEdge(const QRectF& photo)
 }
 
 // White with a dark outline, so a circle reads on any photo.
-void outlined(QPainter& painter, const std::function<void()>& draw, Qt::PenStyle style = Qt::SolidLine)
+constexpr double kRing = 2.0; // the ring's width; a 1 px dark edge on each side keeps it visible
+
+// Draws `draw` as a ring of `colour` with a thin dark edge, so it shows on any photo; with
+// `halo`, a soft band of the colour around it marks the selected spot.
+void outlined(QPainter& painter, const std::function<void()>& draw, const QColor& colour,
+              Qt::PenStyle style = Qt::SolidLine, bool halo = false)
 {
     painter.setBrush(Qt::NoBrush);
-    painter.setPen(QPen(QColor(0, 0, 0, 170), 3.5, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
+    if (halo) {
+        QColor soft = colour;
+        soft.setAlphaF(0.35F);
+        painter.setPen(QPen(soft, kRing + 8.0, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
+        draw();
+    }
+    painter.setPen(QPen(QColor(0, 0, 0, 128), kRing + 2.0, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
     draw();
-    painter.setPen(QPen(Qt::white, 1.5, style, Qt::RoundCap, Qt::RoundJoin));
+    painter.setPen(QPen(colour, kRing, style, Qt::RoundCap, Qt::RoundJoin));
     draw();
 }
 
@@ -364,20 +377,21 @@ void HealTool::paintSpot(QPainter& painter, const pfx::Spot& spot, const QRectF&
     } else {
         shape.addEllipse(target, r, r);
     }
-    outlined(painter, [&] { painter.drawPath(shape); });
     if (!selected) {
+        outlined(painter, [&] { painter.drawPath(shape); }, Qt::white);
         return;
     }
-    // The selected spot: a fill to say which, its source hollow, and the line between.
-    painter.fillPath(shape, QColor(255, 255, 255, 40));
+    // The selected spot in the accent, its source dashed, and a dashed line between them.
+    outlined(painter, [&] { painter.drawPath(shape); }, tokens().accent, Qt::SolidLine, true);
     const QPainterPath source = shape.translated(offset);
-    outlined(painter, [&] { painter.drawPath(source); }, Qt::DashLine);
+    outlined(painter, [&] { painter.drawPath(source); }, Qt::white, Qt::DashLine);
     const QPointF from = target;
     const QPointF to = target + offset;
     const double distance = std::hypot(offset.x(), offset.y());
     if (spot.stroke.size() < 2 && distance > 2.0 * r) {
         const QPointF unit = offset / distance;
-        outlined(painter, [&] { painter.drawLine(from + (unit * r), to - (unit * r)); }, Qt::DashLine);
+        outlined(
+            painter, [&] { painter.drawLine(from + (unit * r), to - (unit * r)); }, Qt::white, Qt::DashLine);
     }
 }
 
@@ -401,7 +415,7 @@ void HealTool::paint(QPainter& painter, const QRectF& photo)
         painter.drawPath(line);
     }
     if (m_hover.x() >= 0 && m_drag == Drag::None && photo.contains(m_hover)) {
-        outlined(painter, [&] { painter.drawEllipse(m_hover, r, r); });
+        outlined(painter, [&] { painter.drawEllipse(m_hover, r, r); }, Qt::white);
     }
 }
 

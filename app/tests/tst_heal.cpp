@@ -5,12 +5,14 @@
 #include "ui/canvas.h"
 #include "ui/heal_panel.h"
 #include "ui/heal_tool.h"
+#include "ui/list_row.h"
 #include "ui/main_window.h"
+#include "ui/slider_row.h"
 #include "ui/style.h"
 
 #include <QApplication>
-#include <QListWidget>
 #include <QSignalSpy>
+#include <QSlider>
 #include <QStandardPaths>
 #include <QTemporaryDir>
 #include <QTest>
@@ -127,14 +129,17 @@ private Q_SLOTS:
         pixelfx::ui::HealPanel panel(&tool);
         tool.addSpotAt({0.3, 0.3});
         tool.addSpotAt({0.6, 0.6});
-        QCOMPARE(panel.spotList()->count(), 2);
-        QVERIFY(panel.spotList()->item(0)->text().startsWith(u"Spot 1"_s));
-        panel.spotList()->setCurrentRow(0);
+        QCOMPARE(panel.spotRows().size(), std::size_t{2});
+        QCOMPARE(panel.spotRows().front()->title(), u"Spot 1"_s);
+        Q_EMIT panel.spotRows().front()->clicked();
         QCOMPARE(tool.selected(), 0);
-        panel.sizeSlider()->setValue(100); // 10%
+        QVERIFY(panel.spotRows().front()->isSelected());
+        panel.sizeSlider()->slider()->setValue(100); // 10%
         QCOMPARE(tool.spots().front().radius, 0.05);
+        Q_EMIT panel.spotRows().back()->actionClicked(); // the row's ×
+        QCOMPARE(tool.spots().size(), std::size_t{1});
         tool.removeAll();
-        QCOMPARE(panel.spotList()->count(), 0);
+        QCOMPARE(panel.spotRows().size(), std::size_t{0});
     }
 
     void revealDustShowsSpecksOnGrey()
