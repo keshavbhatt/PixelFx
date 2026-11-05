@@ -308,6 +308,15 @@ std::string readFailure(const std::string& detail)
     return "The photo could not be read (" + firstLine + ").";
 }
 
+std::optional<std::vector<std::uint8_t>> readAll(const std::filesystem::path& path)
+{
+    std::ifstream in(path, std::ios::binary);
+    if (!in) {
+        return std::nullopt;
+    }
+    return std::vector<std::uint8_t>(std::istreambuf_iterator<char>(in), std::istreambuf_iterator<char>());
+}
+
 vips::VImage openFile(const std::filesystem::path& path)
 {
     return vips::VImage::new_from_file(path.string().c_str(),
@@ -319,6 +328,13 @@ vips::VImage openFile(const std::filesystem::path& path)
 Result<ImageInfo> probe(const std::filesystem::path& path)
 {
     ensureVips();
+    if (lowerExtension(path) == ".dng") {
+        if (const auto file = readAll(path)) {
+            if (auto info = detail::probeLinearDng(*file)) {
+                return *info;
+            }
+        }
+    }
     try {
         const vips::VImage in = openFile(path);
         ImageInfo info;
@@ -329,6 +345,7 @@ Result<ImageInfo> probe(const std::filesystem::path& path)
         info.bitsPerSample = bitsOf(in);
         info.hasAlpha = in.has_alpha();
         info.hasProfile = in.get_typeof(VIPS_META_ICC_NAME) != 0;
+        info.raw = isRawFile(path);
         return info;
     } catch (const vips::VError& e) {
         return Error{ErrorCode::DecodeFailed, readFailure(e.what())};
@@ -425,15 +442,6 @@ Result<LoadedImage> loadVips(vips::VImage in, const LoadOptions& options)
         return converted.error();
     }
     return result;
-}
-
-std::optional<std::vector<std::uint8_t>> readAll(const std::filesystem::path& path)
-{
-    std::ifstream in(path, std::ios::binary);
-    if (!in) {
-        return std::nullopt;
-    }
-    return std::vector<std::uint8_t>(std::istreambuf_iterator<char>(in), std::istreambuf_iterator<char>());
 }
 
 // The JPEG inside a RAW file's bytes, decoded and upright; nothing when there is none.

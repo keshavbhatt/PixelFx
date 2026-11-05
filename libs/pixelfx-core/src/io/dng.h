@@ -13,6 +13,8 @@ namespace pfx::detail {
 
 /// Whether the file is a linear (demosaiced) DNG, which PixelFx decodes itself.
 [[nodiscard]] bool isLinearDng(const std::vector<std::uint8_t>& file);
+/// A linear DNG's developed size (upright, after its default crop), without decoding it.
+[[nodiscard]] std::optional<ImageInfo> probeLinearDng(const std::vector<std::uint8_t>& file);
 [[nodiscard]] Result<LoadedImage> loadLinearDng(const std::vector<std::uint8_t>& file,
                                                 const LoadOptions& options);
 /// The largest JPEG inside a TIFF-based RAW, with its size and the RAW's orientation.

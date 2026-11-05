@@ -132,12 +132,12 @@ QWidget* AboutSheet::buildAboutPage()
     auto* whatsNew = smallButton(tr("What's new"), page);
     connect(whatsNew, &QPushButton::clicked, this, &AboutSheet::whatsNewRequested);
     auto* guide = smallButton(tr("Online guide"), page);
-    connect(guide, &QPushButton::clicked, this, [] { QDesktopServices::openUrl(QUrl(core::kGuideUrl)); });
+    connect(guide, &QPushButton::clicked, this, [] { QDesktopServices::openUrl(QUrl(core::guideUrl())); });
     auto* source = smallButton(tr("Source code"), page);
-    connect(source, &QPushButton::clicked, this, [] { QDesktopServices::openUrl(QUrl(core::kSourceUrl)); });
+    connect(source, &QPushButton::clicked, this, [] { QDesktopServices::openUrl(QUrl(core::sourceUrl())); });
     auto* bug = smallButton(tr("Report a bug"), page);
     bug->setToolTip(tr("Opens the issue tracker. Diagnostics has text to paste into the report."));
-    connect(bug, &QPushButton::clicked, this, [] { QDesktopServices::openUrl(QUrl(core::kIssuesUrl)); });
+    connect(bug, &QPushButton::clicked, this, [] { QDesktopServices::openUrl(QUrl(core::issuesUrl())); });
     auto* links = new QHBoxLayout;
     links->setSpacing(kGapRelated);
     links->addWidget(whatsNew);

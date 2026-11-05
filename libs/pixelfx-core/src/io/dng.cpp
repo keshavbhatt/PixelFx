@@ -763,6 +763,25 @@ bool isLinearDng(const std::vector<std::uint8_t>& file)
     return findDng(tiff).has_value();
 }
 
+std::optional<ImageInfo> probeLinearDng(const std::vector<std::uint8_t>& file)
+{
+    const TiffReader tiff(file);
+    const auto dng = findDng(tiff);
+    if (!dng) {
+        return std::nullopt;
+    }
+    const Area area = areaOf(*dng, static_cast<int>(tiff.u32(dng->image, kWidth).value_or(0)),
+                             static_cast<int>(tiff.u32(dng->image, kHeight).value_or(0)));
+    const bool turned = tiff.u32(tiff.directories().front(), kOrientation).value_or(1) >= 5;
+    ImageInfo info;
+    info.width = turned ? area.height : area.width;
+    info.height = turned ? area.width : area.height;
+    info.format = "dng";
+    info.bitsPerSample = 16;
+    info.raw = true;
+    return info;
+}
+
 Result<LoadedImage> loadLinearDng(const std::vector<std::uint8_t>& file, const LoadOptions& options)
 {
     const TiffReader tiff(file);

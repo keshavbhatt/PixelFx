@@ -371,8 +371,8 @@ void MainWindow::setupMenuActions()
         QDir().mkpath(m_library.folder());
         QDesktopServices::openUrl(QUrl::fromLocalFile(m_library.folder()));
     });
-    add(u"onlineGuide"_s, tr("Online guide"), [] { QDesktopServices::openUrl(QUrl(core::kGuideUrl)); });
-    add(u"reportBug"_s, tr("Report a bug"), [] { QDesktopServices::openUrl(QUrl(core::kIssuesUrl)); });
+    add(u"onlineGuide"_s, tr("Online guide"), [] { QDesktopServices::openUrl(QUrl(core::guideUrl())); });
+    add(u"reportBug"_s, tr("Report a bug"), [] { QDesktopServices::openUrl(QUrl(core::issuesUrl())); });
 }
 
 void MainWindow::editGeometry(const std::function<void(pfx::Settings&)>& change, const QString& label)
