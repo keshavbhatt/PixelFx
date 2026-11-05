@@ -32,6 +32,7 @@ add_executable(pfx_tests
     test_compress.cpp
     test_dng.cpp
     test_lens_profile.cpp
+    test_creative.cpp
 )
 target_include_directories(pfx_tests PRIVATE ${PROJECT_SOURCE_DIR}/src)
 target_link_libraries(pfx_tests PRIVATE pfx::core doctest::doctest PkgConfig::VIPS PkgConfig::LCMS2)

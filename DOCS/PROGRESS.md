@@ -75,6 +75,24 @@ Decisions the work stopped at; everything else went ahead within the approved mo
 
 ## Sessions (newest first)
 
+### 2026-11-06 (creative steps for looks, FEATURES E9)
+
+- PixelFx 1's creative operations as look steps, in a `creative` group (stages 91 to 98, after
+  colour grading): Sepia, Colorize (hue, saturation), Threshold (level), Invert, Blur and
+  Pixelate (sizes as shares of the long edge), Emboss and Edges (offsets as shares of the long
+  edge, sub-pixel on small previews so they scale). Grayscale is the existing Black and white
+  step; v1's Edge and Sobel became one Edges step. The keys join presets version 4 and recipes
+  version 5 (nothing was written with those versions before today). Looks keep version 1: they
+  already keep and skip steps a PixelFx does not know.
+- The registry says which operations a look may use (`OpSpec::lookStep`): not geometry, heal or
+  the lens profile, which today's lens work would otherwise have put in the look editor's Add
+  step menu. Every step there now has a name (six showed their ids, such as
+  `chromatic_aberration`).
+- Checks: 161 library tests (each step's effect, a golden image and a scale test each, reviewed
+  as a contact sheet; Edges brightened after that review), 38 app suites (Add step offers names
+  only, never geometry, heal or the lens profile), the linters.
+- Also: FEATURES statuses brought up to date with the code (34 rows were stale).
+
 ### 2026-11-06 (lens profiles, ADR-013)
 
 - ADR-013 written as the owner asked: Lensfun 0.3.4 (LGPL-3.0, its database CC-BY-SA-3.0),

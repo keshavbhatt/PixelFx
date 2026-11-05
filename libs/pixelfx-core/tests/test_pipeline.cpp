@@ -122,6 +122,18 @@ std::vector<Case> cases()
         {"vignette", with({{"effects.vignette.amount", -45}, {"effects.vignette.roundness", 30}}), 0.004},
         {"grain", with({{"effects.grain.amount", 40}, {"effects.grain.size", 80}}), 0.05},
         {"fade", with({{"effects.fade", 40}}), 0.004},
+        {"sepia", with({{"creative.sepia.amount", 80}}), 0.004},
+        {"colorize",
+         with({{"creative.colorize.amount", 70},
+               {"creative.colorize.hue", 200},
+               {"creative.colorize.saturation", 60}}),
+         0.004},
+        {"threshold", with({{"creative.threshold.amount", 100}, {"creative.threshold.level", 45}}), 0.03},
+        {"invert", with({{"creative.invert.amount", 100}}), 0.004},
+        {"blur", with({{"creative.blur.radius", 0.006}}), 0.01},
+        {"pixelate", with({{"creative.pixelate.size", 0.008}}), 0.01},
+        {"emboss", with({{"creative.emboss.amount", 100}}), 0.02},
+        {"edges", with({{"creative.edges.amount", 100}}), 0.02},
     };
 }
 
@@ -144,7 +156,8 @@ TEST_CASE("golden images: each operation's output is unchanged")
     const fixtures::TempDir dir;
     const pfx::Image scene = fixtures::scene();
     for (const Case& c : cases()) {
-        CAPTURE(c.name);
+        const std::string name = c.name; // shown as text, not as a pointer
+        CAPTURE(name);
         const auto rendered = pfx::render(scene, c.settings);
         REQUIRE(rendered.ok());
         const std::filesystem::path golden =
@@ -169,7 +182,8 @@ TEST_CASE("scale: a half-size render matches the full-size render downscaled")
     const pfx::Image full = fixtures::scene(512, 384);
     const pfx::Image half = pfx::downscale(full, 2);
     for (const Case& c : cases()) {
-        CAPTURE(c.name);
+        const std::string name = c.name; // shown as text, not as a pointer
+        CAPTURE(name);
         const auto big = pfx::render(full, c.settings);
         const auto small = pfx::render(half, c.settings);
         REQUIRE(big.ok());
@@ -195,7 +209,8 @@ TEST_CASE("rendering is deterministic across thread counts")
 {
     const pfx::Image scene = fixtures::scene();
     for (const Case& c : cases()) {
-        CAPTURE(c.name);
+        const std::string name = c.name; // shown as text, not as a pointer
+        CAPTURE(name);
         const auto one = pfx::render(scene, c.settings, {1, nullptr});
         const auto many = pfx::render(scene, c.settings, {7, nullptr});
         CHECK(one.value() == many.value());

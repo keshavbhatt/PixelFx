@@ -161,6 +161,34 @@ void addLensCorrections(std::vector<OpSpec>& ops)
           number("detail.defringe.green.hueHigh", 0, 100, 60)}});
 }
 
+// Creative operations for looks (FEATURES E9), after colour grading and before a look's own
+// place: amounts 0 to 100, sizes shares of the long edge.
+void addCreative(std::vector<OpSpec>& ops)
+{
+    ops.push_back({"blur", "creative", 1, 91, false, {relative("creative.blur.radius", 0.0, 0.01, 0.0)}});
+    ops.push_back(
+        {"pixelate", "creative", 1, 92, false, {relative("creative.pixelate.size", 0.0, 0.01, 0.0)}});
+    ops.push_back({"emboss", "creative", 1, 93, false, {number("creative.emboss.amount", 0, 100)}});
+    ops.push_back({"edges", "creative", 1, 94, false, {number("creative.edges.amount", 0, 100)}});
+    ops.push_back(
+        {"colorize",
+         "creative",
+         1,
+         95,
+         true,
+         {number("creative.colorize.amount", 0, 100), number("creative.colorize.hue", 0, 360, 30, "degrees"),
+          number("creative.colorize.saturation", 0, 100, 50)}});
+    ops.push_back({"sepia", "creative", 1, 96, true, {number("creative.sepia.amount", 0, 100)}});
+    ops.push_back(
+        {"threshold",
+         "creative",
+         1,
+         97,
+         true,
+         {number("creative.threshold.amount", 0, 100), number("creative.threshold.level", 0, 100, 50)}});
+    ops.push_back({"invert", "creative", 1, 98, true, {number("creative.invert.amount", 0, 100)}});
+}
+
 void addEffects(std::vector<OpSpec>& ops)
 {
     ops.push_back(
@@ -255,7 +283,7 @@ void addCurves(std::vector<OpSpec>& ops)
 
 // Stages follow DOCS/presets.md section 5; gaps leave room for the operations of later
 // milestones (lens profile 2, CA 3, defringe 4, heal 5, geometry 10, calibration 32, profile 35, dehaze 45,
-// texture 62, mixer 80, B&W 82, grading 90, look 100, vignette 120 ...).
+// texture 62, mixer 80, B&W 82, grading 90, creative 91 to 98, look 100, vignette 120 ...).
 std::vector<OpSpec> builtInOps()
 {
     std::vector<OpSpec> ops;
@@ -269,6 +297,7 @@ std::vector<OpSpec> builtInOps()
     addCalibration(ops);
     addLensCorrections(ops);
     addGrading(ops);
+    addCreative(ops);
     addEffects(ops);
     std::ranges::sort(ops, [](const OpSpec& a, const OpSpec& b) { return a.stage < b.stage; });
     return ops;

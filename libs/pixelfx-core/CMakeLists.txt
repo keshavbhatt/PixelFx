@@ -78,6 +78,7 @@ add_library(pfx_core
     src/ops/calibration.cpp
     src/ops/lens.cpp
     src/ops/lens_profile.cpp
+    src/ops/creative.cpp
     src/ops/heal.cpp
     src/ops/dehaze.cpp
     src/pipeline/pipeline.cpp

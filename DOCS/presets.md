@@ -110,6 +110,10 @@ internal units, so a file reads like the panel.
   `detail.lensProfile` (presets version 4, recipes and batch recipes version 5; ADR-013):
   `enable` corrects the photo's lens from its profile, found from the photo's own camera and
   lens, with `distortion` and `vignetting` amounts (0 to 200, 100 the profile as measured).
+  `creative` (the same versions; FEATURES E9, made for look steps): `sepia.amount`,
+  `colorize.amount` with `hue` (0 to 360) and `saturation`, `threshold.amount` with `level`,
+  `invert.amount`, `emboss.amount` and `edges.amount` (0 to 100, 0 none), `blur.radius` and
+  `pixelate.size` (shares of the long edge, 0 to 0.01).
   `effects.vignette` gains `feather` (0 to 100), `style` (`highlight`, `color` or `paint`) and
   `highlights` (0 to 100); `effects.grain` gains `roughness` (0 to 100, 50 one even layer).
 - `look.id` refers to a look by id: `builtin:<slug>` for shipped looks, a UUID for the user's.
@@ -142,8 +146,9 @@ internal units, so a file reads like the panel.
   operation's settings written under its group, as in section 2 without the group's own name
   (`exposure` reads `{"exposure": 0.5}` for `light.exposure`; `vignette` reads
   `{"vignette": {...}}` for `effects.vignette.*`); values are clamped to the registry's ranges
-  on load. A `lut` step names a resource and a `mix` from 0 to 100. `geometry` is never a look
-  step. `v` is the operation's parameter version (each operation migrates its own params).
+  on load. A `lut` step names a resource and a `mix` from 0 to 100. Operations that move pixels
+  or need the photo's own facts are never look steps (`geometry`, `heal`, `lens_profile`: the
+  registry's `lookStep`); a look naming one keeps it and skips it. `v` is the operation's parameter version (each operation migrates its own params).
 - An unknown `op` is kept as it is (a newer PixelFx may know it), reported, and skipped when
   rendering; the look never fails to load as a whole for it.
 - Steps run top to bottom on the image as it is after the photo's own settings up to colour
@@ -180,7 +185,7 @@ internal units, so a file reads like the panel.
 
 - Recipes are at **version 5**: version 2 added the `heal` group (section 2), version 3 the
   Lightroom-compatible settings (section 2), version 4 the `camera` profile, version 5
-  `detail.lensProfile`. Older recipes read unchanged (nothing to migrate: an older file never
+  `detail.lensProfile` and the `creative` group. Older recipes read unchanged (nothing to migrate: an older file never
   names either); a file above version 5 is refused as made by a newer PixelFx. Presets are at
   **version 4** for the same settings; version 1 to 3 presets read unchanged.
 - The fingerprint (size plus a hash of the first and last 64 KiB) re-attaches a sidecar to a
@@ -203,7 +208,7 @@ internal units, so a file reads like the panel.
 ```
 
 Batch recipes are at **version 5** (version 3 added the Lightroom-compatible settings of
-section 2, version 4 the `camera` profile, version 5 `detail.lensProfile`; looks stay at
+section 2, version 4 the `camera` profile, version 5 `detail.lensProfile` and `creative`; looks stay at
 version 1).
 
 - The stack is applied in order onto each photo's settings (later entries win per key). A step
@@ -233,7 +238,8 @@ Input decode and orientation, RAW development, then: lens profile -> chromatic a
 defringe -> spot heal -> geometry (crop, rotate, perspective, as one resampling) -> noise
 reduction -> white balance -> calibration -> profile -> exposure -> dehaze -> tone (highlights, shadows, whites,
 blacks, contrast) -> clarity -> texture -> curves (parametric, then points) -> colour mixer ->
-black and white -> vibrance and saturation -> colour grading -> **look** (blended by strength)
+black and white -> vibrance and saturation -> colour grading -> creative (blur, pixelate, emboss, edges, colorize, sepia,
+threshold, invert) -> **look** (blended by strength)
 -> sharpen -> vignette -> grain -> fade -> output transform (colour space, bit depth). Identity
 settings are skipped.
 

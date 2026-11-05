@@ -13,7 +13,8 @@ A new editor, a new image engine, and a new look.
 
 - Looks: one click styles your photo (Vivid, Warm, Film, Golden hour, Teal and orange, Noir and
   more), each tile showing your own photo, with a strength slider. Bring your own .cube LUTs
-  and HaldCLUT pictures as looks, or make your own look from steps and LUTs, share it as a file,
+  and HaldCLUT pictures as looks, or make your own look from steps and LUTs (Sepia, Colorize, Threshold, Invert, Blur,
+  Pixelate, Emboss and Edges among them), share it as a file,
   or bake it to a .cube for other apps.
 - Crop and rotate (C): crop freely or to a ratio with thirds, grid, golden or diagonal guides,
   straighten with the dial, the slider or a drawn level line, fix leaning buildings with the

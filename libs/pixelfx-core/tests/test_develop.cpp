@@ -275,6 +275,11 @@ TEST_CASE("presets version 4 and recipes version 5: older files read unchanged, 
     REQUIRE(lens.ok());
     CHECK(lens.value().settings.boolean("detail.lensProfile.enable", false));
     CHECK(lens.value().settings.number("detail.lensProfile.vignetting", 0) == 50.0);
+    // And the creative group.
+    const auto sepia = pfx::parseDocument(
+        R"({"format":"pixelfx","kind":"preset","version":4,"body":{"settings":{"creative":{"sepia":{"amount":60}}}}})");
+    REQUIRE(sepia.ok());
+    CHECK(sepia.value().settings.number("creative.sepia.amount", 0) == 60.0);
 
     pfx::Document doc;
     doc.kind = pfx::DocumentKind::Preset;

@@ -14,7 +14,7 @@ namespace {
 constexpr int kLookStage = 100; // between grading (90) and sharpen (110)
 
 // Implementations in pipeline order; every id must be in the registry (checked by a test).
-constexpr std::array<detail::OpImpl, 23> kImpls = {{
+constexpr std::array<detail::OpImpl, 31> kImpls = {{
     {"lens_profile", detail::lensProfileActive, detail::lensProfileApply},
     {"chromatic_aberration", detail::chromaticAberrationActive, detail::chromaticAberrationApply},
     {"defringe", detail::defringeActive, detail::defringeApply},
@@ -34,6 +34,14 @@ constexpr std::array<detail::OpImpl, 23> kImpls = {{
     {"bw", detail::blackAndWhiteActive, detail::blackAndWhiteApply},
     {"vibrance_saturation", detail::vibranceSaturationActive, detail::vibranceSaturationApply},
     {"grading", detail::gradingActive, detail::gradingApply},
+    {"blur", detail::blurActive, detail::blurApply},
+    {"pixelate", detail::pixelateActive, detail::pixelateApply},
+    {"emboss", detail::embossActive, detail::embossApply},
+    {"edges", detail::edgesActive, detail::edgesApply},
+    {"colorize", detail::colorizeActive, detail::colorizeApply},
+    {"sepia", detail::sepiaActive, detail::sepiaApply},
+    {"threshold", detail::thresholdActive, detail::thresholdApply},
+    {"invert", detail::invertActive, detail::invertApply},
     {"sharpen", detail::sharpenActive, detail::sharpenApply},
     {"vignette", detail::vignetteActive, detail::vignetteApply},
     {"grain", detail::grainActive, detail::grainApply},

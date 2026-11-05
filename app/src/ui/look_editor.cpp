@@ -289,7 +289,7 @@ LookEditor::~LookEditor() = default;
 
 QString LookEditor::stepName(const QString& op)
 {
-    static const std::array<std::pair<const char*, const char*>, 21> names = {{
+    static const std::array<std::pair<const char*, const char*>, 29> names = {{
         {"chromatic_aberration", QT_TRANSLATE_NOOP("LookEditor", "Chromatic aberration")},
         {"defringe", QT_TRANSLATE_NOOP("LookEditor", "Defringe")},
         {"denoise", QT_TRANSLATE_NOOP("LookEditor", "Noise reduction")},
@@ -310,6 +310,14 @@ QString LookEditor::stepName(const QString& op)
         {"vignette", QT_TRANSLATE_NOOP("LookEditor", "Vignette")},
         {"grain", QT_TRANSLATE_NOOP("LookEditor", "Grain")},
         {"fade", QT_TRANSLATE_NOOP("LookEditor", "Fade")},
+        {"blur", QT_TRANSLATE_NOOP("LookEditor", "Blur")},
+        {"pixelate", QT_TRANSLATE_NOOP("LookEditor", "Pixelate")},
+        {"emboss", QT_TRANSLATE_NOOP("LookEditor", "Emboss")},
+        {"edges", QT_TRANSLATE_NOOP("LookEditor", "Edges")},
+        {"colorize", QT_TRANSLATE_NOOP("LookEditor", "Colorize")},
+        {"sepia", QT_TRANSLATE_NOOP("LookEditor", "Sepia")},
+        {"threshold", QT_TRANSLATE_NOOP("LookEditor", "Threshold")},
+        {"invert", QT_TRANSLATE_NOOP("LookEditor", "Invert")},
         {"lut", QT_TRANSLATE_NOOP("LookEditor", "LUT")},
     }};
     for (const auto& [id, label] : names) {

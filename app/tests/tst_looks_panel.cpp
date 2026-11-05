@@ -161,6 +161,8 @@ private Q_SLOTS:
         }
         QVERIFY(offered.contains(u"Chromatic aberration"_s));
         QVERIFY(offered.contains(u"Black and white"_s));
+        QVERIFY(offered.contains(u"Sepia"_s));
+        QVERIFY(offered.contains(u"Edges"_s));
         for (const QString& name : offered) {
             QVERIFY2(!name.contains(u'_') && name.front().isUpper(), qPrintable(name)); // a name, not an id
         }
