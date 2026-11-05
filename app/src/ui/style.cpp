@@ -1,5 +1,6 @@
 #include "ui/style.h"
 
+#include "ui/icon_text_button.h"
 #include "ui/icons.h"
 
 #include <QApplication>
@@ -15,6 +16,7 @@
 #include <QPalette>
 #include <QPixmap>
 #include <QProxyStyle>
+#include <QPushButton>
 #include <QStyleFactory>
 #include <QTemporaryDir>
 #include <QToolButton>
@@ -209,9 +211,9 @@ const QString kControls = uR"(
         QWidget#listRow:hover { background: {{hover}}; }
         QWidget#listRow[selected="true"] { background: {{accentSoft}}; }
         QWidget#listRow[selected="true"] QLabel#itemTitle { color: {{accent}}; }
-        #sheetFoot { background: {{panel}}; border-top: 1px solid {{border}}; }
+        #footBar { background: {{panel}}; border-top: 1px solid {{border}}; }
         pixelfx--ui--Sheet { background: transparent; }
-        pixelfx--ui--Sheet #sheetFoot { border-bottom-left-radius: 13px; border-bottom-right-radius: 13px; }
+        pixelfx--ui--Sheet #footBar { border-bottom-left-radius: 13px; border-bottom-right-radius: 13px; }
         QListWidget#settingsPages { border-bottom-left-radius: 13px; }
         QCheckBox#switch::indicator { width: 34px; height: 20px; border: 0; border-radius: 10px; background: transparent; image: url({{glyphs}}/switch-off.svg); }
         QCheckBox#switch::indicator:checked { image: url({{glyphs}}/switch-on.svg); }
@@ -422,10 +424,6 @@ void applyStyle(QApplication& app)
     app.setStyleSheet(sheet(t));
 }
 
-namespace {
-constexpr int kSheetPadding = 20; // the sides of a sheet's title row, body and footer
-} // namespace
-
 QVBoxLayout* sheetLayout(QDialog* sheet, QLayout* foot)
 {
     auto* root = new QVBoxLayout(sheet);
@@ -436,7 +434,7 @@ QVBoxLayout* sheetLayout(QDialog* sheet, QLayout* foot)
     body->setSpacing(12);
     root->addLayout(body, 1);
     if (foot != nullptr) {
-        root->addWidget(sheetFootBar(sheet, foot));
+        root->addWidget(footBar(sheet, foot));
     }
     return body;
 }
@@ -539,12 +537,33 @@ void makeSidePanel(QWidget* panel, Qt::Edge photoSide)
     panel->setAttribute(Qt::WA_StyledBackground);
 }
 
-QWidget* sheetFootBar(QWidget* sheet, QLayout* foot)
+FootButtons footButtons(QWidget* parent, const QString& primary, const QList<QWidget*>& leading,
+                        bool withCancel)
 {
-    auto* bar = new QWidget(sheet);
-    bar->setObjectName(QStringLiteral("sheetFoot"));
+    auto* row = new QHBoxLayout;
+    row->setSpacing(8);
+    for (QWidget* w : leading) {
+        row->addWidget(w);
+    }
+    row->addStretch();
+    QPushButton* cancel = nullptr;
+    if (withCancel) {
+        cancel = new QPushButton(QObject::tr("Cancel"), parent);
+        row->addWidget(cancel);
+    }
+    auto* button = new IconTextButton(QIcon(), primary, parent); // the primary may take an icon later
+    button->setObjectName(QStringLiteral("primary"));
+    button->setDefault(true);
+    row->addWidget(button);
+    return {row, cancel, button};
+}
+
+QWidget* footBar(QWidget* parent, QLayout* foot, int padding)
+{
+    auto* bar = new QWidget(parent);
+    bar->setObjectName(QStringLiteral("footBar"));
     bar->setAttribute(Qt::WA_StyledBackground);
-    foot->setContentsMargins(kSheetPadding, 12, kSheetPadding, 12);
+    foot->setContentsMargins(padding, 12, padding, 12);
     bar->setLayout(foot);
     return bar;
 }

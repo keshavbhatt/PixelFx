@@ -72,7 +72,7 @@ private:
     QLayout* buildStraighten();
     QLayout* buildPerspective();
     QWidget* buildOverlays();
-    QLayout* buildFoot();
+    QWidget* buildFoot();
     void changed();
     void askCustomRatio();
     void setRatio(double ratio);

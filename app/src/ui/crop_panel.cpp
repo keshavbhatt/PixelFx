@@ -53,12 +53,11 @@ constexpr std::array kOverlays = {
     OverlayChip{QT_TRANSLATE_NOOP("CropPanel", "None"), CropOverlay::None}};
 
 constexpr int kPanelWidth = 316;
-constexpr int kSide = 14;
 
 QLabel* section(const QString& text, QWidget* parent)
 {
     QLabel* label = sectionLabel(text, parent);
-    label->setContentsMargins(kSide, 12, kSide, 4);
+    label->setContentsMargins(kPanelPadding, 12, kPanelPadding, 4);
     return label;
 }
 
@@ -76,9 +75,9 @@ QWidget* chipRows(const QList<QAbstractButton*>& chips, QWidget* parent)
 {
     auto* box = new QWidget(parent);
     auto* column = new QVBoxLayout(box);
-    column->setContentsMargins(10, 6, 10, 6);
+    column->setContentsMargins(kToolRowPadding, 6, kToolRowPadding, 6);
     column->setSpacing(6);
-    const int width = kPanelWidth - 20;
+    const int width = kPanelWidth - (2 * kToolRowPadding);
     QHBoxLayout* row = nullptr;
     int used = 0;
     for (QAbstractButton* c : chips) {
@@ -134,7 +133,7 @@ CropPanel::CropPanel(QWidget* parent)
     column->addWidget(section(tr("Overlay"), this));
     column->addWidget(buildOverlays());
     column->addStretch();
-    column->addLayout(buildFoot());
+    column->addWidget(buildFoot());
 }
 
 QWidget* CropPanel::buildRatios()
@@ -164,7 +163,7 @@ QWidget* CropPanel::buildOrientation()
 {
     auto* orientation = new QWidget(this);
     auto* orientationRow = new QHBoxLayout(orientation);
-    orientationRow->setContentsMargins(kSide, 4, kSide, 4);
+    orientationRow->setContentsMargins(kPanelPadding, 4, kPanelPadding, 4);
     orientationRow->setSpacing(0);
     auto* orientationLabel = new QLabel(tr("Orientation"), orientation);
     orientationLabel->setObjectName(u"adjustName"_s);
@@ -206,7 +205,7 @@ QLayout* CropPanel::buildStraighten()
     connect(flipH, &QPushButton::clicked, this, [this] { flip(Qt::Horizontal); });
     connect(flipV, &QPushButton::clicked, this, [this] { flip(Qt::Vertical); });
     auto* straighten = new QVBoxLayout;
-    straighten->setContentsMargins(kSide, 0, kSide, 0);
+    straighten->setContentsMargins(kPanelPadding, 0, kPanelPadding, 0);
     straighten->setSpacing(6);
     straighten->addWidget(m_angle);
     auto* turns = new QHBoxLayout;
@@ -229,7 +228,7 @@ QLayout* CropPanel::buildStraighten()
 QLayout* CropPanel::buildPerspective()
 {
     auto* box = new QVBoxLayout;
-    box->setContentsMargins(kSide, 0, kSide, 0);
+    box->setContentsMargins(kPanelPadding, 0, kPanelPadding, 0);
     box->setSpacing(0);
     const std::array<std::pair<const char*, QString>, 2> sliders = {
         std::pair{"geometry.perspective.vertical", tr("Vertical")},
@@ -270,26 +269,17 @@ QWidget* CropPanel::buildOverlays()
     return chipRows(overlayChips, this);
 }
 
-QLayout* CropPanel::buildFoot()
+QWidget* CropPanel::buildFoot()
 {
     auto* resetButton = new QPushButton(tr("Reset"), this);
     resetButton->setToolTip(tr("Undo the turn, flips, straightening and crop"));
-    auto* cancel = new QPushButton(tr("Cancel"), this);
-    cancel->setToolTip(tr("Leave without changes (Escape)"));
-    auto* done = new QPushButton(tr("Done"), this);
-    done->setObjectName(u"primary"_s);
-    done->setToolTip(tr("Apply the crop (Enter)"));
     connect(resetButton, &QPushButton::clicked, this, &CropPanel::reset);
-    connect(cancel, &QPushButton::clicked, this, [this] { Q_EMIT finished(false); });
-    connect(done, &QPushButton::clicked, this, [this] { Q_EMIT finished(true); });
-    auto* foot = new QHBoxLayout;
-    foot->setContentsMargins(kSide, 10, kSide, 12);
-    foot->setSpacing(8);
-    foot->addWidget(resetButton);
-    foot->addStretch();
-    foot->addWidget(cancel);
-    foot->addWidget(done);
-    return foot;
+    const FootButtons buttons = footButtons(this, tr("Done"), {resetButton}, true);
+    buttons.cancel->setToolTip(tr("Leave without changes (Escape)"));
+    buttons.primary->setToolTip(tr("Apply the crop (Enter)"));
+    connect(buttons.cancel, &QPushButton::clicked, this, [this] { Q_EMIT finished(false); });
+    connect(buttons.primary, &QPushButton::clicked, this, [this] { Q_EMIT finished(true); });
+    return footBar(this, buttons.row, kPanelPadding);
 }
 
 CropPanel::~CropPanel() = default;
@@ -348,21 +338,14 @@ void CropPanel::askCustomRatio()
     height->setValue(m_customHeight);
     width->setAccessibleName(tr("Width"));
     height->setAccessibleName(tr("Height"));
-    auto* cancel = new QPushButton(tr("Cancel"), &sheet);
-    auto* use = new QPushButton(tr("Use ratio"), &sheet);
-    use->setObjectName(u"primary"_s);
-    use->setDefault(true);
-    connect(cancel, &QPushButton::clicked, &sheet, &QDialog::reject);
-    connect(use, &QPushButton::clicked, &sheet, &QDialog::accept);
-    auto* foot = new QHBoxLayout;
-    foot->addStretch();
-    foot->addWidget(cancel);
-    foot->addWidget(use);
+    const FootButtons buttons = footButtons(&sheet, tr("Use ratio"), {}, true);
+    connect(buttons.cancel, &QPushButton::clicked, &sheet, &QDialog::reject);
+    connect(buttons.primary, &QPushButton::clicked, &sheet, &QDialog::accept);
     auto* ratio = new QHBoxLayout;
     ratio->addWidget(width, 1);
     ratio->addWidget(new QLabel(u":"_s, &sheet));
     ratio->addWidget(height, 1);
-    QVBoxLayout* column = sheetLayout(&sheet, foot);
+    QVBoxLayout* column = sheetLayout(&sheet, buttons.row);
     column->addLayout(sheetTitleRow(&sheet, tr("Custom ratio")));
     column->addWidget(new QLabel(tr("Width to height, for example 16 : 9 or 5 : 4."), &sheet));
     column->addLayout(ratio);

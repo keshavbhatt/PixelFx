@@ -93,14 +93,10 @@ AboutSheet::AboutSheet(QWidget* parent)
     m_pages->addWidget(buildDiagnosticsPage());
     connect(m_tabs, &QButtonGroup::idClicked, this, [this](int id) { showPage(static_cast<Page>(id)); });
 
-    auto* close = new QPushButton(tr("Close"), this);
-    close->setDefault(true);
-    connect(close, &QPushButton::clicked, this, &QDialog::accept);
-    auto* foot = new QHBoxLayout;
-    foot->addStretch();
-    foot->addWidget(close);
+    const FootButtons buttons = footButtons(this, tr("Close"));
+    connect(buttons.primary, &QPushButton::clicked, this, &QDialog::accept);
 
-    QVBoxLayout* layout = sheetLayout(this, foot);
+    QVBoxLayout* layout = sheetLayout(this, buttons.row);
     layout->addLayout(sheetTitleRow(this, tr("About PixelFx")));
     layout->addLayout(tabRow);
     layout->addWidget(m_pages, 1);

@@ -108,19 +108,11 @@ QHBoxLayout* PresetSaveSheet::buildButtons()
             accept();
         }
     });
-    auto* cancel = new QPushButton(tr("Cancel"), this);
-    connect(cancel, &QPushButton::clicked, this, &QDialog::reject);
-    m_save = new QPushButton(tr("Save preset"), this);
-    m_save->setObjectName(u"primary"_s);
-    m_save->setDefault(true);
+    const FootButtons buttons = footButtons(this, tr("Save preset"), {toFile}, true);
+    connect(buttons.cancel, &QPushButton::clicked, this, &QDialog::reject);
+    m_save = buttons.primary;
     connect(m_save, &QPushButton::clicked, this, &QDialog::accept);
-    auto* buttons = new QHBoxLayout;
-    buttons->addWidget(toFile);
-    buttons->addStretch();
-    buttons->addWidget(cancel);
-    buttons->addWidget(m_save);
-
-    return buttons;
+    return buttons.row;
 }
 
 void PresetSaveSheet::buildInclude(QVBoxLayout* column, const pfx::Settings& settings)

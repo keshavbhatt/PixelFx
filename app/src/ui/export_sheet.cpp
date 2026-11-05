@@ -136,23 +136,15 @@ QHBoxLayout* ExportSheet::addFooter(QFormLayout* form)
     note->setObjectName(u"faint"_s);
     note->setWordWrap(true);
 
-    auto* cancel = new QPushButton(tr("Cancel"), this);
-    auto* exportButton = new QPushButton(tr("Export"), this);
-    m_exportButton = exportButton;
-    exportButton->setObjectName(u"primary"_s);
-    exportButton->setDefault(true);
-    connect(cancel, &QPushButton::clicked, this, &QDialog::reject);
-    connect(exportButton, &QPushButton::clicked, this, &QDialog::accept);
     m_copyButton = new QPushButton(tr("Copy to clipboard"), this);
     m_copyButton->setToolTip(tr("Copy the photo at this size, with the watermark, instead of saving a file"));
     connect(m_copyButton, &QPushButton::clicked, this, [this] { done(kCopyToClipboard); });
-    auto* buttons = new QHBoxLayout;
-    buttons->addWidget(m_copyButton);
-    buttons->addStretch();
-    buttons->addWidget(cancel);
-    buttons->addWidget(exportButton);
+    const FootButtons buttons = footButtons(this, tr("Export"), {m_copyButton}, true);
+    m_exportButton = buttons.primary;
+    connect(buttons.cancel, &QPushButton::clicked, this, &QDialog::reject);
+    connect(m_exportButton, &QPushButton::clicked, this, &QDialog::accept);
     form->addRow(note);
-    return buttons;
+    return buttons.row;
 }
 
 QWidget* ExportSheet::qualityRow(int quality)
@@ -245,17 +237,10 @@ bool ExportSheet::askLongEdge()
     edge->setSuffix(tr(" px"));
     edge->setValue(m_longEdge);
     edge->setAccessibleName(tr("Long edge"));
-    auto* cancel = new QPushButton(tr("Cancel"), &sheet);
-    auto* use = new QPushButton(tr("Use size"), &sheet);
-    use->setObjectName(u"primary"_s);
-    use->setDefault(true);
-    connect(cancel, &QPushButton::clicked, &sheet, &QDialog::reject);
-    connect(use, &QPushButton::clicked, &sheet, &QDialog::accept);
-    auto* foot = new QHBoxLayout;
-    foot->addStretch();
-    foot->addWidget(cancel);
-    foot->addWidget(use);
-    QVBoxLayout* column = sheetLayout(&sheet, foot);
+    const FootButtons buttons = footButtons(&sheet, tr("Use size"), {}, true);
+    connect(buttons.cancel, &QPushButton::clicked, &sheet, &QDialog::reject);
+    connect(buttons.primary, &QPushButton::clicked, &sheet, &QDialog::accept);
+    QVBoxLayout* column = sheetLayout(&sheet, buttons.row);
     auto* form = new QFormLayout;
     form->addRow(tr("Long edge"), edge);
     column->addLayout(sheetTitleRow(&sheet, tr("Custom size")));

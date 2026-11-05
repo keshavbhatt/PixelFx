@@ -200,7 +200,7 @@ WatermarkSheet::WatermarkSheet(const QImage& photo, const QString& current, cons
     column->setSpacing(0);
     column->addWidget(head);
     column->addLayout(body, 1);
-    column->addWidget(sheetFootBar(this, foot));
+    column->addWidget(footBar(this, foot));
 
     m_preview->setPhoto(photo);
     connect(m_list, &QComboBox::activated, this, [this](int index) {
@@ -241,18 +241,10 @@ QLayout* WatermarkSheet::buildFooter()
 {
     auto* note = new QLabel(tr("Applied on export only; the editor view never shows it."), this);
     note->setObjectName(u"faint"_s);
-    auto* cancel = new QPushButton(tr("Cancel"), this);
-    connect(cancel, &QPushButton::clicked, this, &QDialog::reject);
-    auto* use = new QPushButton(tr("Use watermark"), this);
-    use->setObjectName(u"primary"_s);
-    use->setDefault(true);
-    connect(use, &QPushButton::clicked, this, &WatermarkSheet::useWatermark);
-    auto* foot = new QHBoxLayout;
-    foot->addWidget(note);
-    foot->addStretch();
-    foot->addWidget(cancel);
-    foot->addWidget(use);
-    return foot;
+    const FootButtons buttons = footButtons(this, tr("Use watermark"), {note}, true);
+    connect(buttons.cancel, &QPushButton::clicked, this, &QDialog::reject);
+    connect(buttons.primary, &QPushButton::clicked, this, &WatermarkSheet::useWatermark);
+    return buttons.row;
 }
 
 QWidget* WatermarkSheet::buildLogoPage()
@@ -333,7 +325,7 @@ QWidget* WatermarkSheet::buildControls()
     panel->setAttribute(Qt::WA_StyledBackground);
     panel->setFixedWidth(340);
     auto* column = new QVBoxLayout(panel);
-    column->setContentsMargins(16, 12, 16, 12);
+    column->setContentsMargins(kPanelPadding, 12, kPanelPadding, 12);
     column->setSpacing(10);
 
     column->addWidget(buildKindRow(panel));
@@ -496,7 +488,7 @@ QWidget* WatermarkSheet::buildPreview()
     on->setObjectName(u"faint"_s);
     auto* shapes = new QButtonGroup(bar);
     auto* barLayout = new QHBoxLayout(bar);
-    barLayout->setContentsMargins(12, 8, 12, 8);
+    barLayout->setContentsMargins(kPanelPadding, 8, kPanelPadding, 8);
     barLayout->setSpacing(0);
     barLayout->addWidget(on);
     barLayout->addSpacing(6);

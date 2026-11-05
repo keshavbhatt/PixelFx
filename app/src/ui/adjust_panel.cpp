@@ -190,7 +190,7 @@ QHBoxLayout* AdjustPanel::buildTopRow()
     autoButton->setToolTip(tr("Set light and color from the photo (Ctrl+Shift+A)"));
     connect(autoButton, &QPushButton::clicked, this, &AdjustPanel::autoRequested);
     auto* top = new QHBoxLayout;
-    top->setContentsMargins(12, 6, 12, 8);
+    top->setContentsMargins(kPanelPadding, 6, kPanelPadding, 8);
     top->setSpacing(6);
     top->addWidget(autoButton, 1);
     top->addWidget(copy);
@@ -206,7 +206,7 @@ AdjustPanel::AdjustPanel(QWidget* parent)
     makeSidePanel(this, Qt::LeftEdge);
     QHBoxLayout* top = buildTopRow();
     auto* histogramBox = new QVBoxLayout;
-    histogramBox->setContentsMargins(12, 10, 12, 0);
+    histogramBox->setContentsMargins(kPanelPadding, 10, kPanelPadding, 0);
     histogramBox->addWidget(m_histogram);
 
     auto* content = new QWidget(this);

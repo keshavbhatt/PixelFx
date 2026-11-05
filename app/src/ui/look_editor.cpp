@@ -422,7 +422,7 @@ QHBoxLayout* LookEditor::buildStepButtons(QWidget* side)
     import->setObjectName(u"small"_s);
     connect(import, &QPushButton::clicked, this, &LookEditor::importLut);
     auto* buttons = new QHBoxLayout;
-    buttons->setContentsMargins(10, 8, 10, 8);
+    buttons->setContentsMargins(kToolRowPadding, 8, kToolRowPadding, 8);
     buttons->addWidget(add);
     buttons->addWidget(import);
     buttons->addStretch();
@@ -458,7 +458,7 @@ QWidget* LookEditor::buildSteps()
     m_noSteps = new QLabel(tr("No steps yet. Add a step, or import a LUT to start from."), side);
     m_noSteps->setObjectName(u"faint"_s);
     m_noSteps->setWordWrap(true);
-    m_noSteps->setContentsMargins(14, 6, 14, 6);
+    m_noSteps->setContentsMargins(kPanelPadding, 6, kPanelPadding, 6);
 
     QHBoxLayout* buttons = buildStepButtons(side);
 
@@ -467,7 +467,7 @@ QWidget* LookEditor::buildSteps()
     m_params = new QWidget(side);
     m_params->setObjectName(u"panelContent"_s);
     m_paramsLayout = new QVBoxLayout(m_params);
-    m_paramsLayout->setContentsMargins(14, 0, 14, 8);
+    m_paramsLayout->setContentsMargins(kPanelPadding, 0, kPanelPadding, 8);
     auto* scroll = new QScrollArea(side);
     scroll->setObjectName(u"panelScroll"_s);
     scroll->setWidget(m_params);
@@ -479,11 +479,11 @@ QWidget* LookEditor::buildSteps()
     column->setContentsMargins(0, 10, 0, 0);
     column->setSpacing(4);
     column->addWidget(label);
-    label->setContentsMargins(14, 0, 14, 0);
+    label->setContentsMargins(kPanelPadding, 0, kPanelPadding, 0);
     column->addWidget(m_noSteps);
     column->addWidget(m_stepsScroll);
     column->addLayout(buttons);
-    m_paramsTitle->setContentsMargins(14, 4, 14, 0);
+    m_paramsTitle->setContentsMargins(kPanelPadding, 4, kPanelPadding, 0);
     column->addWidget(m_paramsTitle);
     column->addWidget(scroll, 1);
     return side;
@@ -498,7 +498,7 @@ QWidget* LookEditor::buildPreviewBar(QWidget* side)
     on->setObjectName(u"faint"_s);
     auto* group = new QButtonGroup(bar);
     auto* layout = new QHBoxLayout(bar);
-    layout->setContentsMargins(12, 8, 12, 8);
+    layout->setContentsMargins(kPanelPadding, 8, kPanelPadding, 8);
     layout->setSpacing(0);
     layout->addWidget(on);
     layout->addSpacing(6);
@@ -561,19 +561,11 @@ void LookEditor::buildFooter(QVBoxLayout* column)
     connect(m_export, &QPushButton::clicked, this, &LookEditor::exportLook);
     m_bake = new QPushButton(tr("Bake to .cube..."), this);
     connect(m_bake, &QPushButton::clicked, this, &LookEditor::bakeCube);
-    auto* cancel = new QPushButton(tr("Cancel"), this);
-    connect(cancel, &QPushButton::clicked, this, &QDialog::reject);
-    m_save = new QPushButton(tr("Save look"), this);
-    m_save->setObjectName(u"primary"_s);
-    m_save->setDefault(true);
+    const FootButtons buttons = footButtons(this, tr("Save look"), {m_export, m_bake}, true);
+    connect(buttons.cancel, &QPushButton::clicked, this, &QDialog::reject);
+    m_save = buttons.primary;
     connect(m_save, &QPushButton::clicked, this, &LookEditor::saveLook);
-    auto* foot = new QHBoxLayout;
-    foot->addWidget(m_export);
-    foot->addWidget(m_bake);
-    foot->addStretch();
-    foot->addWidget(cancel);
-    foot->addWidget(m_save);
-    column->addWidget(sheetFootBar(this, foot));
+    column->addWidget(footBar(this, buttons.row));
 }
 
 void LookEditor::refreshSteps()

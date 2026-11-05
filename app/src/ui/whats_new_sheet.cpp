@@ -52,16 +52,10 @@ WhatsNewSheet::WhatsNewSheet(const QString& markdown, const QString& version, bo
     connect(m_more, &QLabel::linkActivated, this, &WhatsNewSheet::showAll);
 
     m_show->setChecked(showAfterUpdates);
-    auto* close = new QPushButton(tr("Close"), this);
-    close->setObjectName(u"primary"_s);
-    close->setDefault(true);
-    connect(close, &QPushButton::clicked, this, &QDialog::accept);
-    auto* foot = new QHBoxLayout;
-    foot->addWidget(m_show);
-    foot->addStretch();
-    foot->addWidget(close);
+    const FootButtons buttons = footButtons(this, tr("Close"), {m_show});
+    connect(buttons.primary, &QPushButton::clicked, this, &QDialog::accept);
 
-    QVBoxLayout* layout = sheetLayout(this, foot);
+    QVBoxLayout* layout = sheetLayout(this, buttons.row);
     layout->setSpacing(10);
     layout->addLayout(head);
     layout->addWidget(m_text, 1);

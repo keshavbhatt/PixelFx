@@ -24,18 +24,12 @@ PasteSheet::PasteSheet(const pfx::Settings& copied, int photos, QWidget* parent)
     auto* hint = new QLabel(tr("Parts left out keep what each photo already has."), this);
     hint->setObjectName(u"faint"_s);
     hint->setWordWrap(true);
-    auto* cancel = new QPushButton(tr("Cancel"), this);
-    auto* paste = new QPushButton(tr("Paste to %n photos", nullptr, photos), this);
-    paste->setObjectName(u"primary"_s);
-    paste->setDefault(true);
-    connect(cancel, &QPushButton::clicked, this, &QDialog::reject);
-    connect(paste, &QPushButton::clicked, this, &QDialog::accept);
-    connect(m_parts, &PartChecklist::toggled, this, [this, paste] { paste->setEnabled(!units().isEmpty()); });
-    auto* buttons = new QHBoxLayout;
-    buttons->addStretch();
-    buttons->addWidget(cancel);
-    buttons->addWidget(paste);
-    QVBoxLayout* column = sheetLayout(this, buttons);
+    const FootButtons buttons = footButtons(this, tr("Paste to %n photos", nullptr, photos), {}, true);
+    connect(buttons.cancel, &QPushButton::clicked, this, &QDialog::reject);
+    connect(buttons.primary, &QPushButton::clicked, this, &QDialog::accept);
+    connect(m_parts, &PartChecklist::toggled, this,
+            [this, paste = buttons.primary] { paste->setEnabled(!units().isEmpty()); });
+    QVBoxLayout* column = sheetLayout(this, buttons.row);
     column->addLayout(sheetTitleRow(this, tr("Paste settings to %n photos", nullptr, photos)));
     column->addWidget(m_source);
     column->addWidget(m_parts);

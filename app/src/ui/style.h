@@ -15,11 +15,19 @@ class QHBoxLayout;
 class QLabel;
 class QLayout;
 class QMenu;
+class QPushButton;
 class QToolButton;
 class QVBoxLayout;
 class QWidget;
 
 namespace pixelfx::ui {
+
+/// The space between a sheet's edge and its content; between a panel's edge and its content
+/// (sections, groups, sliders, footers); and around a panel's compact rows of tools (tabs, the
+/// search row, filter chips, the tile grid).
+inline constexpr int kSheetPadding = 20;
+inline constexpr int kPanelPadding = 14;
+inline constexpr int kToolRowPadding = 10;
 
 /// The design tokens of DOCS/DESIGN.md section 1.
 struct Tokens
@@ -86,7 +94,19 @@ void setLabelColumn(const QFormLayout* form, int width);
 /// Styles `panel` as a panel at the side of the window: the panel colour and a border on the edge
 /// that faces the photo.
 void makeSidePanel(QWidget* panel, Qt::Edge photoSide);
-/// The footer bar alone, for sheets whose body runs edge to edge (Watermark, the look editor).
-QWidget* sheetFootBar(QWidget* sheet, QLayout* foot);
+/// The buttons of a footer: `leading` at the left (Copy to clipboard, a note, a check box), then
+/// Cancel when asked for, then the primary button, the default one. Both are returned so their
+/// actions can be connected (Cancel rejects a sheet, or leaves a mode).
+struct FootButtons
+{
+    QHBoxLayout* row;
+    QPushButton* cancel; ///< nullptr without Cancel
+    QPushButton* primary;
+};
+FootButtons footButtons(QWidget* parent, const QString& primary, const QList<QWidget*>& leading = {},
+                        bool withCancel = false);
+/// A footer on a bar with a top border, edge to edge: under a sheet whose body runs edge to edge
+/// (Watermark, the look editor) or a side panel (Heal, Crop, Batch).
+QWidget* footBar(QWidget* parent, QLayout* foot, int padding = kSheetPadding);
 
 } // namespace pixelfx::ui

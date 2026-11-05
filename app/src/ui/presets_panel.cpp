@@ -70,7 +70,7 @@ PresetsPanel::PresetsPanel(QWidget* parent)
     footLine->setAttribute(Qt::WA_StyledBackground);
     footLine->setFixedHeight(1);
     auto* foot = new QHBoxLayout;
-    foot->setContentsMargins(10, 10, 10, 10);
+    foot->setContentsMargins(kPanelPadding, 10, kPanelPadding, 10);
     foot->addWidget(save, 1);
 
     auto* presetsPage = new QWidget(this);
@@ -106,7 +106,7 @@ int PresetsPanel::currentTab() const
 QHBoxLayout* PresetsPanel::buildTabs()
 {
     auto* tabs = new QHBoxLayout;
-    tabs->setContentsMargins(10, 8, 10, 0);
+    tabs->setContentsMargins(kToolRowPadding, 8, kToolRowPadding, 0);
     tabs->setSpacing(4);
     for (const QString& name : {tr("Looks"), tr("Presets")}) {
         auto* tab = new QPushButton(name, this);
@@ -137,7 +137,7 @@ QHBoxLayout* PresetsPanel::buildHead()
     import->setAccessibleName(tr("Import presets and looks"));
     connect(import, &QToolButton::clicked, this, &PresetsPanel::importRequested);
     auto* head = new QHBoxLayout;
-    head->setContentsMargins(10, 10, 10, 6);
+    head->setContentsMargins(kToolRowPadding, 10, kToolRowPadding, 6);
     head->setSpacing(6);
     head->addWidget(m_search, 1);
     head->addWidget(import);
@@ -196,7 +196,7 @@ void PresetsPanel::rebuild()
             group = e.group;
             auto* label = new QLabel(group.toUpper(), m_listBox);
             label->setObjectName(u"section"_s);
-            label->setContentsMargins(14, 12, 14, 4);
+            label->setContentsMargins(kPanelPadding, 12, kPanelPadding, 4);
             m_list->addWidget(label);
         }
         auto* row = new PresetRow(i, e, m_listBox);
@@ -211,7 +211,7 @@ void PresetsPanel::rebuild()
         auto* empty =
             new QLabel(filter.isEmpty() ? tr("No presets yet.") : tr("No preset is called that."), m_listBox);
         empty->setObjectName(u"muted"_s);
-        empty->setContentsMargins(14, 12, 14, 0);
+        empty->setContentsMargins(kPanelPadding, 12, kPanelPadding, 0);
         m_list->addWidget(empty);
     }
     m_list->addStretch();

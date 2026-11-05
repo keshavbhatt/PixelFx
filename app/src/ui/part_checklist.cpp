@@ -4,6 +4,7 @@
 #include "core/presets.h"
 #include "ui/adjust_panel.h"
 #include "ui/elided_label.h"
+#include "ui/style.h"
 
 #include <QCheckBox>
 #include <QHBoxLayout>
@@ -45,7 +46,7 @@ PartChecklist::PartChecklist(const pfx::Settings& settings, const QStringList& p
 {
     setObjectName(u"card"_s);
     auto* row = new QHBoxLayout(this);
-    row->setContentsMargins(14, 10, 14, 10);
+    row->setContentsMargins(kPanelPadding, 10, kPanelPadding, 10);
     row->setSpacing(20);
     std::vector<QVBoxLayout*> halves;
     for (int i = 0; i < std::max(1, columns); ++i) {

@@ -79,7 +79,7 @@ AdjustGroup::AdjustGroup(QString id, const QString& name, const QString& glyph, 
     m_reset->setToolTip(tr("Reset %1").arg(name));
     m_reset->setAccessibleName(tr("Reset %1").arg(name));
     auto* row = new QHBoxLayout(header);
-    row->setContentsMargins(14, 10, 14, 10);
+    row->setContentsMargins(kPanelPadding, 10, kPanelPadding, 10);
     row->setSpacing(8);
     row->addWidget(m_chevron);
     row->addWidget(icon);
@@ -87,7 +87,7 @@ AdjustGroup::AdjustGroup(QString id, const QString& name, const QString& glyph, 
     row->addWidget(m_dot);
     row->addStretch();
     row->addWidget(m_reset);
-    m_bodyLayout->setContentsMargins(14, 0, 14, 10);
+    m_bodyLayout->setContentsMargins(kPanelPadding, 0, kPanelPadding, 10);
     m_bodyLayout->setSpacing(0);
     auto* column = new QVBoxLayout(this);
     column->setContentsMargins(0, 0, 0, 0);

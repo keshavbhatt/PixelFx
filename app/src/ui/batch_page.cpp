@@ -56,7 +56,6 @@ namespace {
 bool (*isPhotoTest)(const QString&) = nullptr;
 
 constexpr int kPanelWidth = 380;
-constexpr int kSide = 14;
 
 QLabel* sectionTitle(const QString& text, QWidget* parent)
 {
@@ -396,7 +395,7 @@ QWidget* BatchPage::buildPanel()
     auto* content = new QWidget(panel);
     content->setObjectName(u"batchPanelContent"_s);
     auto* sections = new QVBoxLayout(content);
-    sections->setContentsMargins(kSide, 0, kSide, 12);
+    sections->setContentsMargins(kPanelPadding, 0, kPanelPadding, 12);
     sections->setSpacing(6);
     sections->addWidget(buildRecipe(content));
     sections->addWidget(buildResize(content));
@@ -610,14 +609,11 @@ QWidget* BatchPage::buildFoot(QWidget* parent)
             m_status->show();
         }
     });
-    m_process = new IconTextButton(icons::themed(u"play"_s, Qt::white), tr("Process"), parent);
-    m_process->setObjectName(u"primary"_s);
+    const FootButtons buttons = footButtons(parent, tr("Process"), {save});
+    m_process = buttons.primary;
+    m_process->setIcon(icons::themed(u"play"_s, Qt::white));
     connect(m_process, &QPushButton::clicked, this, &BatchPage::process);
-    auto* foot = new QHBoxLayout;
-    foot->addWidget(save);
-    foot->addStretch();
-    foot->addWidget(m_process);
-    return sheetFootBar(parent, foot);
+    return footBar(parent, buttons.row, kPanelPadding);
 }
 
 void BatchPage::refreshFormats()
@@ -677,17 +673,10 @@ void BatchPage::editSaveOptions()
     sheet.setWindowTitle(tr("Save options"));
     SaveOptionsControls c;
     QFormLayout* form = saveOptionsForm(&sheet, m_output, c);
-    auto* cancel = new QPushButton(tr("Cancel"), &sheet);
-    auto* done = new QPushButton(tr("Done"), &sheet);
-    done->setObjectName(u"primary"_s);
-    done->setDefault(true);
-    connect(cancel, &QPushButton::clicked, &sheet, &QDialog::reject);
-    connect(done, &QPushButton::clicked, &sheet, &QDialog::accept);
-    auto* foot = new QHBoxLayout;
-    foot->addStretch();
-    foot->addWidget(cancel);
-    foot->addWidget(done);
-    QVBoxLayout* column = sheetLayout(&sheet, foot);
+    const FootButtons buttons = footButtons(&sheet, tr("Done"), {}, true);
+    connect(buttons.cancel, &QPushButton::clicked, &sheet, &QDialog::reject);
+    connect(buttons.primary, &QPushButton::clicked, &sheet, &QDialog::accept);
+    QVBoxLayout* column = sheetLayout(&sheet, buttons.row);
     column->addLayout(sheetTitleRow(&sheet, tr("Save options")));
     column->addLayout(form);
     sheet.setSize(Sheet::Size::Narrow);

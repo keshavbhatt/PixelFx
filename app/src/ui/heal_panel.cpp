@@ -25,7 +25,6 @@ namespace pixelfx::ui {
 namespace {
 
 constexpr int kPanelWidth = 316;
-constexpr int kSide = 14;
 constexpr int kSizeTicks = 1000; // the size slider counts tenths of a percent
 
 // A size as a share of the long edge, as people read it: "4%", "2.5%".
@@ -39,7 +38,7 @@ QString percent(double share)
 QLabel* heading(const QString& text, QWidget* parent)
 {
     QLabel* label = sectionLabel(text, parent);
-    label->setContentsMargins(kSide, 12, kSide, 4);
+    label->setContentsMargins(kPanelPadding, 12, kPanelPadding, 4);
     return label;
 }
 
@@ -53,22 +52,17 @@ HealPanel::HealPanel(HealTool* tool, QWidget* parent)
     setFixedWidth(kPanelWidth);
     auto* reset = new QPushButton(tr("Reset"), this);
     reset->setToolTip(tr("Take off the spots made since Heal opened"));
-    auto* done = new QPushButton(tr("Done"), this);
-    done->setObjectName(u"primary"_s);
-    done->setToolTip(tr("Keep the spots and leave Heal (Escape)"));
     connect(reset, &QPushButton::clicked, this, &HealPanel::resetRequested);
-    connect(done, &QPushButton::clicked, this, &HealPanel::doneRequested);
-    auto* foot = new QHBoxLayout;
-    foot->addWidget(reset);
-    foot->addStretch();
-    foot->addWidget(done);
+    const FootButtons buttons = footButtons(this, tr("Done"), {reset});
+    buttons.primary->setToolTip(tr("Keep the spots and leave Heal (Escape)"));
+    connect(buttons.primary, &QPushButton::clicked, this, &HealPanel::doneRequested);
     auto* column = new QVBoxLayout(this);
     column->setContentsMargins(0, 0, 0, 0);
     column->setSpacing(0);
     column->addWidget(heading(tr("Heal"), this));
     column->addWidget(buildBrush());
     column->addWidget(buildSpots(), 1);
-    column->addWidget(sheetFootBar(this, foot));
+    column->addWidget(footBar(this, buttons.row, kPanelPadding));
     connect(m_tool, &HealTool::spotsChanged, this, [this](const pfx::Spots& /*spots*/, bool finished) {
         if (finished) {
             refresh();
@@ -85,7 +79,7 @@ QWidget* HealPanel::buildBrush()
 {
     auto* box = new QWidget(this);
     auto* column = new QVBoxLayout(box);
-    column->setContentsMargins(kSide, 0, kSide, 4);
+    column->setContentsMargins(kPanelPadding, 0, kPanelPadding, 4);
     column->setSpacing(8);
     auto* modes = new QHBoxLayout;
     modes->setSpacing(0);
@@ -168,7 +162,7 @@ QWidget* HealPanel::buildSpots()
     m_removeAll->setObjectName(u"link"_s);
     connect(m_removeAll, &QPushButton::clicked, m_tool, &HealTool::removeAll);
     auto* head = new QHBoxLayout;
-    head->setContentsMargins(kSide, 12, kSide - 4, 4);
+    head->setContentsMargins(kPanelPadding, 12, kPanelPadding - 4, 4);
     head->addWidget(m_count, 1);
     head->addWidget(m_removeAll);
     auto* listBox = new QWidget(box);

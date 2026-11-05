@@ -171,14 +171,14 @@ LooksPanel::LooksPanel(QWidget* parent)
     add->setAccessibleName(tr("New look"));
     connect(add, &QToolButton::clicked, this, &LooksPanel::newLookRequested);
     auto* head = new QHBoxLayout;
-    head->setContentsMargins(10, 10, 10, 4);
+    head->setContentsMargins(kToolRowPadding, 10, kToolRowPadding, 4);
     head->setSpacing(6);
     head->addWidget(m_search, 1);
     head->addWidget(add);
 
     auto* chipBox = new QWidget(this);
     auto* chips = new FlowLayout(chipBox, 6);
-    chips->setContentsMargins(10, 6, 10, 6);
+    chips->setContentsMargins(kToolRowPadding, 6, kToolRowPadding, 6);
     for (std::size_t i = 0; i < kChips.size(); ++i) {
         auto* chip = new QPushButton(tr(kChips.at(i).label), this);
         chip->setObjectName(u"chip"_s);
@@ -242,7 +242,7 @@ QWidget* LooksPanel::buildStrength()
     top->addStretch();
     top->addWidget(m_strengthValue);
     auto* column = new QVBoxLayout(box);
-    column->setContentsMargins(12, 8, 12, 10);
+    column->setContentsMargins(kPanelPadding, 8, kPanelPadding, 10);
     column->setSpacing(0);
     column->addLayout(top);
     column->addWidget(m_strength);
@@ -320,7 +320,7 @@ void LooksPanel::addSection(const QString& title, QWidget* extra, const std::vec
     auto* label = new QLabel(title.toUpper(), m_listBox);
     label->setObjectName(u"section"_s);
     auto* head = new QHBoxLayout;
-    head->setContentsMargins(12, 10, 12, 4);
+    head->setContentsMargins(kPanelPadding, 10, kPanelPadding, 4);
     head->addWidget(label);
     head->addStretch();
     if (extra != nullptr) {
@@ -328,7 +328,7 @@ void LooksPanel::addSection(const QString& title, QWidget* extra, const std::vec
     }
     m_list->addLayout(head);
     auto* grid = new QGridLayout;
-    grid->setContentsMargins(10, 2, 10, 6);
+    grid->setContentsMargins(kToolRowPadding, 2, kToolRowPadding, 6);
     grid->setHorizontalSpacing(8);
     grid->setVerticalSpacing(8);
     int at = 0;
