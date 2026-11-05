@@ -55,8 +55,8 @@ Decisions the work stopped at; everything else went ahead within the approved mo
     shipped); the main menu leaves out Save edit with the file;
     Copy to clipboard has no shortcut (the mock's
     Ctrl+Shift+C is Copy settings).
-9. Still to plan: monitor profile, GPU preview, sidecars next to the photo, the batch-end
-    notification (needs Qt D-Bus on Linux, a dependency decision).
+9. Still to plan: monitor profile, GPU preview; sidecars next to the photo later (owner,
+    2026-11-06). The batch-end notification is done on Linux (ADR-011).
 10. Online guide: done 2026-11-06, the GitHub wiki (main menu and About).
 11. Small choices made with the approved About, What's new and grading mocks, easy to change:
     What's new does not open on a first install (nothing is new yet), only after an update from
@@ -71,6 +71,14 @@ Decisions the work stopped at; everything else went ahead within the approved mo
     Heal); Reveal dust explains itself in its tooltip rather than a first-time line.
 
 ## Sessions (newest first)
+
+### 2026-11-06 (batch notification)
+
+- FEATURES S6 on Linux (ADR-011, owner's approval of Qt D-Bus): `services::Notifier` notifies
+  when a batch ends and the window is not active, through the portal in Flatpak and
+  org.freedesktop.Notifications elsewhere; clicking it brings PixelFx forward on Batch. Not sent
+  for real in this session (it would show on the owner's desktop); the call is the one the
+  freedesktop specification gives.
 
 ### 2026-11-06 (Online guide, live theme)
 

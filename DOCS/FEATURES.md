@@ -28,7 +28,7 @@ look; a **batch recipe** is a preset plus resize and save options.
 | S3 | Single instance; a second launch forwards its files to the running window | refuses with a dialog | KEEP | done (`SingleInstance`, `Application`; end-to-end `tst_instance`) |
 | S4 | Open files from the command line and the desktop file (`%F`), MIME types declared | argv ignored | KEEP | wip: command line done (`CliOptions`); desktop file and MIME types with packaging (M7) |
 | S5 | Drag and drop of files and folders anywhere in the window; paste an image from the clipboard | none | KEEP | wip: dropping files and pasting an image (Ctrl+V, kept as PNG in the cache) done; folders with the filmstrip and Batch |
-| S6 | Native notifications through the portal or freedesktop (batch finished) | none | KEEP | todo |
+| S6 | Native notifications through the portal or freedesktop (batch finished) | none | KEEP | done on Linux: a batch that ends while PixelFx is in the background notifies through the portal (Flatpak) or org.freedesktop.Notifications, a click brings the window to Batch (ADR-011, 2026-11-06); Windows and macOS with M7 |
 | S7 | Crash handler, log file, diagnostics copy, Report a bug sheet | none | KEEP | wip: log file done (`LogSink`); the rest M6 |
 | S8 | What's new once per version from the bundled changelog, Version picker, link in About; Online guide | none | KEEP | done: What's new (once after an update, menu, About); Online guide waits for a URL |
 | S9 | Keyboard shortcuts sheet (F1, Ctrl+/); every action shows its shortcut in its tooltip | 3 shortcuts | KEEP | wip: the shortcuts sheet from `shortcuts.html` (F1, Ctrl+/, searchable); tooltips name their shortcut where set |

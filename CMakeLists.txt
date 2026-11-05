@@ -47,6 +47,9 @@ add_subdirectory(libs/pixelfx-core)
 # Qt 6.11: the version of the kde-qt6-core24-sdk snap and the Flathub KDE runtime (ADR-000).
 set(PIXELFX_QT_MIN_VERSION "6.11" CACHE STRING "Minimum required Qt6 version")
 find_package(Qt6 ${PIXELFX_QT_MIN_VERSION} REQUIRED COMPONENTS Core Gui Widgets Network Concurrent Svg)
+if(UNIX AND NOT APPLE)
+    find_package(Qt6 ${PIXELFX_QT_MIN_VERSION} REQUIRED COMPONENTS DBus) # notifications (ADR-011)
+endif()
 qt_standard_project_setup()
 include(SnapSdkWorkaround)
 

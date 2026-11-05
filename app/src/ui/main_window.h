@@ -21,6 +21,10 @@ namespace pixelfx::core {
 class Settings;
 } // namespace pixelfx::core
 
+namespace pixelfx::services {
+class Notifier;
+} // namespace pixelfx::services
+
 namespace pixelfx::ui {
 
 class AdjustPanel;
@@ -261,6 +265,7 @@ private:
     class ColorTargetTool* m_colorTarget = nullptr;
     QAction* m_colorTargetStop = nullptr;
     QAction* m_endPreview = nullptr;
+    services::Notifier* m_notifier = nullptr;
     // The name of the preview asked for; the photo shows it once its picture is on the photo.
     QString m_previewName;
     class HealPanel* m_healPanel = nullptr;

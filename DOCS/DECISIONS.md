@@ -281,3 +281,18 @@ runtime and vcpkg. The quantiser, the PNG writer and the GIF writer are ours to 
 library tests decode every lossless result and compare it pixel for pixel. zopfli can be added
 later as an option for slightly smaller PNGs, with a row here and in THIRD_PARTY.
 
+## ADR-011: desktop notifications over Qt D-Bus on Linux (2026-11-06)
+
+**Context.** A batch can take minutes; FEATURES S6 and `batch-running.html` want a notification
+when it ends while PixelFx is in the background. On Linux that is a D-Bus call: the notification
+portal inside Flatpak, `org.freedesktop.Notifications` elsewhere. The owner approved Qt D-Bus
+(2026-11-06).
+
+**Decision.** The app links Qt's D-Bus module (part of Qt, LGPL-3.0, already in every runtime) on
+Linux only; `services::Notifier` sends the notification and brings the window forward when it is
+clicked (freedesktop's default action; the portal opens the app itself). Windows and macOS get
+their own notification APIs with M7; until then they show nothing. The library is untouched.
+
+**Consequences.** The snap needs the `desktop` plug (the KDE extension gives it); the Flatpak
+needs no permission for the portal. When no service answers, nothing is shown and nothing fails.
+

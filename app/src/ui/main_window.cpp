@@ -5,6 +5,7 @@
 #include "core/looks.h"
 #include "core/settings/settings.h"
 #include "core/settings_clipboard.h"
+#include "services/notifier.h"
 #include "ui/about_sheet.h"
 #include "ui/adjust_panel.h"
 #include "ui/batch_page.h"
@@ -632,10 +633,22 @@ void MainWindow::buildBatch()
             [this](int done, int total) { setWindowTitle(tr("Batch %1 of %2").arg(done).arg(total)); });
     connect(&m_batch->runner(), &services::BatchRunner::finished, this, [this](int saved, int failed) {
         setWindowTitle(m_document.isOpen() ? QFileInfo(m_document.info().path).fileName() : QString());
+        const QString summary =
+            failed > 0 ? tr("%1 saved, %2 not saved").arg(saved).arg(failed) : tr("%n saved", nullptr, saved);
         if (!isBatching()) {
-            showToast(failed > 0 ? tr("Batch done: %1 saved, %2 not saved").arg(saved).arg(failed)
-                                 : tr("Batch done: %n saved", nullptr, saved));
+            showToast(tr("Batch done: %1").arg(summary));
         }
+        // Someone working elsewhere hears that the batch is done (batch-running.html).
+        if (!isActiveWindow()) {
+            m_notifier->notify(tr("Batch done"), summary);
+        }
+    });
+    m_notifier = new services::Notifier(this);
+    connect(m_notifier, &services::Notifier::activated, this, [this] {
+        showNormal();
+        raise();
+        activateWindow();
+        enterBatch();
     });
     m_stack->addWidget(m_batch);
 }

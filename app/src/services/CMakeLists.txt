@@ -8,6 +8,8 @@ qt_add_library(pixelfx_services STATIC
     exporter.h
     logging.cpp
     logging.h
+    notifier.cpp
+    notifier.h
     qt_image_bridge.cpp
     qt_image_bridge.h
     render_scheduler.cpp
@@ -17,3 +19,8 @@ qt_add_library(pixelfx_services STATIC
 )
 pixelfx_set_warnings(pixelfx_services)
 target_link_libraries(pixelfx_services PUBLIC pixelfx_core pfx::core Qt6::Gui Qt6::Concurrent)
+# Desktop notifications over D-Bus on Linux (ADR-011).
+if(TARGET Qt6::DBus)
+    target_link_libraries(pixelfx_services PRIVATE Qt6::DBus)
+    target_compile_definitions(pixelfx_services PRIVATE PIXELFX_HAS_DBUS)
+endif()

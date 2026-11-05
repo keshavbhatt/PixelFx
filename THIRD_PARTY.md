@@ -18,7 +18,7 @@ Every dependency, why it is here, and its licence. A new dependency needs an ADR
 
 | Component | Version | Licence | Use | How it is obtained | ADR |
 |---|---|---|---|---|---|
-| Qt | 6.11 | LGPL-3.0 (and GPL-3.0 for some tools), linked dynamically | The UI | `kde-qt6-core24-sdk` snap (dev), the KDE runtimes (packages), install-qt-action (CI) | ADR-000 |
+| Qt | 6.11 | LGPL-3.0 (and GPL-3.0 for some tools), linked dynamically | The UI; Qt D-Bus on Linux for notifications (ADR-011) | `kde-qt6-core24-sdk` snap (dev), the KDE runtimes (packages), install-qt-action (CI) | ADR-000 |
 | Lucide icons | snapshot ba6751ac (2026-09-18) | ISC | UI glyphs in `app/src/resources/icons/ui` (notice alongside) | Pulled from the rewrite kit's vendored set | ADR-000 |
 | EmulsionPresets | v3.1.4 (2026-11-04) | MIT | The built-in preset catalog in `app/src/resources/presets`: 429 of its Lightroom presets converted by the library's importer and renamed (`scripts/catalog`) | The release ZIP of github.com/peva3/EmulsionPresets, converted at development time; not fetched by the build | ADR-009 |
 | libvips | 8.18.7 for dev builds | LGPL-2.1-or-later | As for the library; dev builds compile it against the snap SDK | `scripts/build-deps.sh` (pinned, SHA-256) | ADR-008 |
