@@ -3,6 +3,7 @@
 #include "ui/panel_slider.h"
 
 #include <QEvent>
+#include <QFont>
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QSlider>
@@ -32,6 +33,9 @@ SliderRow::SliderRow(const QString& label, QWidget* parent)
     m_value->setObjectName(u"adjustValue"_s);
     m_value->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
     m_value->setMinimumWidth(44);
+    QFont figures = m_value->font();
+    figures.setFeature(QFont::Tag("tnum"), 1); // digits of one width, so the number holds still
+    m_value->setFont(figures);
     auto* top = new QHBoxLayout;
     top->setContentsMargins(0, 0, 0, 0);
     top->addWidget(m_name);

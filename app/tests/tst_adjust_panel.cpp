@@ -304,6 +304,9 @@ private Q_SLOTS:
         QCOMPARE(contrast->value(), 0.0);
         // Exposure steps a twentieth of a stop.
         QCOMPARE(panel.slider(u"light.exposure"_s)->slider()->singleStep(), 5);
+        // The value keeps its tabular figures under the style sheet.
+        auto* value = contrast->findChild<QLabel*>(u"adjustValue"_s);
+        QVERIFY(value->font().featureTags().contains(QFont::Tag("tnum")));
     }
 
     void setSettingsDoesNotEmit()
