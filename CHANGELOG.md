@@ -33,6 +33,12 @@ A new editor, a new image engine, and a new look.
   set, and the location and embedded previews can go while camera details and copyright stay.
   Each file shows its size before and after and what it saved, any file can be checked at 100%
   next to its original, and Run again tries other settings on the same files.
+- Quick jobs on the welcome page: Convert or resize, and Make files smaller, each one click
+  into Batch ready for the job.
+- Batch names: number the photos with {n}, use the day they were taken or the camera, and see
+  the first names as they will be saved while you type; Batch warns when every photo would get
+  the same name.
+- Choose how many photos Batch works on at once in Settings.
 - Watermarks on export and in Batch: your name, the year or the camera, or a logo; placed in a
   corner or anywhere you drag it, or repeated across the photo for proofs. The colour can follow
   the photo, light on dark areas and dark on light ones, and the size follows the photo, so a

@@ -32,6 +32,7 @@
 | `editor-zoom-loading.html` | 2026-11-05 (`mocks/reviews/editor-zoom-loading.md`) | approved 2026-11-05 |
 | `editor-looks-preview.html` | 2026-11-05 (`mocks/reviews/editor-looks-preview.md`) | approved 2026-11-05 |
 | `editor-zoom-loading.html`, slow preview | 2026-11-05 (same review, "Slow preview") | approved 2026-11-05 (the ring always turns) |
+| `batch-convert-rename.html` | 2026-11-06 (`mocks/reviews/batch-convert-rename.md`) | approved 2026-11-06 ("Batch threads" of `settings.html` became "Photos at a time") |
 | `editor-presets-catalog.html`, hover preview | 2026-11-05 (same review, "Hover preview, reworked") | approved 2026-11-05 |
 
 ## Waiting for the owner (2026-11-05)
@@ -71,6 +72,23 @@ Decisions the work stopped at; everything else went ahead within the approved mo
     Heal); Reveal dust explains itself in its tooltip rather than a first-time line.
 
 ## Sessions (newest first)
+
+### 2026-11-06 (Batch: convert, resize and rename)
+
+- The approved `batch-convert-rename.html`, built (FEATURES M8, M9, M12). The welcome page has
+  Quick jobs: Convert or resize (Batch with "Convert and resize only", the renamed first recipe
+  choice) and Make files smaller (Compress only).
+- `NameField` serves both Batch modes: the template, + Token with an example from the first photo,
+  the first three names as they will be saved (numbers added as the batch adds them), and a
+  warning line when every photo would get the same name. New tokens {n} (padded to the count),
+  {taken} and {camera} (from Exif: `pfx::readMetadata` reads it from the header), through
+  `core::NameFacts`; the runner passes each photo's number. A `warning` colour token joined the
+  app's tokens (DESIGN section 1 already had it).
+- Settings, Performance: Photos at a time (Automatic, 1, 2, 4, 8); the runner takes it from the
+  next run.
+- Checks: 145 library tests, 36 app suites (new: tokens and the saved size in
+  `tst_export_options`, the name preview in `tst_batch_compress`), the linters; the welcome page,
+  both name previews and the Settings sheet checked headless against the mock.
 
 ### 2026-11-06 (Batch: Compress only)
 
