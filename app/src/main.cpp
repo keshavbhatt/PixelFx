@@ -130,22 +130,16 @@ bool grabMenu(pixelfx::ui::MainWindow& window, const QString& grab)
     return true;
 }
 
-// A sheet instead of the window (PIXELFX_DEBUG_SHEET); false when none is asked for.
-bool grabSheet(pixelfx::ui::MainWindow& window, const QString& grab, bool exportSheet, bool settingsSheet,
-               bool presetSheet)
+// A sheet of the app (PIXELFX_DEBUG_SHEET), or nullptr.
+QDialog* appSheet(pixelfx::ui::MainWindow& window, const QString& name)
 {
-    QDialog* sheet = nullptr;
-    if (presetSheet && window.document().isOpen()) {
-        auto* preset = new pixelfx::ui::PresetSaveSheet(window.document().settings(), {}, &window);
-        preset->setName(QStringLiteral("Warm evening"));
-        preset->setPhoto(window.document().preview());
-        sheet = preset;
-    } else if (settingsSheet) {
-        sheet = new pixelfx::ui::SettingsSheet(window.settings(), &window);
-    } else if (qEnvironmentVariable("PIXELFX_DEBUG_SHEET") == u"shortcuts"_s) {
-        sheet = new pixelfx::ui::ShortcutsSheet(&window);
-    } else if (const QString name = qEnvironmentVariable("PIXELFX_DEBUG_SHEET");
-               name == u"about"_s || name == u"diagnostics"_s || name == u"notices"_s) {
+    if (name == u"settings"_s) {
+        return new pixelfx::ui::SettingsSheet(window.settings(), &window);
+    }
+    if (name == u"shortcuts"_s) {
+        return new pixelfx::ui::ShortcutsSheet(&window);
+    }
+    if (name == u"about"_s || name == u"diagnostics"_s || name == u"notices"_s) {
         auto* about = new pixelfx::ui::AboutSheet(&window);
         auto page = pixelfx::ui::AboutSheet::DiagnosticsPage;
         if (name == u"about"_s) {
@@ -154,35 +148,60 @@ bool grabSheet(pixelfx::ui::MainWindow& window, const QString& grab, bool export
             page = pixelfx::ui::AboutSheet::NoticesPage;
         }
         about->showPage(page);
-        sheet = about;
-    } else if (qEnvironmentVariable("PIXELFX_DEBUG_SHEET") == u"paste"_s && window.document().isOpen()) {
-        auto* paste = new pixelfx::ui::PasteSheet(window.document().settings(), 6, &window);
-        paste->setSource(QFileInfo(window.document().info().path).fileName());
-        sheet = paste;
-    } else if (qEnvironmentVariable("PIXELFX_DEBUG_SHEET") == u"whatsnew"_s) {
-        sheet = new pixelfx::ui::WhatsNewSheet(pixelfx::ui::WhatsNewSheet::bundledChangelog(),
-                                               QApplication::applicationVersion(), true, &window);
-    } else if (qEnvironmentVariable("PIXELFX_DEBUG_SHEET") == u"watermark"_s && window.document().isOpen()) {
-        // A sample text watermark, unsaved, in the scratch profile's folder.
-        auto* mark =
-            new pixelfx::ui::WatermarkSheet(window.document().preview(), QString(),
-                                            pixelfx::core::WatermarkLibrary::defaultFolder(), &window);
-        sheet = mark;
-    } else if (const QString look = qEnvironmentVariable("PIXELFX_DEBUG_SHEET");
-               (look == u"look"_s || look == u"newlook"_s) && window.document().isOpen()) {
-        // The look editor on a built-in look's steps, unsaved, or on a new look.
+        return about;
+    }
+    if (name == u"whatsnew"_s) {
+        return new pixelfx::ui::WhatsNewSheet(pixelfx::ui::WhatsNewSheet::bundledChangelog(),
+                                              QApplication::applicationVersion(), true, &window);
+    }
+    return nullptr;
+}
+
+// A sheet about the open photo (PIXELFX_DEBUG_SHEET), or nullptr.
+QDialog* photoSheet(pixelfx::ui::MainWindow& window, const QString& name)
+{
+    const pixelfx::services::Document& doc = window.document();
+    if (!doc.isOpen()) {
+        return nullptr;
+    }
+    if (name == u"preset"_s) {
+        auto* preset = new pixelfx::ui::PresetSaveSheet(doc.settings(), {}, &window);
+        preset->setName(QStringLiteral("Warm evening"));
+        preset->setPhoto(doc.preview());
+        return preset;
+    }
+    if (name == u"paste"_s) {
+        auto* paste = new pixelfx::ui::PasteSheet(doc.settings(), 6, &window);
+        paste->setSource(QFileInfo(doc.info().path).fileName());
+        return paste;
+    }
+    if (name == u"watermark"_s) { // a sample text watermark, unsaved, in the scratch profile's folder
+        return new pixelfx::ui::WatermarkSheet(doc.preview(), QString(),
+                                               pixelfx::core::WatermarkLibrary::defaultFolder(), &window);
+    }
+    if (name == u"look"_s || name == u"newlook"_s) { // a built-in look's steps, unsaved, or a new look
         pixelfx::core::LookEntry entry;
-        if (look == u"look"_s) {
+        if (name == u"look"_s) {
             entry = pixelfx::core::builtInLooks().at(3); // Film: curve, grading, grain
             entry.path.clear();
         }
-        auto* editor =
-            new pixelfx::ui::LookEditor(window.document().previewSource(), window.document().settings(),
-                                        entry, pixelfx::core::LookLibrary::defaultFolder(), &window);
-        sheet = editor;
-    } else if (exportSheet && window.document().isOpen()) {
-        sheet = new pixelfx::ui::ExportSheet(window.document().info().path, window.document().outputSize(),
-                                             window.settings().exportOptions(), &window);
+        return new pixelfx::ui::LookEditor(doc.previewSource(), doc.settings(), entry,
+                                           pixelfx::core::LookLibrary::defaultFolder(), &window);
+    }
+    if (name == u"export"_s) {
+        return new pixelfx::ui::ExportSheet(doc.info().path, doc.outputSize(),
+                                            window.settings().exportOptions(), &window);
+    }
+    return nullptr;
+}
+
+// A sheet instead of the window (PIXELFX_DEBUG_SHEET); false when none is asked for.
+bool grabSheet(pixelfx::ui::MainWindow& window, const QString& grab)
+{
+    const QString name = qEnvironmentVariable("PIXELFX_DEBUG_SHEET");
+    QDialog* sheet = appSheet(window, name);
+    if (sheet == nullptr) {
+        sheet = photoSheet(window, name);
     }
     if (sheet == nullptr) {
         return false;
@@ -207,11 +226,8 @@ void applyGrabHook(pixelfx::ui::MainWindow& window, const QStringList& files)
     if (grab.isEmpty()) {
         return;
     }
-    const bool exportSheet = qEnvironmentVariable("PIXELFX_DEBUG_SHEET") == u"export"_s;
-    const bool settingsSheet = qEnvironmentVariable("PIXELFX_DEBUG_SHEET") == u"settings"_s;
-    const bool presetSheet = qEnvironmentVariable("PIXELFX_DEBUG_SHEET") == u"preset"_s;
-    const auto save = [&window, grab, exportSheet, settingsSheet, presetSheet] {
-        if (grabSheet(window, grab, exportSheet, settingsSheet, presetSheet) || grabMenu(window, grab)) {
+    const auto save = [&window, grab] {
+        if (grabSheet(window, grab) || grabMenu(window, grab)) {
             return;
         }
         window.grab().save(grab);
