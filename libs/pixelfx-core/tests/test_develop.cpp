@@ -3,6 +3,7 @@
 // name says, and its default is no change.
 #include "fixtures.h"
 #include "pfx/color.h"
+#include "pfx/curve.h"
 #include "pfx/document.h"
 #include "pfx/pipeline.h"
 
@@ -275,4 +276,25 @@ TEST_CASE("presets version 2 and recipes version 3: older files read unchanged, 
     const auto back = pfx::parseDocument(text);
     REQUIRE(back.ok());
     CHECK(back.value().settings == doc.settings);
+}
+
+TEST_CASE("black and white: the colour mixer stands aside; the parametric sampler matches the render")
+{
+    const pfx::Image blue = fixtures::flat(0.05F, 0.1F, 0.6F);
+    pfx::Settings bw = blackAndWhite({});
+    const double plain = lightness(rendered(blue, bw));
+    bw.set("mixer.luminance.blue", -100.0);
+    CHECK(lightness(rendered(blue, bw)) == doctest::Approx(plain));
+
+    const pfx::Settings lift =
+        with({{"curves.parametric.shadows", 60}, {"curves.parametric.split.shadows", 30}});
+    const std::vector<double> curve = pfx::sampleParametricCurve(lift, 256);
+    REQUIRE(curve.size() == 256);
+    CHECK(curve.front() == 0.0);
+    CHECK(curve.back() == 1.0);
+    const pfx::Image ramp = fixtures::ramp(256, 1);
+    const pfx::Image out = rendered(ramp, lift);
+    const double in = pfx::color::srgbEncode(ramp.pixel(40, 0)[1]);
+    const auto at = static_cast<std::size_t>(std::lround(in * 255.0));
+    CHECK(pfx::color::srgbEncode(out.pixel(40, 0)[1]) == doctest::Approx(curve.at(at)).epsilon(0.01));
 }

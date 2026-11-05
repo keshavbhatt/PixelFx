@@ -91,6 +91,10 @@ void hsvToRgb(double h, double s, double v, double* rgb)
 
 bool mixerActive(const Settings& s)
 {
+    // In black and white the B&W mix takes the mixer's place, as in Lightroom.
+    if (s.boolean("bw.enabled", false)) {
+        return false;
+    }
     return std::ranges::any_of(
         bandsOf(s), [](const Band& b) { return b.hue != 0.0 || b.saturation != 0.0 || b.luminance != 0.0; });
 }
