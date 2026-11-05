@@ -21,6 +21,8 @@ class QToolButton;
 
 namespace pixelfx::ui {
 
+class MessageLine;
+
 /// The photo with the mark on it, as the export will lay it (watermark.html, right side).
 /// A press or drag places the mark freely.
 class WatermarkPreview : public QWidget
@@ -112,6 +114,7 @@ private:
     QStackedWidget* m_kindPages = nullptr;
     QLineEdit* m_text = nullptr;
     QLabel* m_logoName = nullptr;
+    MessageLine* m_message = nullptr;
     QFontComboBox* m_font = nullptr;
     QButtonGroup* m_colors = nullptr;
     QToolButton* m_custom = nullptr;

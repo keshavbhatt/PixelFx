@@ -21,6 +21,7 @@ class QWidget;
 
 namespace pixelfx::ui {
 
+class MessageLine;
 class SliderRow;
 class StepList;
 
@@ -96,6 +97,7 @@ private:
     QPushButton* m_bake = nullptr;
     QScrollArea* m_stepsScroll = nullptr;
     QLabel* m_paramsTitle = nullptr;
+    MessageLine* m_message = nullptr;
     QWidget* m_params = nullptr;
     QVBoxLayout* m_paramsLayout = nullptr;
     QLabel* m_preview = nullptr;

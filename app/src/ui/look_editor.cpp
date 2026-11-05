@@ -4,12 +4,14 @@
 #include "ui/curve_editor.h"
 #include "ui/icon_text_button.h"
 #include "ui/icons.h"
+#include "ui/message_line.h"
 #include "ui/slider_row.h"
 #include "ui/step_list.h"
 #include "ui/style.h"
 
 #include <QButtonGroup>
 #include <QComboBox>
+#include <QDir>
 #include <QFile>
 #include <QFileDialog>
 #include <QFileInfo>
@@ -264,6 +266,7 @@ LookEditor::LookEditor(const std::shared_ptr<const pfx::Image>& source, const pf
     m_name = new QLineEdit(entry.look ? entry.name : tr("My look"), this);
     m_name->setFixedWidth(220);
     m_name->setAccessibleName(tr("Name"));
+    connect(m_name, &QLineEdit::textEdited, this, &LookEditor::schedulePreview);
     m_category = new QComboBox(this);
     for (const Category& c : kCategories) {
         m_category->addItem(tr(c.label), QString::fromLatin1(c.id));
@@ -557,7 +560,8 @@ void LookEditor::buildFooter(QVBoxLayout* column)
     connect(m_export, &QPushButton::clicked, this, &LookEditor::exportLook);
     m_bake = new QPushButton(tr("Bake to .cube..."), this);
     connect(m_bake, &QPushButton::clicked, this, &LookEditor::bakeCube);
-    const FootButtons buttons = footButtons(this, tr("Save look"), {m_export, m_bake}, true);
+    m_message = new MessageLine(this);
+    const FootButtons buttons = footButtons(this, tr("Save look"), {m_export, m_bake, m_message}, true);
     connect(buttons.cancel, &QPushButton::clicked, this, &QDialog::reject);
     m_save = buttons.primary;
     connect(m_save, &QPushButton::clicked, this, &LookEditor::saveLook);
@@ -695,6 +699,7 @@ void LookEditor::importLut()
     if (file.isEmpty()) {
         return;
     }
+    m_message->clear();
     pfx::Result<pfx::Lut> lut = pfx::Error{};
     if (file.endsWith(u".cube"_s, Qt::CaseInsensitive)) {
         lut = pfx::loadCube(file.toStdString());
@@ -702,7 +707,7 @@ void LookEditor::importLut()
         lut = pfx::lutFromHald(picture.value().image);
     }
     if (!lut) {
-        m_paramsTitle->setText(tr("That LUT could not be read.").toUpper());
+        m_message->showError(tr("%1 could not be read as a LUT.").arg(QFileInfo(file).fileName()));
         return;
     }
     // A resource name of its own, the file's name as the title.
@@ -730,6 +735,7 @@ void LookEditor::exportLook()
     if (target.isEmpty()) {
         return;
     }
+    m_message->clear();
     pfx::Document doc;
     doc.kind = pfx::DocumentKind::Look;
     // An id of its own, so the file opens as a look wherever it is imported.
@@ -738,8 +744,10 @@ void LookEditor::exportLook()
     doc.look = m_look;
     doc.look.category = m_category->currentData().toString().toStdString();
     if (!pfx::saveDocument(doc, target.toStdString()).ok()) {
-        m_paramsTitle->setText(tr("The look could not be exported.").toUpper());
+        m_message->showError(tr("The look could not be written to %1.").arg(QFileInfo(target).fileName()));
+        return;
     }
+    m_message->showInfo(tr("Exported as %1").arg(QFileInfo(target).fileName()));
 }
 
 void LookEditor::bakeCube()
@@ -752,23 +760,28 @@ void LookEditor::bakeCube()
     pfx::BakedLook baked = pfx::bakeLook(m_look);
     baked.lut.title = m_name->text().trimmed().toStdString();
     QSaveFile file(target);
-    if (file.open(QIODevice::WriteOnly)) {
-        file.write(QByteArray::fromStdString(pfx::cubeText(baked.lut)));
-        (void)file.commit();
+    const bool written = file.open(QIODevice::WriteOnly) &&
+                         file.write(QByteArray::fromStdString(pfx::cubeText(baked.lut))) >= 0 &&
+                         file.commit();
+    if (!written) {
+        m_message->showError(tr("The .cube could not be written to %1.").arg(QFileInfo(target).fileName()));
+        return;
     }
-    if (!baked.leftOut.empty()) {
-        QStringList names;
-        for (const std::string& op : baked.leftOut) {
-            names << stepName(QString::fromStdString(op));
-        }
-        m_paramsTitle->setText(tr("Left out of the .cube: %1").arg(names.join(u", "_s)).toUpper());
+    // A LUT holds colour only: steps that look at neighbouring pixels cannot go in it.
+    QStringList names;
+    for (const std::string& op : baked.leftOut) {
+        names << stepName(QString::fromStdString(op));
     }
+    m_message->showInfo(names.isEmpty() ? tr("Baked to %1").arg(QFileInfo(target).fileName())
+                                        : tr("Baked to %1, without %2 (a LUT holds colour only)")
+                                              .arg(QFileInfo(target).fileName(), names.join(u", "_s)));
 }
 
 bool LookEditor::saveLook()
 {
     const QString name = m_name->text().trimmed();
     if (name.isEmpty()) {
+        m_message->showError(tr("Name the look first."));
         m_name->setFocus();
         return false;
     }
@@ -776,6 +789,8 @@ bool LookEditor::saveLook()
     QString path;
     m_savedId = core::LookLibrary(m_folder).save(name, m_look, m_path, &path);
     if (m_savedId.isEmpty()) {
+        m_message->showError(
+            tr("The look could not be saved in %1.").arg(QDir::toNativeSeparators(m_folder)));
         return false;
     }
     m_path = std::move(path);
@@ -785,6 +800,9 @@ bool LookEditor::saveLook()
 
 void LookEditor::schedulePreview()
 {
+    if (m_message != nullptr && m_message->isError()) {
+        m_message->clear(); // the edit may have put it right
+    }
     m_previewTimer->start();
 }
 

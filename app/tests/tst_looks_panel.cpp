@@ -1,5 +1,6 @@
 #include "ui/look_editor.h"
 #include "ui/looks_panel.h"
+#include "ui/message_line.h"
 #include "ui/step_list.h"
 #include "ui/style.h"
 
@@ -57,6 +58,23 @@ private Q_SLOTS:
         tile->setFocus();
         QTest::keyClick(tile, Qt::Key_Return);
         QCOMPARE(chosen.size(), 2);
+    }
+
+    void lookEditorSaysWhatWentWrongInItsFooter()
+    {
+        QTemporaryDir dir;
+        auto photo = std::make_shared<pfx::Image>(40, 30);
+        pixelfx::ui::LookEditor editor(photo, {}, {}, dir.filePath(u"looks"_s));
+        editor.addStep(u"grain"_s);
+        auto* message = editor.findChild<pixelfx::ui::MessageLine*>();
+        QVERIFY(message);
+        auto* name = editor.findChild<QLineEdit*>();
+        name->clear();
+        QVERIFY(!editor.saveLook());
+        QVERIFY(message->isError());
+        QCOMPARE(message->text(), u"Name the look first."_s);
+        QTest::keyClicks(name, u"Dusk"_s); // typing a name puts it right
+        QVERIFY(!message->isError());
     }
 
     void lookEditorMakesALook()

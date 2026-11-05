@@ -1,5 +1,6 @@
 #include "core/watermark.h"
 #include "ui/export_sheet.h"
+#include "ui/message_line.h"
 #include "ui/style.h"
 #include "ui/watermark_sheet.h"
 
@@ -150,6 +151,23 @@ private Q_SLOTS:
         for (const char* ext : {"jpg", "png", "webp", "tif"}) {
             QVERIFY2(offered.contains(QString::fromLatin1(ext)), ext);
         }
+    }
+
+    void aLogoWatermarkWithoutALogoSaysSo()
+    {
+        QTemporaryDir dir;
+        QImage photo(60, 40, QImage::Format_RGB32);
+        photo.fill(Qt::gray);
+        pixelfx::ui::WatermarkSheet sheet(photo, {}, dir.filePath(u"marks"_s));
+        for (auto* b : sheet.findChildren<QPushButton*>(u"segment"_s)) {
+            if (b->text() == u"Logo"_s) {
+                b->click();
+            }
+        }
+        QVERIFY(!sheet.useWatermark());
+        auto* message = sheet.findChild<pixelfx::ui::MessageLine*>();
+        QVERIFY(message && message->isError());
+        QVERIFY(message->text().contains(u"logo"_s));
     }
 
     void rareFormatsAreUnderMore()

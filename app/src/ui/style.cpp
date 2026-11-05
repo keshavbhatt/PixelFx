@@ -61,6 +61,9 @@ const QString kSheet = uR"(
         #welcomeTitle { font-size: 20px; font-weight: 600; }
         #welcomeHint, #muted { color: {{muted}}; }
         #faint { color: {{faint}}; font-size: 12px; }
+        #messageText { color: {{faint}}; font-size: 12px; }
+        #messageText[kind="info"] { color: {{text}}; }
+        #messageText[kind="error"] { color: {{danger}}; }
         QLabel#small { font-size: 12px; }
         #recentTitle { font-size: 13px; font-weight: 600; }
         QPushButton#link { border: 0; background: transparent; color: {{link}}; font-size: 12px; padding: 2px 4px; }
@@ -615,10 +618,16 @@ FootButtons footButtons(QWidget* parent, const QString& primary, const QList<QWi
 {
     auto* row = new QHBoxLayout;
     row->setSpacing(kGapControls);
+    // A leading widget that expands (a message line) takes the free space; otherwise a stretch does.
+    bool filled = false;
     for (QWidget* w : leading) {
-        row->addWidget(w);
+        const bool expands = (w->sizePolicy().horizontalPolicy() & QSizePolicy::ExpandFlag) != 0;
+        row->addWidget(w, expands ? 1 : 0);
+        filled = filled || expands;
     }
-    row->addStretch();
+    if (!filled) {
+        row->addStretch();
+    }
     QPushButton* cancel = nullptr;
     if (withCancel) {
         cancel = new QPushButton(QObject::tr("Cancel"), parent);

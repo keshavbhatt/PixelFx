@@ -4,6 +4,7 @@
 #include "ui/color_swatch.h"
 #include "ui/icon_text_button.h"
 #include "ui/icons.h"
+#include "ui/message_line.h"
 #include "ui/slider_row.h"
 #include "ui/style.h"
 
@@ -239,9 +240,9 @@ QWidget* WatermarkSheet::buildHeader()
 
 QLayout* WatermarkSheet::buildFooter()
 {
-    auto* note = new QLabel(tr("Applied on export only; the editor view never shows it."), this);
-    note->setObjectName(u"faint"_s);
-    const FootButtons buttons = footButtons(this, tr("Use watermark"), {note}, true);
+    m_message = new MessageLine(this);
+    m_message->setNote(tr("Applied on export only; the editor view never shows it."));
+    const FootButtons buttons = footButtons(this, tr("Use watermark"), {m_message}, true);
     connect(buttons.cancel, &QPushButton::clicked, this, &QDialog::reject);
     connect(buttons.primary, &QPushButton::clicked, this, &WatermarkSheet::useWatermark);
     return buttons.row;
@@ -601,6 +602,9 @@ void WatermarkSheet::sync()
     if (m_loading) {
         return;
     }
+    if (m_message != nullptr && m_message->isError()) {
+        m_message->clear(); // the edit may have put it right
+    }
     m_mark.kind = static_cast<core::Watermark::Kind>(std::max(0, m_kind->checkedId()));
     m_mark.text = m_text->text();
     // The family as picked; the system sans is stored as empty so it follows the system.
@@ -644,7 +648,7 @@ void WatermarkSheet::saveAs()
 bool WatermarkSheet::useWatermark()
 {
     if (m_mark.kind == core::Watermark::Kind::Logo && m_mark.logo.isEmpty()) {
-        m_logoName->setText(tr("Choose a logo first."));
+        m_message->showError(tr("Choose a logo first, or switch to Text."));
         return false;
     }
     if (m_mark.name.trimmed().isEmpty()) {
@@ -661,10 +665,12 @@ bool WatermarkSheet::useWatermark()
             m_mark.name = u"%1 %2"_s.arg(base).arg(n);
         }
     }
-    m_path = m_library.save(m_mark, m_path);
-    if (m_path.isEmpty()) {
+    const QString saved = m_library.save(m_mark, m_path);
+    if (saved.isEmpty()) {
+        m_message->showError(tr("The watermark could not be saved."));
         return false;
     }
+    m_path = saved;
     accept();
     return true;
 }
