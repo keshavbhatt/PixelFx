@@ -29,9 +29,9 @@ enum class DocumentKind
 // (sidecars) are at 3: version 2 added healed spots, version 3 the same settings. Older files
 // of every kind read as they always did.
 inline constexpr int kDocumentVersion = 1;
-inline constexpr int kPresetVersion = 2;
-inline constexpr int kBatchVersion = 3;
-inline constexpr int kRecipeVersion = 3;
+inline constexpr int kPresetVersion = 3;
+inline constexpr int kBatchVersion = 4;
+inline constexpr int kRecipeVersion = 4;
 [[nodiscard]] int currentVersion(DocumentKind kind);
 
 // A step of a batch recipe's stack (DOCS/presets.md section 4): settings applied onto each

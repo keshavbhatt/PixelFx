@@ -247,19 +247,28 @@ TEST_CASE("defringe: purple next to a hard edge turns grey, purple away from edg
     CHECK(chroma(out, 56, 36) == doctest::Approx(chroma(img, 56, 36)).epsilon(0.05));
 }
 
-TEST_CASE("presets version 2 and recipes version 3: older files read unchanged, new settings round-trip")
+TEST_CASE("presets version 3 and recipes version 4: older files read unchanged, new settings round-trip")
 {
     const auto old = pfx::parseDocument(
         R"({"format":"pixelfx","kind":"preset","version":1,"body":{"settings":{"light":{"exposure":0.5}}}})");
     REQUIRE(old.ok());
-    CHECK(old.value().version == 2);
+    CHECK(old.value().version == 3);
     CHECK(old.value().settings.number("light.exposure", 0) == 0.5);
     const auto recipe = pfx::parseDocument(
         R"({"format":"pixelfx","kind":"recipe","version":2,"body":{"settings":{"color":{"vibrance":10}}}})");
     REQUIRE(recipe.ok());
-    CHECK(recipe.value().version == 3);
-    CHECK(pfx::parseDocument(R"({"format":"pixelfx","kind":"preset","version":3})").error().code ==
+    CHECK(recipe.value().version == 4);
+    CHECK(pfx::parseDocument(R"({"format":"pixelfx","kind":"preset","version":4})").error().code ==
           pfx::ErrorCode::NewerVersion);
+    // Version 3 presets and version 4 recipes added the Camera profile of RAW files.
+    const auto camera = pfx::parseDocument(
+        R"({"format":"pixelfx","kind":"recipe","version":4,"body":{"settings":{"color":{"profile":"camera"}}}})");
+    REQUIRE(camera.ok());
+    CHECK(camera.value().settings.text("color.profile", "") == "camera");
+    const auto older = pfx::parseDocument(
+        R"({"format":"pixelfx","kind":"preset","version":2,"body":{"settings":{"color":{"profile":"vivid"}}}})");
+    REQUIRE(older.ok());
+    CHECK(older.value().settings.text("color.profile", "") == "vivid");
 
     pfx::Document doc;
     doc.kind = pfx::DocumentKind::Preset;
@@ -274,7 +283,7 @@ TEST_CASE("presets version 2 and recipes version 3: older files read unchanged, 
     doc.settings.set("curves.parametric.lights", 20.0);
     doc.settings.set("detail.ca.auto", true);
     const std::string text = pfx::serializeDocument(doc);
-    CHECK(text.find("\"version\": 2") != std::string::npos);
+    CHECK(text.find("\"version\": 3") != std::string::npos);
     const auto back = pfx::parseDocument(text);
     REQUIRE(back.ok());
     CHECK(back.value().settings == doc.settings);

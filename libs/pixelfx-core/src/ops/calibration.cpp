@@ -2,7 +2,8 @@
 // Calibration and profile (FEATURES P8), the colour a camera profile gives before any slider:
 // - calibration turns each primary toward its neighbours (hue) and makes it purer or greyer
 //   (saturation), as one matrix that keeps white white, and tints the shadows green or magenta;
-// - the vivid profile adds the contrast and colour of Lightroom's Adobe Vivid.
+// - the vivid profile adds the contrast and colour of Lightroom's Adobe Vivid; camera, the base
+//   curve and colour a RAW needs to look as its camera's JPEG does.
 #include "ops/hue_bands.h"
 #include "ops/ops.h"
 
@@ -97,16 +98,21 @@ void calibrationApply(Image& image, const Settings& s, const OpContext& ctx)
 
 bool profileActive(const Settings& s)
 {
-    return s.text("color.profile", "standard") == "vivid";
+    return s.text("color.profile", "standard") != "standard";
 }
 
-void profileApply(Image& image, const Settings& /*s*/, const OpContext& ctx)
+void profileApply(Image& image, const Settings& s, const OpContext& ctx)
 {
-    constexpr double kContrast = 0.18; // a gentle S-curve around middle grey
-    constexpr double kChroma = 1.15;   // colour a little purer
-    constexpr double kPivot = 0.4633;  // middle grey (0.18) in the perceptual encoding
-    const double g = std::exp2(kContrast);
-    applyLuminanceMapping(image, ctx, [g](double luma) {
+    // Vivid: Lightroom's Adobe Vivid. Camera: the base curve a RAW needs, the contrast and colour
+    // a camera's or phone's own JPEG has (DNG's default rendering), on the file's own tone.
+    const bool camera = s.text("color.profile", "standard") == "camera";
+    // An S-curve, in stops of slope, around a pivot in the perceptual encoding: middle grey for
+    // Vivid; lower for Camera, whose curve lifts the light half as cameras' JPEGs do.
+    const double contrast = camera ? 0.45 : 0.18;
+    const double chroma = camera ? 1.2 : 1.15; // colour a little purer
+    const double kPivot = color::perceptualEncode(camera ? 0.05 : 0.18);
+    const double g = std::exp2(contrast);
+    applyLuminanceMapping(image, ctx, [g, kPivot](double luma) {
         const double p = color::perceptualEncode(luma);
         double out = p;
         if (p > 0.0 && p < kPivot) {
@@ -122,7 +128,7 @@ void profileApply(Image& image, const Settings& /*s*/, const OpContext& ctx)
             for (int x = 0; x < image.width(); ++x, p += 4) {
                 const double luma = color::luminance(p[0], p[1], p[2]);
                 for (int c = 0; c < 3; ++c) {
-                    p[c] = static_cast<float>(std::max(0.0, luma + ((double{p[c]} - luma) * kChroma)));
+                    p[c] = static_cast<float>(std::max(0.0, luma + ((double{p[c]} - luma) * chroma)));
                 }
             }
         }

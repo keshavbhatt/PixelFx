@@ -26,6 +26,8 @@ struct ImageInfo
     int bitsPerSample = 8;
     bool hasAlpha = false;
     bool hasProfile = false;
+    bool raw = false;     // a camera RAW file
+    int asShotKelvin = 0; // a RAW's as-shot white balance, when it says (DNG); 0 otherwise
 };
 
 struct LoadedImage
@@ -38,6 +40,12 @@ struct LoadedImage
 struct LoadOptions
 {
     int maxLongEdge = 0; // 0: full size; otherwise downscaled on load (previews, thumbnails)
+    // A RAW's own tone (a DNG's profile gain table map): the Camera profile; false for PixelFx's
+    // renderings.
+    bool rawTone = true;
+    // A RAW's embedded JPEG instead of developing it, when it is at least maxLongEdge large:
+    // thumbnails.
+    bool embeddedPreview = false;
 };
 
 struct SaveOptions
@@ -87,6 +95,11 @@ struct Rgba8Image
 // header cannot exhaust memory.
 [[nodiscard]] Result<LoadedImage> load(const std::filesystem::path& path, const LoadOptions& options = {});
 [[nodiscard]] Result<ImageInfo> probe(const std::filesystem::path& path);
+// The JPEG preview inside a camera RAW file, upright, when PixelFx cannot develop the RAW itself.
+[[nodiscard]] Result<LoadedImage> loadPreview(const std::filesystem::path& path,
+                                              const LoadOptions& options = {});
+// Whether the file's extension is a camera RAW format.
+[[nodiscard]] bool isRawFile(const std::filesystem::path& path);
 // The Exif, XMP and IPTC of a file, from its header, without decoding the pixels.
 [[nodiscard]] Result<Metadata> readMetadata(const std::filesystem::path& path);
 

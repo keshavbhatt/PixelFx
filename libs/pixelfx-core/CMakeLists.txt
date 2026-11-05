@@ -81,6 +81,8 @@ add_library(pfx_core
     src/io/gif_writer.cpp
     src/io/jpeg_lossless.cpp
     src/io/riff.cpp
+    src/io/tiff_reader.cpp
+    src/io/dng.cpp
 )
 add_library(pfx::core ALIAS pfx_core)
 target_include_directories(pfx_core

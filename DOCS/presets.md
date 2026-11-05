@@ -100,7 +100,9 @@ internal units, so a file reads like the panel.
   highlights, global), each with a hue, an amount and a luminance (-100 to 100), plus balance and
   blending (0 to 100, 50 the even overlap). `calibration` moves the red, green and blue primaries
   (hue and saturation, -100 to 100) and tints the shadows (-100 green to 100 magenta), keeping
-  greys neutral. `color.profile` is the base rendering: `standard` or `vivid`. `curves.parametric`
+  greys neutral. `color.profile` is the base rendering: `standard`, `vivid`, or `camera` (presets
+  version 3, recipes and batch recipes version 4: a RAW file's own tone and the base curve its
+  camera's JPEG has; offered for RAW files). `curves.parametric`
   lifts or lowers four tone regions (-100 to 100) split at three points (5 to 95). `detail.texture`
   (-100 to 100), `detail.sharpen.detail` (0 to 100, 25 the plain mask), the noise reduction detail,
   contrast and smoothness (0 to 100), `detail.ca.auto` (lateral chromatic aberration measured on
@@ -173,10 +175,11 @@ internal units, so a file reads like the panel.
 }
 ```
 
-- Recipes are at **version 3**: version 2 added the `heal` group (section 2), version 3 the
-  Lightroom-compatible settings (section 2). Older recipes read unchanged; a file above version 3
-  is refused as made by a newer PixelFx. Presets are at **version 2** for the same settings; a
-  version 1 preset reads unchanged.
+- Recipes are at **version 4**: version 2 added the `heal` group (section 2), version 3 the
+  Lightroom-compatible settings (section 2), version 4 the `camera` profile. Older recipes read
+  unchanged (nothing to migrate: an older file never names `camera`); a file above version 4 is
+  refused as made by a newer PixelFx. Presets are at **version 3** for the same settings; version
+  1 and 2 presets read unchanged.
 - The fingerprint (size plus a hash of the first and last 64 KiB) re-attaches a sidecar to a
   photo that was moved or renamed within the library folder.
 - History entries store only the changed groups (deltas), capped at 200 steps per photo.
@@ -196,8 +199,8 @@ internal units, so a file reads like the panel.
 }
 ```
 
-Batch recipes are at **version 3** (version 3 added the Lightroom-compatible settings of
-section 2; looks stay at version 1).
+Batch recipes are at **version 4** (version 3 added the Lightroom-compatible settings of
+section 2, version 4 the `camera` profile; looks stay at version 1).
 
 - The stack is applied in order onto each photo's settings (later entries win per key). A step
   is a preset (its settings, embedded) or a look on its own (`id`, `strength` 0 to 100,
@@ -218,7 +221,7 @@ section 2; looks stay at version 1).
   watermark. Opening the file adds the watermark to the user's watermarks unless an identical
   one is there already.
 - Version 1 batch recipes had none of these keys and read unchanged; there is nothing to
-  migrate. A file with a `version` above 3 is refused as made by a newer PixelFx.
+  migrate. A file with a `version` above 4 is refused as made by a newer PixelFx.
 
 ## 5. Pipeline order (fixed, documented here and in ADR-004)
 

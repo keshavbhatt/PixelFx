@@ -296,3 +296,30 @@ their own notification APIs with M7; until then they show nothing. The library i
 **Consequences.** The snap needs the `desktop` plug (the KDE extension gives it); the Flatpak
 needs no permission for the portal. When no service answers, nothing is shown and nothing fails.
 
+## ADR-012: Camera RAW: LibRaw, and phones' linear DNG read by PixelFx (2026-11-06)
+
+**Context.** RAW is in 2.0 (PLAN D15) through LibRaw (ADR-003). The owner's Galaxy S22 Ultra
+writes DNG 1.7: linear (already demosaiced), JPEG XL compressed, with a profile gain table map;
+LibRaw reads that only when built with Adobe's DNG SDK. The approved `editor-raw.html` wants a
+RAW to open on its camera's look, its embedded JPEG first, and a way out when it cannot be read.
+
+**Decision.**
+- Camera RAW files keep going to LibRaw through libvips's `dcrawload`.
+- Linear DNG (photometric LinearRaw, uncompressed or JPEG XL) is read by libpixelfx itself
+  (`io/dng.cpp`, `io/tiff_reader.cpp`): strips and tiles decoded by libvips (`jxlload`, already in
+  the build), then the DNG specification's default rendering steps: black and white levels, the
+  colour and forward matrices with camera calibration interpolated for the white, the as-shot
+  neutral, the baseline exposure, the active area and default crop, the orientation. The profile
+  gain table map is applied for the Camera profile only (`LoadOptions::rawTone`).
+- A new profile choice, `camera` (presets version 3, recipes and batch recipes version 4): the
+  base curve and colour a RAW needs to look as its camera's JPEG does, on the file's own tone.
+- The JPEG inside a TIFF-based RAW is read without developing (`pfx::loadPreview`): thumbnails
+  ask for it (`LoadOptions::embeddedPreview`), and a RAW that cannot be developed can still be
+  opened as its preview.
+- No Adobe DNG SDK, no new dependency.
+
+**Consequences.** Opcode lists, lossless JPEG (compression 7) linear DNGs and floating-point DNGs
+go to LibRaw as before. The Camera curve is a global one: a phone's own JPEG may differ where the
+phone also tone-mapped locally beyond the gain table map (the owner's test file: a little brighter
+and redder flower). Lens profiles wait for lensfun (ADR to come).
+

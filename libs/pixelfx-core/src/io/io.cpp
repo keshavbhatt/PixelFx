@@ -6,6 +6,7 @@
 #include "core/log_internal.h"
 #include "core/parallel.h"
 #include "io/compress_internal.h"
+#include "io/dng.h"
 #include "ops/value_table.h"
 #include "pfx/color.h"
 
@@ -14,6 +15,8 @@
 #include <atomic>
 #include <cctype>
 #include <cmath>
+#include <fstream>
+#include <iterator>
 #include <lcms2.h>
 #include <memory>
 #include <mutex>
@@ -373,18 +376,15 @@ Status toWorkingSpace(Image& image, const std::vector<std::uint8_t>& icc)
 
 } // namespace
 
-Result<LoadedImage> load(const std::filesystem::path& path, const LoadOptions& options)
+namespace {
+
+// Decodes an opened image into the working space.
+Result<LoadedImage> loadVips(vips::VImage in, const LoadOptions& options)
 {
-    ensureVips();
-    std::error_code ec;
-    if (!std::filesystem::exists(path, ec)) {
-        return Error{ErrorCode::NotFound, "The file " + path.string() + " does not exist."};
-    }
     LoadedImage result;
     std::vector<std::uint8_t> icc;
     double scale = 255.0;
     try {
-        vips::VImage in = openFile(path);
         result.info.format = in.get_typeof("vips-loader") != 0 ? in.get_string("vips-loader") : "";
         result.info.bitsPerSample = bitsOf(in);
         result.info.hasAlpha = in.has_alpha();
@@ -425,6 +425,97 @@ Result<LoadedImage> load(const std::filesystem::path& path, const LoadOptions& o
         return converted.error();
     }
     return result;
+}
+
+std::optional<std::vector<std::uint8_t>> readAll(const std::filesystem::path& path)
+{
+    std::ifstream in(path, std::ios::binary);
+    if (!in) {
+        return std::nullopt;
+    }
+    return std::vector<std::uint8_t>(std::istreambuf_iterator<char>(in), std::istreambuf_iterator<char>());
+}
+
+// The JPEG inside a RAW file's bytes, decoded and upright; nothing when there is none.
+std::optional<Result<LoadedImage>> previewOf(const std::vector<std::uint8_t>& file,
+                                             const LoadOptions& options, int minimumLongEdge)
+{
+    int width = 0;
+    int height = 0;
+    std::uint32_t orientation = 1;
+    const auto jpeg = detail::embeddedPreview(file, width, height, orientation);
+    if (!jpeg || std::max(width, height) < minimumLongEdge) {
+        return std::nullopt;
+    }
+    try {
+        vips::VImage in = vips::VImage::new_from_buffer(jpeg->data(), jpeg->size(), "").copy_memory();
+        in.set(VIPS_META_ORIENTATION, static_cast<int>(orientation));
+        auto loaded = loadVips(in, options);
+        if (loaded) {
+            loaded.value().info.format = "jpeg";
+        }
+        return loaded;
+    } catch (const vips::VError&) {
+        vips_error_clear();
+        return std::nullopt;
+    }
+}
+
+} // namespace
+
+bool isRawFile(const std::filesystem::path& path)
+{
+    static constexpr std::array kRaw = {".3fr", ".ari", ".arw", ".cap", ".cin", ".cr2", ".cr3", ".crw",
+                                        ".dcr", ".dng", ".erf", ".fff", ".iiq", ".k25", ".kdc", ".mdc",
+                                        ".mos", ".mrw", ".nef", ".nrw", ".orf", ".ori", ".pef", ".pxn",
+                                        ".raf", ".raw", ".rw2", ".rwl", ".sr2", ".srf", ".srw", ".x3f"};
+    const std::string ext = lowerExtension(path);
+    return std::ranges::find(kRaw, ext) != kRaw.end();
+}
+
+Result<LoadedImage> loadPreview(const std::filesystem::path& path, const LoadOptions& options)
+{
+    ensureVips();
+    const auto file = readAll(path);
+    if (!file) {
+        return Error{ErrorCode::NotFound, "The file " + path.string() + " could not be opened."};
+    }
+    if (auto preview = previewOf(*file, options, 1)) {
+        return std::move(*preview);
+    }
+    return Error{ErrorCode::DecodeFailed, "This file has no preview inside it."};
+}
+
+Result<LoadedImage> load(const std::filesystem::path& path, const LoadOptions& options)
+{
+    ensureVips();
+    std::error_code ec;
+    if (!std::filesystem::exists(path, ec)) {
+        return Error{ErrorCode::NotFound, "The file " + path.string() + " does not exist."};
+    }
+    const bool raw = isRawFile(path);
+    if (raw && (options.embeddedPreview || lowerExtension(path) == ".dng")) {
+        if (const auto file = readAll(path)) {
+            // A thumbnail from the JPEG inside, when it is large enough: no developing.
+            if (options.embeddedPreview && options.maxLongEdge > 0) {
+                if (auto preview = previewOf(*file, options, options.maxLongEdge)) {
+                    return std::move(*preview);
+                }
+            }
+            if (detail::isLinearDng(*file)) {
+                return detail::loadLinearDng(*file, options);
+            }
+        }
+    }
+    try {
+        auto loaded = loadVips(openFile(path), options);
+        if (loaded) {
+            loaded.value().info.raw = raw;
+        }
+        return loaded;
+    } catch (const vips::VError& e) {
+        return Error{ErrorCode::DecodeFailed, readFailure(e.what())};
+    }
 }
 
 namespace {
