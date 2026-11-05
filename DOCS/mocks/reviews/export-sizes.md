@@ -30,3 +30,17 @@ current choice has a tick and a highlight, not colour alone.
 - Crop to fill or Fit inside is explicit, and the export frame never changes the photo's own
   crop.
 - The same list feeds Batch and Crop's ratio chips, so a user learns it once.
+
+## Changed while building (2026-11-06)
+
+- **The framing card** sits under the Size row inside the sheet, not as a popover beside the
+  open menu: it stays visible while the chosen size's shape differs, and never falls off a small
+  screen (owner, 2026-11-06). The picture is at most 170 px high so the sheet stays short.
+- **The frame** moves with the mouse (a press outside it centres it there) and with the arrow
+  keys; Home puts it back in the middle. It is chosen per export and not remembered.
+- **Fit inside's border** is black for a dark photo and white for a light one, as the note says.
+- **Custom size** asks for width, height (either may follow the photo's shape) and resolution,
+  and keeps the size under Mine by a name. Print sizes write 300 dpi into the file.
+- **Batch** lists the same headings and sizes; its Mine sizes wait for a batch recipe version
+  that can carry them.
+

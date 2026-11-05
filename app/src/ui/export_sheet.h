@@ -6,6 +6,8 @@
 #include <QImage>
 #include <QSize>
 
+#include <vector>
+
 class QButtonGroup;
 class QCheckBox;
 class QComboBox;
@@ -14,6 +16,7 @@ class QLineEdit;
 class QSlider;
 class QSpinBox;
 class QFormLayout;
+class QFrame;
 class QHBoxLayout;
 class QVBoxLayout;
 class QWidget;
@@ -49,6 +52,12 @@ public:
     void setPreview(const QImage& preview);
     /// Where saved watermarks are kept (tests use their own folder).
     void setWatermarkFolder(const QString& folder);
+    /// The sizes kept under Mine; customSizes() has any added with Custom size.
+    void setCustomSizes(const std::vector<core::CustomSize>& sizes);
+    [[nodiscard]] const std::vector<core::CustomSize>& customSizes() const { return m_mySizes; }
+    [[nodiscard]] bool customSizesChanged() const { return m_mySizesChanged; }
+    [[nodiscard]] QComboBox* sizeList() const { return m_size; }
+    [[nodiscard]] class FramePicker* framePicker() const { return m_picker; }
 
 private:
     void updateForFormat();
@@ -60,11 +69,24 @@ private:
     [[nodiscard]] QWidget* formatRow(const QString& current);
     [[nodiscard]] QWidget* qualityRow(int quality);
     [[nodiscard]] QWidget* sizeRow(const QSize& photoSize, const core::ExportOptions& options);
-    [[nodiscard]] QWidget* fitRow(bool fitInside);
-    void refreshSize(const QSize& photoSize);
-    void setLongEdge(int pixels);
-    /// Asks for the long edge of a custom size; false when cancelled.
-    bool askLongEdge();
+    [[nodiscard]] QWidget* framingCard(const core::ExportOptions& options);
+    /// The size list: Original, the presets by group, Mine, the custom size in use, Custom size...
+    void fillSizes(const QString& chosen);
+    void refreshSize();
+    /// The size part of the options, as the list and the frame show it.
+    [[nodiscard]] core::ExportOptions sizeOptions() const;
+    /// Asks for a custom size (width, height, resolution, kept under Mine); false when cancelled.
+    bool askCustomSize();
+    struct CustomSizeControls
+    {
+        QSpinBox* width = nullptr;
+        QSpinBox* height = nullptr;
+        QSpinBox* dpi = nullptr;
+        QCheckBox* keep = nullptr;
+        QLineEdit* name = nullptr;
+    };
+    /// The Custom size sheet's body; `use` is enabled while the size is complete.
+    QVBoxLayout* customSizeForm(Sheet& sheet, CustomSizeControls& c, class QPushButton* use) const;
     /// Puts a format from More on the More button.
     void showRareFormat(const QString& extension);
     void chooseRareFormat(const QString& extension);
@@ -84,8 +106,13 @@ private:
     int m_longEdge = 0;
     int m_sizeIndex = 0;
     class QPushButton* m_more = nullptr;
-    QWidget* m_fitRow = nullptr;
-    class QLabel* m_fitNote = nullptr;
+    QSize m_photoSize;
+    core::CustomSize m_custom;
+    std::vector<core::CustomSize> m_mySizes;
+    bool m_mySizesChanged = false;
+    QFrame* m_framing = nullptr;
+    class QLabel* m_frameNote = nullptr;
+    class FramePicker* m_picker = nullptr;
     class QPushButton* m_fill = nullptr;
     class QPushButton* m_fit = nullptr;
     QCheckBox* m_metadata = nullptr;
@@ -95,6 +122,7 @@ private:
     QLabel* m_extension = nullptr;
     QComboBox* m_ifExists = nullptr;
     QString m_folderPath;
+    QString m_pendingSize; ///< a Mine size to choose once the list has it
     class WatermarkPicker* m_watermark = nullptr;
 };
 

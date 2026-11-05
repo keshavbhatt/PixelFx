@@ -32,6 +32,10 @@ TEST_CASE("size presets: fill keeps the middle, fit adds a border, both exact")
     CHECK(filled.value().height() == 125);
     CHECK(filled.value().pixel(0, 60)[0] ==
           doctest::Approx(0.5).epsilon(0.05)); // the edge band was cropped away
+    // The frame dragged to the left edge keeps the band.
+    const auto left = pfx::fillSize(wide, 100, 125, 0.0F, 0.5F);
+    REQUIRE(left.ok());
+    CHECK(left.value().pixel(2, 60)[0] == doctest::Approx(1.0).epsilon(0.05));
     const auto fitted = pfx::fitInside(wide, 100, 125, 1.0F);
     REQUIRE(fitted.ok());
     CHECK(fitted.value().width() == 100);

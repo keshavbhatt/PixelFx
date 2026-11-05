@@ -54,10 +54,14 @@ qt_add_library(pixelfx_ui STATIC
     icons.h
     look_editor.cpp
     look_editor.h
+    frame_picker.cpp
+    frame_picker.h
     list_row.cpp
     list_row.h
     name_field.cpp
     name_field.h
+    size_list.cpp
+    size_list.h
     status_pill.cpp
     status_pill.h
     looks_panel.cpp

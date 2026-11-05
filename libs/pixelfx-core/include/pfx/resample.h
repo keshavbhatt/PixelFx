@@ -11,8 +11,10 @@ namespace pfx {
 [[nodiscard]] Result<Image> fitLongEdge(const Image& image, int longEdge);
 
 // Exactly `width` by `height` (size presets: Instagram portrait, a print): scaled to cover the
-// frame, then the middle kept. May enlarge.
-[[nodiscard]] Result<Image> fillSize(const Image& image, int width, int height);
+// frame, then the part at `anchorX`, `anchorY` kept: 0 the left or top, 0.5 the middle, 1 the
+// right or bottom. May enlarge.
+[[nodiscard]] Result<Image> fillSize(const Image& image, int width, int height, float anchorX = 0.5F,
+                                     float anchorY = 0.5F);
 // Exactly `width` by `height`: scaled to fit inside, centred on a border of grey `border`
 // (linear light, 0 black, 1 white). May enlarge.
 [[nodiscard]] Result<Image> fitInside(const Image& image, int width, int height, float border);

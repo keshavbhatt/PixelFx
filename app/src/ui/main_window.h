@@ -50,6 +50,8 @@ public:
     [[nodiscard]] Filmstrip* filmstrip() const { return m_strip; }
     /// Opens the Export sheet for the open photo and writes it.
     void exportPhoto();
+    /// The Export sheet for the open photo, set up with its picture and the sizes kept under Mine.
+    [[nodiscard]] class ExportSheet* newExportSheet();
     [[nodiscard]] services::Exporter& exporter() { return m_exporter; }
 
     [[nodiscard]] services::Document& document() { return m_document; }

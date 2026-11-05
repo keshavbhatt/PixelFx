@@ -1,5 +1,6 @@
 #include "core/watermark.h"
 #include "ui/export_sheet.h"
+#include "ui/frame_picker.h"
 #include "ui/message_line.h"
 #include "ui/style.h"
 #include "ui/watermark_sheet.h"
@@ -43,6 +44,44 @@ private Q_SLOTS:
         in.ifExists = ExportOptions::IfExists::Skip;
         const ExportSheet sheet(u"/p/photo.jpg"_s, QSize(6000, 4000), in);
         QCOMPARE(sheet.options(), in);
+    }
+
+    void theSizeListGroupsTheSizesAndKeepsMine()
+    {
+        ExportOptions in;
+        in.sizePreset = u"mine:Shop listing"_s;
+        ExportSheet sheet(u"/p/photo.jpg"_s, QSize(6000, 4000), in);
+        sheet.setCustomSizes({{u"Shop listing"_s, QSize(2000, 2000), 72}});
+        QComboBox* list = sheet.sizeList();
+        QCOMPARE(list->itemText(0), u"Keep"_s);
+        QVERIFY(!(list->model()->flags(list->model()->index(0, 0)) & Qt::ItemIsEnabled)); // a heading
+        QCOMPARE(list->itemText(1), u"Original · 6000 x 4000"_s);
+        QVERIFY(list->findText(u"Instagram portrait · 1080 x 1350 · 4:5"_s) > 0);
+        QVERIFY(list->findText(u"Web · 2048 long edge"_s) > 0);
+        QVERIFY(list->findText(u"Mine"_s) > 0);
+        // The kept size is chosen again, and gives an exact square at its resolution.
+        QCOMPARE(list->currentText(), u"Shop listing · 2000 x 2000 · 1:1"_s);
+        QCOMPARE(sheet.options().customSize, QSize(2000, 2000));
+        QCOMPARE(sheet.options().dpi, 72);
+        QCOMPARE(list->itemText(list->count() - 1), u"Custom size..."_s);
+    }
+
+    void theFrameChoosesWhatACropToFillKeeps()
+    {
+        ExportOptions in;
+        in.sizePreset = u"instagram-portrait"_s;
+        ExportSheet sheet(u"/p/photo.jpg"_s, QSize(6000, 4000), in);
+        QImage photo(300, 200, QImage::Format_RGB32);
+        photo.fill(Qt::gray);
+        sheet.setPreview(photo);
+        auto* picker = sheet.framePicker();
+        QVERIFY(picker->isVisibleTo(&sheet)); // 4:5 from 3:2: something to choose
+        QTest::keyClick(picker, Qt::Key_Left);
+        QVERIFY(sheet.options().frameX < 0.5);
+        QCOMPARE(sheet.options().frameY, 0.5);
+        in.sizePreset = u"web"_s; // the photo's own shape: nothing to frame
+        ExportSheet same(u"/p/photo.jpg"_s, QSize(6000, 4000), in);
+        QVERIFY(!same.framePicker()->isVisibleTo(&same));
     }
 
     void watermarkRowListsTheSavedOnes()

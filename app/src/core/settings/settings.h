@@ -11,6 +11,7 @@
 
 #include <memory>
 #include <optional>
+#include <vector>
 
 namespace pixelfx::core {
 
@@ -51,6 +52,9 @@ public:
     /// The folder defaults to Pictures/PixelFx.
     [[nodiscard]] ExportOptions exportOptions() const;
     void setExportOptions(const ExportOptions& options);
+    /// The sizes kept under "Mine" with Custom size.
+    [[nodiscard]] std::vector<CustomSize> customSizes() const;
+    void setCustomSizes(const std::vector<CustomSize>& sizes);
 
     /// Batch's Compress only choices, remembered; Replace the originals never is (it asks each
     /// batch). The folder defaults to Pictures/PixelFx/Compressed.

@@ -513,6 +513,10 @@ Status save(const Image& image, const std::filesystem::path& path, const SaveOpt
             attachMetadata(img, options.keepLocation ? *metadata : withoutLocation(*metadata));
         }
         img.set(VIPS_META_ORIENTATION, 1); // pixels are already upright
+        if (options.dpi > 0) {
+            const double perMillimetre = options.dpi / 25.4; // libvips keeps resolution per millimetre
+            img = img.copy(vips::VImage::option()->set("xres", perMillimetre)->set("yres", perMillimetre));
+        }
         img.write_to_file(path.string().c_str(), saverOptions(ext, options));
     } catch (const vips::VError& e) {
         return Error{ErrorCode::EncodeFailed, std::string("Could not save the image: ") + e.what()};

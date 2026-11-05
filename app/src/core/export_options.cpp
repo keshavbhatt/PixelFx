@@ -2,23 +2,50 @@
 
 #include <QDir>
 #include <QFileInfo>
+#include <QObject>
 #include <QRegularExpression>
 
 #include <algorithm>
+#include <array>
 #include <cmath>
 
 using namespace Qt::StringLiterals;
 
 namespace pixelfx::core {
 
+QString customSizeId(const CustomSize& size)
+{
+    return u"mine:"_s + size.name;
+}
+
+QSize frameSize(const ExportOptions& options, const QSize& photo)
+{
+    if (const SizePreset* preset = sizePreset(options.sizePreset)) {
+        return exactSize(*preset, photo);
+    }
+    if (options.customSize.width() > 0 && options.customSize.height() > 0) {
+        return options.customSize;
+    }
+    return {};
+}
+
 QSize outputSize(const ExportOptions& options, QSize photo)
 {
     int longEdge = options.longEdge;
     if (const SizePreset* preset = sizePreset(options.sizePreset)) {
         longEdge = preset->longEdge;
-        if (const QSize exact = exactSize(*preset, photo); exact.isValid()) {
-            photo = exact;
-        }
+    }
+    if (const QSize frame = frameSize(options, photo); frame.isValid()) {
+        return frame;
+    }
+    // One side of a custom size: the other follows the photo's shape.
+    if (photo.width() > 0 && photo.height() > 0 &&
+        (options.customSize.width() > 0 || options.customSize.height() > 0)) {
+        const double scale = options.customSize.width() > 0
+                                 ? static_cast<double>(options.customSize.width()) / photo.width()
+                                 : static_cast<double>(options.customSize.height()) / photo.height();
+        return {std::max(1, static_cast<int>(std::lround(photo.width() * scale))),
+                std::max(1, static_cast<int>(std::lround(photo.height() * scale)))};
     }
     const int edge = std::max(photo.width(), photo.height());
     if (edge > 0 && longEdge > 0 && (edge > longEdge || !options.noEnlarge)) {
@@ -27,6 +54,47 @@ QSize outputSize(const ExportOptions& options, QSize photo)
                       std::max(1, static_cast<int>(std::lround(photo.height() * scale))));
     }
     return photo;
+}
+
+QString ratioName(const QSize& size)
+{
+    if (size.width() <= 0 || size.height() <= 0) {
+        return {};
+    }
+    const double r = static_cast<double>(size.width()) / size.height();
+    static constexpr std::array<std::pair<int, int>, 8> kCommon = {
+        {{1, 1}, {5, 4}, {4, 3}, {3, 2}, {16, 10}, {16, 9}, {2, 1}, {21, 9}}};
+    for (const auto& [a, b] : kCommon) {
+        if (std::abs(r - (static_cast<double>(a) / b)) < 0.02 * r) {
+            return u"%1:%2"_s.arg(a).arg(b);
+        }
+        if (std::abs(r - (static_cast<double>(b) / a)) < 0.02 * r) {
+            return u"%1:%2"_s.arg(b).arg(a);
+        }
+    }
+    return u"%1:1"_s.arg(r, 0, 'f', 2);
+}
+
+QString sizeDetail(const SizePreset& preset, const QSize& photo)
+{
+    if (preset.longEdge > 0) {
+        //: A size list row: "2048 long edge".
+        return QObject::tr("%1 long edge").arg(preset.longEdge);
+    }
+    const QSize exact = exactSize(preset, photo.isValid() ? photo : QSize(preset.width, preset.height));
+    const QString pixels = u"%1 x %2"_s.arg(exact.width()).arg(exact.height());
+    // Prints are named by their paper; their shape goes without saying.
+    return preset.followsPhoto ? pixels : u"%1 \u00B7 %2"_s.arg(pixels, ratioName(exact));
+}
+
+QString sizeDetail(const CustomSize& size)
+{
+    const QSize s = size.size;
+    if (s.width() > 0 && s.height() > 0) {
+        return u"%1 x %2 \u00B7 %3"_s.arg(s.width()).arg(s.height()).arg(ratioName(s));
+    }
+    //: A custom size with one side: "2000 wide", "1500 high".
+    return s.width() > 0 ? QObject::tr("%1 wide").arg(s.width()) : QObject::tr("%1 high").arg(s.height());
 }
 
 NameFacts nameFacts(const pfx::Metadata& metadata)

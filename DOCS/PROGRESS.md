@@ -73,6 +73,26 @@ Decisions the work stopped at; everything else went ahead within the approved mo
 
 ## Sessions (newest first)
 
+### 2026-11-06 (Export: sizes as the mock)
+
+- Owner: the Export sheet's size did not match `export-sizes.html`. Built what was missing: the
+  grouped size list (`sizelist`, a delegate shared with Batch: headings, the pixel size on the
+  right, a tick), the framing card (`FramePicker`: the photo dimmed, the kept part in a white
+  frame dragged with the mouse or the arrow keys; `pfx::fillSize` keeps any part, not only the
+  middle), Fit inside's border black or white by the photo, Custom size (width, height, dpi,
+  kept under Mine), 300 dpi for the print sizes (`pfx::SaveOptions::dpi`). One factory,
+  `MainWindow::newExportSheet`, sets the sheet up for both the window and the debug hook.
+- Checks: 145 library tests (the frame at the left edge keeps the left), 36 app suites (the
+  list's headings, Mine and Custom size, the frame's keys), the linters; the sheet and the open
+  list checked headless against the mock.
+
+### 2026-11-06 (owner's answers)
+
+- Camera RAW mock (`editor-raw.html`) approved as described, Kelvin for RAW only. Lensfun: write
+  the ADR and build. Batch finished notification: Qt D-Bus on Linux. Export framing under the Size
+  row. Theme: switch live. Batch's subfolder stays "PixelFx". Online guide: the GitHub wiki.
+  Sidecars next to the photo: later.
+
 ### 2026-11-06 (Batch: convert, resize and rename)
 
 - The approved `batch-convert-rename.html`, built (FEATURES M8, M9, M12). The welcome page has

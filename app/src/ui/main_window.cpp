@@ -251,6 +251,15 @@ void MainWindow::connectDocument()
     });
 }
 
+ExportSheet* MainWindow::newExportSheet()
+{
+    auto* sheet =
+        new ExportSheet(m_document.info().path, m_document.outputSize(), m_settings.exportOptions(), this);
+    sheet->setPreview(m_document.preview());
+    sheet->setCustomSizes(m_settings.customSizes());
+    return sheet;
+}
+
 void MainWindow::exportPhoto()
 {
     if (!m_document.isOpen() || m_exporter.isBusy()) {
@@ -275,10 +284,13 @@ void MainWindow::exportPhoto()
     if (jobs.isEmpty()) {
         jobs.append({m_document.info().path, m_document.settings()});
     }
-    ExportSheet sheet(m_document.info().path, m_document.outputSize(), m_settings.exportOptions(), this);
+    const std::unique_ptr<ExportSheet> owned(newExportSheet());
+    ExportSheet& sheet = *owned;
     sheet.setPhotoCount(static_cast<int>(jobs.size()));
-    sheet.setPreview(m_document.preview());
     const int result = sheet.exec();
+    if (sheet.customSizesChanged()) {
+        m_settings.setCustomSizes(sheet.customSizes());
+    }
     if (result == ExportSheet::kCopyToClipboard) {
         m_settings.setExportOptions(sheet.options());
         copyToClipboard(sheet.options());

@@ -46,38 +46,49 @@ QString applyWatermark(pfx::Image& image, const QString& file, const pfx::Metada
 
 // The size the options ask for: a size preset's exact frame (filled or fitted) or long edge, or
 // the long edge; never enlarging to a long edge. A reason on failure.
+// The border of Fit inside: black for a dark photo, white for a light one.
+float borderFor(const pfx::Image& image)
+{
+    double sum = 0.0;
+    std::size_t n = 0;
+    const int step = std::max(1, std::max(image.width(), image.height()) / 64);
+    for (int y = 0; y < image.height(); y += step) {
+        for (int x = 0; x < image.width(); x += step) {
+            const float* p = image.pixel(x, y);
+            sum += (0.2627 * double{p[0]}) + (0.6780 * double{p[1]}) +
+                   (0.0593 * double{p[2]}); // Rec.2020 luminance
+            ++n;
+        }
+    }
+    constexpr double kMiddleGrey = 0.18;
+    return (n > 0 && sum / static_cast<double>(n) < kMiddleGrey) ? 0.0F : 1.0F;
+}
+
 std::string resize(pfx::Image& image, const core::ExportOptions& options)
 {
-    int longEdge = options.longEdge;
-    if (const core::SizePreset* preset = core::sizePreset(options.sizePreset)) {
-        longEdge = preset->longEdge;
-        const QSize exact = core::exactSize(*preset, QSize(image.width(), image.height()));
-        if (exact.isValid()) {
-            auto framed = options.fitInside ? pfx::fitInside(image, exact.width(), exact.height(), 1.0F)
-                                            : pfx::fillSize(image, exact.width(), exact.height());
-            if (!framed) {
-                return framed.error().message;
-            }
-            image = std::move(framed).value();
+    const QSize photo(image.width(), image.height());
+    if (const QSize frame = core::frameSize(options, photo); frame.isValid()) {
+        auto framed =
+            options.fitInside
+                ? pfx::fitInside(image, frame.width(), frame.height(), borderFor(image))
+                : pfx::fillSize(image, frame.width(), frame.height(), static_cast<float>(options.frameX),
+                                static_cast<float>(options.frameY));
+        if (!framed) {
+            return framed.error().message;
         }
+        image = std::move(framed).value();
+        return {};
     }
-    if (longEdge > 0 && image.longEdge() > longEdge) {
-        auto resized = pfx::fitLongEdge(image, longEdge);
-        if (!resized) {
-            return resized.error().message;
-        }
-        image = std::move(resized).value();
-    } else if (longEdge > image.longEdge() && !options.noEnlarge) {
-        // Enlarging to the long edge: the same shape, so filling the frame crops nothing.
-        const double scale = static_cast<double>(longEdge) / image.longEdge();
-        auto enlarged =
-            pfx::fillSize(image, std::max(1, static_cast<int>(std::lround(image.width() * scale))),
-                          std::max(1, static_cast<int>(std::lround(image.height() * scale))));
-        if (!enlarged) {
-            return enlarged.error().message;
-        }
-        image = std::move(enlarged).value();
+    const QSize target = core::outputSize(options, photo);
+    if (target == photo || !target.isValid()) {
+        return {};
     }
+    // The same shape: scaling, nothing cropped.
+    auto resized = pfx::fillSize(image, target.width(), target.height());
+    if (!resized) {
+        return resized.error().message;
+    }
+    image = std::move(resized).value();
     return {};
 }
 
@@ -140,6 +151,7 @@ ExportOutcome exportFile(const QString& source,
     save.bitsPerSample = options.bitsPerSample;
     save.keepMetadata = options.keepMetadata;
     save.keepLocation = options.keepLocation;
+    save.dpi = options.dpi;
     const auto saved = pfx::save(image, out.target.toStdString(), save, &prepared.metadata);
     if (!saved) {
         out.error = QString::fromStdString(saved.error().message);

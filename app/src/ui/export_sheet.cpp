@@ -1,6 +1,8 @@
 #include "ui/export_sheet.h"
 
 #include "ui/elided_label.h"
+#include "ui/frame_picker.h"
+#include "ui/size_list.h"
 #include "ui/slider_row.h"
 #include "ui/style.h"
 #include "ui/watermark_sheet.h"
@@ -79,6 +81,7 @@ ExportSheet::ExportSheet(const QString& source, const QSize& photoSize, const co
     : Sheet(parent)
     , m_source(source)
     , m_folderPath(options.folder)
+    , m_pendingSize(options.sizePreset)
 {
     setWindowTitle(tr("Export"));
     setModal(true);
@@ -101,8 +104,8 @@ ExportSheet::ExportSheet(const QString& source, const QSize& photoSize, const co
     form->addRow(QString(), m_sixteen);
 
     form->addRow(tr("Size"), sizeRow(photoSize, options));
-    form->addRow(QString(), fitRow(options.fitInside));
-    refreshSize(photoSize);
+    form->addRow(QString(), framingCard(options));
+    refreshSize();
 
     form->addRow(tr("Watermark"), watermarkRow(options.watermark));
 
@@ -157,145 +160,241 @@ QWidget* ExportSheet::qualityRow(int quality)
 
 QWidget* ExportSheet::sizeRow(const QSize& photoSize, const core::ExportOptions& options)
 {
-    auto* row = new QWidget(this);
-    m_size = new QComboBox(row);
+    m_photoSize = photoSize;
+    m_longEdge = options.longEdge;
+    m_custom = core::CustomSize{QString(), options.customSize, options.dpi};
+    m_size = new QComboBox(this);
     m_size->setObjectName(u"sizeList"_s);
     m_size->setAccessibleName(tr("Size"));
-    m_size->addItem(tr("Original \u00B7 %1 x %2").arg(photoSize.width()).arg(photoSize.height()), QString());
+    sizelist::install(m_size);
+    QString chosen = options.sizePreset;
+    if (chosen.isEmpty() && (options.longEdge > 0 || core::hasSize(options.customSize))) {
+        chosen = u"custom"_s;
+    }
+    fillSizes(chosen);
+    connect(m_size, &QComboBox::activated, this, [this](int index) {
+        if (m_size->itemData(index).toString() == u"new"_s && !askCustomSize()) {
+            m_size->setCurrentIndex(m_sizeIndex);
+        }
+        m_sizeIndex = m_size->currentIndex();
+    });
+    connect(m_size, &QComboBox::currentIndexChanged, this, &ExportSheet::refreshSize);
+    return m_size;
+}
+
+void ExportSheet::fillSizes(const QString& chosen)
+{
+    const QSignalBlocker block(m_size);
+    m_size->clear();
+    const QString photo = tr("%1 x %2").arg(m_photoSize.width()).arg(m_photoSize.height());
+    sizelist::addHeading(m_size, tr("Keep"));
+    sizelist::addItem(m_size, tr("Original"), photo, QString());
     QString group;
     for (const core::SizePreset& p : core::sizePresets()) {
         const QString g = QCoreApplication::translate("SizePresets", p.group);
         if (g != group) {
             group = g;
-            m_size->insertSeparator(m_size->count());
-            m_size->addItem(g);
-            const auto* model = qobject_cast<const QStandardItemModel*>(m_size->model());
-            if (model != nullptr) {
-                model->item(m_size->count() - 1)->setEnabled(false); // a heading, not a choice
-            }
+            sizelist::addHeading(m_size, g);
         }
-        const QSize exact = core::exactSize(p, photoSize);
-        const QString pixels = exact.isValid() ? tr("%1 x %2").arg(exact.width()).arg(exact.height())
-                                               : tr("%1 long edge").arg(p.longEdge);
-        m_size->addItem(u"%1 \u00B7 %2"_s.arg(QCoreApplication::translate("SizePresets", p.name), pixels),
-                        QString::fromLatin1(p.id));
+        sizelist::addItem(m_size, QCoreApplication::translate("SizePresets", p.name),
+                          core::sizeDetail(p, m_photoSize), QString::fromLatin1(p.id));
     }
-    m_size->insertSeparator(m_size->count());
-    m_size->addItem(QString(), u"custom"_s);
-    setLongEdge(options.longEdge > 0 ? options.longEdge : 2048);
-    int index = 0;
-    if (!options.sizePreset.isEmpty()) {
-        index = std::max(0, m_size->findData(options.sizePreset));
-    } else if (options.longEdge > 0) {
-        index = m_size->findData(u"custom"_s);
-    }
-    m_size->setCurrentIndex(index);
-    m_sizeIndex = index;
-    auto* sizeLayout = new QHBoxLayout(row);
-    sizeLayout->setContentsMargins(0, 0, 0, 0);
-    sizeLayout->addWidget(m_size, 1);
-    connect(m_size, &QComboBox::activated, this, [this](int chosen) {
-        if (m_size->itemData(chosen).toString() == u"custom"_s && !askLongEdge()) {
-            m_size->setCurrentIndex(m_sizeIndex);
+    if (!m_mySizes.empty()) {
+        sizelist::addHeading(m_size, tr("Mine"));
+        for (const core::CustomSize& c : m_mySizes) {
+            sizelist::addItem(m_size, c.name, core::sizeDetail(c), core::customSizeId(c));
         }
-        m_sizeIndex = m_size->currentIndex();
-    });
-    connect(m_size, &QComboBox::currentIndexChanged, this, [this, photoSize] { refreshSize(photoSize); });
-    return row;
+    }
+    // An unnamed custom size in use, from the last export.
+    if (m_longEdge > 0 || core::hasSize(m_custom.size)) {
+        sizelist::addItem(m_size, tr("Custom"),
+                          m_longEdge > 0 ? tr("%1 long edge").arg(m_longEdge) : core::sizeDetail(m_custom),
+                          u"custom"_s);
+    }
+    sizelist::addSeparator(m_size);
+    sizelist::addItem(m_size, tr("Custom size..."), QString(), u"new"_s);
+    m_size->setCurrentIndex(std::max(1, m_size->findData(chosen)));
+    m_sizeIndex = m_size->currentIndex();
 }
 
-void ExportSheet::setLongEdge(int pixels)
+void ExportSheet::setCustomSizes(const std::vector<core::CustomSize>& sizes)
 {
-    m_longEdge = pixels;
-    m_size->setItemText(m_size->findData(u"custom"_s), tr("Long edge \u00B7 %1 px").arg(pixels));
+    m_mySizes = sizes;
+    const QString chosen = m_size->currentData().toString();
+    fillSizes(m_pendingSize.isEmpty() ? chosen : m_pendingSize);
+    m_pendingSize.clear();
+    refreshSize();
 }
 
-bool ExportSheet::askLongEdge()
+QVBoxLayout* ExportSheet::customSizeForm(Sheet& sheet, CustomSizeControls& c, QPushButton* use) const
+{
+    const auto side = [&sheet](int value, const QString& name) {
+        auto* box = new QSpinBox(&sheet);
+        box->setRange(0, 65535);
+        box->setSuffix(tr(" px"));
+        box->setSpecialValueText(tr("Follows the photo"));
+        box->setValue(value);
+        box->setAccessibleName(name);
+        return box;
+    };
+    c.width = side(m_custom.size.width() > 0 ? m_custom.size.width() : 2000, tr("Width"));
+    c.height = side(m_custom.size.height(), tr("Height"));
+    c.dpi = new QSpinBox(&sheet);
+    c.dpi->setRange(0, 4800);
+    c.dpi->setSpecialValueText(tr("Not set"));
+    c.dpi->setSuffix(tr(" dpi"));
+    c.dpi->setValue(m_custom.dpi);
+    c.dpi->setAccessibleName(tr("Pixels per inch"));
+    c.keep = new QCheckBox(tr("Keep it under Mine as"), &sheet);
+    c.name = new QLineEdit(&sheet);
+    c.name->setPlaceholderText(tr("Shop listing"));
+    c.name->setAccessibleName(tr("Name of the size"));
+    c.name->setEnabled(false);
+    connect(c.keep, &QCheckBox::toggled, c.name, &QWidget::setEnabled);
+    const auto valid = [c, use] {
+        use->setEnabled((c.width->value() > 0 || c.height->value() > 0) &&
+                        (!c.keep->isChecked() || !c.name->text().trimmed().isEmpty()));
+    };
+    for (const QSpinBox* box : {c.width, c.height}) {
+        connect(box, &QSpinBox::valueChanged, &sheet, valid);
+    }
+    connect(c.keep, &QCheckBox::toggled, &sheet, valid);
+    connect(c.name, &QLineEdit::textChanged, &sheet, valid);
+    auto* column = new QVBoxLayout;
+    column->setSpacing(kGapGroups);
+    column->addLayout(sheetTitleRow(&sheet, tr("Custom size")));
+    auto* note =
+        new QLabel(tr("Both sides make an exact frame; one side leaves the other to the photo's shape. "
+                      "Resolution is written into the file for printing."),
+                   &sheet);
+    note->setObjectName(u"muted"_s);
+    note->setWordWrap(true);
+    column->addWidget(note);
+    auto* form = new QFormLayout;
+    form->addRow(tr("Width"), c.width);
+    form->addRow(tr("Height"), c.height);
+    form->addRow(tr("Resolution"), c.dpi);
+    column->addLayout(form);
+    auto* keepRow = new QHBoxLayout;
+    keepRow->addWidget(c.keep);
+    keepRow->addWidget(c.name, 1);
+    column->addLayout(keepRow);
+    return column;
+}
+
+bool ExportSheet::askCustomSize()
 {
     Sheet sheet(this);
     sheet.setWindowTitle(tr("Custom size"));
-    auto* edge = new QSpinBox(&sheet);
-    edge->setRange(16, 65535);
-    edge->setSuffix(tr(" px"));
-    edge->setValue(m_longEdge);
-    edge->setAccessibleName(tr("Long edge"));
     const FootButtons buttons = footButtons(&sheet, tr("Use size"), {}, true);
     connect(buttons.cancel, &QPushButton::clicked, &sheet, &QDialog::reject);
     connect(buttons.primary, &QPushButton::clicked, &sheet, &QDialog::accept);
-    QVBoxLayout* column = sheetLayout(&sheet, buttons.row);
-    auto* form = new QFormLayout;
-    form->addRow(tr("Long edge"), edge);
-    column->addLayout(sheetTitleRow(&sheet, tr("Custom size")));
-    column->addWidget(new QLabel(tr("The longer side of the photo; the other follows its shape."), &sheet));
-    column->addLayout(form);
+    CustomSizeControls c;
+    sheetLayout(&sheet, buttons.row)->addLayout(customSizeForm(sheet, c, buttons.primary));
     sheet.setSize(Size::Narrow);
-    edge->setFocus();
-    edge->selectAll();
+    c.width->setFocus();
+    c.width->selectAll();
     if (sheet.exec() != QDialog::Accepted) {
         return false;
     }
-    setLongEdge(edge->value());
+    m_longEdge = 0;
+    const bool keep = c.keep->isChecked();
+    m_custom = core::CustomSize{keep ? c.name->text().trimmed() : QString(),
+                                QSize(c.width->value(), c.height->value()), c.dpi->value()};
+    if (keep) {
+        std::erase_if(m_mySizes, [this](const core::CustomSize& s) { return s.name == m_custom.name; });
+        m_mySizes.push_back(m_custom);
+        m_mySizesChanged = true;
+    }
+    fillSizes(keep ? core::customSizeId(m_custom) : u"custom"_s);
+    refreshSize();
     return true;
 }
 
-QWidget* ExportSheet::fitRow(bool fitInside)
+QWidget* ExportSheet::framingCard(const core::ExportOptions& options)
 {
-    m_fitRow = new QWidget(this);
-    m_fitNote = new QLabel(m_fitRow);
-    m_fitNote->setObjectName(u"faint"_s);
-    m_fill = new QPushButton(tr("Crop to fill"), m_fitRow);
-    m_fit = new QPushButton(tr("Fit inside"), m_fitRow);
-    m_fill->setToolTip(tr("Keep the middle of the photo, cropped to the shape"));
+    m_framing = new QFrame(this);
+    m_framing->setObjectName(u"card"_s);
+    m_frameNote = new QLabel(m_framing);
+    m_frameNote->setObjectName(u"muted"_s);
+    m_picker = new FramePicker(m_framing);
+    m_picker->setAnchor({options.frameX, options.frameY});
+    m_fill = new QPushButton(tr("Crop to fill"), m_framing);
+    m_fit = new QPushButton(tr("Fit inside"), m_framing);
+    m_fill->setToolTip(tr("Keep the part in the frame, cropped to the shape"));
     m_fit->setToolTip(tr("Keep the whole photo and add a border"));
-    auto* group = new QButtonGroup(m_fitRow);
+    auto* group = new QButtonGroup(m_framing);
+    auto* fitBox = new QFrame(m_framing);
+    fitBox->setObjectName(u"segmentBox"_s);
+    auto* buttons = new QHBoxLayout(fitBox);
+    buttons->setContentsMargins(1, 1, 1, 1);
+    buttons->setSpacing(0);
     for (QPushButton* b : {m_fill, m_fit}) {
         b->setObjectName(u"segment"_s);
         b->setCheckable(true);
         group->addButton(b);
+        buttons->addWidget(b, 1);
     }
-    (fitInside ? m_fit : m_fill)->setChecked(true);
-    auto* buttons = new QHBoxLayout;
-    buttons->setSpacing(0);
-    buttons->addWidget(m_fill);
-    buttons->addWidget(m_fit);
-    buttons->addStretch();
-    auto* column = new QVBoxLayout(m_fitRow);
-    column->setContentsMargins(0, 0, 0, 0);
-    column->setSpacing(kGapSmall);
-    column->addWidget(m_fitNote);
-    column->addLayout(buttons);
-    return m_fitRow;
+    m_fill->setProperty("edge", u"first"_s);
+    (options.fitInside ? m_fit : m_fill)->setChecked(true);
+    connect(group, &QButtonGroup::buttonClicked, this, &ExportSheet::refreshSize);
+    auto* help =
+        new QLabel(tr("Drag the frame to choose what stays. Fit inside adds a border instead."), m_framing);
+    help->setObjectName(u"itemDetail"_s);
+    help->setWordWrap(true);
+    auto* column = new QVBoxLayout(m_framing);
+    column->setContentsMargins(10, 10, 10, 10);
+    column->setSpacing(kGapControls);
+    column->addWidget(m_frameNote);
+    column->addWidget(m_picker);
+    column->addWidget(fitBox);
+    column->addWidget(help);
+    return m_framing;
 }
 
-void ExportSheet::refreshSize(const QSize& photoSize)
+core::ExportOptions ExportSheet::sizeOptions() const
 {
-    const QString id = m_size->currentData().toString();
-    const core::SizePreset* preset = core::sizePreset(id);
-    const QSize exact = preset != nullptr ? core::exactSize(*preset, photoSize) : QSize();
-    // Only when the shapes differ is there anything to choose.
-    const bool differs = exact.isValid() && photoSize.height() > 0 &&
-                         std::abs((static_cast<double>(exact.width()) / exact.height()) -
-                                  (static_cast<double>(photoSize.width()) / photoSize.height())) > 0.01;
-    m_fitRow->setVisible(differs);
-    if (differs) {
-        // The nearest common shape ("3:2"), as people name them; otherwise the number.
-        const auto ratio = [](const QSize& s) {
-            const double r = static_cast<double>(s.width()) / s.height();
-            static const std::array<std::pair<int, int>, 8> common = {
-                {{1, 1}, {5, 4}, {4, 3}, {3, 2}, {16, 10}, {16, 9}, {2, 1}, {21, 9}}};
-            for (const auto& [a, b] : common) {
-                if (std::abs(r - (static_cast<double>(a) / b)) < 0.02 * r) {
-                    return u"%1:%2"_s.arg(a).arg(b);
-                }
-                if (std::abs(r - (static_cast<double>(b) / a)) < 0.02 * r) {
-                    return u"%1:%2"_s.arg(b).arg(a);
-                }
+    core::ExportOptions o;
+    const QString size = m_size->currentData().toString();
+    if (core::sizePreset(size) != nullptr) {
+        o.sizePreset = size;
+        o.dpi = core::sizePreset(size)->followsPhoto ? 300 : 0; // the print sizes are at 300 dpi
+    } else if (size.startsWith(u"mine:"_s)) {
+        for (const core::CustomSize& c : m_mySizes) {
+            if (core::customSizeId(c) == size) {
+                o.sizePreset = size;
+                o.customSize = c.size;
+                o.dpi = c.dpi;
             }
-            return u"%1:1"_s.arg(r, 0, 'f', 2);
-        };
-        m_fitNote->setText(tr("%1 is %2, this photo is %3")
-                               .arg(QCoreApplication::translate("SizePresets", preset->name), ratio(exact),
-                                    ratio(photoSize)));
+        }
+    } else if (size == u"custom"_s) {
+        o.longEdge = m_longEdge;
+        o.customSize = m_longEdge > 0 ? QSize() : m_custom.size;
+        o.dpi = m_custom.dpi;
+    }
+    o.fitInside = m_fit->isChecked();
+    o.frameX = m_picker->anchor().x();
+    o.frameY = m_picker->anchor().y();
+    return o;
+}
+
+void ExportSheet::refreshSize()
+{
+    const core::ExportOptions o = sizeOptions();
+    const QSize frame = core::frameSize(o, m_photoSize);
+    // Only when the shapes differ is there anything to choose.
+    const bool differs = frame.isValid() && m_photoSize.height() > 0 &&
+                         std::abs((static_cast<double>(frame.width()) / frame.height()) -
+                                  (static_cast<double>(m_photoSize.width()) / m_photoSize.height())) > 0.01;
+    m_framing->setVisible(differs);
+    if (differs) {
+        //: Above the framing picture: "Instagram portrait is 4:5, this photo is 3:2".
+        m_frameNote->setText(tr("%1 is %2, this photo is %3")
+                                 .arg(m_size->currentData().toString() == u"custom"_s
+                                          ? tr("This size")
+                                          : sizelist::nameOf(m_size, m_size->currentIndex()),
+                                      core::ratioName(frame), core::ratioName(m_photoSize)));
+        m_picker->setFrame(frame, o.fitInside);
     }
 }
 
@@ -464,6 +563,7 @@ QWidget* ExportSheet::watermarkRow(const QString& current)
 void ExportSheet::setPreview(const QImage& preview)
 {
     m_watermark->setPreview(preview);
+    m_picker->setPicture(preview);
 }
 
 void ExportSheet::setWatermarkFolder(const QString& folder)
@@ -477,10 +577,14 @@ core::ExportOptions ExportSheet::options() const
     o.extension = m_formats->checkedButton()->property("extension").toString();
     o.quality = m_quality->ticks();
     o.bitsPerSample = (formatFor(o.extension)->deep && m_sixteen->isChecked()) ? 16 : 8;
-    const QString size = m_size->currentData().toString();
-    o.longEdge = size == u"custom"_s ? m_longEdge : 0;
-    o.sizePreset = core::sizePreset(size) != nullptr ? size : QString();
-    o.fitInside = m_fit->isChecked();
+    const core::ExportOptions size = sizeOptions();
+    o.longEdge = size.longEdge;
+    o.sizePreset = size.sizePreset;
+    o.customSize = size.customSize;
+    o.dpi = size.dpi;
+    o.fitInside = size.fitInside;
+    o.frameX = size.frameX;
+    o.frameY = size.frameY;
     o.keepMetadata = m_metadata->isChecked();
     o.keepLocation = m_location->isChecked();
     o.watermark = m_watermark->path();

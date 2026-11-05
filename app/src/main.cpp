@@ -257,8 +257,7 @@ QDialog* photoSheet(pixelfx::ui::MainWindow& window, const QString& name)
             &window);
     }
     if (name == u"export"_s) {
-        return new pixelfx::ui::ExportSheet(doc.info().path, doc.outputSize(),
-                                            window.settings().exportOptions(), &window);
+        return window.newExportSheet();
     }
     return nullptr;
 }

@@ -15,6 +15,7 @@
 #include "ui/name_field.h"
 #include "ui/preview_viewer.h"
 #include "ui/sheet.h"
+#include "ui/size_list.h"
 #include "ui/slider_row.h"
 #include "ui/status_pill.h"
 #include "ui/style.h"
@@ -552,17 +553,23 @@ QComboBox* BatchPage::buildSizes(QWidget* parent)
 {
     auto* sizes = new QComboBox(parent);
     sizes->setAccessibleName(tr("Resize"));
-    sizes->addItem(tr("Original size"), 0);
+    sizelist::install(sizes);
+    sizelist::addHeading(sizes, tr("Keep"));
+    sizelist::addItem(sizes, tr("Original size"), QString(), 0);
+    sizelist::addHeading(sizes, tr("Long edge"));
     for (const int edge : {3840, 2048, 1600, 1080}) {
-        sizes->addItem(tr("%1 px long edge").arg(edge), edge);
+        sizelist::addItem(sizes, tr("%1 px long edge").arg(edge), QString(), edge);
     }
-    // The Export sheet's named sizes too.
+    // The Export sheet's named sizes too; each photo keeps its own shape for the rest.
+    QString group;
     for (const core::SizePreset& p : core::sizePresets()) {
-        const QString size =
-            p.longEdge > 0 ? tr("%1 long edge").arg(p.longEdge) : tr("%1 x %2").arg(p.width).arg(p.height);
-        //: A size choice of Batch: where the photos go, then the size, "Web · 2048 long edge".
-        sizes->addItem(tr("%1 · %2").arg(QCoreApplication::translate("SizePresets", p.name), size),
-                       QString(u"preset:"_s + QString::fromLatin1(p.id)));
+        const QString g = QCoreApplication::translate("SizePresets", p.group);
+        if (g != group) {
+            group = g;
+            sizelist::addHeading(sizes, g);
+        }
+        sizelist::addItem(sizes, QCoreApplication::translate("SizePresets", p.name), core::sizeDetail(p, {}),
+                          QString(u"preset:"_s + QString::fromLatin1(p.id)));
     }
     return sizes;
 }
@@ -990,7 +997,7 @@ void BatchPage::showSize(const QString& sizePreset, int longEdge)
     if (index < 0) {
         index = m_size->findData(longEdge);
     }
-    m_size->setCurrentIndex(std::max(0, index));
+    m_size->setCurrentIndex(std::max(1, index)); // 0 is the Keep heading
 }
 
 // The photo's own settings as a preset, its crop, turns and spots left out (they belong to it).
@@ -1053,6 +1060,12 @@ services::BatchRecipe BatchPage::recipe() const
     r.output.sizePreset = size.startsWith(u"preset:"_s) ? size.mid(7) : QString();
     r.output.longEdge = r.output.sizePreset.isEmpty() ? m_size->currentData().toInt() : 0;
     r.output.noEnlarge = m_noEnlarge->isChecked();
+    // Batch offers no custom size yet; the print sizes are at 300 dpi.
+    r.output.customSize = {};
+    const core::SizePreset* preset = core::sizePreset(r.output.sizePreset);
+    r.output.dpi = (preset != nullptr && preset->followsPhoto) ? 300 : 0;
+    r.output.frameX = 0.5;
+    r.output.frameY = 0.5;
     r.output.extension = m_format->currentData().toString();
     r.output.watermark = m_watermark->path();
     r.output.recipeName = m_fromPhoto ? QFileInfo(m_photoName).completeBaseName() : recipeTitle();

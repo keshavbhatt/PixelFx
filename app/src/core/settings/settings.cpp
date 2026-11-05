@@ -124,6 +124,9 @@ ExportOptions Settings::exportOptions() const
     o.folder = m_settings->value(key(keys::kExportFolder), defaultFolder).toString();
     o.nameTemplate = m_settings->value(key(keys::kExportNameTemplate), o.nameTemplate).toString();
     o.ifExists = ifExistsFromKey(m_settings->value(key(keys::kExportIfExists)).toString());
+    o.customSize = QSize(std::max(0, m_settings->value(key(keys::kExportCustomWidth), 0).toInt()),
+                         std::max(0, m_settings->value(key(keys::kExportCustomHeight), 0).toInt()));
+    o.dpi = std::clamp(m_settings->value(key(keys::kExportDpi), 0).toInt(), 0, 4800);
     return o;
 }
 
@@ -141,6 +144,39 @@ void Settings::setExportOptions(const ExportOptions& options)
     m_settings->setValue(key(keys::kExportFolder), options.folder);
     m_settings->setValue(key(keys::kExportNameTemplate), options.nameTemplate);
     m_settings->setValue(key(keys::kExportIfExists), ifExistsKey(options.ifExists));
+    m_settings->setValue(key(keys::kExportCustomWidth), options.customSize.width());
+    m_settings->setValue(key(keys::kExportCustomHeight), options.customSize.height());
+    m_settings->setValue(key(keys::kExportDpi), options.dpi);
+}
+
+std::vector<CustomSize> Settings::customSizes() const
+{
+    // One "name|width|height|dpi" per size.
+    std::vector<CustomSize> out;
+    for (const QString& line : m_settings->value(key(keys::kCustomSizes)).toStringList()) {
+        const QStringList parts = line.split(u'|');
+        if (parts.size() != 4 || parts.at(0).trimmed().isEmpty()) {
+            continue;
+        }
+        const CustomSize c{parts.at(0),
+                           QSize(std::max(0, parts.at(1).toInt()), std::max(0, parts.at(2).toInt())),
+                           std::clamp(parts.at(3).toInt(), 0, 4800)};
+        if (hasSize(c.size)) {
+            out.push_back(c);
+        }
+    }
+    return out;
+}
+
+void Settings::setCustomSizes(const std::vector<CustomSize>& sizes)
+{
+    QStringList lines;
+    for (const CustomSize& c : sizes) {
+        QString name = c.name;
+        name.replace(u'|', u'-');
+        lines << u"%1|%2|%3|%4"_s.arg(name).arg(c.size.width()).arg(c.size.height()).arg(c.dpi);
+    }
+    m_settings->setValue(key(keys::kCustomSizes), lines);
 }
 
 CompressJob Settings::compressJob() const

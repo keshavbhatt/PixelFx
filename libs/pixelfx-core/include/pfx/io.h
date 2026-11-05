@@ -46,6 +46,7 @@ struct SaveOptions
     int bitsPerSample = 8; // 8 or 16 where the format allows
     bool keepMetadata = true;
     bool keepLocation = true; // with keepMetadata: false strips GPS from Exif and XMP
+    int dpi = 0;              // pixels per inch written into the file (prints); 0 leaves it out
 };
 
 // Metadata with the location taken out: the Exif GPS block unlinked and zeroed (no trace of the

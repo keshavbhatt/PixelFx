@@ -38,6 +38,15 @@ struct ExportOptions
     /// What {preset} in the name becomes: the batch's recipe ("golden-hour"); not remembered.
     QString recipeName;
     IfExists ifExists = IfExists::AddNumber;
+    /// A custom size: both sides make an exact frame, one side scales the photo to it; empty
+    /// for none.
+    QSize customSize;
+    /// Pixels per inch written into the file (prints); 0 leaves it out.
+    int dpi = 0;
+    /// Where Crop to fill keeps the photo: 0 the left or top, 0.5 the middle, 1 the right or
+    /// bottom. Chosen per export by dragging the frame; not remembered.
+    double frameX = 0.5;
+    double frameY = 0.5;
 
     bool operator==(const ExportOptions&) const = default;
 };
@@ -54,14 +63,41 @@ struct SizePreset
     bool followsPhoto = false; ///< prints turn with the photo (portrait or landscape)
 };
 
+/// A size the user kept under "Mine" (Custom size).
+struct CustomSize
+{
+    QString name;
+    QSize size; ///< a side of 0 follows the photo's shape
+    int dpi = 0;
+
+    bool operator==(const CustomSize&) const = default;
+};
+/// Whether a custom size has a side at all (one side alone follows the photo's shape).
+[[nodiscard]] inline bool hasSize(const QSize& size)
+{
+    return size.width() > 0 || size.height() > 0;
+}
+
+/// The id of a custom size in a size list ("mine:Shop listing").
+[[nodiscard]] QString customSizeId(const CustomSize& size);
+
 [[nodiscard]] const std::vector<SizePreset>& sizePresets();
 [[nodiscard]] const SizePreset* sizePreset(const QString& id);
 /// The exact output size of `preset` for a photo of `photo` (prints follow its orientation);
 /// invalid for long-edge presets.
 [[nodiscard]] QSize exactSize(const SizePreset& preset, const QSize& photo);
 
-/// The size a photo of `photo` is saved at under `options`' size preset or long edge.
+/// The exact frame a photo of `photo` is saved in (a preset or custom size with both sides),
+/// whose shape may differ from the photo's; invalid when the photo keeps its shape.
+[[nodiscard]] QSize frameSize(const ExportOptions& options, const QSize& photo);
+/// The size a photo of `photo` is saved at under `options`' size preset, custom size or long
+/// edge.
 [[nodiscard]] QSize outputSize(const ExportOptions& options, QSize photo);
+/// The common name of a shape ("3:2", "4:5"), else the ratio to one ("1.85:1").
+[[nodiscard]] QString ratioName(const QSize& size);
+/// What a size list row says on its right: "1080 x 1350 · 4:5", "2048 long edge", "1800 x 1200".
+[[nodiscard]] QString sizeDetail(const SizePreset& preset, const QSize& photo);
+[[nodiscard]] QString sizeDetail(const CustomSize& size);
 
 /// What a file name's tokens know of a photo beyond its path: its place in the batch and what
 /// its Exif says.

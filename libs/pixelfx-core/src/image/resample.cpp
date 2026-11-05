@@ -44,7 +44,7 @@ vips::VImage resizedTo(const vips::VImage& in, int nw, int nh)
 
 } // namespace
 
-Result<Image> fillSize(const Image& image, int width, int height)
+Result<Image> fillSize(const Image& image, int width, int height, float anchorX, float anchorY)
 {
     if (image.empty() || width <= 0 || height <= 0) {
         return Error{ErrorCode::InvalidArgument, "Nothing to resize."};
@@ -56,8 +56,11 @@ Result<Image> fillSize(const Image& image, int width, int height)
     const int nh = std::max(height, static_cast<int>(std::lround(image.height() * scale)));
     try {
         const vips::VImage out = resizedTo(wrap(image), nw, nh);
-        return unwrap(
-            out.extract_area((out.width() - width) / 2, (out.height() - height) / 2, width, height));
+        const auto offset = [](int spare, float anchor) {
+            return static_cast<int>(std::lround(spare * std::clamp(static_cast<double>(anchor), 0.0, 1.0)));
+        };
+        return unwrap(out.extract_area(offset(out.width() - width, anchorX),
+                                       offset(out.height() - height, anchorY), width, height));
     } catch (const vips::VError& e) {
         return Error{ErrorCode::InvalidArgument, std::string("Could not resize the image: ") + e.what()};
     }
