@@ -41,8 +41,7 @@ Decisions the work stopped at; everything else went ahead within the approved mo
 5. Real Lightroom `.xmp` exports should be tried on the importer (EmulsionPresets' 451 so far,
    2026-11-05; a second, real-world set is still wanted for the 95% target of FEATURES P8).
 6. Batch writes beside each original into a folder named "PixelFx": keep the name?
-   The catalog's 429 names (`scripts/catalog/catalog.tsv`) and whether Tools stays in it
-   (2026-11-05) are also waiting.
+   (The catalog's names and Tools: decided 2026-11-05, see below.)
 7. Zoom has no FEATURES row; add one (it is built).
 8. Small departures from approved mocks, until their parts exist: no Favorites chip; the look
     editor previews on This photo and a colour ramp (no Portrait or Landscape test photos are
@@ -82,7 +81,7 @@ Decisions the work stopped at; everything else went ahead within the approved mo
   (`core::describeSettings`). On the 33 ColorWall photos every one renders and, outside Tools,
   visibly changes the photo.
 - Shared pieces: `PhotoTile` and `tileGrid` for the Looks and Presets tabs, `core::hueName`.
-- Waiting for the owner: the names list, and whether Tools stays.
+- Decided by the owner: the names are fine; Tools stays, last in the list.
 
 ### 2026-11-05 (Lightroom compatibility, the panel)
 

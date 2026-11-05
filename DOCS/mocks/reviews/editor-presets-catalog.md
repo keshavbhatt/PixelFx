@@ -67,12 +67,12 @@ a preview, and the tile's tooltip says what a click does.
 ## Questions for the owner
 
 - **Names.** All 429 catalog names are in `scripts/catalog/catalog.tsv` (source, category,
-  name), descriptive, without film brands, makers or real people (a test keeps it so). Review
-  the list before it ships.
+  name), descriptive, without film brands, makers or real people (a test keeps it so).
+  Approved by the owner, 2026-11-05.
 - **Categories.** Film color, Film black and white, Slide film, Cinematic, Vintage and
   processes, Portrait, Landscape and nature, Food and product, Seasons and festivals, Places,
-  Social, Tools. Tools holds the one-step presets (Exposure +0.3, Grain fine, WB Cloudy): kept
-  for now, last in the list; say if they should go.
+  Social, Tools. Tools holds the one-step presets (Exposure +0.3, Grain fine, WB Cloudy): kept,
+  last in the list (owner, 2026-11-05).
 
 ## What works
 
