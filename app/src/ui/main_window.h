@@ -129,6 +129,8 @@ private:
     void updateCropStrip();
     void setupActions();
     void buildMainMenu();
+    template <typename Entries>
+    void fillMenu(class QMenu* menu, const Entries& entries) const;
     void buildRecentMenu(class QMenu* recent);
     void setupPanelActions();
     [[nodiscard]] QAction* namedAction(const QString& name) const;

@@ -105,7 +105,7 @@ void applyExpandHook(const pixelfx::ui::MainWindow& window)
 }
 
 // The main menu or one of its submenus instead of the window (PIXELFX_DEBUG_MENU).
-bool grabMenu(pixelfx::ui::MainWindow& window, const QString& grab)
+bool grabMenu(const pixelfx::ui::MainWindow& window, const QString& grab)
 {
     const QString name = qEnvironmentVariable("PIXELFX_DEBUG_MENU");
     if (name.isEmpty()) {
@@ -113,7 +113,7 @@ bool grabMenu(pixelfx::ui::MainWindow& window, const QString& grab)
     }
     QMenu* menu = window.mainMenu();
     if (name != u"-"_s) {
-        for (QAction* a : menu->actions()) {
+        for (const QAction* a : menu->actions()) {
             if (a->menu() != nullptr && a->text() == name) {
                 menu = a->menu();
             }

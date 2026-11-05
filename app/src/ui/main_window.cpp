@@ -58,6 +58,7 @@
 #include <QUrl>
 #include <QVBoxLayout>
 
+#include <array>
 #include <functional>
 #include <pfx/auto.h>
 #include <pfx/io.h>
@@ -1889,80 +1890,101 @@ void MainWindow::buildRecentMenu(QMenu* recent)
     });
 }
 
+namespace {
+
+// An entry of the main menu: a window action by name and its icon; a null name is a separator.
+struct MenuEntry
+{
+    const char* action;
+    const char* glyph;
+};
+constexpr MenuEntry kSeparator{nullptr, nullptr};
+
+constexpr std::array kEditEntries{MenuEntry{"undo", "undo"},
+                                  MenuEntry{"redo", "redo"},
+                                  MenuEntry{"history", "history"},
+                                  kSeparator,
+                                  MenuEntry{"copySettings", "copy"},
+                                  MenuEntry{"pasteSettings", "paste"},
+                                  kSeparator,
+                                  MenuEntry{"resetAll", "reset"}};
+constexpr std::array kViewEntries{MenuEntry{"compare", "compare"},
+                                  MenuEntry{"showOriginal", "eye"},
+                                  MenuEntry{"clipping", "alert"},
+                                  kSeparator,
+                                  MenuEntry{"fit", "maximize"},
+                                  MenuEntry{"zoomIn", "zoom-in"},
+                                  MenuEntry{"zoomOut", "zoom-out"},
+                                  MenuEntry{"actualSize", "search"},
+                                  kSeparator,
+                                  MenuEntry{"hidePanels", "layout-grid"},
+                                  MenuEntry{"fullScreen", "maximize"}};
+constexpr std::array kPhotoEntries{MenuEntry{"auto", "auto"},
+                                   kSeparator,
+                                   MenuEntry{"rotateLeft", "rotate-ccw"},
+                                   MenuEntry{"rotateRight", "rotate-cw"},
+                                   MenuEntry{"flipHorizontal", "flip-h"},
+                                   MenuEntry{"flipVertical", "flip-v"},
+                                   kSeparator,
+                                   MenuEntry{"crop", "crop"},
+                                   MenuEntry{"heal", "bandage"},
+                                   kSeparator,
+                                   MenuEntry{"edit", "sliders"},
+                                   MenuEntry{"batch", "stack"}};
+constexpr std::array kFileEntries{kSeparator,
+                                  MenuEntry{"export", "export"},
+                                  MenuEntry{"copyToClipboard", "share"},
+                                  MenuEntry{"openBatchRecipe", "stack"},
+                                  kSeparator,
+                                  MenuEntry{"importPresets", "import"},
+                                  MenuEntry{"showPresetsFolder", "folder"},
+                                  kSeparator,
+                                  MenuEntry{"settings", "settings"},
+                                  MenuEntry{"shortcuts", "keyboard"},
+                                  MenuEntry{"whatsNew", "sparkles"},
+                                  MenuEntry{"reportBug", "bug"},
+                                  MenuEntry{"about", "info"},
+                                  kSeparator,
+                                  MenuEntry{"quit", "power"}};
+
+QIcon menuIcon(const char* glyph)
+{
+    return icons::themed(QString::fromLatin1(glyph), tokens().muted);
+}
+
+} // namespace
+
+template <typename Entries>
+void MainWindow::fillMenu(QMenu* menu, const Entries& entries) const
+{
+    for (const MenuEntry& e : entries) {
+        if (e.action == nullptr) {
+            menu->addSeparator();
+            continue;
+        }
+        QAction* a = namedAction(QString::fromLatin1(e.action));
+        a->setIcon(menuIcon(e.glyph));
+        menu->addAction(a);
+    }
+}
+
 void MainWindow::buildMainMenu()
 {
     // Every entry is one of the window's own actions, so the shortcut shown is the one that works.
     setupPanelActions();
     setupMenuActions();
-    using Entries = std::initializer_list<std::pair<const char*, const char*>>; // action, icon
-    const auto fill = [this](QMenu* menu, Entries entries) {
-        for (const auto& [name, glyph] : entries) {
-            if (name == nullptr) {
-                menu->addSeparator();
-                continue;
-            }
-            QAction* a = namedAction(QString::fromLatin1(name));
-            a->setIcon(icons::themed(QString::fromLatin1(glyph), tokens().muted));
-            menu->addAction(a);
-        }
-    };
-    const auto submenu = [](QMenu* menu, const QString& title, const char* glyph) {
-        return menu->addMenu(icons::themed(QString::fromLatin1(glyph), tokens().muted), title);
-    };
-    auto* menu = new QMenu(m_menuButton);
-    fill(menu, {{"open", "open"}, {"openFolder", "folder"}});
-    buildRecentMenu(submenu(menu, tr("Open recent"), "clock"));
-    fill(menu, {{"pasteImage", "paste"}, {nullptr, nullptr}});
-    fill(submenu(menu, tr("Edit"), "undo"), {{"undo", "undo"},
-                                             {"redo", "redo"},
-                                             {"history", "history"},
-                                             {nullptr, nullptr},
-                                             {"copySettings", "copy"},
-                                             {"pasteSettings", "paste"},
-                                             {nullptr, nullptr},
-                                             {"resetAll", "reset"}});
     QAction* clipping = namedAction(u"clipping"_s);
     clipping->setCheckable(true);
     clipping->setChecked(m_settings.clippingWarnings());
     connect(&m_settings, &core::Settings::clippingWarningsChanged, clipping, &QAction::setChecked);
-    fill(submenu(menu, tr("View"), "eye"), {{"compare", "compare"},
-                                            {"showOriginal", "eye"},
-                                            {"clipping", "alert"},
-                                            {nullptr, nullptr},
-                                            {"fit", "maximize"},
-                                            {"zoomIn", "zoom-in"},
-                                            {"zoomOut", "zoom-out"},
-                                            {"actualSize", "search"},
-                                            {nullptr, nullptr},
-                                            {"hidePanels", "layout-grid"},
-                                            {"fullScreen", "maximize"}});
-    fill(submenu(menu, tr("Photo"), "image"), {{"auto", "auto"},
-                                               {nullptr, nullptr},
-                                               {"rotateLeft", "rotate-ccw"},
-                                               {"rotateRight", "rotate-cw"},
-                                               {"flipHorizontal", "flip-h"},
-                                               {"flipVertical", "flip-v"},
-                                               {nullptr, nullptr},
-                                               {"crop", "crop"},
-                                               {"heal", "bandage"},
-                                               {nullptr, nullptr},
-                                               {"edit", "sliders"},
-                                               {"batch", "stack"}});
-    fill(menu, {{nullptr, nullptr},
-                {"export", "export"},
-                {"copyToClipboard", "share"},
-                {"openBatchRecipe", "stack"},
-                {nullptr, nullptr},
-                {"importPresets", "import"},
-                {"showPresetsFolder", "folder"},
-                {nullptr, nullptr},
-                {"settings", "settings"},
-                {"shortcuts", "keyboard"},
-                {"whatsNew", "sparkles"},
-                {"reportBug", "bug"},
-                {"about", "info"},
-                {nullptr, nullptr},
-                {"quit", "power"}});
+    auto* menu = new QMenu(m_menuButton);
+    fillMenu(menu, std::array{MenuEntry{"open", "open"}, MenuEntry{"openFolder", "folder"}});
+    buildRecentMenu(menu->addMenu(menuIcon("clock"), tr("Open recent")));
+    fillMenu(menu, std::array{MenuEntry{"pasteImage", "paste"}, kSeparator});
+    fillMenu(menu->addMenu(menuIcon("undo"), tr("Edit")), kEditEntries);
+    fillMenu(menu->addMenu(menuIcon("eye"), tr("View")), kViewEntries);
+    fillMenu(menu->addMenu(menuIcon("image"), tr("Photo")), kPhotoEntries);
+    fillMenu(menu, kFileEntries);
     m_menuButton->setMenu(menu);
 }
 
