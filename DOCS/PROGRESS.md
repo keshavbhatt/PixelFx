@@ -33,6 +33,7 @@
 | `editor-looks-preview.html` | 2026-11-05 (`mocks/reviews/editor-looks-preview.md`) | approved 2026-11-05 |
 | `editor-zoom-loading.html`, slow preview | 2026-11-05 (same review, "Slow preview") | approved 2026-11-05 (the ring always turns) |
 | `batch-convert-rename.html` | 2026-11-06 (`mocks/reviews/batch-convert-rename.md`) | approved 2026-11-06 ("Batch threads" of `settings.html` became "Photos at a time") |
+| `editor-raw.html` | 2026-11-06 (`mocks/reviews/editor-raw.md`) | approved 2026-11-06 (Kelvin for RAW only) |
 | `editor-presets-catalog.html`, hover preview | 2026-11-05 (same review, "Hover preview, reworked") | approved 2026-11-05 |
 
 ## Waiting for the owner (2026-11-05)
