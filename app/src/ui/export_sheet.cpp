@@ -13,9 +13,11 @@
 #include <QFileDialog>
 #include <QFileInfo>
 #include <QFormLayout>
+#include <QFrame>
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QLineEdit>
+#include <QMenu>
 #include <QPushButton>
 #include <QSlider>
 #include <QSpinBox>
@@ -38,13 +40,17 @@ struct Format
     const char* label;
     bool lossy;
     bool deep; // 16 bits per channel possible
+    bool rare; // listed under More
 };
 
 constexpr Format kFormats[] = {
-    {"jpg", "JPEG", true, false},  {"png", "PNG", false, true},  {"webp", "WebP", true, false},
-    {"avif", "AVIF", true, false}, {"tif", "TIFF", false, true}, {"jxl", "JPEG XL", true, false},
-    {"heic", "HEIC", true, false},
+    {"jpg", "JPEG", true, false, false},  {"png", "PNG", false, true, false},
+    {"webp", "WebP", true, false, false}, {"avif", "AVIF", true, false, false},
+    {"tif", "TIFF", false, true, false},  {"jxl", "JPEG XL", true, false, true},
+    {"heic", "HEIC", true, false, true},
 };
+
+constexpr int kLabelColumn = 160;
 
 const Format* formatFor(const QString& extension)
 {
@@ -92,7 +98,7 @@ ExportSheet::ExportSheet(const QString& source, const QSize& photoSize, const co
 
     auto* form = new QFormLayout;
     form->setHorizontalSpacing(16);
-    form->setVerticalSpacing(10);
+    form->setVerticalSpacing(12);
     form->setLabelAlignment(Qt::AlignLeft | Qt::AlignVCenter);
     form->addRow(tr("Format"), formatRow(options.extension));
 
@@ -110,6 +116,11 @@ ExportSheet::ExportSheet(const QString& source, const QSize& photoSize, const co
 
     form->addRow(tr("Metadata"), metadataRow(options));
 
+    auto* divider = new QFrame(this);
+    divider->setObjectName(u"divider"_s);
+    divider->setFixedHeight(1);
+    form->addRow(divider);
+
     form->addRow(tr("Save to"), folderRow());
 
     form->addRow(tr("File name"), nameRow(options.nameTemplate));
@@ -117,6 +128,7 @@ ExportSheet::ExportSheet(const QString& source, const QSize& photoSize, const co
     form->addRow(tr("If it exists"), ifExistsBox(options.ifExists));
 
     QHBoxLayout* foot = addFooter(form);
+    setLabelColumn(form, kLabelColumn);
     QVBoxLayout* column = sheetLayout(this, foot);
     column->setSpacing(14);
     column->addLayout(heading);
@@ -159,18 +171,19 @@ QWidget* ExportSheet::qualityRow(int quality)
     m_quality->setValue(quality);
     m_quality->setAccessibleName(tr("Quality"));
     m_qualityValue = new QLabel(m_qualityRow);
-    m_qualityValue->setMinimumWidth(28);
+    m_qualityValue->setObjectName(u"adjustValue"_s);
+    m_qualityValue->setProperty("changed", true);
     m_qualityValue->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
-    auto* qualityLayout = new QHBoxLayout(m_qualityRow);
+    auto* scale = new QLabel(tr("Smaller file \u00B7 Better image"), m_qualityRow);
+    scale->setObjectName(u"small"_s);
+    auto* top = new QHBoxLayout;
+    top->addWidget(scale, 1);
+    top->addWidget(m_qualityValue);
+    auto* qualityLayout = new QVBoxLayout(m_qualityRow);
     qualityLayout->setContentsMargins(0, 0, 0, 0);
-    auto* smaller = new QLabel(tr("Smaller file"), m_qualityRow);
-    smaller->setObjectName(u"faint"_s);
-    auto* better = new QLabel(tr("Better image"), m_qualityRow);
-    better->setObjectName(u"faint"_s);
-    qualityLayout->addWidget(smaller);
-    qualityLayout->addWidget(m_quality, 1);
-    qualityLayout->addWidget(better);
-    qualityLayout->addWidget(m_qualityValue);
+    qualityLayout->setSpacing(2);
+    qualityLayout->addLayout(top);
+    qualityLayout->addWidget(m_quality);
     connect(m_quality, &QSlider::valueChanged, m_qualityValue, qOverload<int>(&QLabel::setNum));
     m_qualityValue->setNum(quality);
     return m_qualityRow;
@@ -180,7 +193,9 @@ QWidget* ExportSheet::sizeRow(const QSize& photoSize, const core::ExportOptions&
 {
     auto* row = new QWidget(this);
     m_size = new QComboBox(row);
-    m_size->addItem(tr("Original (%1 x %2)").arg(photoSize.width()).arg(photoSize.height()), QString());
+    m_size->setObjectName(u"sizeList"_s);
+    m_size->setAccessibleName(tr("Size"));
+    m_size->addItem(tr("Original \u00B7 %1 x %2").arg(photoSize.width()).arg(photoSize.height()), QString());
     QString group;
     for (const core::SizePreset& p : core::sizePresets()) {
         const QString g = QCoreApplication::translate("SizePresets", p.group);
@@ -200,11 +215,8 @@ QWidget* ExportSheet::sizeRow(const QSize& photoSize, const core::ExportOptions&
                         QString::fromLatin1(p.id));
     }
     m_size->insertSeparator(m_size->count());
-    m_size->addItem(tr("Long edge"), u"custom"_s);
-    m_longEdge = new QSpinBox(row);
-    m_longEdge->setRange(16, 65535);
-    m_longEdge->setSuffix(tr(" px"));
-    m_longEdge->setValue(options.longEdge > 0 ? options.longEdge : 2048);
+    m_size->addItem(QString(), u"custom"_s);
+    setLongEdge(options.longEdge > 0 ? options.longEdge : 2048);
     int index = 0;
     if (!options.sizePreset.isEmpty()) {
         index = std::max(0, m_size->findData(options.sizePreset));
@@ -212,12 +224,65 @@ QWidget* ExportSheet::sizeRow(const QSize& photoSize, const core::ExportOptions&
         index = m_size->findData(u"custom"_s);
     }
     m_size->setCurrentIndex(index);
+    m_sizeIndex = index;
     auto* sizeLayout = new QHBoxLayout(row);
     sizeLayout->setContentsMargins(0, 0, 0, 0);
     sizeLayout->addWidget(m_size, 1);
-    sizeLayout->addWidget(m_longEdge);
+    connect(m_size, &QComboBox::activated, this, [this](int chosen) {
+        if (m_size->itemData(chosen).toString() == u"custom"_s && !askLongEdge()) {
+            m_size->setCurrentIndex(m_sizeIndex);
+        }
+        m_sizeIndex = m_size->currentIndex();
+    });
     connect(m_size, &QComboBox::currentIndexChanged, this, [this, photoSize] { refreshSize(photoSize); });
     return row;
+}
+
+void ExportSheet::setLongEdge(int pixels)
+{
+    m_longEdge = pixels;
+    m_size->setItemText(m_size->findData(u"custom"_s), tr("Long edge \u00B7 %1 px").arg(pixels));
+}
+
+bool ExportSheet::askLongEdge()
+{
+    Sheet sheet(this);
+    sheet.setWindowTitle(tr("Custom size"));
+    auto* edge = new QSpinBox(&sheet);
+    edge->setRange(16, 65535);
+    edge->setSuffix(tr(" px"));
+    edge->setValue(m_longEdge);
+    edge->setAccessibleName(tr("Long edge"));
+    auto* cancel = new QPushButton(tr("Cancel"), &sheet);
+    auto* use = new QPushButton(tr("Use size"), &sheet);
+    use->setObjectName(u"primary"_s);
+    use->setDefault(true);
+    connect(cancel, &QPushButton::clicked, &sheet, &QDialog::reject);
+    connect(use, &QPushButton::clicked, &sheet, &QDialog::accept);
+    auto* foot = new QHBoxLayout;
+    foot->addStretch();
+    foot->addWidget(cancel);
+    foot->addWidget(use);
+    QVBoxLayout* column = sheetLayout(&sheet, foot);
+    auto* title = new QLabel(tr("Custom size"), &sheet);
+    title->setObjectName(u"sheetTitle"_s);
+    auto* titleRow = new QHBoxLayout;
+    titleRow->addWidget(title);
+    titleRow->addStretch();
+    titleRow->addWidget(sheetCloseButton(&sheet));
+    auto* form = new QFormLayout;
+    form->addRow(tr("Long edge"), edge);
+    column->addLayout(titleRow);
+    column->addWidget(new QLabel(tr("The longer side of the photo; the other follows its shape."), &sheet));
+    column->addLayout(form);
+    sheet.setMinimumWidth(400);
+    edge->setFocus();
+    edge->selectAll();
+    if (sheet.exec() != QDialog::Accepted) {
+        return false;
+    }
+    setLongEdge(edge->value());
+    return true;
 }
 
 QWidget* ExportSheet::fitRow(bool fitInside)
@@ -252,7 +317,6 @@ QWidget* ExportSheet::fitRow(bool fitInside)
 void ExportSheet::refreshSize(const QSize& photoSize)
 {
     const QString id = m_size->currentData().toString();
-    m_longEdge->setEnabled(id == u"custom"_s);
     const core::SizePreset* preset = core::sizePreset(id);
     const QSize exact = preset != nullptr ? core::exactSize(*preset, photoSize) : QSize();
     // Only when the shapes differ is there anything to choose.
@@ -333,26 +397,61 @@ QWidget* ExportSheet::formatRow(const QString& current)
     layout->setContentsMargins(0, 0, 0, 0);
     layout->setSpacing(0);
     m_formats = new QButtonGroup(this);
+    auto* more = new QMenu(row);
     const auto writable = pfx::writableExtensions();
     for (const Format& f : kFormats) {
         const std::string ext = std::string(".") + f.extension;
         if (std::ranges::find(writable, ext) == writable.end()) {
             continue; // this build cannot write it (AVIF, HEIC and JPEG XL depend on libvips)
         }
+        const QString extension = QString::fromLatin1(f.extension);
+        if (f.rare) {
+            more->addAction(QString::fromLatin1(f.label), this,
+                            [this, extension] { chooseRareFormat(extension); });
+            continue;
+        }
         auto* button = new QPushButton(QString::fromLatin1(f.label), row);
         button->setCheckable(true);
         button->setObjectName(u"segment"_s);
-        button->setProperty("extension", QString::fromLatin1(f.extension));
-        button->setChecked(current == QLatin1StringView(f.extension));
+        button->setProperty("extension", extension);
+        button->setChecked(current == extension);
         m_formats->addButton(button);
-        layout->addWidget(button);
+        layout->addWidget(button, 1);
+    }
+    if (!more->isEmpty()) {
+        m_more = new QPushButton(tr("More"), row);
+        m_more->setObjectName(u"segment"_s);
+        m_more->setCheckable(true);
+        m_more->setMenu(more);
+        m_formats->addButton(m_more);
+        layout->addWidget(m_more, 1);
+        if (formatFor(current)->rare && current == QLatin1StringView(formatFor(current)->extension)) {
+            showRareFormat(current);
+        }
     }
     if (m_formats->checkedButton() == nullptr && !m_formats->buttons().isEmpty()) {
         m_formats->buttons().first()->setChecked(true);
     }
-    layout->addStretch();
-    connect(m_formats, &QButtonGroup::buttonClicked, this, &ExportSheet::updateForFormat);
+    connect(m_formats, &QButtonGroup::buttonClicked, this, [this](QAbstractButton* button) {
+        if (button == m_more && m_more->property("extension").toString().isEmpty()) {
+            return; // the menu is open; a choice in it decides
+        }
+        updateForFormat();
+    });
     return row;
+}
+
+void ExportSheet::showRareFormat(const QString& extension)
+{
+    m_more->setText(QString::fromLatin1(formatFor(extension)->label));
+    m_more->setProperty("extension", extension);
+    m_more->setChecked(true);
+}
+
+void ExportSheet::chooseRareFormat(const QString& extension)
+{
+    showRareFormat(extension);
+    updateForFormat();
 }
 
 void ExportSheet::updateForFormat()
@@ -427,7 +526,7 @@ core::ExportOptions ExportSheet::options() const
     o.quality = m_quality->value();
     o.bitsPerSample = (formatFor(o.extension)->deep && m_sixteen->isChecked()) ? 16 : 8;
     const QString size = m_size->currentData().toString();
-    o.longEdge = size == u"custom"_s ? m_longEdge->value() : 0;
+    o.longEdge = size == u"custom"_s ? m_longEdge : 0;
     o.sizePreset = core::sizePreset(size) != nullptr ? size : QString();
     o.fitInside = m_fit->isChecked();
     o.keepMetadata = m_metadata->isChecked();

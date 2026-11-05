@@ -5,6 +5,7 @@
 #include <QApplication>
 #include <QDialog>
 #include <QFile>
+#include <QFormLayout>
 #include <QLabel>
 #include <QMenu>
 #include <QPalette>
@@ -15,6 +16,7 @@
 #include <QVBoxLayout>
 #include <QWidgetAction>
 
+#include <algorithm>
 #include <memory>
 
 using namespace Qt::StringLiterals;
@@ -114,6 +116,7 @@ const QString kSheet = uR"(
         #mono { font-family: monospace; font-size: 12px; }
         QPushButton#segment { border-radius: 0; padding: 5px 12px; background: {{input}}; }
         QPushButton#segment:checked { background: {{accentSoft}}; color: {{accent}}; font-weight: 600; }
+        QPushButton#segment::menu-indicator { image: none; width: 0; }
         QLineEdit, QComboBox, QSpinBox { background: {{input}}; border: 1px solid {{border}}; border-radius: 7px; padding: 5px 8px; }
         QLineEdit:focus, QComboBox:focus, QSpinBox:focus { border-color: {{accent}}; }
         #toast { background: {{elevated}}; border: 1px solid {{border}}; border-radius: 9px; padding: 7px 12px; }
@@ -448,6 +451,16 @@ void addMenuHeading(QMenu* menu, const QString& text)
     action->setDefaultWidget(label);
     action->setEnabled(false);
     menu->addAction(action);
+}
+
+void setLabelColumn(const QFormLayout* form, int width)
+{
+    for (int row = 0; row < form->rowCount(); ++row) {
+        const QLayoutItem* item = form->itemAt(row, QFormLayout::LabelRole);
+        if (QWidget* label = item != nullptr ? item->widget() : nullptr; label != nullptr) {
+            label->setMinimumWidth(width - std::max(0, form->horizontalSpacing()));
+        }
+    }
 }
 
 QWidget* sheetFootBar(QWidget* sheet, QLayout* foot)

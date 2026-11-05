@@ -5,6 +5,7 @@
 
 class QApplication;
 class QDialog;
+class QFormLayout;
 class QLabel;
 class QLayout;
 class QMenu;
@@ -59,6 +60,8 @@ QLabel* sectionLabel(const QString& text, QWidget* parent);
 /// A heading inside a menu ("History"): Qt draws a menu section as a bare line under a style
 /// sheet, so the heading is a label of its own.
 void addMenuHeading(QMenu* menu, const QString& text);
+/// Gives the labels of `form` one column `width` px wide, the gap to the fields included.
+void setLabelColumn(const QFormLayout* form, int width);
 /// The footer bar alone, for sheets whose body runs edge to edge (Watermark, the look editor).
 QWidget* sheetFootBar(QWidget* sheet, QLayout* foot);
 

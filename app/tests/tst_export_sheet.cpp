@@ -7,6 +7,7 @@
 #include <QCheckBox>
 #include <QComboBox>
 #include <QFile>
+#include <QMenu>
 #include <QPushButton>
 #include <QTemporaryDir>
 #include <QTest>
@@ -149,6 +150,41 @@ private Q_SLOTS:
         for (const char* ext : {"jpg", "png", "webp", "tif"}) {
             QVERIFY2(offered.contains(QString::fromLatin1(ext)), ext);
         }
+    }
+
+    void rareFormatsAreUnderMore()
+    {
+        ExportSheet sheet(u"/p/photo.jpg"_s, QSize(600, 400), ExportOptions{});
+        QPushButton* more = nullptr;
+        for (QPushButton* b : sheet.findChildren<QPushButton*>(u"segment"_s)) {
+            if (b->menu() != nullptr) {
+                more = b;
+            }
+        }
+        if (more == nullptr) {
+            QSKIP("this build writes no format that goes under More");
+        }
+        QAction* rare = more->menu()->actions().first();
+        rare->trigger();
+        QCOMPARE(more->text(), rare->text());
+        QVERIFY(more->isChecked());
+        const QString chosen = sheet.options().extension;
+        QVERIFY(chosen == u"jxl"_s || chosen == u"heic"_s);
+        // Remembered: the sheet opens on it again.
+        ExportOptions in;
+        in.extension = chosen;
+        const ExportSheet again(u"/p/photo.jpg"_s, QSize(600, 400), in);
+        QCOMPARE(again.options().extension, chosen);
+    }
+
+    void aCustomSizeIsTheLongEdgeInTheList()
+    {
+        ExportOptions in;
+        in.longEdge = 1600;
+        const ExportSheet sheet(u"/p/photo.jpg"_s, QSize(600, 400), in);
+        auto* size = sheet.findChild<QComboBox*>(u"sizeList"_s);
+        QVERIFY(size->currentText().contains(u"1600"_s));
+        QCOMPARE(sheet.options().longEdge, 1600);
     }
 };
 

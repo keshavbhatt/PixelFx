@@ -55,6 +55,12 @@ private:
     [[nodiscard]] QWidget* sizeRow(const QSize& photoSize, const core::ExportOptions& options);
     [[nodiscard]] QWidget* fitRow(bool fitInside);
     void refreshSize(const QSize& photoSize);
+    void setLongEdge(int pixels);
+    /// Asks for the long edge of a custom size; false when cancelled.
+    bool askLongEdge();
+    /// Puts a format from More on the More button.
+    void showRareFormat(const QString& extension);
+    void chooseRareFormat(const QString& extension);
     [[nodiscard]] QWidget* folderRow();
     [[nodiscard]] QWidget* nameRow(const QString& nameTemplate);
     [[nodiscard]] QWidget* ifExistsBox(core::ExportOptions::IfExists ifExists);
@@ -69,7 +75,9 @@ private:
     QWidget* m_qualityRow = nullptr;
     QCheckBox* m_sixteen = nullptr;
     QComboBox* m_size = nullptr;
-    QSpinBox* m_longEdge = nullptr;
+    int m_longEdge = 0;
+    int m_sizeIndex = 0;
+    class QPushButton* m_more = nullptr;
     QWidget* m_fitRow = nullptr;
     class QLabel* m_fitNote = nullptr;
     class QPushButton* m_fill = nullptr;
