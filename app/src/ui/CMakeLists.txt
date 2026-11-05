@@ -13,6 +13,8 @@ qt_add_library(pixelfx_ui STATIC
     crop_overlay.h
     crop_panel.cpp
     crop_panel.h
+    color_swatch.cpp
+    color_swatch.h
     color_wheel.cpp
     color_wheel.h
     curve_editor.cpp

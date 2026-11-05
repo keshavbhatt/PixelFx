@@ -57,6 +57,7 @@ const QString kSheet = uR"(
         #welcomeTitle { font-size: 20px; font-weight: 600; }
         #welcomeHint, #muted { color: {{muted}}; }
         #faint { color: {{faint}}; font-size: 12px; }
+        QLabel#small { font-size: 12px; }
         #recentTitle { font-size: 13px; font-weight: 600; }
         QPushButton#link { border: 0; background: transparent; color: {{link}}; font-size: 12px; padding: 2px 4px; }
         QPushButton#link:hover { text-decoration: underline; }
@@ -64,8 +65,6 @@ const QString kSheet = uR"(
         #sidePanel[photoSide="left"] { border-left: 1px solid {{border}}; }
         #sidePanel[photoSide="right"] { border-right: 1px solid {{border}}; }
         #section { color: {{muted}}; font-size: 11px; font-weight: 700; }
-        QToolButton#swatch { border: 2px solid transparent; border-radius: 12px; }
-        QToolButton#swatch:checked { border-color: {{text}}; }
         QPushButton#chip { border: 1px solid {{border}}; border-radius: 12px; padding: 3px 10px; font-size: 12px; color: {{muted}}; background: transparent; }
         QPushButton#chip:hover { background: {{hover}}; color: {{text}}; }
         QPushButton#chip:checked { background: {{accentSoft}}; color: {{accent}}; border-color: transparent; }
@@ -120,6 +119,9 @@ const QString kSheet = uR"(
         #mono { font-family: monospace; font-size: 12px; }
         QPushButton#segment { border-radius: 0; padding: 5px 12px; background: {{input}}; }
         QPushButton#segment:checked { background: {{accentSoft}}; color: {{accent}}; font-weight: 600; }
+        QPushButton#segment[channel="red"] { color: {{channelRed}}; }
+        QPushButton#segment[channel="green"] { color: {{channelGreen}}; }
+        QPushButton#segment[channel="blue"] { color: {{channelBlue}}; }
         QPushButton::menu-indicator { image: none; width: 0; }
         QLineEdit, QComboBox, QSpinBox { background: {{input}}; border: 1px solid {{border}}; border-radius: 7px; padding: 5px 8px; }
         QLineEdit:focus, QComboBox:focus, QSpinBox:focus { border-color: {{accent}}; }
@@ -313,6 +315,9 @@ QString sheet(const Tokens& t)
     put(u"link"_s, t.link);
     put(u"danger"_s, t.danger);
     put(u"success"_s, t.success);
+    put(u"channelRed"_s, t.channelRed);
+    put(u"channelGreen"_s, t.channelGreen);
+    put(u"channelBlue"_s, t.channelBlue);
     put(u"canvas"_s, t.canvas);
     return s;
 }
@@ -324,7 +329,8 @@ const Tokens& darkTokens()
     static const Tokens t{hex("#6EA8FE"), hex("#2F6FE0"), hex("#3B7CF0"), hex("#1D2A40"), hex("#161616"),
                           hex("#0F0F0F"), hex("#1C1C1C"), hex("#1E1E1E"), hex("#282828"), hex("#2C2C2C"),
                           hex("#141414"), hex("#303030"), hex("#696969"), hex("#ECECEC"), hex("#A8A8A8"),
-                          hex("#8E8E8E"), hex("#FF6B6B"), hex("#8AB8FF"), hex("#5CCB84")};
+                          hex("#8E8E8E"), hex("#FF6B6B"), hex("#8AB8FF"), hex("#5CCB84"), hex("#E05050"),
+                          hex("#50C060"), hex("#5080F0")};
     return t;
 }
 
@@ -333,7 +339,8 @@ const Tokens& lightTokens()
     static const Tokens t{hex("#2560CC"), hex("#2560CC"), hex("#1F52B0"), hex("#E3ECFC"), hex("#EDEDED"),
                           hex("#D6D6D6"), hex("#FAFAFA"), hex("#F5F5F5"), hex("#FFFFFF"), hex("#E6E6E6"),
                           hex("#FFFFFF"), hex("#D4D4D4"), hex("#8E8E8E"), hex("#1A1A1A"), hex("#555555"),
-                          hex("#676767"), hex("#C01C28"), hex("#2560CC"), hex("#1B7F38")};
+                          hex("#676767"), hex("#C01C28"), hex("#2560CC"), hex("#1B7F38"), hex("#E05050"),
+                          hex("#50C060"), hex("#5080F0")};
     return t;
 }
 

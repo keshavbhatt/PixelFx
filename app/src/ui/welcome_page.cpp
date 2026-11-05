@@ -216,7 +216,7 @@ RecentCard::RecentCard(const QString& path, QWidget* parent)
     setFocusPolicy(Qt::StrongFocus);
     setToolTip(tr("Open %1").arg(QDir::toNativeSeparators(path)));
     setAccessibleName(tr("Open %1").arg(QFileInfo(path).fileName()));
-    m_name->setStyleSheet(u"font-size: 12px;"_s);
+    m_name->setObjectName(u"small"_s);
     m_name->setText(fontMetrics().elidedText(m_name->text(), Qt::ElideMiddle, kWidth));
     m_date->setObjectName(u"faint"_s);
     m_date->setText(dateText());

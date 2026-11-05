@@ -2,6 +2,7 @@
 
 #include "core/crop_geometry.h"
 #include "ui/adjust_group.h"
+#include "ui/color_swatch.h"
 #include "ui/color_wheel.h"
 #include "ui/curve_editor.h"
 #include "ui/histogram_view.h"
@@ -367,18 +368,32 @@ struct CurveChannel
 {
     const char* key;
     const char* label;
-    QColor color;
+    const char* channel; // "red", "green", "blue", or nullptr for all three
 };
 
 const std::vector<CurveChannel>& curveChannels()
 {
     static const std::vector<CurveChannel> channels = {
-        {"curves.rgb", QT_TRANSLATE_NOOP("AdjustPanel", "RGB"), QColor()},
-        {"curves.r", QT_TRANSLATE_NOOP("AdjustPanel", "R"), QColor(0xE0, 0x50, 0x50)},
-        {"curves.g", QT_TRANSLATE_NOOP("AdjustPanel", "G"), QColor(0x50, 0xC0, 0x60)},
-        {"curves.b", QT_TRANSLATE_NOOP("AdjustPanel", "B"), QColor(0x50, 0x80, 0xF0)},
+        {"curves.rgb", QT_TRANSLATE_NOOP("AdjustPanel", "RGB"), nullptr},
+        {"curves.r", QT_TRANSLATE_NOOP("AdjustPanel", "R"), "red"},
+        {"curves.g", QT_TRANSLATE_NOOP("AdjustPanel", "G"), "green"},
+        {"curves.b", QT_TRANSLATE_NOOP("AdjustPanel", "B"), "blue"},
     };
     return channels;
+}
+
+// The colour a curve is drawn in: its channel's, or the text colour for all three.
+QColor channelColor(const char* channel)
+{
+    const Tokens& t = tokens();
+    if (channel == nullptr) {
+        return t.text;
+    }
+    const std::string_view c(channel);
+    if (c == "red") {
+        return t.channelRed;
+    }
+    return c == "green" ? t.channelGreen : t.channelBlue;
 }
 
 const std::vector<QString>& curveKeys()
@@ -442,14 +457,8 @@ void AdjustPanel::buildMixerGroup(QWidget* content, QVBoxLayout* groups)
     m_mixerBands = new QButtonGroup(this);
     const std::vector<MixerBand>& bands = mixerBands();
     for (std::size_t i = 0; i < bands.size(); ++i) {
-        auto* s = new QToolButton(swatches);
-        s->setObjectName(u"swatch"_s);
-        s->setCheckable(true);
+        auto* s = new ColorSwatch(bands.at(i).swatch, tr(bands.at(i).label), swatches);
         s->setChecked(i == 0);
-        s->setFixedSize(24, 24);
-        s->setStyleSheet(u"QToolButton#swatch { background: %1; }"_s.arg(bands.at(i).swatch.name()));
-        s->setToolTip(tr(bands.at(i).label));
-        s->setAccessibleName(tr(bands.at(i).label));
         m_mixerBands->addButton(s, static_cast<int>(i));
         swatchRow->addWidget(s);
     }
@@ -709,8 +718,8 @@ void AdjustPanel::buildCurvesGroup(QWidget* content, QVBoxLayout* groups)
         b->setCheckable(true);
         b->setChecked(QLatin1StringView(c.key) == m_curveKey);
         b->setProperty("curveKey", QString::fromLatin1(c.key));
-        if (c.color.isValid()) {
-            b->setStyleSheet(u"color: %1;"_s.arg(c.color.name()));
+        if (c.channel != nullptr) {
+            b->setProperty("channel", QString::fromLatin1(c.channel));
         }
         m_curveChannels->addButton(b);
         channelRow->addWidget(b, 1);
@@ -737,7 +746,7 @@ void AdjustPanel::showCurve(const QString& key)
     m_curveKey = key;
     for (const CurveChannel& c : curveChannels()) {
         if (key == QLatin1StringView(c.key)) {
-            m_curve->setColor(c.color.isValid() ? c.color : tokens().text);
+            m_curve->setColor(channelColor(c.channel));
         }
     }
     for (QAbstractButton* b : m_curveChannels->buttons()) {

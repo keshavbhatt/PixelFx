@@ -44,8 +44,10 @@ void HistogramView::paintEvent(QPaintEvent* /*event*/)
     }
     const QRectF area = well.adjusted(4, 6, -4, -4);
     const double top = std::sqrt(static_cast<double>(m_histogram.peak()));
-    const QColor colours[3] = {QColor(0xE0, 0x50, 0x50, 115), QColor(0x50, 0xC0, 0x60, 115),
-                               QColor(0x50, 0x80, 0xF0, 115)};
+    QColor colours[3] = {t.channelRed, t.channelGreen, t.channelBlue};
+    for (QColor& c : colours) {
+        c.setAlpha(115);
+    }
     p.setPen(Qt::NoPen);
     // Overlapping channels add up to grey: adding light on a dark well, multiplying on a light one
     // (adding would vanish into white).

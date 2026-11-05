@@ -41,6 +41,10 @@ struct Tokens
     QColor danger;
     QColor link;
     QColor success;
+    /// The red, green and blue of channels (histogram, curves), the same in both themes.
+    QColor channelRed;
+    QColor channelGreen;
+    QColor channelBlue;
 };
 
 [[nodiscard]] const Tokens& darkTokens();

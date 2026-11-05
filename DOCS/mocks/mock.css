@@ -181,7 +181,7 @@ input[type=range]::-moz-range-thumb { width: 13px; height: 13px; border-radius: 
 .adj.sat input::-webkit-slider-runnable-track { background: linear-gradient(90deg, #888, #E04F4F, #E0C04F, #4FE070, #4F9CE0, #B04FE0); }
 .adj.sat input::-moz-range-track { background: linear-gradient(90deg, #888, #E04F4F, #E0C04F, #4FE070, #4F9CE0, #B04FE0); }
 .swatches { display: flex; gap: 6px; margin: 4px 0 8px; }
-.swatches i { width: 24px; height: 24px; border-radius: 50%; border: 2px solid transparent; }
+.swatches i { width: 24px; height: 24px; border-radius: 50%; border: 2px solid transparent; padding: 1px; background-clip: content-box; box-sizing: border-box; }
 .swatches i.on { border-color: var(--text); }
 .curve { height: 180px; border-radius: 8px; background: var(--input); border: 1px solid var(--border); position: relative; margin: 6px 0; }
 .curve svg { position: absolute; inset: 0; width: 100%; height: 100%; }

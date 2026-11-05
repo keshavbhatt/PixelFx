@@ -1,6 +1,7 @@
 #include "ui/watermark_sheet.h"
 
 #include "services/qt_image_bridge.h"
+#include "ui/color_swatch.h"
 #include "ui/icon_text_button.h"
 #include "ui/icons.h"
 #include "ui/slider_row.h"
@@ -394,23 +395,15 @@ QWidget* WatermarkSheet::buildColorRow()
     autoButton->setCheckable(true);
     autoButton->setToolTip(tr("Light or dark, whichever reads on the area under the mark"));
     m_colors->addButton(autoButton, static_cast<int>(core::Watermark::ColorMode::Auto));
-    const auto swatch = [this, row](const QColor& c, const QString& name, core::Watermark::ColorMode mode) {
-        auto* s = new QToolButton(row);
-        s->setObjectName(u"swatch"_s);
-        s->setCheckable(true);
-        s->setFixedSize(24, 24);
-        s->setStyleSheet(u"QToolButton#swatch { background: %1; }"_s.arg(c.name()));
-        s->setToolTip(name);
-        s->setAccessibleName(name);
+    const auto swatch = [this, row](const QBrush& fill, const QString& name,
+                                    core::Watermark::ColorMode mode) {
+        auto* s = new ColorSwatch(fill, name, row);
         m_colors->addButton(s, static_cast<int>(mode));
         return s;
     };
-    auto* white = swatch(Qt::white, tr("White"), core::Watermark::ColorMode::White);
+    auto* white = swatch(QColor(Qt::white), tr("White"), core::Watermark::ColorMode::White);
     auto* black = swatch(QColor(0x11, 0x11, 0x11), tr("Black"), core::Watermark::ColorMode::Black);
-    m_custom = swatch(Qt::white, tr("Pick a colour"), core::Watermark::ColorMode::Custom);
-    m_custom->setStyleSheet(
-        u"QToolButton#swatch { background: qconicalgradient(cx:0.5, cy:0.5, angle:0, stop:0 red, "
-        "stop:0.17 magenta, stop:0.33 blue, stop:0.5 cyan, stop:0.67 lime, stop:0.83 yellow, stop:1 red); }"_s);
+    m_custom = swatch(ColorSwatch::allHues(), tr("Pick a colour"), core::Watermark::ColorMode::Custom);
     connect(m_custom, &QToolButton::clicked, this, [this] {
         const QColor c = QColorDialog::getColor(m_mark.color, this, tr("Watermark colour"));
         if (c.isValid()) {
