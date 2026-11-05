@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>PixelFx mock: Convert, resize and rename in Batch</title><link rel="stylesheet" href="mock.css"><script src="mock.js"></script></head>
+<body style="height:auto">
+<div class="window" style="height:720px">
+  <div class="titlebar"><div class="lights"><i></i><i></i><i></i></div><div class="title">PixelFx</div><div class="wc"><span>&#x2212;</span><span>&#x25A1;</span><span>&#x2715;</span></div></div>
+  <div class="menubar"><b>PixelFx</b><span>File</span><span>Edit</span><span>Image</span><span>View</span><span>Window</span><span>Help</span></div>
+  <div class="header"><div class="brand"><span class="mark"></span></div><span class="grow"></span><button class="btn flat icon"><svg class="ic "><use href="#i-menu"/></svg></button></div>
+  <div class="body solo"><div class="rail"><div class="r"><svg class="ic "><use href="#i-sliders"/></svg><span>Edit</span></div><div class="r"><svg class="ic "><use href="#i-crop"/></svg><span>Crop</span></div><div class="r"><svg class="ic "><use href="#i-bandage"/></svg><span>Heal</span></div><div class="r"><svg class="ic "><use href="#i-stack"/></svg><span>Batch</span></div><span class="spacer"></span><div class="r"><svg class="ic "><use href="#i-settings"/></svg></div></div><div class="center" style="background:var(--bg)">
+  <div style="flex:1;display:grid;place-items:center;overflow:auto">
+    <div style="width:min(760px,92%)">
+      <div class="card" style="border-style:dashed;border-width:2px;padding:40px 20px 30px;text-align:center;background:var(--panel)">
+        <div class="muted"><svg class="ic xl"><use href="#i-images"/></svg></div>
+        <h1 style="margin-top:10px">Drop photos here</h1>
+        <p class="muted" style="margin-top:6px">Or open one to edit, or a whole folder to apply a look or preset to every image at once.</p>
+        <div class="row" style="justify-content:center;margin-top:18px;gap:10px">
+          <button class="btn primary"><svg class="ic s"><use href="#i-open"/></svg>Open images</button>
+          <button class="btn"><svg class="ic s"><use href="#i-folder"/></svg>Open folder</button>
+          <button class="btn"><svg class="ic s"><use href="#i-stack"/></svg>Batch edit</button>
+        </div>
+        <div class="row" style="justify-content:center;margin-top:16px;gap:8px">
+          <span class="small muted">Quick jobs</span>
+          <button class="btn sm"><svg class="ic s"><use href="#i-file-image"/></svg>Convert or resize</button>
+          <button class="btn sm"><svg class="ic s"><use href="#i-download"/></svg>Make files smaller</button>
+        </div>
+        <p class="small faint" style="margin-top:14px">JPEG, PNG, WebP, AVIF, HEIC, TIFF, JPEG XL and camera RAW. Paste from the clipboard with Ctrl+V.</p>
+      </div>
+      <div class="row" style="margin-top:24px"><h3>Recent</h3><span class="grow"></span><a class="small">Clear</a></div>
+      <div class="row" style="gap:12px;margin-top:10px">
+        <div style="width:170px"><img src="sample-1.svg" style="width:100%;aspect-ratio:3/2;object-fit:cover;border-radius:8px"><div class="small" style="margin-top:4px">sunset-lake.jpg</div><div class="small faint">Edited yesterday</div></div>
+        <div style="width:170px"><img src="sample-2.svg" style="width:100%;aspect-ratio:3/2;object-fit:cover;border-radius:8px"><div class="small" style="margin-top:4px">beach-0413.jpg</div><div class="small faint">Edited 3 days ago</div></div>
+      </div>
+    </div>
+  </div>
+</div></div>
+<span class="pin" style="left:calc(50% - 205px);top:366px">1</span>
+</div>
+<div class="specs">
+  <div class="spec" style="width:380px"><div class="cap">2. Convert or resize opens Batch with this recipe</div><div class="side right" style="border:1px solid var(--border);border-radius:10px;width:auto"><div class="sec">1. What to do</div>
+<div style="padding:0 14px"><div class="seg full"><span class="on">Edit and export</span><span>Compress only</span></div></div>
+<div class="sec">2. Recipe</div>
+<div style="padding:0 14px" class="stack">
+  <div class="seg full small"><span class="on">Preset or look</span><span>Settings from a photo</span></div>
+  <div class="card row" style="padding:8px;gap:10px"><div style="width:54px;height:36px;border-radius:5px;background:var(--input);display:grid;place-items:center;color:var(--faint)"><svg class="ic s"><use href="#i-file-image"/></svg></div><div class="grow"><b style="font-weight:500">Convert and resize only</b><div class="small muted">No edits: each photo is resized and saved as below</div></div><button class="btn sm">Change</button></div>
+</div>
+<div class="sec">3. Resize</div>
+<div style="padding:0 14px" class="stack"><select class="input"><option>1600 px long edge</option></select><div class="row small"><span class="check on"></span>Never enlarge</div></div>
+<div class="sec">4. Watermark</div>
+<div style="padding:0 14px"><select class="input"><option>None</option></select></div>
+<div class="sec">5. Save as</div>
+<div style="padding:0 14px" class="stack"><div class="row"><select class="input" style="width:auto"><option>JPEG, quality 85</option></select><button class="btn sm">More...</button></div><div class="row"><span class="mono small grow">~/Pictures/PixelFx</span><button class="btn sm">Change</button></div></div></div></div>
+  <div class="spec" style="width:380px"><div class="cap">3. The name, with a token menu and the first names it gives</div><div class="side right" style="border:1px solid var(--border);border-radius:10px;width:auto"><div class="sec">5. Save as</div>
+<div style="padding:0 14px" class="stack">
+  <div class="row"><select class="input" style="width:auto"><option>JPEG, quality 85</option></select><button class="btn sm">More...</button></div>
+  <div class="row"><span class="mono small grow">~/Pictures/PixelFx</span><button class="btn sm">Change</button></div>
+  <div class="row"><input class="input mono grow" value="trip-{n}"><button class="btn sm"><svg class="ic s"><use href="#i-plus"/></svg>Token</button></div>
+  <div class="stack" style="gap:4px;padding:2px 0 0"><div class="row small" style="gap:6px"><span class="mono muted grow" style="overflow:hidden;text-overflow:ellipsis">IMG_0412.HEIC</span><span class="faint">&rarr;</span><span class="mono" style="min-width:110px">trip-001.jpg</span></div><div class="row small" style="gap:6px"><span class="mono muted grow" style="overflow:hidden;text-overflow:ellipsis">IMG_0413.HEIC</span><span class="faint">&rarr;</span><span class="mono" style="min-width:110px">trip-002.jpg</span></div><div class="row small" style="gap:6px"><span class="mono muted grow" style="overflow:hidden;text-overflow:ellipsis">IMG_0415.HEIC</span><span class="faint">&rarr;</span><span class="mono" style="min-width:110px">trip-003.jpg</span></div><div class="small faint">and 297 more</div></div>
+  <div class="row small"><span class="check"></span>Next to each original, in a subfolder</div>
+</div></div></div>
+  <div class="spec" style="width:380px"><div class="cap">4. + Token inserts at the cursor</div><div class="menu" style="position:relative;min-width:360px">
+  <div class="mi hl"><span class="mono" style="width:78px">{name}</span><span class="grow">The file's own name</span><span class="small faint">IMG_0412</span></div>
+  <div class="mi"><span class="mono" style="width:78px">{n}</span><span class="grow">Its number in the batch</span><span class="small faint">001</span></div>
+  <div class="mi"><span class="mono" style="width:78px">{taken}</span><span class="grow">The day it was taken</span><span class="small faint">2026-08-14</span></div>
+  <div class="mi"><span class="mono" style="width:78px">{date}</span><span class="grow">Today</span><span class="small faint">2026-11-06</span></div>
+  <div class="mi"><span class="mono" style="width:78px">{camera}</span><span class="grow">The camera</span><span class="small faint">iPhone 15</span></div>
+  <div class="mi"><span class="mono" style="width:78px">{w}x{h}</span><span class="grow">The saved size</span><span class="small faint">1600x1200</span></div>
+  <div class="mi"><span class="mono" style="width:78px">{preset}</span><span class="grow">The recipe's name</span><span class="small faint">golden-hour</span></div>
+</div></div>
+  <div class="spec" style="width:380px"><div class="cap">5. A name without a token: said before it happens</div><div class="side right" style="border:1px solid var(--border);border-radius:10px;width:auto"><div style="padding:12px 14px" class="stack">
+  <div class="row"><input class="input mono grow" value="holiday"><button class="btn sm"><svg class="ic s"><use href="#i-plus"/></svg>Token</button></div>
+  <div class="stack" style="gap:4px"><div class="row small" style="gap:6px"><span class="mono muted grow">IMG_0412.HEIC</span><span class="faint">&rarr;</span><span class="mono" style="min-width:110px">holiday.jpg</span></div><div class="row small" style="gap:6px"><span class="mono muted grow">IMG_0413.HEIC</span><span class="faint">&rarr;</span><span class="mono" style="min-width:110px">holiday (2).jpg</span></div><div class="row small" style="gap:6px"><span class="mono muted grow">IMG_0415.HEIC</span><span class="faint">&rarr;</span><span class="mono" style="min-width:110px">holiday (3).jpg</span></div></div>
+  <div class="row small" style="gap:6px;color:var(--warning, var(--muted))"><svg class="ic s"><use href="#i-alert"/></svg><span>Every photo gets this name, so numbers are added. Add {n} to choose where.</span></div>
+</div></div></div>
+  <div class="spec" style="width:560px"><div class="cap">6. Settings, Performance: how many photos Batch works on at once</div><div class="card" style="padding:0;background:var(--panel)"><div style="padding:12px 18px">
+  <div class="sec" style="padding-left:0">Performance</div>
+  <div class="field"><label>Photos at a time</label><select class="input"><option>Automatic: 2, or 4 for Compress only</option></select></div>
+  <div class="small muted" style="margin:-2px 0 0 160px">More at once is faster with many small photos and needs more memory: a 24 megapixel photo takes about 1 GB while it is edited.</div>
+</div></div></div>
+</div>
+<ol class="notes">
+<li><b>Quick jobs</b> (1) on the welcome page: <b>Convert or resize</b> opens Batch in Edit and export with no preset (2), <b>Make files smaller</b> opens it in Compress only; then Add photos or drop them. One click for "HEIC to JPG" or "shrink 300 photos for email", without first opening a photo.</li>
+<li><b>Convert and resize only</b> (2) is the recipe's first choice, renamed from "None: resize and save only"; its card says what happens. The rest of the page is unchanged: size, watermark, format.</li>
+<li><b>The name</b> (3) takes text and tokens; prefix and suffix are just text around {name}. <b>+ Token</b> (4) lists every token with an example from the first photo. Under the field, the first three names as they will be saved, updated as you type, then "and N more". The same field and preview serve Compress only.</li>
+<li><b>{n}</b> numbers the photos in the list's order, padded to the count's width (001 for 300 photos). <b>{taken}</b> is the day from the photo's Exif, today when it has none.</li>
+<li>A name that would give every photo the same file (5) says so under the preview before the run: numbers are added, as now.</li>
+<li><b>Photos at a time</b> (6) in Settings, Performance: Automatic, 1, 2, 4 or 8. It replaces "Batch threads" of <code>settings.html</code>: what the user controls is how many photos are worked on at once, each already using every core.</li>
+</ol>
+</body></html>
