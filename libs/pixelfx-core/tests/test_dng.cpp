@@ -153,9 +153,10 @@ Bytes linearDng(bool jpegXl, float gain)
     }
     Bytes data;
     if (jpegXl) {
-        const vips::VImage img = vips::VImage::new_from_memory_copy(samples.data(), samples.size() * 2, kWidth, kHeight, 3,
-                                                                    VIPS_FORMAT_USHORT)
-                                     .copy(vips::VImage::option()->set("interpretation", VIPS_INTERPRETATION_RGB16));
+        const vips::VImage img =
+            vips::VImage::new_from_memory_copy(samples.data(), samples.size() * 2, kWidth, kHeight, 3,
+                                               VIPS_FORMAT_USHORT)
+                .copy(vips::VImage::option()->set("interpretation", VIPS_INTERPRETATION_RGB16));
         void* buffer = nullptr;
         std::size_t size = 0;
         img.write_to_buffer(".jxl", &buffer, &size, vips::VImage::option()->set("lossless", true));
@@ -217,7 +218,8 @@ std::filesystem::path written(const fixtures::TempDir& dir, const std::string& n
 {
     const auto path = dir.path() / name;
     std::ofstream out(path, std::ios::binary);
-    out.write(reinterpret_cast<const char*>(bytes.data()), static_cast<std::streamsize>(bytes.size())); // NOLINT
+    out.write(reinterpret_cast<const char*>(bytes.data()),
+              static_cast<std::streamsize>(bytes.size())); // NOLINT
     return path;
 }
 
@@ -257,7 +259,8 @@ TEST_CASE("the gain table map is the camera's tone, applied only when asked")
     const auto flat = pfx::load(path, plain);
     REQUIRE(camera);
     REQUIRE(flat);
-    CHECK(camera.value().image.pixel(1, 0)[1] == doctest::Approx(2.0 * double{flat.value().image.pixel(1, 0)[1]}).epsilon(0.02));
+    CHECK(camera.value().image.pixel(1, 0)[1] ==
+          doctest::Approx(2.0 * double{flat.value().image.pixel(1, 0)[1]}).epsilon(0.02));
 }
 
 TEST_CASE("a RAW without a readable image still has its preview")
@@ -265,8 +268,9 @@ TEST_CASE("a RAW without a readable image still has its preview")
     pfx::detail::startVips();
     const fixtures::TempDir dir;
     // A TIFF-based RAW holding only a JPEG preview, as a JPEG-compressed strip.
-    const vips::VImage picture =
-        vips::VImage::black(40, 30, vips::VImage::option()->set("bands", 3)).linear(0.0, 180.0).cast(VIPS_FORMAT_UCHAR);
+    const vips::VImage picture = vips::VImage::black(40, 30, vips::VImage::option()->set("bands", 3))
+                                     .linear(0.0, 180.0)
+                                     .cast(VIPS_FORMAT_UCHAR);
     void* buffer = nullptr;
     std::size_t size = 0;
     picture.write_to_buffer(".jpg", &buffer, &size);

@@ -466,7 +466,7 @@ void applyGainTableMap(Image& image, const GainTableMap& g, int threads)
                 double fh = 0.0;
                 grid((x + 0.5) / image.width(), g.originH, g.spacingH, g.pointsH, h0, fh);
                 const std::size_t h1 = std::min<std::size_t>(h0 + 1, g.pointsH - 1);
-                const Vec3 pro = color::transform(toProPhoto, {p[0], p[1], p[2]});
+                const Vec3 pro = color::transform(toProPhoto, {double{p[0]}, double{p[1]}, double{p[2]}});
                 const double lo = std::min({pro[0], pro[1], pro[2]});
                 const double hi = std::max({pro[0], pro[1], pro[2]});
                 const double input =
@@ -802,9 +802,13 @@ Result<LoadedImage> loadLinearDng(const std::vector<std::uint8_t>& file, const L
         return Error{ErrorCode::DecodeFailed, error};
     }
     const CameraColour colour = cameraColour(*dng);
+    // The camera's exposure for its default rendering, and the profile's change to it.
     const auto baseline = tiff.reals(dng->tags, kBaselineExposure);
-    Image image = develop(*samples, width, areaOf(*dng, width, height), levelsOf(*dng), colour,
-                          std::exp2(baseline.empty() ? 0.0 : baseline.front()));
+    const auto offset = tiff.reals(dng->tags, kBaselineExposureOffset);
+    const double exposure =
+        (baseline.empty() ? 0.0 : baseline.front()) + (offset.empty() ? 0.0 : offset.front());
+    Image image =
+        develop(*samples, width, areaOf(*dng, width, height), levelsOf(*dng), colour, std::exp2(exposure));
     if (options.rawTone) {
         if (const auto map = readGainTableMap(*dng)) {
             applyGainTableMap(image, *map, 0);

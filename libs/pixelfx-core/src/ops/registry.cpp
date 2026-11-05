@@ -182,7 +182,8 @@ void addLightAndColor(std::vector<OpSpec>& ops)
                    {choice("color.wb.mode", {"relative"}), number("color.wb.temperature", -100, 100),
                     number("color.wb.tint", -100, 100)}});
     // The base rendering a Lightroom profile stands for: standard, or vivid (more contrast and colour).
-    ops.push_back({"profile", "color", 1, 35, true, {choice("color.profile", {"standard", "vivid", "camera"})}});
+    ops.push_back(
+        {"profile", "color", 1, 35, true, {choice("color.profile", {"standard", "vivid", "camera"})}});
     ops.push_back({"exposure", "light", 1, 40, true, {number("light.exposure", -5, 5, 0, "EV")}});
     ops.push_back({"tone",
                    "light",
