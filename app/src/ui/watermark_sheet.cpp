@@ -3,7 +3,7 @@
 #include "services/qt_image_bridge.h"
 #include "ui/icon_text_button.h"
 #include "ui/icons.h"
-#include "ui/panel_slider.h"
+#include "ui/slider_row.h"
 #include "ui/style.h"
 
 #include <QButtonGroup>
@@ -13,6 +13,7 @@
 #include <QFileDialog>
 #include <QFileInfo>
 #include <QFontComboBox>
+#include <QFrame>
 #include <QFutureWatcher>
 #include <QGridLayout>
 #include <QHBoxLayout>
@@ -59,6 +60,15 @@ QImage shaped(const QImage& photo, WatermarkPreview::Shape shape)
     }
     return photo.copy(
         QRect(QPoint((photo.width() - size.width()) / 2, (photo.height() - size.height()) / 2), size));
+}
+
+// A labelled slider row in `parent` that reads "3%", "70", "-30\u00B0"; returns its slider.
+QSlider* sliderRow(QWidget* parent, const QString& name, int low, int high, int standard, const QString& unit)
+{
+    auto* row = new SliderRow(name, parent);
+    row->setRange(low, high, standard);
+    row->setFormat([unit](int ticks) { return QString::number(ticks) + unit; });
+    return row->slider();
 }
 
 } // namespace
@@ -300,7 +310,7 @@ QWidget* WatermarkSheet::buildKindRow(QWidget* parent)
     const std::array<std::pair<QString, QString>, 2> kindNames = {
         {{tr("Text"), u"type"_s}, {tr("Logo"), u"image"_s}}};
     for (std::size_t i = 0; i < kindNames.size(); ++i) {
-        auto* b = new IconTextButton(icons::themed(kindNames.at(i).second, tokens().muted),
+        auto* b = new IconTextButton(icons::toggle(kindNames.at(i).second, tokens().muted, tokens().accent),
                                      kindNames.at(i).first, panel);
         b->setObjectName(u"segment"_s);
         b->setCheckable(true);
@@ -346,32 +356,18 @@ QWidget* WatermarkSheet::buildControls()
 
     column->addWidget(buildColorRow());
 
-    const auto sliderRow = [this, panel, column](const QString& name, int low, int high,
-                                                 const QString& unit) {
-        auto* label = new QLabel(name, panel);
-        label->setObjectName(u"adjustName"_s);
-        auto* value = new QLabel(panel);
-        value->setObjectName(u"adjustValue"_s);
-        auto* slider = new PanelSlider(Qt::Horizontal, panel);
-        slider->setRange(low, high);
-        slider->setAccessibleName(name);
-        connect(slider, &QSlider::valueChanged, value,
-                [value, unit](int v) { value->setText(QString::number(v) + unit); });
+    const core::Watermark defaults;
+    const auto percent = [](double share) { return static_cast<int>(std::lround(share * 100)); };
+    m_size = sliderRow(panel, tr("Size"), 1, 20, percent(defaults.size), u"%"_s);
+    m_opacity = sliderRow(panel, tr("Opacity"), 0, 100, percent(defaults.opacity), QString());
+    m_margin = sliderRow(panel, tr("Margin"), 0, 10, percent(defaults.margin), u"%"_s);
+    auto* sliders = new QVBoxLayout;
+    sliders->setSpacing(4);
+    for (const QSlider* slider : {m_size, m_opacity, m_margin}) {
+        sliders->addWidget(slider->parentWidget());
         connect(slider, &QSlider::valueChanged, this, &WatermarkSheet::sync);
-        auto* top = new QHBoxLayout;
-        top->addWidget(label);
-        top->addStretch();
-        top->addWidget(value);
-        auto* box = new QVBoxLayout;
-        box->setSpacing(0);
-        box->addLayout(top);
-        box->addWidget(slider);
-        column->addLayout(box);
-        return slider;
-    };
-    m_size = sliderRow(tr("Size"), 1, 20, u"%"_s);
-    m_opacity = sliderRow(tr("Opacity"), 0, 100, QString());
-    m_margin = sliderRow(tr("Margin"), 0, 10, u"%"_s);
+    }
+    column->addLayout(sliders);
 
     column->addWidget(buildPositionRow());
 
@@ -443,15 +439,18 @@ QWidget* WatermarkSheet::buildPositionRow()
     auto* row = new QWidget(this);
     auto* label = new QLabel(tr("Position"), row);
     label->setObjectName(u"faint"_s);
-    auto* grid = new QGridLayout;
-    grid->setSpacing(3);
+    auto* gridBox = new QFrame(row);
+    gridBox->setObjectName(u"positionBox"_s);
+    auto* grid = new QGridLayout(gridBox);
+    grid->setContentsMargins(6, 6, 6, 6);
+    grid->setSpacing(4);
     m_anchors = new QButtonGroup(row);
     static const std::array<const char*, 9> names = {
         QT_TR_NOOP("Top left"),    QT_TR_NOOP("Top"),    QT_TR_NOOP("Top right"),
         QT_TR_NOOP("Left"),        QT_TR_NOOP("Middle"), QT_TR_NOOP("Right"),
         QT_TR_NOOP("Bottom left"), QT_TR_NOOP("Bottom"), QT_TR_NOOP("Bottom right")};
     for (int i = 0; i < 9; ++i) {
-        auto* cell = new QToolButton(row);
+        auto* cell = new QToolButton(gridBox);
         cell->setObjectName(u"positionCell"_s);
         cell->setCheckable(true);
         cell->setFixedSize(26, 26);
@@ -467,7 +466,7 @@ QWidget* WatermarkSheet::buildPositionRow()
     auto* left = new QVBoxLayout;
     left->setSpacing(4);
     left->addWidget(label);
-    left->addLayout(grid);
+    left->addWidget(gridBox);
 
     m_repeat = new QCheckBox(tr("Repeat across the photo"), row);
     m_shadow = new QCheckBox(tr("Soft shadow"), row);
@@ -476,17 +475,10 @@ QWidget* WatermarkSheet::buildPositionRow()
     connect(m_repeat, &QCheckBox::toggled, this, &WatermarkSheet::sync);
     connect(m_shadow, &QCheckBox::toggled, this, &WatermarkSheet::sync);
     // The angle matters only when the mark repeats.
-    m_angleRow = new QWidget(row);
-    auto* angleLabel = new QLabel(tr("Angle"), m_angleRow);
-    angleLabel->setObjectName(u"adjustName"_s);
-    m_angle = new PanelSlider(Qt::Horizontal, m_angleRow);
-    m_angle->setRange(-90, 90);
-    m_angle->setAccessibleName(tr("Angle"));
+    m_angle = sliderRow(row, tr("Angle"), -90, 90, static_cast<int>(std::lround(core::Watermark().angle)),
+                        u"\u00B0"_s);
+    m_angleRow = m_angle->parentWidget();
     connect(m_angle, &QSlider::valueChanged, this, &WatermarkSheet::sync);
-    auto* angleLayout = new QHBoxLayout(m_angleRow);
-    angleLayout->setContentsMargins(0, 0, 0, 0);
-    angleLayout->addWidget(angleLabel);
-    angleLayout->addWidget(m_angle, 1);
     auto* right = new QVBoxLayout;
     right->setSpacing(6);
     right->addSpacing(18);

@@ -120,11 +120,7 @@ QToolButton* headerButton(QWidget* parent, const QString& glyph, const QString& 
 {
     auto* b = new QToolButton(parent);
     b->setObjectName(u"headerButton"_s);
-    QIcon icon = icons::themed(glyph, tokens().text, tokens().faint);
-    for (const qreal dpr : {1.0, 2.0}) { // a toggle that is on shows in the accent
-        icon.addPixmap(icons::pixmap(glyph, tokens().accent, 18, dpr), QIcon::Normal, QIcon::On);
-    }
-    b->setIcon(icon);
+    b->setIcon(icons::toggle(glyph, tokens().text, tokens().accent, tokens().faint));
     b->setIconSize(QSize(18, 18));
     b->setToolTip(tip);
     b->setAccessibleName(tip);
@@ -879,13 +875,7 @@ void MainWindow::buildRail()
     const auto railButton = [this](const QString& glyph, const QString& text, const QString& tip) {
         auto* b = new QToolButton(m_rail);
         b->setObjectName(u"railButton"_s);
-        QIcon icon;
-        for (const qreal dpr : {1.0, 2.0}) {
-            icon.addPixmap(icons::pixmap(glyph, tokens().muted, 20, dpr), QIcon::Normal, QIcon::Off);
-            icon.addPixmap(icons::pixmap(glyph, tokens().accent, 20, dpr), QIcon::Normal, QIcon::On);
-            icon.addPixmap(icons::pixmap(glyph, tokens().faint, 20, dpr), QIcon::Disabled, QIcon::Off);
-        }
-        b->setIcon(icon);
+        b->setIcon(icons::toggle(glyph, tokens().muted, tokens().accent, tokens().faint));
         b->setIconSize(QSize(20, 20));
         b->setText(text);
         b->setToolTip(tip);

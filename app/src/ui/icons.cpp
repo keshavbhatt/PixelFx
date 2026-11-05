@@ -74,6 +74,17 @@ QIcon themed(const QString& name, const QColor& color, const QColor& disabledCol
     return icon;
 }
 
+QIcon toggle(const QString& name, const QColor& color, const QColor& onColor, const QColor& disabledColor)
+{
+    QIcon icon = themed(name, color, disabledColor);
+    for (const int size : {16, 20, 24, 32, 48}) {
+        for (const qreal dpr : {1.0, 2.0}) {
+            icon.addPixmap(pixmap(name, onColor, size, dpr), QIcon::Normal, QIcon::On);
+        }
+    }
+    return icon;
+}
+
 QIcon brand()
 {
     return QIcon(u":/icons/pixelfx.png"_s);

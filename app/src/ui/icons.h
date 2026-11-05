@@ -16,6 +16,9 @@ namespace pixelfx::ui::icons {
 [[nodiscard]] QPixmap pixmap(const QString& name, const QColor& color, int size,
                              qreal devicePixelRatio = 1.0);
 /// The brand mark as an icon (multi-size, from :/icons/pixelfx.png).
+/// A themed icon that shows in `onColor` while its button is checked.
+[[nodiscard]] QIcon toggle(const QString& name, const QColor& color, const QColor& onColor,
+                           const QColor& disabledColor = {});
 [[nodiscard]] QIcon brand();
 /// Path of a tinted copy of the SVG on disk, for style-sheet url() references.
 [[nodiscard]] QString tintedFile(const QString& name, const QColor& color);

@@ -44,19 +44,28 @@ void IconTextButton::paintEvent(QPaintEvent* event)
     QStylePainter painter(this);
     QStyleOptionButton option;
     initStyleOption(&option);
-    // The style draws the button with an empty label; the label is drawn here.
     QStyleOptionButton frame = option;
     frame.text.clear();
     frame.icon = QIcon();
     painter.drawControl(QStyle::CE_PushButton, frame);
 
+    // The style draws the text, centred, in the colours of the button's state; it moves right by
+    // half the icon and gap so that icon, gap and text together sit in the middle.
     const QRect area = style()->subElementRect(QStyle::SE_PushButtonContents, &option, this);
     const QSize iconSize = option.iconSize;
+    const int shift = (iconSize.width() + kGap) / 2;
+    const bool rtl = layoutDirection() == Qt::RightToLeft;
+    QStyleOptionButton label = option;
+    label.icon = QIcon();
+    painter.save();
+    painter.translate(rtl ? -shift : shift, 0);
+    painter.drawControl(QStyle::CE_PushButtonLabel, label);
+    painter.restore();
+
     const int textWidth = fontMetrics().horizontalAdvance(option.text);
-    const int left = area.x() + ((area.width() - (iconSize.width() + kGap + textWidth)) / 2);
+    const int left = area.center().x() + 1 - ((iconSize.width() + kGap + textWidth) / 2);
     const QRect iconRect(left, area.y() + ((area.height() - iconSize.height()) / 2), iconSize.width(),
                          iconSize.height());
-    const QRect textRect(iconRect.right() + 1 + kGap, area.y(), textWidth + 1, area.height());
     QIcon::Mode mode = QIcon::Normal;
     if (!isEnabled()) {
         mode = QIcon::Disabled;
@@ -65,9 +74,6 @@ void IconTextButton::paintEvent(QPaintEvent* event)
     }
     icon().paint(&painter, QStyle::visualRect(layoutDirection(), area, iconRect), Qt::AlignCenter, mode,
                  isChecked() ? QIcon::On : QIcon::Off);
-    style()->drawItemText(&painter, QStyle::visualRect(layoutDirection(), area, textRect),
-                          Qt::AlignLeft | Qt::AlignVCenter | Qt::TextShowMnemonic, palette(), isEnabled(),
-                          option.text, foregroundRole());
 }
 
 } // namespace pixelfx::ui

@@ -123,9 +123,10 @@ const QString kSheet = uR"(
         #watermarkControls { background: {{panel}}; border-top: 1px solid {{border}}; border-right: 1px solid {{border}}; }
         #watermarkPreview { background: {{canvas}}; border-top: 1px solid {{border}}; }
         #watermarkBar { background: {{panel}}; border-top: 1px solid {{border}}; }
-        QToolButton#positionCell { border: 1px solid {{faint}}; border-radius: 5px; background: {{input}}; }
+        QToolButton#positionCell { border: 1px solid {{track}}; border-radius: 5px; background: {{input}}; padding: 0; }
         QToolButton#positionCell:hover { background: {{hover}}; }
-        QToolButton#positionCell:checked { background: {{accent}}; border-color: {{accent}}; }
+        QToolButton#positionCell:checked { background: {{accentStrong}}; border-color: {{accentStrong}}; }
+        QFrame#positionBox { border: 1px solid {{border}}; border-radius: 8px; background: {{input}}; }
         QListWidget#lookSteps { background: {{panel}}; border: 0; outline: 0; }
         QListWidget#lookSteps::item { padding: 6px 8px; border-radius: 7px; margin: 1px 6px; }
         QListWidget#lookSteps::item:selected { background: {{accentSoft}}; color: {{text}}; }
