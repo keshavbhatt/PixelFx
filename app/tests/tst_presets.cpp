@@ -133,6 +133,40 @@ private Q_SLOTS:
         QVERIFY(QFile::exists(dir.filePath(u"out.pfxpreset"_s)));
     }
 
+    void aColourPresetTurnsBlackAndWhiteBackToColour()
+    {
+        pfx::Settings photo;
+        photo.set("bw.enabled", true);
+        photo.set("bw.mix.blue", -40.0);
+        photo.set("calibration.red.hue", 10.0);
+        pfx::Settings colour;
+        colour.set("bw.enabled", false);
+        colour.set("light.exposure", 0.3);
+        const pfx::Settings out = pixelfx::core::applyPreset(photo, colour);
+        QVERIFY(!out.boolean("bw.enabled", false));
+        QVERIFY(!out.contains("bw.mix.blue"));                // the whole Black & white part is the preset's
+        QCOMPARE(out.number("calibration.red.hue", 0), 10.0); // other parts stay
+        QCOMPARE(out.number("light.exposure", 0), 0.3);
+    }
+
+    void newPartsAreOfferedAndChoicesResetToTheirDefault()
+    {
+        pfx::Settings s;
+        s.set("bw.enabled", true);
+        s.set("detail.ca.auto", true);
+        s.set("detail.clarity", 10.0);
+        s.set("calibration.blue.saturation", 5.0);
+        s.set("effects.vignette.style", std::string("highlight"));
+        const QStringList units = pixelfx::core::unitsIn(s);
+        QVERIFY(units.contains(u"bw"_s));
+        QVERIFY(units.contains(u"optics"_s));
+        QVERIFY(units.contains(u"calibration"_s));
+        QVERIFY(!pixelfx::core::keyInUnit("detail.ca.auto", u"detail"_s)); // Optics, not Detail
+        QCOMPARE(pixelfx::core::changedCount(s, u"effects"_s), 0);         // the default style
+        const pfx::Settings preset = pixelfx::core::presetFrom(pfx::Settings(), {u"color"_s});
+        QCOMPARE(preset.text("color.profile", ""), std::string("standard"));
+    }
+
     void lightroomPresetsComeInWithAReport()
     {
         QTemporaryDir dir;
@@ -140,9 +174,10 @@ private Q_SLOTS:
         const QString file = dir.filePath(u"clean.xmp"_s);
         QFile out(file);
         QVERIFY(out.open(QIODevice::WriteOnly));
-        out.write(R"(<x:xmpmeta><rdf:Description xmlns:crs="x" crs:Exposure2012="+0.5" crs:LensProfileEnable="1">)"
-                  R"(<crs:Name><rdf:Alt><rdf:li xml:lang="x-default">Clean</rdf:li></rdf:Alt></crs:Name>)"
-                  R"(</rdf:Description></x:xmpmeta>)");
+        out.write(
+            R"(<x:xmpmeta><rdf:Description xmlns:crs="x" crs:Exposure2012="+0.5" crs:LensProfileEnable="1">)"
+            R"(<crs:Name><rdf:Alt><rdf:li xml:lang="x-default">Clean</rdf:li></rdf:Alt></crs:Name>)"
+            R"(</rdf:Description></x:xmpmeta>)");
         out.close();
         const auto imported = library.importFile(file);
         QVERIFY2(!imported.path.isEmpty(), qPrintable(imported.error));

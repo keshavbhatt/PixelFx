@@ -293,8 +293,12 @@ bool mapSpecial(const std::string& key, const std::string& value, Settings& s)
         return true;
     }
     if (key == "Treatment" || key == "ConvertToGrayscale") {
+        // Colour switches black and white off, so a colour preset turns a black-and-white photo
+        // back; either key saying black and white wins.
         if (value == "Black & White" || value == "Monochrome" || value == "True") {
             s.set("bw.enabled", true);
+        } else if (!s.boolean("bw.enabled", false)) {
+            s.set("bw.enabled", false);
         }
     } else if (key == "AutoLateralCA") {
         if (v && *v != 0.0) {

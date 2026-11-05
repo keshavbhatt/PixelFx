@@ -34,10 +34,16 @@ const std::vector<UnitRule>& rules()
         {"color", QT_TRANSLATE_NOOP("PresetUnits", "Color"), {"color."}, {"color.wb."}},
         {"wb", QT_TRANSLATE_NOOP("PresetUnits", "White balance"), {"color.wb."}, {}},
         {"mixer", QT_TRANSLATE_NOOP("PresetUnits", "Color mixer"), {"mixer."}, {}},
+        {"bw", QT_TRANSLATE_NOOP("PresetUnits", "Black & white"), {"bw."}, {}},
         {"grading", QT_TRANSLATE_NOOP("PresetUnits", "Color grading"), {"grading."}, {}},
         {"curves", QT_TRANSLATE_NOOP("PresetUnits", "Curves"), {"curves."}, {}},
-        {"detail", QT_TRANSLATE_NOOP("PresetUnits", "Detail"), {"detail."}, {}},
+        {"detail",
+         QT_TRANSLATE_NOOP("PresetUnits", "Detail"),
+         {"detail."},
+         {"detail.ca.", "detail.defringe."}},
+        {"optics", QT_TRANSLATE_NOOP("PresetUnits", "Optics"), {"detail.ca.", "detail.defringe."}, {}},
         {"effects", QT_TRANSLATE_NOOP("PresetUnits", "Effects"), {"effects."}, {}},
+        {"calibration", QT_TRANSLATE_NOOP("PresetUnits", "Calibration"), {"calibration."}, {}},
         {"look", QT_TRANSLATE_NOOP("PresetUnits", "Look"), {"look."}, {}},
         {"crop",
          QT_TRANSLATE_NOOP("PresetUnits", "Crop and rotate"),
@@ -74,6 +80,9 @@ bool isDefault(const pfx::ParamSpec& spec, const pfx::Value& value)
     }
     if (const auto* c = std::get_if<pfx::Curve>(&value)) {
         return c->empty() || *c == pfx::Curve{{0, 0}, {1, 1}};
+    }
+    if (const auto* t = std::get_if<std::string>(&value)) {
+        return spec.type == pfx::ParamType::Choice && !spec.choices.empty() && *t == spec.choices.front();
     }
     return false;
 }
@@ -164,6 +173,8 @@ bool addUnit(pfx::Settings& out, const pfx::Settings& settings, const UnitRule& 
                 out.set(p.key, p.defaultValue);
             } else if (p.type == pfx::ParamType::Boolean) {
                 out.set(p.key, false);
+            } else if (p.type == pfx::ParamType::Choice && !p.choices.empty()) {
+                out.set(p.key, p.choices.front());
             } else {
                 continue;
             }

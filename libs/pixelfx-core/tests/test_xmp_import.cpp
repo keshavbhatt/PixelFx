@@ -131,7 +131,8 @@ TEST_CASE("xmp import: profiles map to black and white or vivid; unknown profile
         R"(<x crs:Treatment="Color"><crs:Look><rdf:Description crs:Name="Adobe Color"/></crs:Look></x>)");
     REQUIRE(colour.ok());
     CHECK(colour.value().skipped.empty());
-    CHECK_FALSE(colour.value().document.settings.contains("bw.enabled"));
+    CHECK(colour.value().document.settings.contains("bw.enabled")); // colour: black and white off
+    CHECK_FALSE(colour.value().document.settings.boolean("bw.enabled", true));
     const auto creative = pfx::importXmpPreset(
         R"(<x crs:Exposure2012="0.1"><crs:Look><rdf:Description crs:Name="Artistic 03"/></crs:Look></x>)");
     REQUIRE(creative.ok());
