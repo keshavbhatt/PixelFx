@@ -1,0 +1,97 @@
+{
+  "format": "pixelfx",
+  "kind": "preset",
+  "version": 2,
+  "name": "Golden 200, 10 years expired",
+  "group": "Profiles",
+  "workingSpace": "rec2020-linear",
+  "body": {
+    "settings": {
+      "bw": {
+        "enabled": false
+      },
+      "color": {
+        "saturation": -10.0,
+        "vibrance": -10.0
+      },
+      "detail": {
+        "clarity": 0.0,
+        "dehaze": 0.0,
+        "denoise": {
+          "luminance": 0.0
+        },
+        "sharpen": {
+          "amount": 10.0
+        },
+        "texture": 0.0
+      },
+      "effects": {
+        "grain": {
+          "amount": 57.0,
+          "roughness": 65.0,
+          "size": 39.5
+        }
+      },
+      "grading": {
+        "balance": -15.0,
+        "blending": 50.0,
+        "global": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "highlights": {
+          "amount": 15.0,
+          "hue": 50.0,
+          "luminance": 0.0
+        },
+        "midtones": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "shadows": {
+          "amount": 25.5,
+          "hue": 177.5,
+          "luminance": 0.0
+        }
+      },
+      "light": {
+        "blacks": 32.0,
+        "contrast": -24.5,
+        "exposure": 0.15,
+        "highlights": -35.0,
+        "shadows": 37.5,
+        "whites": -35.0
+      },
+      "mixer": {
+        "hue": {
+          "aqua": -12.5,
+          "blue": -10.0,
+          "green": -22.5,
+          "magenta": -15.0,
+          "orange": -2.5,
+          "purple": -15.0,
+          "red": 7.5,
+          "yellow": -12.5
+        },
+        "luminance": {
+          "blue": -10.0,
+          "green": -7.5,
+          "orange": 15.0,
+          "yellow": 10.0
+        },
+        "saturation": {
+          "aqua": -5.0,
+          "blue": -25.0,
+          "green": -25.0,
+          "magenta": -22.5,
+          "orange": 15.0,
+          "purple": -22.5,
+          "red": 10.0,
+          "yellow": 20.0
+        }
+      }
+    }
+  }
+}

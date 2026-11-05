@@ -1,0 +1,64 @@
+{
+  "format": "pixelfx",
+  "kind": "preset",
+  "version": 2,
+  "name": "Palladium print",
+  "group": "Profiles",
+  "workingSpace": "rec2020-linear",
+  "body": {
+    "settings": {
+      "bw": {
+        "enabled": true
+      },
+      "detail": {
+        "clarity": 0.0,
+        "dehaze": 0.0,
+        "denoise": {
+          "luminance": 0.0
+        },
+        "sharpen": {
+          "amount": 10.0
+        },
+        "texture": 0.0
+      },
+      "effects": {
+        "grain": {
+          "amount": 15.0,
+          "roughness": 40.0,
+          "size": 20.0
+        }
+      },
+      "grading": {
+        "balance": 0.0,
+        "blending": 65.0,
+        "global": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "highlights": {
+          "amount": 10.0,
+          "hue": 40.0,
+          "luminance": 0.0
+        },
+        "midtones": {
+          "amount": 18.0,
+          "hue": 30.0,
+          "luminance": 0.0
+        },
+        "shadows": {
+          "amount": 28.0,
+          "hue": 35.0,
+          "luminance": 0.0
+        }
+      },
+      "light": {
+        "blacks": -20.0,
+        "contrast": 22.0,
+        "highlights": -20.0,
+        "shadows": 20.0,
+        "whites": 0.0
+      }
+    }
+  }
+}

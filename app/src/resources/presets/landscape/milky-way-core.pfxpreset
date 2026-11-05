@@ -1,0 +1,66 @@
+{
+  "format": "pixelfx",
+  "kind": "preset",
+  "version": 2,
+  "name": "Milky Way core",
+  "group": "Profiles",
+  "workingSpace": "rec2020-linear",
+  "body": {
+    "settings": {
+      "bw": {
+        "enabled": false
+      },
+      "color": {
+        "saturation": 5.0,
+        "vibrance": 10.0
+      },
+      "detail": {
+        "clarity": 20.0,
+        "dehaze": 15.0
+      },
+      "grading": {
+        "balance": 0.0,
+        "blending": 75.0,
+        "global": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "highlights": {
+          "amount": 8.0,
+          "hue": 40.0,
+          "luminance": 0.0
+        },
+        "midtones": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "shadows": {
+          "amount": 10.0,
+          "hue": 260.0,
+          "luminance": 0.0
+        }
+      },
+      "light": {
+        "blacks": -20.0,
+        "contrast": 30.0,
+        "exposure": 0.4,
+        "highlights": -60.0,
+        "shadows": 40.0,
+        "whites": 25.0
+      },
+      "mixer": {
+        "luminance": {
+          "blue": -10.0
+        },
+        "saturation": {
+          "blue": 15.0,
+          "green": -20.0,
+          "magenta": 15.0,
+          "purple": 20.0
+        }
+      }
+    }
+  }
+}

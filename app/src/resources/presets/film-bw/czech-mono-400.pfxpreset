@@ -1,0 +1,74 @@
+{
+  "format": "pixelfx",
+  "kind": "preset",
+  "version": 2,
+  "name": "Czech mono 400",
+  "group": "Profiles",
+  "workingSpace": "rec2020-linear",
+  "body": {
+    "settings": {
+      "bw": {
+        "enabled": true,
+        "mix": {
+          "aqua": -8.0,
+          "blue": -30.0,
+          "green": -10.0,
+          "magenta": -8.0,
+          "orange": 12.0,
+          "purple": -5.0,
+          "red": 15.0,
+          "yellow": 5.0
+        }
+      },
+      "detail": {
+        "clarity": 0.0,
+        "dehaze": 0.0,
+        "denoise": {
+          "luminance": 0.0
+        },
+        "sharpen": {
+          "amount": 10.0
+        },
+        "texture": 0.0
+      },
+      "effects": {
+        "grain": {
+          "amount": 45.0,
+          "roughness": 60.0,
+          "size": 35.0
+        }
+      },
+      "grading": {
+        "balance": 0.0,
+        "blending": 50.0,
+        "global": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "highlights": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "midtones": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "shadows": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        }
+      },
+      "light": {
+        "blacks": -28.0,
+        "contrast": 25.0,
+        "highlights": -20.0,
+        "shadows": 15.0,
+        "whites": 10.0
+      }
+    }
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "format": "pixelfx",
+  "kind": "preset",
+  "version": 2,
+  "name": "Sharpening, for print",
+  "group": "Profiles",
+  "workingSpace": "rec2020-linear",
+  "body": {
+    "settings": {
+      "bw": {
+        "enabled": false
+      },
+      "detail": {
+        "sharpen": {
+          "amount": 50.0,
+          "detail": 35.0,
+          "masking": 10.0,
+          "radius": 0.00025
+        }
+      }
+    }
+  }
+}

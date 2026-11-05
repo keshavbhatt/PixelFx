@@ -1,0 +1,72 @@
+{
+  "format": "pixelfx",
+  "kind": "preset",
+  "version": 2,
+  "name": "Everyday green 1600",
+  "group": "Profiles",
+  "workingSpace": "rec2020-linear",
+  "body": {
+    "settings": {
+      "bw": {
+        "enabled": false
+      },
+      "color": {
+        "saturation": 5.0
+      },
+      "detail": {
+        "sharpen": {
+          "amount": 10.0
+        }
+      },
+      "effects": {
+        "grain": {
+          "amount": 40.0,
+          "roughness": 60.0,
+          "size": 40.0
+        }
+      },
+      "grading": {
+        "balance": -10.0,
+        "blending": 50.0,
+        "global": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "highlights": {
+          "amount": 7.0,
+          "hue": 40.0,
+          "luminance": 0.0
+        },
+        "midtones": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "shadows": {
+          "amount": 13.0,
+          "hue": 208.0,
+          "luminance": 0.0
+        }
+      },
+      "light": {
+        "blacks": -19.0,
+        "contrast": 28.0,
+        "exposure": 0.11,
+        "highlights": -36.0,
+        "shadows": 21.0,
+        "whites": 11.0
+      },
+      "mixer": {
+        "hue": {
+          "blue": -5.0
+        },
+        "saturation": {
+          "blue": 16.0,
+          "green": 21.0,
+          "red": 11.0
+        }
+      }
+    }
+  }
+}

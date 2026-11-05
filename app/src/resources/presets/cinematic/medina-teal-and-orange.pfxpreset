@@ -1,0 +1,126 @@
+{
+  "format": "pixelfx",
+  "kind": "preset",
+  "version": 2,
+  "name": "Medina teal and orange",
+  "group": "Creative",
+  "workingSpace": "rec2020-linear",
+  "body": {
+    "settings": {
+      "bw": {
+        "enabled": false
+      },
+      "calibration": {
+        "blue": {
+          "hue": -45.0,
+          "saturation": 35.0
+        },
+        "green": {
+          "hue": 10.0,
+          "saturation": 0.0
+        },
+        "red": {
+          "hue": 20.0,
+          "saturation": 10.0
+        }
+      },
+      "color": {
+        "saturation": -5.0,
+        "vibrance": 20.0
+      },
+      "curves": {
+        "rgb": [
+          [
+            0.0,
+            0.0196078431372549
+          ],
+          [
+            0.17647058823529413,
+            0.13725490196078433
+          ],
+          [
+            0.5019607843137255,
+            0.5019607843137255
+          ],
+          [
+            0.7450980392156863,
+            0.803921568627451
+          ],
+          [
+            1.0,
+            0.9607843137254902
+          ]
+        ]
+      },
+      "detail": {
+        "clarity": 5.0,
+        "dehaze": 10.0,
+        "texture": 5.0
+      },
+      "grading": {
+        "balance": 10.0,
+        "blending": 75.0,
+        "global": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "highlights": {
+          "amount": 35.0,
+          "hue": 40.0,
+          "luminance": 0.0
+        },
+        "midtones": {
+          "amount": 10.0,
+          "hue": 35.0,
+          "luminance": 0.0
+        },
+        "shadows": {
+          "amount": 15.0,
+          "hue": 210.0,
+          "luminance": 0.0
+        }
+      },
+      "light": {
+        "blacks": -15.0,
+        "contrast": 25.0,
+        "exposure": 0.1,
+        "highlights": -25.0,
+        "shadows": 0.0,
+        "whites": 15.0
+      },
+      "mixer": {
+        "hue": {
+          "aqua": -35.0,
+          "blue": -45.0,
+          "green": 10.0,
+          "magenta": 0.0,
+          "orange": -5.0,
+          "purple": 0.0,
+          "red": 0.0,
+          "yellow": -15.0
+        },
+        "luminance": {
+          "aqua": -20.0,
+          "blue": -35.0,
+          "green": -10.0,
+          "magenta": 0.0,
+          "orange": 10.0,
+          "purple": 0.0,
+          "red": 0.0,
+          "yellow": 5.0
+        },
+        "saturation": {
+          "aqua": 40.0,
+          "blue": 45.0,
+          "green": -20.0,
+          "magenta": -10.0,
+          "orange": 15.0,
+          "purple": -10.0,
+          "red": 10.0,
+          "yellow": 15.0
+        }
+      }
+    }
+  }
+}

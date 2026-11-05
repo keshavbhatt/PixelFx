@@ -1,0 +1,75 @@
+{
+  "format": "pixelfx",
+  "kind": "preset",
+  "version": 2,
+  "name": "Fairytale fashion",
+  "group": "Profiles",
+  "workingSpace": "rec2020-linear",
+  "body": {
+    "settings": {
+      "bw": {
+        "enabled": false
+      },
+      "color": {
+        "saturation": -10.0,
+        "vibrance": -10.0
+      },
+      "detail": {
+        "clarity": -15.0,
+        "dehaze": -12.0,
+        "sharpen": {
+          "amount": 40.0
+        },
+        "texture": -8.0
+      },
+      "grading": {
+        "balance": 5.0,
+        "blending": 75.0,
+        "global": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "highlights": {
+          "amount": 6.0,
+          "hue": 42.0,
+          "luminance": 0.0
+        },
+        "midtones": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "shadows": {
+          "amount": 8.0,
+          "hue": 195.0,
+          "luminance": 0.0
+        }
+      },
+      "light": {
+        "blacks": 15.0,
+        "contrast": -20.0,
+        "exposure": 0.75,
+        "highlights": -50.0,
+        "shadows": 40.0,
+        "whites": 15.0
+      },
+      "mixer": {
+        "hue": {
+          "green": 20.0
+        },
+        "luminance": {
+          "aqua": 20.0,
+          "orange": 15.0,
+          "yellow": 10.0
+        },
+        "saturation": {
+          "aqua": -20.0,
+          "blue": -15.0,
+          "green": -30.0,
+          "magenta": 5.0
+        }
+      }
+    }
+  }
+}

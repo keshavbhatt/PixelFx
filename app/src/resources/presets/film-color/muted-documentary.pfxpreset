@@ -1,0 +1,97 @@
+{
+  "format": "pixelfx",
+  "kind": "preset",
+  "version": 2,
+  "name": "Muted documentary",
+  "group": "Profiles",
+  "workingSpace": "rec2020-linear",
+  "body": {
+    "settings": {
+      "bw": {
+        "enabled": false
+      },
+      "color": {
+        "saturation": -7.5,
+        "vibrance": -2.5
+      },
+      "detail": {
+        "clarity": 0.0,
+        "dehaze": 0.0,
+        "denoise": {
+          "luminance": 0.0
+        },
+        "sharpen": {
+          "amount": 10.0
+        },
+        "texture": 0.0
+      },
+      "effects": {
+        "grain": {
+          "amount": 22.5,
+          "roughness": 50.0,
+          "size": 25.0
+        }
+      },
+      "grading": {
+        "balance": -5.0,
+        "blending": 50.0,
+        "global": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "highlights": {
+          "amount": 4.5,
+          "hue": 50.0,
+          "luminance": 0.0
+        },
+        "midtones": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "shadows": {
+          "amount": 8.0,
+          "hue": 212.0,
+          "luminance": 0.0
+        }
+      },
+      "light": {
+        "blacks": -22.0,
+        "contrast": 22.0,
+        "exposure": 0.0,
+        "highlights": -50.0,
+        "shadows": -22.0,
+        "whites": 0.0
+      },
+      "mixer": {
+        "hue": {
+          "aqua": 10.0,
+          "blue": -7.5,
+          "green": -20.0,
+          "orange": 2.5,
+          "purple": -15.0
+        },
+        "luminance": {
+          "aqua": -10.0,
+          "blue": -17.5,
+          "green": -20.0,
+          "magenta": -15.0,
+          "orange": -10.0,
+          "purple": -10.0,
+          "red": -15.0,
+          "yellow": -7.5
+        },
+        "saturation": {
+          "aqua": -20.0,
+          "blue": -26.0,
+          "green": -30.0,
+          "magenta": -22.5,
+          "orange": -15.0,
+          "purple": -25.0,
+          "red": -22.5
+        }
+      }
+    }
+  }
+}

@@ -2,6 +2,7 @@
 
 #include "ui/flow_layout.h"
 #include "ui/icons.h"
+#include "ui/photo_tile.h"
 #include "ui/slider_row.h"
 #include "ui/style.h"
 
@@ -30,11 +31,6 @@ namespace pixelfx::ui {
 
 namespace {
 
-// Two columns that share the panel's width; about 116 px
-// each beside the scroll bar.
-constexpr int kImageHeight = 77;
-constexpr int kTileHeight = kImageHeight + 24;
-
 // The category chips.
 struct Chip
 {
@@ -50,108 +46,6 @@ constexpr std::array<Chip, 5> kChips = {{
 }};
 
 } // namespace
-
-LookTile::LookTile(QString id, QString name, bool mine, QWidget* parent)
-    : QWidget(parent)
-    , m_id(std::move(id))
-    , m_name(std::move(name))
-    , m_mine(mine)
-{
-    setFixedHeight(kTileHeight);
-    setMinimumWidth(90);
-    setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
-    setFocusPolicy(Qt::StrongFocus);
-    setCursor(Qt::PointingHandCursor);
-    setAccessibleName(m_name);
-    setToolTip(m_name);
-}
-
-LookTile::~LookTile() = default;
-
-void LookTile::setImage(const QImage& image)
-{
-    m_image = image;
-    update();
-}
-
-void LookTile::setSelected(bool selected)
-{
-    m_selected = selected;
-    update();
-}
-
-void LookTile::paintEvent(QPaintEvent* /*event*/)
-{
-    const Tokens& t = tokens();
-    QPainter p(this);
-    p.setRenderHint(QPainter::Antialiasing);
-    const QRectF box = QRectF(rect()).adjusted(1, 1, -1, -1);
-    QPainterPath clip;
-    clip.addRoundedRect(box, 8, 8);
-    p.fillPath(clip, t.hover);
-    p.save();
-    p.setClipPath(clip);
-    const QRectF imageRect(box.left(), box.top(), box.width(), kImageHeight);
-    if (!m_image.isNull()) {
-        // object-fit: cover
-        const QSizeF scaled = QSizeF(m_image.size()).scaled(imageRect.size(), Qt::KeepAspectRatioByExpanding);
-        const QRectF source((scaled.width() - imageRect.width()) / 2 * m_image.width() / scaled.width(),
-                            (scaled.height() - imageRect.height()) / 2 * m_image.height() / scaled.height(),
-                            imageRect.width() * m_image.width() / scaled.width(),
-                            imageRect.height() * m_image.height() / scaled.height());
-        p.drawImage(imageRect, m_image, source);
-    }
-    p.restore();
-    QFont small = font();
-    small.setPixelSize(12);
-    p.setFont(small);
-    p.setPen(t.text);
-    p.drawText(QRectF(box.left() + 7, imageRect.bottom(), box.width() - 14, kTileHeight - kImageHeight),
-               Qt::AlignLeft | Qt::AlignVCenter,
-               fontMetrics().elidedText(m_name, Qt::ElideRight, width() - 16));
-    if (m_mine) {
-        // The "Mine" pill, top right.
-        QFont pill = small;
-        pill.setPixelSize(11);
-        pill.setWeight(QFont::DemiBold);
-        const QString text = tr("Mine");
-        const QFontMetrics fm(pill);
-        const QRectF r(box.right() - fm.horizontalAdvance(text) - 17, box.top() + 5,
-                       fm.horizontalAdvance(text) + 12, 18);
-        p.setPen(Qt::NoPen);
-        p.setBrush(t.accentSoft);
-        p.drawRoundedRect(r, 9, 9);
-        p.setFont(pill);
-        p.setPen(t.accent);
-        p.drawText(r, Qt::AlignCenter, text);
-    }
-    if (m_selected || showsFocusRing(this)) {
-        p.setPen(QPen(m_selected ? t.accent : t.muted, 2));
-        p.setBrush(Qt::NoBrush);
-        p.drawRoundedRect(box, 8, 8);
-    }
-}
-
-void LookTile::contextMenuEvent(QContextMenuEvent* event)
-{
-    Q_EMIT menuRequested(event->globalPos());
-}
-
-void LookTile::mouseReleaseEvent(QMouseEvent* event)
-{
-    if (event->button() == Qt::LeftButton && rect().contains(event->position().toPoint())) {
-        Q_EMIT clicked();
-    }
-}
-
-void LookTile::keyPressEvent(QKeyEvent* event)
-{
-    if (event->key() == Qt::Key_Return || event->key() == Qt::Key_Enter || event->key() == Qt::Key_Space) {
-        Q_EMIT clicked();
-        return;
-    }
-    QWidget::keyPressEvent(event);
-}
 
 LooksPanel::LooksPanel(QWidget* parent)
     : QWidget(parent)
@@ -259,7 +153,7 @@ void LooksPanel::setCurrent(const QString& id, double strength)
     m_strength->setTicks(static_cast<int>(std::lround(strength)));
     m_strength->setEnabled(!id.isEmpty());
     if (changed) {
-        for (LookTile* tile : visibleTiles()) {
+        for (PhotoTile* tile : visibleTiles()) {
             tile->setSelected(tile->id() == id);
         }
     }
@@ -275,16 +169,16 @@ void LooksPanel::setThumbnail(int index, const QImage& image)
         return;
     }
     const QString id = index < 0 ? QString() : m_entries[static_cast<std::size_t>(index)].id;
-    for (LookTile* tile : visibleTiles()) {
+    for (PhotoTile* tile : visibleTiles()) {
         if (tile->id() == id) {
             tile->setImage(image);
         }
     }
 }
 
-std::vector<LookTile*> LooksPanel::visibleTiles() const
+std::vector<PhotoTile*> LooksPanel::visibleTiles() const
 {
-    const QList<LookTile*> tiles = m_listBox->findChildren<LookTile*>();
+    const QList<PhotoTile*> tiles = m_listBox->findChildren<PhotoTile*>();
     return {tiles.begin(), tiles.end()};
 }
 
@@ -303,16 +197,10 @@ void LooksPanel::addSection(const QString& title, QWidget* extra, const std::vec
                             bool withOriginal)
 {
     m_list->addLayout(sectionHeadingRow(sectionLabel(title, m_listBox), extra, kPanelPadding));
-    auto* grid = new QGridLayout;
-    grid->setContentsMargins(kToolRowPadding, 2, kToolRowPadding, 6);
-    grid->setHorizontalSpacing(kGapControls);
-    grid->setVerticalSpacing(kGapControls);
-    grid->setColumnStretch(0, 1);
-    grid->setColumnStretch(1, 1);
-    int at = 0;
-    const auto place = [&](LookTile* tile) {
+    std::vector<PhotoTile*> tiles;
+    const auto place = [&](PhotoTile* tile) {
         tile->setSelected(tile->id() == m_current);
-        connect(tile, &LookTile::clicked, this, [this, tile] {
+        connect(tile, &PhotoTile::clicked, this, [this, tile] {
             int strength = 100;
             for (const core::LookEntry& e : m_entries) {
                 if (e.id == tile->id()) {
@@ -321,21 +209,21 @@ void LooksPanel::addSection(const QString& title, QWidget* extra, const std::vec
             }
             Q_EMIT lookChosen(tile->id(), strength);
         });
-        grid->addWidget(tile, at / 2, at % 2);
-        ++at;
+        tiles.push_back(tile);
     };
     if (withOriginal) {
-        auto* original = new LookTile({}, tr("Original"), false, m_listBox);
+        auto* original = new PhotoTile({}, tr("Original"), PhotoTile::Badge::None, m_listBox);
         original->setImage(m_original);
         place(original);
     }
     for (const int i : indexes) {
         const core::LookEntry& e = m_entries[static_cast<std::size_t>(i)];
-        auto* tile = new LookTile(e.id, e.name, e.isMine(), m_listBox);
+        auto* tile = new PhotoTile(e.id, e.name, e.isMine() ? PhotoTile::Badge::Mine : PhotoTile::Badge::None,
+                                   m_listBox);
         tile->setImage(m_thumbnails[static_cast<std::size_t>(i)]);
         if (e.isMine()) {
             tile->setToolTip(tr("%1. Right-click to edit, export or delete.").arg(e.name));
-            connect(tile, &LookTile::menuRequested, this, [this, id = e.id](const QPoint& where) {
+            connect(tile, &PhotoTile::menuRequested, this, [this, id = e.id](const QPoint& where) {
                 QMenu menu(this);
                 connect(menu.addAction(tr("Edit look...")), &QAction::triggered, this,
                         [this, id] { Q_EMIT editLookRequested(id); });
@@ -349,11 +237,7 @@ void LooksPanel::addSection(const QString& title, QWidget* extra, const std::vec
         }
         place(tile);
     }
-    if (at % 2 == 1) {
-        // A blank in the free column keeps the gap, so a lone tile is as wide as the others.
-        grid->addWidget(new QWidget(m_listBox), at / 2, 1);
-    }
-    m_list->addLayout(grid);
+    m_list->addLayout(tileGrid(tiles, m_listBox));
 }
 
 void LooksPanel::rebuild()

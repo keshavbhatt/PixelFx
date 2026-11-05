@@ -1,0 +1,21 @@
+{
+  "format": "pixelfx",
+  "kind": "preset",
+  "version": 2,
+  "name": "Dehaze",
+  "group": "Profiles",
+  "workingSpace": "rec2020-linear",
+  "body": {
+    "settings": {
+      "bw": {
+        "enabled": false
+      },
+      "detail": {
+        "ca": {
+          "auto": true
+        },
+        "dehaze": 15.0
+      }
+    }
+  }
+}

@@ -80,6 +80,15 @@ public:
     /// The adjust groups whose "More" was open (empty: none, the first time too).
     [[nodiscard]] QStringList openAdjustMore() const;
     void setOpenAdjustMore(const QStringList& ids);
+    /// Preset ids (PresetEntry::id) in Favorites, and the last ones applied, newest first.
+    [[nodiscard]] QStringList favoritePresets() const;
+    void setFavoritePresets(const QStringList& ids);
+    [[nodiscard]] QStringList recentPresets() const;
+    /// Puts `id` first in Recent, which keeps the last 12.
+    void notePresetUsed(const QString& id);
+    /// The preset categories the user closed in the Presets tab.
+    [[nodiscard]] QStringList closedPresetCategories() const;
+    void setClosedPresetCategories(const QStringList& names);
     /// Display: clipped highlights and shadows shown on the photo (J).
     [[nodiscard]] bool clippingWarnings() const;
     void setClippingWarnings(bool on);

@@ -1,0 +1,73 @@
+{
+  "format": "pixelfx",
+  "kind": "preset",
+  "version": 2,
+  "name": "Warm pop",
+  "group": "Profiles",
+  "workingSpace": "rec2020-linear",
+  "body": {
+    "settings": {
+      "bw": {
+        "enabled": false
+      },
+      "color": {
+        "saturation": 15.0,
+        "vibrance": 15.0,
+        "wb": {
+          "temperature": -16.52743571727309
+        }
+      },
+      "detail": {
+        "clarity": 0.0,
+        "dehaze": 0.0,
+        "denoise": {
+          "luminance": 0.0
+        },
+        "sharpen": {
+          "amount": 10.0
+        },
+        "texture": 0.0
+      },
+      "grading": {
+        "blending": 55.0,
+        "global": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "highlights": {
+          "amount": 10.0,
+          "hue": 45.0
+        },
+        "midtones": {
+          "amount": 5.0,
+          "hue": 50.0
+        },
+        "shadows": {
+          "amount": 8.0,
+          "hue": 65.0
+        }
+      },
+      "light": {
+        "blacks": -5.0,
+        "contrast": 15.0,
+        "exposure": 0.15,
+        "highlights": -35.0,
+        "shadows": 20.0,
+        "whites": 15.0
+      },
+      "mixer": {
+        "luminance": {
+          "orange": 10.0
+        },
+        "saturation": {
+          "blue": -10.0,
+          "green": 10.0,
+          "orange": 10.0,
+          "red": 20.0,
+          "yellow": 15.0
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,74 @@
+{
+  "format": "pixelfx",
+  "kind": "preset",
+  "version": 2,
+  "name": "Low light 1600",
+  "group": "Profiles",
+  "workingSpace": "rec2020-linear",
+  "body": {
+    "settings": {
+      "bw": {
+        "enabled": false
+      },
+      "color": {
+        "saturation": -5.0
+      },
+      "detail": {
+        "sharpen": {
+          "amount": 10.0
+        }
+      },
+      "effects": {
+        "grain": {
+          "amount": 31.0,
+          "roughness": 55.0,
+          "size": 30.0
+        }
+      },
+      "grading": {
+        "balance": -10.0,
+        "blending": 50.0,
+        "global": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "highlights": {
+          "amount": 6.0,
+          "hue": 42.0,
+          "luminance": 0.0
+        },
+        "midtones": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "shadows": {
+          "amount": 8.0,
+          "hue": 215.0,
+          "luminance": 0.0
+        }
+      },
+      "light": {
+        "blacks": -16.0,
+        "contrast": -14.0,
+        "exposure": 0.24,
+        "highlights": -43.0,
+        "shadows": 41.0
+      },
+      "mixer": {
+        "hue": {
+          "green": 16.0
+        },
+        "luminance": {
+          "green": 5.0
+        },
+        "saturation": {
+          "blue": 5.0,
+          "green": -20.0,
+          "orange": -5.0
+        }
+      }
+    }
+  }
+}

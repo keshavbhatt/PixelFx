@@ -8,6 +8,8 @@ qt_add_library(pixelfx_core STATIC
     changelog.h
     crop_geometry.cpp
     crop_geometry.h
+    describe.cpp
+    describe.h
     export_options.cpp
     export_options.h
     histogram.cpp
@@ -47,6 +49,14 @@ qt_add_resources(pixelfx_core "pixelfx_notices"
     PREFIX "/"
     BASE "${_pixelfx_resources}"
     FILES ${_pixelfx_notices})
+# The built-in preset catalog (FEATURES P9): one .pfxpreset per preset, a folder per category.
+file(GLOB_RECURSE _pixelfx_catalog "${_pixelfx_resources}/presets/*.pfxpreset")
+if(_pixelfx_catalog)
+    qt_add_resources(pixelfx_core "pixelfx_presets"
+        PREFIX "/"
+        BASE "${_pixelfx_resources}"
+        FILES ${_pixelfx_catalog})
+endif()
 qt_add_resources(pixelfx_core "pixelfx_changelog"
     PREFIX "/"
     BASE "${PROJECT_SOURCE_DIR}"

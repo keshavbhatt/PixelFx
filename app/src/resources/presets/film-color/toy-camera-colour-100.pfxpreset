@@ -1,0 +1,98 @@
+{
+  "format": "pixelfx",
+  "kind": "preset",
+  "version": 2,
+  "name": "Toy camera colour 100",
+  "group": "Profiles",
+  "workingSpace": "rec2020-linear",
+  "body": {
+    "settings": {
+      "bw": {
+        "enabled": false
+      },
+      "color": {
+        "saturation": -1.0,
+        "vibrance": 4.0
+      },
+      "detail": {
+        "clarity": 0.0,
+        "dehaze": 0.0,
+        "denoise": {
+          "luminance": 0.0
+        },
+        "sharpen": {
+          "amount": 10.0
+        },
+        "texture": 0.0
+      },
+      "effects": {
+        "grain": {
+          "amount": 24.0,
+          "roughness": 48.0,
+          "size": 22.0
+        }
+      },
+      "grading": {
+        "balance": 20.0,
+        "blending": 50.0,
+        "global": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "highlights": {
+          "amount": 18.0,
+          "hue": 45.0,
+          "luminance": 0.0
+        },
+        "midtones": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "shadows": {
+          "amount": 10.0,
+          "hue": 205.0,
+          "luminance": 0.0
+        }
+      },
+      "light": {
+        "blacks": -18.0,
+        "contrast": 25.0,
+        "exposure": 0.2,
+        "highlights": -30.0,
+        "shadows": 12.0,
+        "whites": 8.0
+      },
+      "mixer": {
+        "hue": {
+          "aqua": -5.0,
+          "blue": 0.0,
+          "green": -12.0,
+          "magenta": -5.0,
+          "orange": 5.0,
+          "purple": -5.0,
+          "red": 5.0,
+          "yellow": -8.0
+        },
+        "luminance": {
+          "blue": -10.0,
+          "green": -8.0,
+          "orange": -3.0,
+          "red": -5.0,
+          "yellow": -5.0
+        },
+        "saturation": {
+          "aqua": -5.0,
+          "blue": 5.0,
+          "green": -8.0,
+          "magenta": -8.0,
+          "orange": 22.0,
+          "purple": -12.0,
+          "red": 18.0,
+          "yellow": 15.0
+        }
+      }
+    }
+  }
+}

@@ -122,6 +122,11 @@ const QString kSheet = uR"(
         QSlider::handle:horizontal:disabled { background: {{track}}; }
         QLineEdit#adjustValueField { font-size: 12px; padding: 0 4px; min-height: 0; border-radius: 4px; border-color: {{accent}}; }
         QPushButton#small { padding: 4px 10px; font-size: 12px; }
+        QPushButton#flatSmall { border: 0; background: transparent; padding: 4px 6px; font-size: 12px; }
+        QPushButton#flatSmall:hover { background: {{hover}}; }
+        QPushButton#categoryHeading { border: 0; background: transparent; padding: 2px 0; color: {{muted}};
+            font-size: 11px; font-weight: 700; text-align: left; }
+        QPushButton#categoryHeading:hover { color: {{text}}; }
         QSlider { min-height: 24px; }
         QSlider::groove:horizontal { height: 3px; border-radius: 1px; background: {{track}}; }
         QSlider::handle:horizontal { width: 13px; height: 13px; margin: -5px 0; border-radius: 6px; background: {{text}}; }

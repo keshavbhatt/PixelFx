@@ -32,7 +32,7 @@ blends the preset in from 0 to 200, while the real sliders show what it did (own
   6.9:1 and 5.3:1. The whole heading row is the 32 px target that opens or closes it.
 - Favourite star: #FFD43B on a 55% black chip over the picture: 14.7:1 over black, 3.3:1 over
   pure white, so at least the 3:1 a graphic needs whatever the photo; the star is also said in
-  the tile's name ("Portrait film 400, in Favorites").
+  the tile's name ("Portrait 400, in Favorites").
 - Amount: the approved slider row, 0 to 200, 100 by default, double-click back to 100, typed
   values as everywhere.
 
@@ -53,15 +53,26 @@ blends the preset in from 0 to 200, while the real sliders show what it did (own
 Removed: the toast's second line ("click to apply"). The toast's first line already says it is
 a preview, and the tile's tooltip says what a click does.
 
+## Changed while building (2026-11-05)
+
+- **Two-line names.** The real names run longer than the draft's ("Portrait 400, pushed
+  twice"), and cut on one line the three "Bright everyday" tiles looked the same: the end of a
+  name is what tells similar presets apart. Preset tiles now give the name two lines (117 px
+  tiles instead of 101); the Looks tab keeps one, its names are short.
+- **Essentials.** The four built-in presets made in code (Auto enhance, Bright and airy, Punchy,
+  High key B&W) were in no category of the draft; they are the first category, under My
+  presets. High key B&W now uses black and white itself rather than saturation -100.
+- **My presets** open and close like the categories, without the six-tile limit.
+
 ## Questions for the owner
 
-- **Names.** The tiles show draft names: descriptive, without film brands, makers or real
-  people. The full list of 451 renamed presets comes with the curation step, for your review
-  before it ships.
+- **Names.** All 429 catalog names are in `scripts/catalog/catalog.tsv` (source, category,
+  name), descriptive, without film brands, makers or real people (a test keeps it so). Review
+  the list before it ships.
 - **Categories.** Film color, Film black and white, Slide film, Cinematic, Vintage and
   processes, Portrait, Landscape and nature, Food and product, Seasons and festivals, Places,
-  Social, Tools. Tools holds the one-step presets (Exposure +0.3, Grain fine, WB Cloudy): keep
-  them in the catalog, or leave them out?
+  Social, Tools. Tools holds the one-step presets (Exposure +0.3, Grain fine, WB Cloudy): kept
+  for now, last in the list; say if they should go.
 
 ## What works
 

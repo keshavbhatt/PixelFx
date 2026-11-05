@@ -1,0 +1,30 @@
+{
+  "format": "pixelfx",
+  "kind": "preset",
+  "version": 2,
+  "name": "Grain, heavy",
+  "group": "Profiles",
+  "workingSpace": "rec2020-linear",
+  "body": {
+    "settings": {
+      "bw": {
+        "enabled": false
+      },
+      "detail": {
+        "denoise": {
+          "luminance": 0.0
+        },
+        "sharpen": {
+          "amount": 10.0
+        }
+      },
+      "effects": {
+        "grain": {
+          "amount": 45.0,
+          "roughness": 60.0,
+          "size": 40.0
+        }
+      }
+    }
+  }
+}

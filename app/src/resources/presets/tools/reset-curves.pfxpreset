@@ -1,0 +1,28 @@
+{
+  "format": "pixelfx",
+  "kind": "preset",
+  "version": 2,
+  "name": "Reset curves",
+  "group": "Profiles",
+  "workingSpace": "rec2020-linear",
+  "body": {
+    "settings": {
+      "bw": {
+        "enabled": false
+      },
+      "curves": {
+        "parametric": {
+          "darks": 0.0,
+          "highlights": 0.0,
+          "lights": 0.0,
+          "shadows": 0.0,
+          "split": {
+            "highlights": 75.0,
+            "midtones": 50.0,
+            "shadows": 25.0
+          }
+        }
+      }
+    }
+  }
+}

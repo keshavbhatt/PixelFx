@@ -1,0 +1,86 @@
+{
+  "format": "pixelfx",
+  "kind": "preset",
+  "version": 2,
+  "name": "Twenties sepia",
+  "group": "Profiles",
+  "workingSpace": "rec2020-linear",
+  "body": {
+    "settings": {
+      "bw": {
+        "enabled": false
+      },
+      "color": {
+        "saturation": -45.0,
+        "wb": {
+          "temperature": -11.636475669178443
+        }
+      },
+      "detail": {
+        "denoise": {
+          "luminance": 0.0
+        },
+        "sharpen": {
+          "amount": 10.0
+        }
+      },
+      "effects": {
+        "grain": {
+          "amount": 40.0,
+          "roughness": 65.0,
+          "size": 32.0
+        },
+        "vignette": {
+          "amount": -20.0
+        }
+      },
+      "grading": {
+        "balance": 0.0,
+        "blending": 80.0,
+        "global": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "highlights": {
+          "amount": 15.0,
+          "hue": 38.0,
+          "luminance": 0.0
+        },
+        "midtones": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "shadows": {
+          "amount": 18.0,
+          "hue": 35.0,
+          "luminance": 0.0
+        }
+      },
+      "light": {
+        "blacks": -10.0,
+        "contrast": 15.0,
+        "exposure": -0.15,
+        "highlights": -40.0,
+        "shadows": 20.0,
+        "whites": -5.0
+      },
+      "mixer": {
+        "hue": {
+          "yellow": -5.0
+        },
+        "saturation": {
+          "aqua": -50.0,
+          "blue": -60.0,
+          "green": -55.0,
+          "magenta": -45.0,
+          "orange": -10.0,
+          "purple": -40.0,
+          "red": -35.0,
+          "yellow": -30.0
+        }
+      }
+    }
+  }
+}

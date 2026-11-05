@@ -1,0 +1,140 @@
+{
+  "format": "pixelfx",
+  "kind": "preset",
+  "version": 2,
+  "name": "Portugal nostalgia",
+  "group": "Creative",
+  "workingSpace": "rec2020-linear",
+  "body": {
+    "settings": {
+      "bw": {
+        "enabled": false
+      },
+      "calibration": {
+        "blue": {
+          "hue": -10.0,
+          "saturation": 5.0
+        },
+        "green": {
+          "hue": 10.0,
+          "saturation": -10.0
+        },
+        "red": {
+          "hue": 5.0,
+          "saturation": 5.0
+        }
+      },
+      "color": {
+        "saturation": -10.0,
+        "vibrance": 15.0
+      },
+      "curves": {
+        "rgb": [
+          [
+            0.0,
+            0.047058823529411764
+          ],
+          [
+            0.17647058823529413,
+            0.1568627450980392
+          ],
+          [
+            0.5019607843137255,
+            0.5019607843137255
+          ],
+          [
+            0.7529411764705882,
+            0.7686274509803922
+          ],
+          [
+            1.0,
+            0.9607843137254902
+          ]
+        ]
+      },
+      "detail": {
+        "clarity": 0.0,
+        "dehaze": 5.0,
+        "denoise": {
+          "color": 10.0,
+          "luminance": 0.0
+        },
+        "sharpen": {
+          "amount": 15.0
+        },
+        "texture": 0.0
+      },
+      "effects": {
+        "grain": {
+          "amount": 20.0,
+          "roughness": 40.0,
+          "size": 45.0
+        }
+      },
+      "grading": {
+        "balance": 10.0,
+        "blending": 75.0,
+        "global": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "highlights": {
+          "amount": 10.0,
+          "hue": 45.0,
+          "luminance": 0.0
+        },
+        "midtones": {
+          "amount": 15.0,
+          "hue": 45.0,
+          "luminance": 0.0
+        },
+        "shadows": {
+          "amount": 5.0,
+          "hue": 215.0,
+          "luminance": 0.0
+        }
+      },
+      "light": {
+        "blacks": -10.0,
+        "contrast": 0.0,
+        "exposure": 0.15,
+        "highlights": -40.0,
+        "shadows": 20.0,
+        "whites": 15.0
+      },
+      "mixer": {
+        "hue": {
+          "aqua": -10.0,
+          "blue": -15.0,
+          "green": 15.0,
+          "magenta": 0.0,
+          "orange": -5.0,
+          "purple": 0.0,
+          "red": 5.0,
+          "yellow": -10.0
+        },
+        "luminance": {
+          "aqua": 0.0,
+          "blue": -15.0,
+          "green": -10.0,
+          "magenta": 0.0,
+          "orange": -10.0,
+          "purple": 0.0,
+          "red": -15.0,
+          "yellow": 0.0
+        },
+        "saturation": {
+          "aqua": 0.0,
+          "blue": 5.0,
+          "green": -25.0,
+          "magenta": -15.0,
+          "orange": 10.0,
+          "purple": -15.0,
+          "red": 5.0,
+          "yellow": 0.0
+        }
+      }
+    }
+  }
+}

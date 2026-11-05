@@ -1,0 +1,72 @@
+{
+  "format": "pixelfx",
+  "kind": "preset",
+  "version": 2,
+  "name": "Aurora pop",
+  "group": "Profiles",
+  "workingSpace": "rec2020-linear",
+  "body": {
+    "settings": {
+      "bw": {
+        "enabled": false
+      },
+      "color": {
+        "saturation": 5.0,
+        "vibrance": 10.0,
+        "wb": {
+          "temperature": -32.28156341592108
+        }
+      },
+      "detail": {
+        "clarity": 15.0,
+        "dehaze": 10.0,
+        "denoise": {
+          "luminance": 0.0
+        },
+        "sharpen": {
+          "amount": 10.0
+        },
+        "texture": 0.0
+      },
+      "grading": {
+        "blending": 55.0,
+        "global": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "highlights": {
+          "amount": 10.0,
+          "hue": 140.0
+        },
+        "shadows": {
+          "amount": 10.0,
+          "hue": 230.0
+        }
+      },
+      "light": {
+        "blacks": -20.0,
+        "contrast": 10.0,
+        "exposure": 0.1,
+        "highlights": -50.0,
+        "shadows": 30.0,
+        "whites": 15.0
+      },
+      "mixer": {
+        "luminance": {
+          "green": 10.0,
+          "magenta": 10.0
+        },
+        "saturation": {
+          "aqua": 15.0,
+          "blue": 10.0,
+          "green": 25.0,
+          "magenta": 25.0,
+          "orange": -10.0,
+          "purple": 20.0,
+          "yellow": -10.0
+        }
+      }
+    }
+  }
+}

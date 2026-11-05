@@ -1,0 +1,432 @@
+# The built-in preset catalog (FEATURES P9): source preset	category	PixelFx name.
+# Sources: EmulsionPresets (MIT, github.com/peva3/EmulsionPresets); names carry no brand,
+# product or real person. scripts/catalog/build_catalog.py turns them into .pfxpreset files.
+Adox Color Implosion	film-color	Broken colour experiment
+Agfa Optima 100	film-color	Euro colour 100
+Agfa Optima 200	film-color	Euro colour 200
+Agfa Ultra 100	film-color	Ultra vivid 100
+Agfa Vista 100	film-color	Bright everyday 100
+Agfa Vista 200	film-color	Bright everyday 200
+Agfa Vista 400	film-color	Bright everyday 400
+C-Print	film-color	Colour print
+CineStill 400D	film-color	Daylight cine 400
+CineStill-50D	film-color	Daylight cine 50
+Ferrania Solaris FG 400	film-color	Italian colour 400
+Fuji 100 Industrial	film-color	Industrial 100
+Fuji NPS 160 Pulled	film-color	Studio 160, pulled
+Fuji Natura 1600	film-color	Low light 1600
+Fuji Pro 160C	film-color	Pro contrast 160
+Fuji Pro 160NS	film-color	Pro natural 160
+Fuji Pro 800Z	film-color	Pro portrait 800
+Fuji Reala 100	film-color	True colour 100
+Fuji Superia 100	film-color	Everyday green 100
+Fuji Superia 1600	film-color	Everyday green 1600
+Fuji Superia 200	film-color	Everyday green 200
+Fuji Superia 800	film-color	Everyday green 800
+Fuji Superia HG 1600	film-color	High grain 1600
+Fuji Superia X-TRA 400 +1	film-color	Everyday green 400, pushed
+Fuji Superia X-TRA 400	film-color	Everyday green 400
+Fujicolor C200	film-color	Budget colour 200
+Fujicolor NPH	film-color	Pro skin 400
+Fujicolor Superia Premium 400	film-color	Premium green 400
+Fujifilm Classic Chrome	film-color	Muted documentary
+Fujifilm Classic Negative	film-color	Hard negative
+Fujifilm Pro 400H	film-color	Pastel pro 400
+Fujifilm-Eterna	film-color	Soft cinema
+Fujifilm-Nostalgic-Negative	film-color	Nostalgic amber
+Kodacolor VR 200	film-color	Eighties colour 200
+Kodak ColorPlus 200	film-color	Warm budget 200
+Kodak Ektar 100 +1	film-color	Saturated 100, pushed
+Kodak Ektar 100	film-color	Saturated 100
+Kodak Farbwelt 200 Expired	film-color	Expired warm 200
+Kodak Gold 200 +1	film-color	Golden 200, pushed
+Kodak Gold 200 +2	film-color	Golden 200, pushed twice
+Kodak Gold 200 Expired 10yr	film-color	Golden 200, 10 years expired
+Kodak Gold 200 Expired 30yr	film-color	Golden 200, 30 years expired
+Kodak Gold 200 Frontier	film-color	Golden 200, cool scan
+Kodak Gold 200 Noritsu	film-color	Golden 200, warm scan
+Kodak Gold 200	film-color	Golden 200
+Kodak High Definition Plus 200	film-color	Sharp colour 200
+Kodak Max 800	film-color	Max speed 800
+Kodak Portra 160	film-color	Portrait 160
+Kodak Portra 160NC	film-color	Portrait 160, soft
+Kodak Portra 160VC	film-color	Portrait 160, vivid
+Kodak Portra 400 +1	film-color	Portrait 400, pushed
+Kodak Portra 400 +2	film-color	Portrait 400, pushed twice
+Kodak Portra 400 -1	film-color	Portrait 400, pulled
+Kodak Portra 400 120	film-color	Portrait 400, medium format
+Kodak Portra 400 4x5	film-color	Portrait 400, large format
+Kodak Portra 400 Expired	film-color	Portrait 400, expired
+Kodak Portra 400 Noritsu	film-color	Portrait 400, warm scan
+Kodak Portra 400	film-color	Portrait 400
+Kodak Portra 400NC	film-color	Portrait 400, soft
+Kodak Portra 400UC	film-color	Portrait 400, ultra
+Kodak Portra 400VC	film-color	Portrait 400, vivid
+Kodak Portra 800 +1	film-color	Portrait 800, pushed
+Kodak Portra 800 -1	film-color	Portrait 800, pulled
+Kodak Portra 800	film-color	Portrait 800
+Kodak Pro Image 100	film-color	Tropical pro 100
+Kodak Royal Gold 400	film-color	Royal golden 400
+Kodak Ultramax 400 +1	film-color	Everyday warm 400, pushed
+Kodak Ultramax 400 +2	film-color	Everyday warm 400, pushed twice
+Kodak Ultramax 400	film-color	Everyday warm 400
+Kodak Vericolor III 160	film-color	Studio colour 160
+Kodak Vericolor VPS	film-color	Studio skin 160
+Kodak Vision3 250D ECN-2	film-color	Cinema daylight 250, lab
+Kodak Vision3 250D	film-color	Cinema daylight 250
+Kodak Vision3 500T ECN-2	film-color	Cinema tungsten 500, lab
+Kodak Vision3 500T	film-color	Cinema tungsten 500
+Kodak Vision3 50D	film-color	Cinema daylight 50
+Kodak-Ektachrome-320T	film-color	Tungsten slide 320
+Lomochrome Purple	film-color	Purple infrared colour
+Lomography Color 100	film-color	Toy camera colour 100
+ORWO NC 500	film-color	East German colour 500
+RA-4 Color Print	film-color	Darkroom colour print
+Rollei Crossbird 200	film-color	Cross processed 200
+SantaColor Aerocolor	film-color	Aerial colour
+Adox Silvermax 21	film-bw	Silver rich 21
+Agfa APX 100	film-bw	Classic grain 100
+Agfa APX 25	film-bw	Fine grain 25
+Agfa APX 400	film-bw	Classic grain 400
+Agfa Scala 200	film-bw	Mono slide 200
+Bergger Pancro 400	film-bw	Double layer 400
+Copper Tone	film-bw	Copper tone
+Dramatic Monochrome	film-bw	Dramatic mono
+Foma Fomapan 100	film-bw	Czech mono 100
+Foma Fomapan 200	film-bw	Czech mono 200
+Foma Fomapan 400	film-bw	Czech mono 400
+Fuji Neopan 1600	film-bw	Night mono 1600
+Fuji Neopan 400	film-bw	Crisp mono 400
+Fujifilm Acros	film-bw	Smooth mono 100
+Gold Tone	film-bw	Gold tone
+Ilford Delta 100	film-bw	Modern grain 100
+Ilford Delta 3200 +2	film-bw	Modern grain 3200, pushed twice
+Ilford Delta 3200 Microphen	film-bw	Modern grain 3200, speed developer
+Ilford Delta 3200	film-bw	Modern grain 3200
+Ilford Delta 400	film-bw	Modern grain 400
+Ilford FP4 Plus 125	film-bw	British classic 125
+Ilford HP5 Plus +1	film-bw	British classic 400, pushed
+Ilford HP5 Plus +2	film-bw	British classic 400, pushed twice
+Ilford HP5 Plus -1	film-bw	British classic 400, pulled
+Ilford HP5 Plus DD-X	film-bw	British classic 400, fine developer
+Ilford HP5 Plus Expired	film-bw	British classic 400, expired
+Ilford HP5 Plus Stand Dev	film-bw	British classic 400, stand developed
+Ilford HP5 Plus	film-bw	British classic 400
+Ilford MG Warmtone	film-bw	Warm tone paper
+Ilford Ortho Plus 80	film-bw	Orthochromatic 80
+Ilford Pan F Plus 50	film-bw	Slow fine grain 50
+Ilford SFX 200	film-bw	Near infrared 200
+Ilford XP2 Super	film-bw	Chromogenic mono 400
+Kentmere Pan 400	film-bw	Student mono 400
+Kodak Panatomic-X 32	film-bw	Ultra fine 32
+Kodak Plus-X 125	film-bw	Mid-century 125
+Kodak Recording Film 2475	film-bw	Surveillance grain
+Kodak T-Max 100	film-bw	Tabular grain 100
+Kodak T-Max 3200 +2	film-bw	Tabular grain 3200, pushed twice
+Kodak T-Max 3200	film-bw	Tabular grain 3200
+Kodak T-Max 400	film-bw	Tabular grain 400
+Kodak Technical Pan	film-bw	Technical high contrast
+Kodak Tri-X 400 +1	film-bw	Street classic 400, pushed
+Kodak Tri-X 400 +2	film-bw	Street classic 400, pushed twice
+Kodak Tri-X 400 -1	film-bw	Street classic 400, pulled
+Kodak Tri-X 400 120	film-bw	Street classic 400, medium format
+Kodak Tri-X 400 Expired	film-bw	Street classic 400, expired
+Kodak Tri-X 400 HC-110	film-bw	Street classic 400, punchy developer
+Kodak Tri-X 400 Rodinal	film-bw	Street classic 400, sharp developer
+Kodak Tri-X 400	film-bw	Street classic 400
+Kodak Verichrome Pan	film-bw	Snapshot mono
+M645 Medium Format	film-bw	Medium format mono
+Ricoh High-Contrast Monochrome	film-bw	High contrast mono
+Rollei Retro 400S	film-bw	Retro infrared 400
+Rollei Retro 80S	film-bw	Retro infrared 80
+Selenium Tone	film-bw	Selenium tone
+Sepia Tone	film-bw	Sepia tone
+Split Warm-Cool	film-bw	Split warm and cool
+Ansel Adams Zone System	film-bw	Grand landscape mono
+Fan Ho	film-bw	Light and shadow mono
+Henri Cartier-Bresson	film-bw	Decisive moment mono
+Michael Kenna	film-bw	Long exposure mono
+Sebastiao Salgado	film-bw	Epic documentary mono
+Vivian Maier	film-bw	Square street mono
+AgfaChrome RS 100	slide	Euro slide 100
+Ektachrome 100G	slide	Clean slide 100
+Elite Chrome 200	slide	Consumer slide 200
+Fuji Astia 100F	slide	Soft slide 100
+Fuji Fortia SP 50	slide	Extreme slide 50
+Fuji Provia 100F	slide	Neutral slide 100
+Fuji Provia 400F	slide	Neutral slide 400
+Fuji Provia 400X	slide	Neutral slide 400, fine
+Fuji Sensia 100	slide	Everyday slide 100
+Fuji Velvia 100	slide	Vivid landscape slide 100
+Fuji Velvia 50	slide	Vivid landscape slide 50
+Kodachrome 200	slide	Mid-century slide 200
+Kodachrome 25	slide	Mid-century slide 25
+Kodachrome 64	slide	Mid-century slide 64
+Kodak Ektachrome 100VS	slide	Very saturated slide 100
+Kodak Ektachrome 200	slide	Cool slide 200
+Kodak Ektachrome 400X	slide	Fast slide 400
+Kodak Ektachrome 64	slide	Cool slide 64
+Kodak Ektachrome E100	slide	Modern slide 100
+Kodak Elite Chrome 400	slide	Consumer slide 400
+1980s VHS Synthwave	cinematic	Eighties synthwave
+Arctic-Cinematic	cinematic	Arctic cinema
+Autumn-Gold	cinematic	Autumn gold
+Beige-Cream	cinematic	Beige cream
+Bleach Bypass	cinematic	Bleach bypass
+Canon Color Science	cinematic	Camera warm colour
+Cinematic Beach Teal & Orange	cinematic	Beach teal and orange
+Cinematic Dream - Tuned	cinematic	Cinema dream, tuned
+Cinematic Dream Look	cinematic	Cinema dream
+Cinematic Teal and Orange	cinematic	Teal and orange
+Cinestill 800T	cinematic	Night tungsten 800
+Classic Cuban Negative	cinematic	Cuban negative
+Classic-Portrait-Glow	cinematic	Portrait glow
+Cozy-Espresso	cinematic	Cozy espresso
+Cross-Processed Velvia	cinematic	Cross processed vivid slide
+Cyberpunk Neon City	cinematic	Neon city
+Deep-Forest-Green	cinematic	Deep forest green
+Deep-Moody-Shadow	cinematic	Deep moody shadows
+Disposable Camera Flash	cinematic	Disposable flash
+Eterna-Summer	cinematic	Soft cinema summer
+Faded Summer Expired	cinematic	Faded summer
+Faux Infrared	cinematic	Faux infrared
+Fuji Soft Ember (Classic Neg)	cinematic	Soft ember
+Fujifilm-Eterna-Bleach-Bypass	cinematic	Soft cinema bleach bypass
+Golden-Glow	cinematic	Golden glow
+High-Key Candy Architecture	cinematic	High key candy
+Kodachrome-Blue	cinematic	Mid-century blue
+Kodak Aerochrome	cinematic	Infrared false colour
+Kodak-2383-Print-Film	cinematic	Cinema print film
+Light and Airy Fine Art	cinematic	Light and airy fine art
+Lomography Cross-Processed	cinematic	Toy camera cross process
+Lomography-Metropolis	cinematic	Urban muted
+Matte Fade	cinematic	Matte fade
+McCurry-Kodachrome	cinematic	Travel slide classic
+Medina Teal and Orange - Tuned	cinematic	Medina teal and orange
+Midnight-City	cinematic	Midnight city
+Moody Cinematic Film - Creator Tuned	cinematic	Moody cinema film
+Moody PNW	cinematic	Moody northwest
+Pastel Anime Aethereal	cinematic	Pastel anime
+Pastel Summer Bronze	cinematic	Pastel summer bronze
+Polaroid SX-70	cinematic	Instant integral
+Portugal Nostalgic (Fuji Sim)	cinematic	Portugal nostalgia
+Pushed-CineStill-800T	cinematic	Night tungsten 800, pushed
+Ricoh Superior 100 (Negative Film)	cinematic	Compact camera 100
+Soft-Dreamy-Pastel	cinematic	Soft dreamy pastel
+Stage-Lights	cinematic	Stage lights
+Super 8 Home Movie	cinematic	Home movie 8 mm
+Urban-Street	cinematic	Urban street
+Vibrant-Color-Pop	cinematic	Vibrant colour pop
+Wes Anderson Pastel	cinematic	Symmetric pastel
+Wong Kar-Wai 80s Hong Kong	cinematic	Hong Kong nights
+Y2K Flash Digicam	cinematic	Y2K flash compact
+Alec Soth	cinematic	Quiet road colour
+Alex Webb	cinematic	Saturated street shadows
+David LaChapelle	cinematic	Pop surreal
+Gregory Crewdson	cinematic	Suburban twilight
+Martin Parr	cinematic	Seaside flash
+Nan Goldin	cinematic	Intimate flash colour
+Saul Leiter	cinematic	Rainy window colour
+Todd Hido	cinematic	Motel dusk
+William Eggleston	cinematic	Dye transfer colour
+Albumen Print	vintage	Albumen print
+Autochrome	vintage	Autochrome
+BW Infrared	vintage	Black and white infrared
+Bromoil	vintage	Bromoil
+Calotype	vintage	Calotype
+Cross Process C41→E6	vintage	Cross process, negative as slide
+Cross Process E6→C41	vintage	Cross process, slide as negative
+Cyanotype Classic	vintage	Cyanotype
+Cyanotype Tea-Toned	vintage	Cyanotype, tea toned
+Daguerreotype	vintage	Daguerreotype
+Diana F+	vintage	Plastic lens camera
+Film Soup	vintage	Film soup
+Gum Bichromate	vintage	Gum print
+Holga	vintage	Toy medium format
+Lith Print	vintage	Lith print
+Lomo LC-A	vintage	Russian compact
+Palladium Print	vintage	Palladium print
+Pinhole	vintage	Pinhole
+Platinum Print	vintage	Platinum print
+Redscale	vintage	Redscale
+Salt Print	vintage	Salt print
+Solarization	vintage	Solarisation
+Van Dyke Brown	vintage	Van Dyke brown
+Wet Plate Ambrotype	vintage	Ambrotype
+Wet Plate Tintype	vintage	Tintype
+Civil War Era	vintage	1860s documentary
+Cross-Processed	vintage	Nineties cross process
+Diner Americana	vintage	Diner Americana
+Disco Warm	vintage	Disco warm
+Dust Bowl Documentary	vintage	Dust bowl documentary
+Earth Tones	vintage	Seventies earth tones
+Edwardian Pictorialist	vintage	Edwardian pictorial
+Gatsby Art Deco	vintage	Art deco gold
+Grunge	vintage	Nineties grunge
+Hip Hop Golden Era	vintage	Golden era hip hop
+Hollywood Glamour	vintage	Old Hollywood glamour
+Indie Sleaze	vintage	Indie flash
+Kodachrome Mid-Century	vintage	Mid-century colour
+McBling Heyday	vintage	Two thousands bling
+Miami Vice	vintage	Miami pastel night
+Mod London	vintage	Mod London
+Neon Synthwave	vintage	Neon synthwave
+New Wave	vintage	New wave
+Post-War Optimism	vintage	Post-war optimism
+Prohibition Sepia	vintage	Twenties sepia
+Punk Rock	vintage	Punk rock
+Summer of Love	vintage	Summer of love
+Victorian Daguerreotype	vintage	Victorian plate
+WWII Newsreel	vintage	Forties newsreel
+Y2K Digicam	vintage	Y2K compact
+Bright & Airy Wedding	portrait	Bright wedding
+Classic Timeless Wedding	portrait	Timeless wedding
+Clean Baby Portrait	portrait	Clean baby portrait
+Dreamy Maternity	portrait	Dreamy maternity
+Eye Enhance	portrait	Eye enhance
+High Contrast Editorial	portrait	High contrast editorial
+Moody Editorial Wedding	portrait	Moody wedding
+Muted Avant-Garde	portrait	Muted avant-garde
+Soft Milky Newborn	portrait	Milky newborn
+Color Decisive Moment	portrait	Street colour moment
+Zone Focus B&W	portrait	Zone focus mono
+Low Light Performance	portrait	Low light stage
+Stage Lighting	portrait	Stage lighting
+Court Action Indoor	portrait	Indoor sports
+Vibrant Field Action	portrait	Outdoor sports
+Cindy Sherman	portrait	Staged portrait
+Peter Lindbergh	portrait	Fashion mono
+Steve McCurry	portrait	Rich travel portrait
+Tim Walker	portrait	Fairytale fashion
+Epic Landscape	landscape	Epic landscape
+Grass Natural Exterior	landscape	Natural lawn
+Haze Removal	landscape	Haze removal
+Milky Way Core	landscape	Milky Way core
+Night Sky Landscape	landscape	Night sky landscape
+Sky Pop Exterior	landscape	Sky pop
+Star Trails	landscape	Star trails
+Detail Pop	landscape	Detail pop
+Color Recovery	landscape	Colour recovery
+Golden Grid Architecture	landscape	Golden architecture
+Joel Meyerowitz	landscape	Cape light colour
+Clean Bright Food	food	Clean bright food
+Dark Moody Culinary	food	Dark moody food
+Lifestyle Product	food	Lifestyle product
+Warm Appetizing Food	food	Warm food
+White BG E-Commerce	food	White background product
+Bright Neutral Interior	food	Bright interior
+Cool Modern Interior	food	Cool interior
+Warm Home Interior	food	Warm interior
+Beach Bright	seasons	Beach bright
+Ceremony	seasons	Wedding ceremony
+Cherry Blossom	seasons	Cherry blossom
+Chinese New Year	seasons	Lunar new year
+Christmas Snowy Bright	seasons	Snowy Christmas
+Christmas Warm Fireside	seasons	Fireside Christmas
+Diwali Festive	seasons	Diwali festive
+Fresh Pastel	seasons	Fresh spring pastel
+Getting Ready	seasons	Getting ready
+Golden Foliage	seasons	Golden foliage
+Golden Hour Endless	seasons	Endless golden hour
+Graduation	seasons	Graduation
+Halloween Orange-Purple	seasons	Halloween orange and purple
+Halloween Spooky Dark	seasons	Halloween dark
+Harvest Warm	seasons	Harvest warm
+Moody Fall	seasons	Moody autumn
+Reception	seasons	Wedding reception
+Spring Garden	seasons	Spring garden
+Summer Vibes	seasons	Summer
+Valentine's Romantic Pink	seasons	Valentine pink
+Bali Tropical	places	Bali tropical
+Bangkok Street	places	Bangkok street
+Brazilian Amazon	places	Amazon rainforest
+Byron Bay Surf	places	Byron Bay surf
+CCCP Nostalgia	places	Soviet nostalgia
+Cape Town Coast	places	Cape Town coast
+Desert Luxury	places	Desert luxury
+Dubai Modern	places	Dubai modern
+English Garden	places	English garden
+Fjord Moody	places	Moody fjord
+Greek Islands White+Blue	places	Greek islands
+Holi Vibrant	places	Holi colours
+Italian Riviera	places	Italian riviera
+K-Drama Cinematic	places	Seoul drama
+K-Pop Vibrant	places	Seoul pop
+Kyoto Temple	places	Kyoto temple
+LOTR Epic	places	Epic fantasy
+London Grey Overcast	places	London overcast
+Marrakech Souk	places	Marrakech souk
+Mexican Pueblo	places	Mexican pueblo
+Nordic Minimal	places	Nordic minimal
+Outback Red Earth	places	Outback red earth
+Parisian Morning	places	Parisian morning
+Rajasthan Golden	places	Rajasthan golden
+Sahara Desert	places	Sahara desert
+Sakura Season	places	Sakura season
+Savanna Golden	places	Savanna golden
+South Island Fjords	places	South Island fjords
+Spanish Costa	places	Spanish coast
+Tokyo Neon Night	places	Tokyo neon
+Vietnam Rice Terraces	places	Vietnam rice terraces
+Wabi-Sabi Zen	places	Wabi-sabi zen
+Bright Selfie	social	Bright selfie
+Clarendon	social	Bright contrast
+Coffee Shop Warm	social	Coffee shop warm
+Cozy Reading	social	Cozy reading
+Filmic Casual	social	Filmic casual
+Flash + Neon	social	Flash and neon
+Food Flatlay	social	Food flat lay
+Gingham	social	Soft faded
+Golden Hour Selfie	social	Golden hour selfie
+High Energy Contrast	social	High energy contrast
+Juno	social	Warm pop
+Lark	social	Airy cool
+Lo-Fi	social	Lo-fi saturated
+Nashville	social	Pink vintage
+Natural Skin	social	Natural skin
+Northern Lights Pop	social	Aurora pop
+Overhead Clean	social	Overhead clean
+Showroom Reflection	social	Showroom reflection
+Streetwear Contrast	social	Streetwear contrast
+Thumbnail Max Pop	social	Thumbnail pop
+Valencia	social	Warm fade
+Vintage Instant	social	Vintage instant
+X-Pro II	social	Cross pop
+Astro NR	tools	Astro noise reduction
+Dehaze Correct	tools	Dehaze
+Exposure +0.30	tools	Exposure +0.3
+Exposure +0.70	tools	Exposure +0.7
+Exposure +1.00	tools	Exposure +1
+Exposure +1.50	tools	Exposure +1.5
+Exposure +2.00	tools	Exposure +2
+Exposure -0.30	tools	Exposure -0.3
+Exposure -0.70	tools	Exposure -0.7
+Exposure -1.00	tools	Exposure -1
+Full Reset	tools	Reset everything
+Grain - Fine	tools	Grain, fine
+Grain - Heavy	tools	Grain, heavy
+Grain - Medium	tools	Grain, medium
+Grain - Pushed	tools	Grain, pushed
+Heavy NR	tools	Noise reduction, heavy
+High ISO NR	tools	Noise reduction, high ISO
+Light NR	tools	Noise reduction, light
+Medium NR	tools	Noise reduction, medium
+Reset Basic	tools	Reset light and colour
+Reset Effects + Detail	tools	Reset effects and detail
+Reset HSL	tools	Reset colour mixer
+Reset Tone Curve	tools	Reset curves
+Sharpening - Creative	tools	Sharpening, creative
+Sharpening - Landscape	tools	Sharpening, landscape
+Sharpening - Portrait	tools	Sharpening, portrait
+Sharpening - Print Output	tools	Sharpening, for print
+Sharpening - Screen Output	tools	Sharpening, for screens
+Vignette - Creative White	tools	Vignette, white
+Vignette - Medium	tools	Vignette, medium
+Vignette - Strong	tools	Vignette, strong
+Vignette - Subtle	tools	Vignette, subtle
+WB Cloudy	tools	White balance, cloudy
+WB Daylight	tools	White balance, daylight
+WB Flash	tools	White balance, flash
+WB Fluorescent	tools	White balance, fluorescent
+WB Shade	tools	White balance, shade
+WB Tungsten	tools	White balance, tungsten

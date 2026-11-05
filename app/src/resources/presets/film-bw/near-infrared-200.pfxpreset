@@ -1,0 +1,75 @@
+{
+  "format": "pixelfx",
+  "kind": "preset",
+  "version": 2,
+  "name": "Near infrared 200",
+  "group": "Profiles",
+  "workingSpace": "rec2020-linear",
+  "body": {
+    "settings": {
+      "bw": {
+        "enabled": true,
+        "mix": {
+          "aqua": 15.0,
+          "blue": -35.0,
+          "green": 40.0,
+          "magenta": -5.0,
+          "orange": 30.0,
+          "purple": -10.0,
+          "red": 35.0,
+          "yellow": 25.0
+        }
+      },
+      "detail": {
+        "clarity": 0.0,
+        "dehaze": 0.0,
+        "denoise": {
+          "luminance": 0.0
+        },
+        "sharpen": {
+          "amount": 10.0
+        },
+        "texture": 0.0
+      },
+      "effects": {
+        "grain": {
+          "amount": 30.0,
+          "roughness": 50.0,
+          "size": 28.0
+        }
+      },
+      "grading": {
+        "balance": 10.0,
+        "blending": 50.0,
+        "global": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "highlights": {
+          "amount": 5.0,
+          "hue": 42.0,
+          "luminance": 0.0
+        },
+        "midtones": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "shadows": {
+          "amount": 3.0,
+          "hue": 220.0,
+          "luminance": 0.0
+        }
+      },
+      "light": {
+        "blacks": -18.0,
+        "contrast": 25.0,
+        "exposure": 0.15,
+        "highlights": -20.0,
+        "shadows": 10.0,
+        "whites": 15.0
+      }
+    }
+  }
+}

@@ -1,0 +1,61 @@
+{
+  "format": "pixelfx",
+  "kind": "preset",
+  "version": 2,
+  "name": "Natural lawn",
+  "group": "Profiles",
+  "workingSpace": "rec2020-linear",
+  "body": {
+    "settings": {
+      "bw": {
+        "enabled": false
+      },
+      "color": {
+        "saturation": 0.0
+      },
+      "grading": {
+        "balance": 0.0,
+        "blending": 75.0,
+        "global": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "highlights": {
+          "amount": 3.0,
+          "hue": 43.0,
+          "luminance": 0.0
+        },
+        "midtones": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "shadows": {
+          "amount": 5.0,
+          "hue": 210.0,
+          "luminance": 0.0
+        }
+      },
+      "light": {
+        "blacks": -5.0,
+        "contrast": 10.0,
+        "exposure": 0.1,
+        "highlights": -35.0,
+        "shadows": 15.0,
+        "whites": 5.0
+      },
+      "mixer": {
+        "hue": {
+          "green": -10.0,
+          "yellow": -10.0
+        },
+        "saturation": {
+          "blue": -5.0,
+          "green": -20.0,
+          "yellow": 10.0
+        }
+      }
+    }
+  }
+}

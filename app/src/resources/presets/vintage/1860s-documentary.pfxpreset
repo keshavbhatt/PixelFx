@@ -1,0 +1,86 @@
+{
+  "format": "pixelfx",
+  "kind": "preset",
+  "version": 2,
+  "name": "1860s documentary",
+  "group": "Profiles",
+  "workingSpace": "rec2020-linear",
+  "body": {
+    "settings": {
+      "bw": {
+        "enabled": false
+      },
+      "color": {
+        "saturation": -50.0,
+        "wb": {
+          "temperature": -16.52743571727309
+        }
+      },
+      "detail": {
+        "denoise": {
+          "luminance": 0.0
+        },
+        "sharpen": {
+          "amount": 10.0
+        }
+      },
+      "effects": {
+        "grain": {
+          "amount": 20.0,
+          "roughness": 50.0,
+          "size": 25.0
+        },
+        "vignette": {
+          "amount": -35.0
+        }
+      },
+      "grading": {
+        "balance": 0.0,
+        "blending": 80.0,
+        "global": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "highlights": {
+          "amount": 12.0,
+          "hue": 38.0,
+          "luminance": 0.0
+        },
+        "midtones": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "shadows": {
+          "amount": 12.0,
+          "hue": 30.0,
+          "luminance": 0.0
+        }
+      },
+      "light": {
+        "blacks": -15.0,
+        "contrast": 18.0,
+        "exposure": -0.35,
+        "highlights": -30.0,
+        "shadows": 8.0,
+        "whites": -5.0
+      },
+      "mixer": {
+        "luminance": {
+          "orange": 8.0
+        },
+        "saturation": {
+          "aqua": -45.0,
+          "blue": -45.0,
+          "green": -45.0,
+          "magenta": -40.0,
+          "orange": -35.0,
+          "purple": -40.0,
+          "red": -40.0,
+          "yellow": -40.0
+        }
+      }
+    }
+  }
+}

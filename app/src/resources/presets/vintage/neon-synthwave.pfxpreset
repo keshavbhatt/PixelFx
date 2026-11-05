@@ -1,0 +1,69 @@
+{
+  "format": "pixelfx",
+  "kind": "preset",
+  "version": 2,
+  "name": "Neon synthwave",
+  "group": "Profiles",
+  "workingSpace": "rec2020-linear",
+  "body": {
+    "settings": {
+      "bw": {
+        "enabled": false
+      },
+      "detail": {
+        "dehaze": 10.0,
+        "denoise": {
+          "luminance": 0.0
+        },
+        "sharpen": {
+          "amount": 10.0
+        }
+      },
+      "effects": {
+        "vignette": {
+          "amount": -18.0
+        }
+      },
+      "grading": {
+        "balance": 0.0,
+        "blending": 70.0,
+        "global": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "highlights": {
+          "amount": 25.0,
+          "hue": 315.0,
+          "luminance": 0.0
+        },
+        "midtones": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "shadows": {
+          "amount": 22.0,
+          "hue": 210.0,
+          "luminance": 0.0
+        }
+      },
+      "light": {
+        "blacks": -20.0,
+        "contrast": 35.0,
+        "exposure": -0.2,
+        "highlights": -60.0,
+        "shadows": 30.0,
+        "whites": 15.0
+      },
+      "mixer": {
+        "saturation": {
+          "blue": 15.0,
+          "green": -45.0,
+          "magenta": 35.0,
+          "orange": 10.0
+        }
+      }
+    }
+  }
+}

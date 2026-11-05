@@ -1,0 +1,22 @@
+{
+  "format": "pixelfx",
+  "kind": "preset",
+  "version": 2,
+  "name": "Noise reduction, heavy",
+  "group": "Profiles",
+  "workingSpace": "rec2020-linear",
+  "body": {
+    "settings": {
+      "bw": {
+        "enabled": false
+      },
+      "detail": {
+        "denoise": {
+          "color": 40.0,
+          "luminance": 45.0,
+          "luminanceDetail": 40.0
+        }
+      }
+    }
+  }
+}

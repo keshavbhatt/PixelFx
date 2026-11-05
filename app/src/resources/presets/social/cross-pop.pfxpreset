@@ -1,0 +1,75 @@
+{
+  "format": "pixelfx",
+  "kind": "preset",
+  "version": 2,
+  "name": "Cross pop",
+  "group": "Profiles",
+  "workingSpace": "rec2020-linear",
+  "body": {
+    "settings": {
+      "bw": {
+        "enabled": false
+      },
+      "color": {
+        "saturation": 10.0,
+        "vibrance": 10.0,
+        "wb": {
+          "temperature": -14.061230293846172
+        }
+      },
+      "detail": {
+        "clarity": 15.0,
+        "dehaze": 5.0,
+        "denoise": {
+          "luminance": 0.0
+        },
+        "sharpen": {
+          "amount": 10.0
+        },
+        "texture": 5.0
+      },
+      "effects": {
+        "vignette": {
+          "amount": -30.0
+        }
+      },
+      "grading": {
+        "balance": 10.0,
+        "blending": 60.0,
+        "global": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "highlights": {
+          "amount": 18.0,
+          "hue": 45.0
+        },
+        "shadows": {
+          "amount": 12.0,
+          "hue": 170.0
+        }
+      },
+      "light": {
+        "blacks": -20.0,
+        "contrast": 40.0,
+        "exposure": -0.1,
+        "highlights": -50.0,
+        "shadows": -5.0,
+        "whites": 15.0
+      },
+      "mixer": {
+        "hue": {
+          "green": 15.0
+        },
+        "saturation": {
+          "blue": -10.0,
+          "green": -20.0,
+          "orange": 15.0,
+          "red": 15.0,
+          "yellow": 10.0
+        }
+      }
+    }
+  }
+}

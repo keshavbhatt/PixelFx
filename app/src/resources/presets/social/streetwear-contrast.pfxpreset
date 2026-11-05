@@ -1,0 +1,76 @@
+{
+  "format": "pixelfx",
+  "kind": "preset",
+  "version": 2,
+  "name": "Streetwear contrast",
+  "group": "Profiles",
+  "workingSpace": "rec2020-linear",
+  "body": {
+    "settings": {
+      "bw": {
+        "enabled": false
+      },
+      "color": {
+        "saturation": -15.0,
+        "vibrance": -10.0
+      },
+      "detail": {
+        "clarity": 0.0,
+        "dehaze": 0.0,
+        "denoise": {
+          "luminance": 0.0
+        },
+        "sharpen": {
+          "amount": 10.0
+        },
+        "texture": 0.0
+      },
+      "effects": {
+        "grain": {
+          "amount": 12.0,
+          "roughness": 60.0,
+          "size": 30.0
+        },
+        "vignette": {
+          "amount": 0.0
+        }
+      },
+      "grading": {
+        "blending": 65.0,
+        "global": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "highlights": {
+          "amount": 5.0,
+          "hue": 40.0
+        },
+        "shadows": {
+          "amount": 15.0,
+          "hue": 215.0
+        }
+      },
+      "light": {
+        "blacks": -25.0,
+        "contrast": 35.0,
+        "exposure": -0.2,
+        "highlights": -45.0,
+        "shadows": 15.0,
+        "whites": 15.0
+      },
+      "mixer": {
+        "luminance": {
+          "orange": 5.0
+        },
+        "saturation": {
+          "blue": -15.0,
+          "green": -35.0,
+          "orange": -15.0,
+          "red": 10.0,
+          "yellow": -20.0
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,75 @@
+{
+  "format": "pixelfx",
+  "kind": "preset",
+  "version": 2,
+  "name": "Spring garden",
+  "group": "Profiles",
+  "workingSpace": "rec2020-linear",
+  "body": {
+    "settings": {
+      "bw": {
+        "enabled": false
+      },
+      "detail": {
+        "denoise": {
+          "luminance": 0.0
+        },
+        "sharpen": {
+          "amount": 10.0
+        }
+      },
+      "effects": {
+        "grain": {
+          "amount": 10.0,
+          "roughness": 45.0,
+          "size": 22.0
+        }
+      },
+      "grading": {
+        "balance": 0.0,
+        "blending": 75.0,
+        "global": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "highlights": {
+          "amount": 8.0,
+          "hue": 50.0,
+          "luminance": 0.0
+        },
+        "midtones": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "shadows": {
+          "amount": 6.0,
+          "hue": 180.0,
+          "luminance": 0.0
+        }
+      },
+      "light": {
+        "blacks": -5.0,
+        "contrast": 5.0,
+        "exposure": 0.35,
+        "highlights": -40.0,
+        "shadows": 30.0,
+        "whites": 10.0
+      },
+      "mixer": {
+        "hue": {
+          "green": -10.0
+        },
+        "luminance": {
+          "aqua": 10.0
+        },
+        "saturation": {
+          "blue": -5.0,
+          "green": 10.0,
+          "yellow": 10.0
+        }
+      }
+    }
+  }
+}

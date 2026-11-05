@@ -1,0 +1,79 @@
+{
+  "format": "pixelfx",
+  "kind": "preset",
+  "version": 2,
+  "name": "Nineties grunge",
+  "group": "Profiles",
+  "workingSpace": "rec2020-linear",
+  "body": {
+    "settings": {
+      "bw": {
+        "enabled": false
+      },
+      "color": {
+        "saturation": -22.0
+      },
+      "detail": {
+        "denoise": {
+          "luminance": 0.0
+        },
+        "sharpen": {
+          "amount": 10.0
+        }
+      },
+      "effects": {
+        "grain": {
+          "amount": 40.0,
+          "roughness": 65.0,
+          "size": 30.0
+        },
+        "vignette": {
+          "amount": -20.0
+        }
+      },
+      "grading": {
+        "balance": 0.0,
+        "blending": 65.0,
+        "global": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "highlights": {
+          "amount": 5.0,
+          "hue": 40.0,
+          "luminance": 0.0
+        },
+        "midtones": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "shadows": {
+          "amount": 12.0,
+          "hue": 90.0,
+          "luminance": 0.0
+        }
+      },
+      "light": {
+        "blacks": -25.0,
+        "contrast": 30.0,
+        "exposure": -0.3,
+        "highlights": -50.0,
+        "shadows": -10.0,
+        "whites": 0.0
+      },
+      "mixer": {
+        "hue": {
+          "green": -20.0
+        },
+        "saturation": {
+          "blue": -20.0,
+          "green": -30.0,
+          "orange": -10.0,
+          "yellow": -15.0
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,95 @@
+{
+  "format": "pixelfx",
+  "kind": "preset",
+  "version": 2,
+  "name": "Redscale",
+  "group": "Profiles",
+  "workingSpace": "rec2020-linear",
+  "body": {
+    "settings": {
+      "bw": {
+        "enabled": false
+      },
+      "color": {
+        "saturation": -10.0,
+        "vibrance": -5.0
+      },
+      "detail": {
+        "clarity": 0.0,
+        "dehaze": 0.0,
+        "denoise": {
+          "luminance": 0.0
+        },
+        "sharpen": {
+          "amount": 10.0
+        },
+        "texture": 0.0
+      },
+      "effects": {
+        "grain": {
+          "amount": 42.0,
+          "roughness": 65.0,
+          "size": 40.0
+        },
+        "vignette": {
+          "amount": -30.0,
+          "midpoint": 35.0
+        }
+      },
+      "grading": {
+        "balance": 0.0,
+        "blending": 70.0,
+        "global": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "highlights": {
+          "amount": 15.0,
+          "hue": 30.0,
+          "luminance": 0.0
+        },
+        "midtones": {
+          "amount": 20.0,
+          "hue": 20.0,
+          "luminance": 0.0
+        },
+        "shadows": {
+          "amount": 28.0,
+          "hue": 25.0,
+          "luminance": 0.0
+        }
+      },
+      "light": {
+        "blacks": -20.0,
+        "contrast": 25.0,
+        "highlights": -35.0,
+        "shadows": 20.0,
+        "whites": 5.0
+      },
+      "mixer": {
+        "hue": {
+          "aqua": -30.0,
+          "blue": -20.0,
+          "green": -50.0
+        },
+        "luminance": {
+          "aqua": -15.0,
+          "blue": -15.0,
+          "orange": 15.0,
+          "red": 10.0
+        },
+        "saturation": {
+          "aqua": -50.0,
+          "blue": -55.0,
+          "green": -40.0,
+          "magenta": -15.0,
+          "orange": 45.0,
+          "purple": -20.0,
+          "red": 40.0,
+          "yellow": 35.0
+        }
+      }
+    }
+  }
+}

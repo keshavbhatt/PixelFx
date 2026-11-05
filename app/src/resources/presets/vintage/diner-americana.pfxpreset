@@ -1,0 +1,71 @@
+{
+  "format": "pixelfx",
+  "kind": "preset",
+  "version": 2,
+  "name": "Diner Americana",
+  "group": "Profiles",
+  "workingSpace": "rec2020-linear",
+  "body": {
+    "settings": {
+      "bw": {
+        "enabled": false
+      },
+      "detail": {
+        "dehaze": -5.0,
+        "denoise": {
+          "luminance": 0.0
+        },
+        "sharpen": {
+          "amount": 10.0
+        }
+      },
+      "effects": {
+        "vignette": {
+          "amount": -12.0
+        }
+      },
+      "grading": {
+        "balance": 0.0,
+        "blending": 75.0,
+        "global": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "highlights": {
+          "amount": 10.0,
+          "hue": 35.0,
+          "luminance": 0.0
+        },
+        "midtones": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "shadows": {
+          "amount": 12.0,
+          "hue": 200.0,
+          "luminance": 0.0
+        }
+      },
+      "light": {
+        "blacks": -5.0,
+        "contrast": 15.0,
+        "exposure": 0.1,
+        "highlights": -35.0,
+        "shadows": 25.0,
+        "whites": 5.0
+      },
+      "mixer": {
+        "luminance": {
+          "orange": 10.0
+        },
+        "saturation": {
+          "blue": 5.0,
+          "green": -15.0,
+          "red": 18.0
+        }
+      }
+    }
+  }
+}

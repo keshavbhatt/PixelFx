@@ -1,0 +1,79 @@
+{
+  "format": "pixelfx",
+  "kind": "preset",
+  "version": 2,
+  "name": "Seventies earth tones",
+  "group": "Profiles",
+  "workingSpace": "rec2020-linear",
+  "body": {
+    "settings": {
+      "bw": {
+        "enabled": false
+      },
+      "color": {
+        "saturation": -5.0
+      },
+      "detail": {
+        "denoise": {
+          "luminance": 0.0
+        },
+        "sharpen": {
+          "amount": 10.0
+        }
+      },
+      "effects": {
+        "grain": {
+          "amount": 25.0,
+          "roughness": 55.0,
+          "size": 28.0
+        },
+        "vignette": {
+          "amount": -12.0
+        }
+      },
+      "grading": {
+        "balance": 0.0,
+        "blending": 75.0,
+        "global": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "highlights": {
+          "amount": 8.0,
+          "hue": 45.0,
+          "luminance": 0.0
+        },
+        "midtones": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "shadows": {
+          "amount": 10.0,
+          "hue": 35.0,
+          "luminance": 0.0
+        }
+      },
+      "light": {
+        "blacks": -10.0,
+        "contrast": 10.0,
+        "exposure": -0.1,
+        "highlights": -35.0,
+        "shadows": 20.0,
+        "whites": -5.0
+      },
+      "mixer": {
+        "hue": {
+          "green": -20.0
+        },
+        "saturation": {
+          "blue": -20.0,
+          "green": -25.0,
+          "orange": 5.0,
+          "yellow": -10.0
+        }
+      }
+    }
+  }
+}

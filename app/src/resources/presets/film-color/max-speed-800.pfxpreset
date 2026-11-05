@@ -1,0 +1,98 @@
+{
+  "format": "pixelfx",
+  "kind": "preset",
+  "version": 2,
+  "name": "Max speed 800",
+  "group": "Profiles",
+  "workingSpace": "rec2020-linear",
+  "body": {
+    "settings": {
+      "bw": {
+        "enabled": false
+      },
+      "color": {
+        "saturation": -2.0,
+        "vibrance": 3.0
+      },
+      "detail": {
+        "clarity": 0.0,
+        "dehaze": 0.0,
+        "denoise": {
+          "luminance": 0.0
+        },
+        "sharpen": {
+          "amount": 10.0
+        },
+        "texture": 0.0
+      },
+      "effects": {
+        "grain": {
+          "amount": 50.0,
+          "roughness": 65.0,
+          "size": 40.0
+        }
+      },
+      "grading": {
+        "balance": 15.0,
+        "blending": 50.0,
+        "global": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "highlights": {
+          "amount": 15.0,
+          "hue": 42.0,
+          "luminance": 0.0
+        },
+        "midtones": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "shadows": {
+          "amount": 10.0,
+          "hue": 200.0,
+          "luminance": 0.0
+        }
+      },
+      "light": {
+        "blacks": -25.0,
+        "contrast": 30.0,
+        "exposure": 0.1,
+        "highlights": -25.0,
+        "shadows": 10.0,
+        "whites": 10.0
+      },
+      "mixer": {
+        "hue": {
+          "aqua": -5.0,
+          "blue": 5.0,
+          "green": -15.0,
+          "magenta": 5.0,
+          "orange": 5.0,
+          "purple": 5.0,
+          "red": 5.0,
+          "yellow": -10.0
+        },
+        "luminance": {
+          "blue": -15.0,
+          "green": -12.0,
+          "orange": -5.0,
+          "red": -5.0,
+          "yellow": -8.0
+        },
+        "saturation": {
+          "aqua": -5.0,
+          "blue": -10.0,
+          "green": -5.0,
+          "magenta": -10.0,
+          "orange": 25.0,
+          "purple": -15.0,
+          "red": 20.0,
+          "yellow": 15.0
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,84 @@
+{
+  "format": "pixelfx",
+  "kind": "preset",
+  "version": 2,
+  "name": "Fireside Christmas",
+  "group": "Profiles",
+  "workingSpace": "rec2020-linear",
+  "body": {
+    "settings": {
+      "bw": {
+        "enabled": false
+      },
+      "color": {
+        "wb": {
+          "temperature": -16.52743571727309
+        }
+      },
+      "detail": {
+        "denoise": {
+          "luminance": 0.0
+        },
+        "sharpen": {
+          "amount": 10.0
+        }
+      },
+      "effects": {
+        "grain": {
+          "amount": 20.0,
+          "roughness": 50.0,
+          "size": 25.0
+        },
+        "vignette": {
+          "amount": -12.0
+        }
+      },
+      "grading": {
+        "balance": 0.0,
+        "blending": 75.0,
+        "global": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "highlights": {
+          "amount": 12.0,
+          "hue": 35.0,
+          "luminance": 0.0
+        },
+        "midtones": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "shadows": {
+          "amount": 10.0,
+          "hue": 38.0,
+          "luminance": 0.0
+        }
+      },
+      "light": {
+        "blacks": -5.0,
+        "contrast": 15.0,
+        "exposure": 0.2,
+        "highlights": -35.0,
+        "shadows": 30.0,
+        "whites": 5.0
+      },
+      "mixer": {
+        "hue": {
+          "orange": -5.0
+        },
+        "luminance": {
+          "orange": 10.0
+        },
+        "saturation": {
+          "blue": -5.0,
+          "green": 5.0,
+          "orange": 10.0,
+          "red": 12.0
+        }
+      }
+    }
+  }
+}

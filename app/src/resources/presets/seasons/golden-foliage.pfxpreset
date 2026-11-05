@@ -1,0 +1,76 @@
+{
+  "format": "pixelfx",
+  "kind": "preset",
+  "version": 2,
+  "name": "Golden foliage",
+  "group": "Profiles",
+  "workingSpace": "rec2020-linear",
+  "body": {
+    "settings": {
+      "bw": {
+        "enabled": false
+      },
+      "detail": {
+        "denoise": {
+          "luminance": 0.0
+        },
+        "sharpen": {
+          "amount": 10.0
+        }
+      },
+      "effects": {
+        "grain": {
+          "amount": 20.0,
+          "roughness": 50.0,
+          "size": 25.0
+        }
+      },
+      "grading": {
+        "balance": 0.0,
+        "blending": 75.0,
+        "global": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "highlights": {
+          "amount": 12.0,
+          "hue": 40.0,
+          "luminance": 0.0
+        },
+        "midtones": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "shadows": {
+          "amount": 8.0,
+          "hue": 35.0,
+          "luminance": 0.0
+        }
+      },
+      "light": {
+        "blacks": -10.0,
+        "contrast": 15.0,
+        "exposure": 0.15,
+        "highlights": -40.0,
+        "shadows": 25.0,
+        "whites": 0.0
+      },
+      "mixer": {
+        "hue": {
+          "green": -20.0,
+          "yellow": -10.0
+        },
+        "luminance": {
+          "orange": 15.0
+        },
+        "saturation": {
+          "green": -15.0,
+          "orange": 15.0,
+          "yellow": 15.0
+        }
+      }
+    }
+  }
+}

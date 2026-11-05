@@ -5,24 +5,27 @@
 #include <QImage>
 #include <QWidget>
 
+#include <vector>
+
+class QButtonGroup;
 class QHBoxLayout;
 class QLabel;
 class QLineEdit;
-class QVBoxLayout;
-
-class QButtonGroup;
+class QPushButton;
 class QStackedWidget;
+class QVBoxLayout;
 
 namespace pixelfx::ui {
 
 class LooksPanel;
+class PhotoTile;
+class SliderRow;
 
-class PresetRow;
-
-/// The Presets tab of the left panel: the user's presets by group,
-/// imported ones, the built-in ones; search, import, and Save current as preset. A click
-/// applies a preset, hovering previews it on the photo, the row menu manages it. The Looks tab
-/// arrives with looks (M4).
+/// The left panel's two tabs. Looks; and Presets, the catalog of `editor-presets-catalog.html`:
+/// search, the All, Favorites, Mine and Recent chips, the user's presets and the built-in
+/// categories as tiles of the photo (six per open category, "All N" for the rest), the Amount
+/// of the preset just applied, and Save current as preset. A click applies, hovering previews
+/// on the photo, a tile's menu manages it.
 class PresetsPanel : public QWidget
 {
     Q_OBJECT
@@ -32,19 +35,47 @@ public:
     explicit PresetsPanel(QWidget* parent = nullptr);
     ~PresetsPanel() override;
 
-    /// Shows `entries`, grouped as given, filtered by the search text.
+    /// Shows `entries`: the user's by group, then the built-in ones by category.
     void setEntries(std::vector<core::PresetEntry> entries);
     [[nodiscard]] const std::vector<core::PresetEntry>& entries() const { return m_entries; }
-    /// A small picture of the photo with the preset at `index` of entries() applied.
+    /// The picture of the photo with the preset at `index` of entries() applied.
     void setThumbnail(std::size_t index, const QImage& image);
-    [[nodiscard]] QList<PresetRow*> rows() const;
+    /// Forgets every picture (the photo or its edit changed); shownIndexes() then wants them all.
+    void clearThumbnails();
+    [[nodiscard]] bool hasThumbnail(std::size_t index) const;
+    /// The entries whose tiles are on show, so only their pictures are made.
+    [[nodiscard]] std::vector<std::size_t> shownIndexes() const;
+    [[nodiscard]] std::vector<PhotoTile*> tiles() const;
     /// With several photos selected the panel says where a click goes ("Applies to 4 photos").
     void setTargetCount(int count);
+    /// Preset ids in Favorites, and the recent ones, newest first.
+    void setFavorites(const QStringList& ids);
+    [[nodiscard]] const QStringList& favorites() const { return m_favorites; }
+    void setRecent(const QStringList& ids);
+    /// Categories closed by the user (their names), restored at start.
+    void setClosedCategories(const QStringList& names);
+    [[nodiscard]] const QStringList& closedCategories() const { return m_closed; }
+    /// The whole of one category (its name), or every category again with an empty name.
+    void showCategory(const QString& name);
+    [[nodiscard]] const QString& shownCategory() const { return m_category; }
+    /// 0 All, 1 Favorites, 2 Mine, 3 Recent.
+    void showFilter(int filter);
+    /// The preset just applied and its Amount; an empty name hides the Amount.
+    void setApplied(const QString& id, const QString& name, double amount);
+    [[nodiscard]] SliderRow* amountRow() const { return m_amount; }
+
+    /// The Looks tab's panel.
+    [[nodiscard]] LooksPanel* looksPanel() const { return m_looks; }
+    /// 0 Looks, 1 Presets.
+    void showTab(int index);
+    [[nodiscard]] int currentTab() const;
 
 Q_SIGNALS:
     void applyRequested(const pixelfx::core::PresetEntry& entry);
-    /// Hovering a row (null `entry`: the pointer left the rows).
+    /// Hovering a tile (null `entry`: the pointer left the tiles).
     void previewRequested(const pixelfx::core::PresetEntry* entry);
+    /// Other tiles came into view: make the pictures shownIndexes() lacks.
+    void thumbnailsWanted();
     void saveRequested();
     void importRequested();
     void renameRequested(const pixelfx::core::PresetEntry& entry);
@@ -53,64 +84,54 @@ Q_SIGNALS:
     void duplicateRequested(const pixelfx::core::PresetEntry& entry);
     void showFileRequested(const pixelfx::core::PresetEntry& entry);
     void deleteRequested(const pixelfx::core::PresetEntry& entry);
-
-public:
-    /// The Looks tab's panel.
-    [[nodiscard]] LooksPanel* looksPanel() const { return m_looks; }
-    /// 0 Looks, 1 Presets.
-    void showTab(int index);
-    [[nodiscard]] int currentTab() const;
+    void favoritesChanged(const QStringList& ids);
+    void closedCategoriesChanged(const QStringList& names);
+    /// The Amount moves (live) and is let go (a history step).
+    void amountMoved(double amount);
+    void amountReleased(double amount);
 
 private:
     QHBoxLayout* buildHead();
     QHBoxLayout* buildTabs();
+    QWidget* buildChips();
+    QWidget* buildBackRow();
+    QWidget* buildFoot();
     void rebuild();
-    void showMenu(PresetRow* row);
+    void clearList();
+    void addGroupSections(bool mineOnly, bool searching);
+    void addEmptyNote(int filter, bool searching);
+    /// A heading and its tiles; `collapsible` headings open and close, `limited` ones show the
+    /// first six with "All N" for the rest.
+    void addSection(const QString& title, const std::vector<std::size_t>& indexes, bool collapsible,
+                    bool limited);
+    [[nodiscard]] PhotoTile* makeTile(std::size_t index);
+    [[nodiscard]] bool matches(const core::PresetEntry& e) const;
+    [[nodiscard]] std::vector<std::size_t> indexesOf(const QStringList& ids) const;
+    void toggleFavorite(std::size_t index);
+    void showMenu(std::size_t index, const QPoint& where);
 
     std::vector<core::PresetEntry> m_entries;
     std::vector<QImage> m_thumbnails;
+    QStringList m_favorites;
+    QStringList m_recent;
+    QStringList m_closed;
+    QString m_category;
+    QString m_appliedId;
     QLineEdit* m_search = nullptr;
     QLabel* m_target = nullptr;
+    QButtonGroup* m_chips = nullptr;
+    QWidget* m_chipRow = nullptr;
+    QWidget* m_backRow = nullptr;
+    QLabel* m_backCount = nullptr;
     QWidget* m_listBox = nullptr;
     QVBoxLayout* m_list = nullptr;
+    QWidget* m_appliedBox = nullptr;
+    QLabel* m_appliedName = nullptr;
+    SliderRow* m_amount = nullptr;
     LooksPanel* m_looks = nullptr;
     QStackedWidget* m_pages = nullptr;
     QButtonGroup* m_tabs = nullptr;
     int m_targetCount = 1;
-};
-
-/// One preset: its picture on the photo, name, what it holds, and a menu button.
-class PresetRow : public QWidget
-{
-    Q_OBJECT
-    Q_DISABLE_COPY_MOVE(PresetRow)
-
-public:
-    PresetRow(std::size_t index, const core::PresetEntry& entry, QWidget* parent = nullptr);
-    ~PresetRow() override;
-    [[nodiscard]] std::size_t index() const { return m_index; }
-    [[nodiscard]] const QString& name() const { return m_name; }
-    void setThumbnail(const QImage& image);
-    [[nodiscard]] QWidget* menuButton() const { return m_more; }
-
-Q_SIGNALS:
-    void clicked();
-    void hovered(bool inside);
-    void menuRequested();
-
-protected:
-    void paintEvent(QPaintEvent* event) override;
-    void mouseReleaseEvent(QMouseEvent* event) override;
-    void enterEvent(QEnterEvent* event) override;
-    void leaveEvent(QEvent* event) override;
-    void keyPressEvent(QKeyEvent* event) override;
-
-private:
-    std::size_t m_index;
-    QString m_name;
-    QImage m_thumbnail;
-    bool m_hover = false;
-    QWidget* m_more = nullptr;
 };
 
 } // namespace pixelfx::ui

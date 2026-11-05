@@ -1,12 +1,18 @@
 #include "core/presets.h"
 
+#include "core/describe.h"
+
 #include <QCoreApplication>
 #include <QDir>
+#include <QFile>
 #include <QFileInfo>
 #include <QRegularExpression>
 #include <QStandardPaths>
 
 #include <algorithm>
+#include <array>
+#include <cmath>
+#include <pfx/curve.h>
 #include <pfx/document.h>
 #include <pfx/registry.h>
 #include <pfx/xmp_import.h>
@@ -229,6 +235,66 @@ pfx::Settings applyPreset(const pfx::Settings& current, const pfx::Settings& pre
     return out;
 }
 
+namespace {
+
+constexpr int kCurveSamples = 17;
+
+pfx::Curve blendCurves(const pfx::Curve& from, const pfx::Curve& to, double t)
+{
+    const pfx::Curve identity{{0, 0}, {1, 1}};
+    const std::vector<double> a = pfx::sampleCurve(from.size() >= 2 ? from : identity, kCurveSamples);
+    const std::vector<double> b = pfx::sampleCurve(to.size() >= 2 ? to : identity, kCurveSamples);
+    pfx::Curve out;
+    for (int i = 0; i < kCurveSamples; ++i) {
+        const auto k = static_cast<std::size_t>(i);
+        out.push_back(
+            {static_cast<double>(i) / (kCurveSamples - 1), std::clamp(a[k] + ((b[k] - a[k]) * t), 0.0, 1.0)});
+    }
+    return out;
+}
+
+} // namespace
+
+pfx::Settings blendPreset(const pfx::Settings& base, const pfx::Settings& preset, double amount)
+{
+    pfx::Settings full = applyPreset(base, preset);
+    if (std::abs(amount - 100.0) < 1e-9) {
+        return full;
+    }
+    const double t = std::clamp(amount, 0.0, 200.0) / 100.0;
+    const QStringList units = unitsIn(preset);
+    const auto inPreset = [&units](std::string_view key) {
+        return std::ranges::any_of(units, [key](const QString& id) { return keyInUnit(key, id); });
+    };
+    pfx::Settings out = full;
+    std::vector<std::string> keys = full.keys();
+    for (const std::string& k : base.keys()) {
+        if (!full.contains(k)) {
+            keys.push_back(k);
+        }
+    }
+    for (const std::string& key : keys) {
+        if (!inPreset(key)) {
+            continue;
+        }
+        const pfx::ParamSpec* spec = pfx::registry().param(key);
+        if (spec != nullptr && spec->type == pfx::ParamType::Number) {
+            const double from = base.number(key, spec->defaultValue);
+            const double to = full.number(key, spec->defaultValue);
+            const double v = std::clamp(from + ((to - from) * t), spec->minimum, spec->maximum);
+            std::abs(v - spec->defaultValue) < 1e-9 ? out.erase(key) : out.set(key, v);
+        } else if (spec != nullptr && spec->type == pfx::ParamType::Points) {
+            const pfx::Curve c = blendCurves(base.curve(key), full.curve(key), t);
+            isDefault(*spec, c) ? out.erase(key) : out.set(key, c);
+        } else if (t <= 0.0) {
+            // Switches and choices (and the look) are the photo's own at 0, the preset's above.
+            const pfx::Value* own = base.find(key);
+            own != nullptr ? out.set(key, *own) : out.erase(key);
+        }
+    }
+    return out;
+}
+
 QString presetSummary(const pfx::Settings& preset)
 {
     QStringList names;
@@ -266,6 +332,7 @@ std::vector<PresetEntry> PresetLibrary::entries() const
         }
         e.group = doc.value().group.empty() ? myPresetsGroup() : QString::fromStdString(doc.value().group);
         e.path = file.absoluteFilePath();
+        e.id = e.path;
         e.settings = doc.value().settings;
         out.push_back(std::move(e));
     }
@@ -388,43 +455,114 @@ QString PresetLibrary::myPresetsGroup()
     return QCoreApplication::translate(kContext, "My presets");
 }
 
-std::vector<PresetEntry> PresetLibrary::builtIn()
+const std::vector<PresetCategory>& presetCategories()
 {
-    const QString group = QCoreApplication::translate(kContext, "Built in");
-    const auto make = [&group](const char* name, const char* description,
-                               std::initializer_list<std::pair<const char*, double>> values) {
+    static const std::vector<PresetCategory> categories = [] {
+        const std::array<std::pair<const char*, const char*>, 13> table = {{
+            {"essentials", QT_TRANSLATE_NOOP("PresetCategories", "Essentials")},
+            {"film-color", QT_TRANSLATE_NOOP("PresetCategories", "Film, color")},
+            {"film-bw", QT_TRANSLATE_NOOP("PresetCategories", "Film, black and white")},
+            {"slide", QT_TRANSLATE_NOOP("PresetCategories", "Slide film")},
+            {"cinematic", QT_TRANSLATE_NOOP("PresetCategories", "Cinematic")},
+            {"vintage", QT_TRANSLATE_NOOP("PresetCategories", "Vintage and processes")},
+            {"portrait", QT_TRANSLATE_NOOP("PresetCategories", "Portrait")},
+            {"landscape", QT_TRANSLATE_NOOP("PresetCategories", "Landscape and nature")},
+            {"food", QT_TRANSLATE_NOOP("PresetCategories", "Food and product")},
+            {"seasons", QT_TRANSLATE_NOOP("PresetCategories", "Seasons and festivals")},
+            {"places", QT_TRANSLATE_NOOP("PresetCategories", "Places")},
+            {"social", QT_TRANSLATE_NOOP("PresetCategories", "Social")},
+            {"tools", QT_TRANSLATE_NOOP("PresetCategories", "Tools")},
+        }};
+        std::vector<PresetCategory> out;
+        out.reserve(table.size());
+        for (const auto& [id, name] : table) {
+            out.push_back({QString::fromLatin1(id), QCoreApplication::translate("PresetCategories", name)});
+        }
+        return out;
+    }();
+    return categories;
+}
+
+namespace {
+
+std::vector<PresetEntry> essentials()
+{
+    const PresetCategory& category = presetCategories().front();
+    const auto make = [&category](const char* id, const char* name, const char* description,
+                                  std::initializer_list<std::pair<const char*, double>> values) {
         PresetEntry e;
+        e.id = u"builtin:%1"_s.arg(QLatin1StringView(id));
         e.name = QCoreApplication::translate(kContext, name);
         e.description = QCoreApplication::translate(kContext, description);
-        e.group = group;
+        e.group = category.name;
+        e.category = category.id;
         for (const auto& [key, value] : values) {
             e.settings.set(key, value);
         }
         return e;
     };
-    PresetEntry autoEnhance = make(QT_TRANSLATE_NOOP("PresetUnits", "Auto enhance"),
-                                   QT_TRANSLATE_NOOP("PresetUnits", "Analyses each image"), {});
+    PresetEntry autoEnhance =
+        make("auto-enhance", QT_TRANSLATE_NOOP("PresetUnits", "Auto enhance"),
+             QT_TRANSLATE_NOOP("PresetUnits", "Works out light and colour for each photo"), {});
     autoEnhance.autoEnhance = true;
+    PresetEntry highKey = make(
+        "high-key-bw", QT_TRANSLATE_NOOP("PresetUnits", "High key B&W"),
+        QT_TRANSLATE_NOOP("PresetUnits", "Bright black and white, soft highlights"),
+        {{"light.exposure", 0.5}, {"light.whites", 30}, {"light.highlights", -15}, {"light.contrast", 10}});
+    highKey.settings.set("bw.enabled", true);
     return {
         autoEnhance,
-        make(QT_TRANSLATE_NOOP("PresetUnits", "Bright and airy"),
-             QT_TRANSLATE_NOOP("PresetUnits", "Exposure, Shadows, Pastel"),
+        make("bright-and-airy", QT_TRANSLATE_NOOP("PresetUnits", "Bright and airy"),
+             QT_TRANSLATE_NOOP("PresetUnits", "Lighter, open shadows, a soft fade"),
              {{"light.exposure", 0.35},
               {"light.shadows", 35},
               {"light.highlights", -20},
               {"light.contrast", -10},
               {"color.vibrance", 10},
               {"effects.fade", 15}}),
-        make(QT_TRANSLATE_NOOP("PresetUnits", "Punchy"),
-             QT_TRANSLATE_NOOP("PresetUnits", "Contrast, Vibrance, Clarity"),
+        make("punchy", QT_TRANSLATE_NOOP("PresetUnits", "Punchy"),
+             QT_TRANSLATE_NOOP("PresetUnits", "More contrast, richer colour, crisp"),
              {{"light.contrast", 30}, {"color.vibrance", 30}, {"detail.clarity", 25}, {"light.blacks", -10}}),
-        make(QT_TRANSLATE_NOOP("PresetUnits", "High key B&W"),
-             QT_TRANSLATE_NOOP("PresetUnits", "Mono, Exposure, Whites"),
-             {{"color.saturation", -100},
-              {"light.exposure", 0.5},
-              {"light.whites", 30},
-              {"light.highlights", -15},
-              {"light.contrast", 10}})};
+        highKey};
+}
+
+// The catalog shipped with the app: :/presets/<category>/<name>.pfxpreset.
+std::vector<PresetEntry> catalog()
+{
+    std::vector<PresetEntry> out;
+    for (const PresetCategory& category : presetCategories()) {
+        const QDir dir(u":/presets/%1"_s.arg(category.id));
+        for (const QFileInfo& file : dir.entryInfoList({u"*.pfxpreset"_s}, QDir::Files, QDir::Name)) {
+            QFile in(file.absoluteFilePath());
+            if (!in.open(QIODevice::ReadOnly)) {
+                continue;
+            }
+            const auto doc = pfx::parseDocument(in.readAll().toStdString());
+            if (!doc) {
+                continue;
+            }
+            PresetEntry e;
+            e.id = u"builtin:%1/%2"_s.arg(category.id, file.completeBaseName());
+            e.name = QString::fromStdString(doc.value().name);
+            e.group = category.name;
+            e.category = category.id;
+            e.settings = doc.value().settings;
+            e.description = describeSettings(e.settings);
+            out.push_back(std::move(e));
+        }
+    }
+    return out;
+}
+
+} // namespace
+
+std::vector<PresetEntry> PresetLibrary::builtIn()
+{
+    std::vector<PresetEntry> out = essentials();
+    for (PresetEntry& e : catalog()) {
+        out.push_back(std::move(e));
+    }
+    return out;
 }
 
 } // namespace pixelfx::core

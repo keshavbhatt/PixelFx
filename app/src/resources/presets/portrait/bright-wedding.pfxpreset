@@ -1,0 +1,68 @@
+{
+  "format": "pixelfx",
+  "kind": "preset",
+  "version": 2,
+  "name": "Bright wedding",
+  "group": "Profiles",
+  "workingSpace": "rec2020-linear",
+  "body": {
+    "settings": {
+      "bw": {
+        "enabled": false
+      },
+      "color": {
+        "saturation": -5.0
+      },
+      "detail": {
+        "clarity": -10.0,
+        "texture": -5.0
+      },
+      "grading": {
+        "balance": 0.0,
+        "blending": 75.0,
+        "global": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "highlights": {
+          "amount": 4.0,
+          "hue": 45.0,
+          "luminance": 0.0
+        },
+        "midtones": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "shadows": {
+          "amount": 4.0,
+          "hue": 210.0,
+          "luminance": 0.0
+        }
+      },
+      "light": {
+        "blacks": 15.0,
+        "contrast": -15.0,
+        "exposure": 0.5,
+        "highlights": -40.0,
+        "shadows": 35.0,
+        "whites": 15.0
+      },
+      "mixer": {
+        "hue": {
+          "green": 20.0
+        },
+        "luminance": {
+          "aqua": 35.0,
+          "orange": 10.0
+        },
+        "saturation": {
+          "blue": -20.0,
+          "green": -30.0,
+          "yellow": -10.0
+        }
+      }
+    }
+  }
+}

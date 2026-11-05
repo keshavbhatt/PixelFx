@@ -1,0 +1,82 @@
+{
+  "format": "pixelfx",
+  "kind": "preset",
+  "version": 2,
+  "name": "Summer of love",
+  "group": "Profiles",
+  "workingSpace": "rec2020-linear",
+  "body": {
+    "settings": {
+      "bw": {
+        "enabled": false
+      },
+      "color": {
+        "saturation": 10.0,
+        "vibrance": 8.0,
+        "wb": {
+          "temperature": -16.52743571727309
+        }
+      },
+      "detail": {
+        "clarity": -10.0,
+        "dehaze": -5.0,
+        "denoise": {
+          "luminance": 0.0
+        },
+        "sharpen": {
+          "amount": 10.0
+        }
+      },
+      "effects": {
+        "grain": {
+          "amount": 0.0
+        }
+      },
+      "grading": {
+        "balance": 0.0,
+        "blending": 75.0,
+        "global": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "highlights": {
+          "amount": 10.0,
+          "hue": 50.0,
+          "luminance": 0.0
+        },
+        "midtones": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "shadows": {
+          "amount": 8.0,
+          "hue": 40.0,
+          "luminance": 0.0
+        }
+      },
+      "light": {
+        "blacks": 5.0,
+        "contrast": -5.0,
+        "exposure": 0.25,
+        "highlights": -40.0,
+        "shadows": 30.0,
+        "whites": 10.0
+      },
+      "mixer": {
+        "hue": {
+          "green": -10.0
+        },
+        "saturation": {
+          "blue": 8.0,
+          "green": -20.0,
+          "magenta": 15.0,
+          "orange": 5.0,
+          "red": 10.0,
+          "yellow": 10.0
+        }
+      }
+    }
+  }
+}

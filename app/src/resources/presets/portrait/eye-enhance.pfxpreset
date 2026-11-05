@@ -1,0 +1,65 @@
+{
+  "format": "pixelfx",
+  "kind": "preset",
+  "version": 2,
+  "name": "Eye enhance",
+  "group": "Profiles",
+  "workingSpace": "rec2020-linear",
+  "body": {
+    "settings": {
+      "bw": {
+        "enabled": false
+      },
+      "color": {
+        "saturation": 5.0,
+        "vibrance": 8.0
+      },
+      "detail": {
+        "clarity": 10.0,
+        "texture": 10.0
+      },
+      "grading": {
+        "balance": 0.0,
+        "blending": 75.0,
+        "global": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "highlights": {
+          "amount": 5.0,
+          "hue": 43.0,
+          "luminance": 0.0
+        },
+        "midtones": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "shadows": {
+          "amount": 3.0,
+          "hue": 215.0,
+          "luminance": 0.0
+        }
+      },
+      "light": {
+        "blacks": -5.0,
+        "contrast": 10.0,
+        "exposure": 0.2,
+        "highlights": -25.0,
+        "shadows": 15.0,
+        "whites": 5.0
+      },
+      "mixer": {
+        "luminance": {
+          "orange": 5.0
+        },
+        "saturation": {
+          "blue": 5.0,
+          "green": -10.0,
+          "red": 5.0
+        }
+      }
+    }
+  }
+}

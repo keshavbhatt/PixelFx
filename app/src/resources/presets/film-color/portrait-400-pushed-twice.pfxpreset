@@ -1,0 +1,83 @@
+{
+  "format": "pixelfx",
+  "kind": "preset",
+  "version": 2,
+  "name": "Portrait 400, pushed twice",
+  "group": "Profiles",
+  "workingSpace": "rec2020-linear",
+  "body": {
+    "settings": {
+      "bw": {
+        "enabled": false
+      },
+      "detail": {
+        "clarity": 0.0,
+        "dehaze": 0.0,
+        "denoise": {
+          "luminance": 0.0
+        },
+        "sharpen": {
+          "amount": 10.0
+        },
+        "texture": 0.0
+      },
+      "effects": {
+        "grain": {
+          "amount": 56.0,
+          "roughness": 65.0,
+          "size": 40.0
+        }
+      },
+      "grading": {
+        "balance": 0.0,
+        "blending": 50.0,
+        "global": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "highlights": {
+          "amount": 12.0,
+          "hue": 45.0,
+          "luminance": 0.0
+        },
+        "midtones": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "shadows": {
+          "amount": 8.0,
+          "hue": 210.0,
+          "luminance": 0.0
+        }
+      },
+      "light": {
+        "blacks": -3.0,
+        "contrast": 20.5,
+        "exposure": 0.15,
+        "highlights": -75.0,
+        "shadows": 12.0,
+        "whites": 8.0
+      },
+      "mixer": {
+        "hue": {
+          "blue": -5.0,
+          "green": -15.0,
+          "orange": -3.0,
+          "yellow": -8.0
+        },
+        "luminance": {
+          "blue": -10.0,
+          "orange": 15.0
+        },
+        "saturation": {
+          "aqua": -10.0,
+          "blue": -15.0,
+          "green": -22.5,
+          "orange": -5.0
+        }
+      }
+    }
+  }
+}

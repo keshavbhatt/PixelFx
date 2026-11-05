@@ -1,0 +1,70 @@
+{
+  "format": "pixelfx",
+  "kind": "preset",
+  "version": 2,
+  "name": "Suburban twilight",
+  "group": "Profiles",
+  "workingSpace": "rec2020-linear",
+  "body": {
+    "settings": {
+      "bw": {
+        "enabled": false
+      },
+      "detail": {
+        "clarity": 0.0,
+        "dehaze": -10.0,
+        "sharpen": {
+          "amount": 40.0
+        },
+        "texture": 0.0
+      },
+      "grading": {
+        "balance": -15.0,
+        "blending": 75.0,
+        "global": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "highlights": {
+          "amount": 10.0,
+          "hue": 40.0,
+          "luminance": 0.0
+        },
+        "midtones": {
+          "amount": 6.0,
+          "hue": 38.0,
+          "luminance": 0.0
+        },
+        "shadows": {
+          "amount": 18.0,
+          "hue": 210.0,
+          "luminance": 0.0
+        }
+      },
+      "light": {
+        "blacks": -15.0,
+        "contrast": 25.0,
+        "exposure": -0.2,
+        "highlights": -45.0,
+        "shadows": 25.0,
+        "whites": 5.0
+      },
+      "mixer": {
+        "hue": {
+          "green": -55.0,
+          "yellow": -10.0
+        },
+        "luminance": {
+          "green": -10.0,
+          "orange": 10.0
+        },
+        "saturation": {
+          "aqua": -15.0,
+          "blue": -20.0,
+          "green": -45.0
+        }
+      }
+    }
+  }
+}

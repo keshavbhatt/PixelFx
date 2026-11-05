@@ -259,6 +259,40 @@ void Settings::setOpenAdjustMore(const QStringList& ids)
     m_settings->setValue(key(keys::kOpenAdjustMore), ids);
 }
 
+QStringList Settings::favoritePresets() const
+{
+    return m_settings->value(key(keys::kFavoritePresets)).toStringList();
+}
+
+void Settings::setFavoritePresets(const QStringList& ids)
+{
+    m_settings->setValue(key(keys::kFavoritePresets), ids);
+}
+
+QStringList Settings::recentPresets() const
+{
+    return m_settings->value(key(keys::kRecentPresets)).toStringList();
+}
+
+void Settings::notePresetUsed(const QString& id)
+{
+    constexpr qsizetype kRecent = 12;
+    QStringList recent = recentPresets();
+    recent.removeAll(id);
+    recent.prepend(id);
+    m_settings->setValue(key(keys::kRecentPresets), recent.mid(0, kRecent));
+}
+
+QStringList Settings::closedPresetCategories() const
+{
+    return m_settings->value(key(keys::kClosedPresetCategories)).toStringList();
+}
+
+void Settings::setClosedPresetCategories(const QStringList& names)
+{
+    m_settings->setValue(key(keys::kClosedPresetCategories), names);
+}
+
 bool Settings::showWhatsNew() const
 {
     return m_settings->value(key(keys::kShowWhatsNew), true).toBool();

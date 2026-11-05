@@ -1,0 +1,75 @@
+{
+  "format": "pixelfx",
+  "kind": "preset",
+  "version": 2,
+  "name": "Halloween orange and purple",
+  "group": "Profiles",
+  "workingSpace": "rec2020-linear",
+  "body": {
+    "settings": {
+      "bw": {
+        "enabled": false
+      },
+      "detail": {
+        "denoise": {
+          "luminance": 0.0
+        },
+        "sharpen": {
+          "amount": 10.0
+        }
+      },
+      "effects": {
+        "grain": {
+          "amount": 20.0,
+          "roughness": 55.0,
+          "size": 25.0
+        },
+        "vignette": {
+          "amount": -18.0
+        }
+      },
+      "grading": {
+        "balance": 0.0,
+        "blending": 70.0,
+        "global": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "highlights": {
+          "amount": 20.0,
+          "hue": 25.0,
+          "luminance": 0.0
+        },
+        "midtones": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "shadows": {
+          "amount": 22.0,
+          "hue": 280.0,
+          "luminance": 0.0
+        }
+      },
+      "light": {
+        "blacks": -15.0,
+        "contrast": 20.0,
+        "exposure": -0.15,
+        "highlights": -35.0,
+        "shadows": 20.0,
+        "whites": 5.0
+      },
+      "mixer": {
+        "luminance": {
+          "orange": 12.0
+        },
+        "saturation": {
+          "green": -30.0,
+          "orange": 20.0,
+          "purple": 25.0
+        }
+      }
+    }
+  }
+}

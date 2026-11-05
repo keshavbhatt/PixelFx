@@ -1,0 +1,76 @@
+{
+  "format": "pixelfx",
+  "kind": "preset",
+  "version": 2,
+  "name": "High contrast editorial",
+  "group": "Profiles",
+  "workingSpace": "rec2020-linear",
+  "body": {
+    "settings": {
+      "bw": {
+        "enabled": false
+      },
+      "color": {
+        "saturation": -10.0,
+        "vibrance": -8.0
+      },
+      "detail": {
+        "dehaze": 0.0,
+        "denoise": {
+          "luminance": 0.0
+        },
+        "sharpen": {
+          "amount": 10.0
+        },
+        "texture": 0.0
+      },
+      "effects": {
+        "grain": {
+          "amount": 15.0,
+          "roughness": 50.0,
+          "size": 25.0
+        }
+      },
+      "grading": {
+        "balance": 0.0,
+        "blending": 75.0,
+        "global": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "highlights": {
+          "amount": 10.0,
+          "hue": 38.0,
+          "luminance": 0.0
+        },
+        "midtones": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "shadows": {
+          "amount": 18.0,
+          "hue": 230.0,
+          "luminance": 0.0
+        }
+      },
+      "light": {
+        "blacks": -20.0,
+        "contrast": 40.0,
+        "exposure": -0.15,
+        "highlights": -45.0,
+        "shadows": 10.0,
+        "whites": 10.0
+      },
+      "mixer": {
+        "saturation": {
+          "blue": -10.0,
+          "green": -25.0,
+          "orange": -10.0,
+          "yellow": -10.0
+        }
+      }
+    }
+  }
+}

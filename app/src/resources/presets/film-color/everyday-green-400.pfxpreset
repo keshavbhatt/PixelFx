@@ -1,0 +1,72 @@
+{
+  "format": "pixelfx",
+  "kind": "preset",
+  "version": 2,
+  "name": "Everyday green 400",
+  "group": "Profiles",
+  "workingSpace": "rec2020-linear",
+  "body": {
+    "settings": {
+      "bw": {
+        "enabled": false
+      },
+      "color": {
+        "saturation": 10.0,
+        "vibrance": 15.0
+      },
+      "detail": {
+        "sharpen": {
+          "amount": 10.0
+        }
+      },
+      "effects": {
+        "grain": {
+          "amount": 31.0,
+          "roughness": 51.0,
+          "size": 28.0
+        }
+      },
+      "grading": {
+        "balance": 0.0,
+        "blending": 50.0,
+        "global": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "highlights": {
+          "amount": 5.0,
+          "hue": 40.0,
+          "luminance": 0.0
+        },
+        "midtones": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "shadows": {
+          "amount": 16.0,
+          "hue": 130.0,
+          "luminance": 0.0
+        }
+      },
+      "light": {
+        "blacks": 5.0,
+        "contrast": 15.0,
+        "highlights": -20.0,
+        "shadows": 10.0
+      },
+      "mixer": {
+        "hue": {
+          "blue": -5.0,
+          "red": -10.0
+        },
+        "saturation": {
+          "blue": -5.0,
+          "green": 5.0,
+          "red": 13.0
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,81 @@
+{
+  "format": "pixelfx",
+  "kind": "preset",
+  "version": 2,
+  "name": "Moody wedding",
+  "group": "Profiles",
+  "workingSpace": "rec2020-linear",
+  "body": {
+    "settings": {
+      "bw": {
+        "enabled": false
+      },
+      "color": {
+        "saturation": -10.0,
+        "vibrance": -8.0
+      },
+      "detail": {
+        "clarity": 0.0,
+        "dehaze": 0.0,
+        "denoise": {
+          "luminance": 0.0
+        },
+        "sharpen": {
+          "amount": 10.0
+        },
+        "texture": 0.0
+      },
+      "effects": {
+        "grain": {
+          "amount": 20.0,
+          "roughness": 45.0,
+          "size": 25.0
+        }
+      },
+      "grading": {
+        "balance": 0.0,
+        "blending": 75.0,
+        "global": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "highlights": {
+          "amount": 10.0,
+          "hue": 40.0,
+          "luminance": 0.0
+        },
+        "midtones": {
+          "amount": 5.0,
+          "hue": 35.0,
+          "luminance": 0.0
+        },
+        "shadows": {
+          "amount": 15.0,
+          "hue": 225.0,
+          "luminance": 0.0
+        }
+      },
+      "light": {
+        "blacks": -15.0,
+        "contrast": 30.0,
+        "exposure": -0.3,
+        "highlights": -50.0,
+        "shadows": 25.0,
+        "whites": 10.0
+      },
+      "mixer": {
+        "hue": {
+          "green": 30.0
+        },
+        "luminance": {
+          "orange": 10.0
+        },
+        "saturation": {
+          "green": -40.0,
+          "yellow": -15.0
+        }
+      }
+    }
+  }
+}

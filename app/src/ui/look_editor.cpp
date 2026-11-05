@@ -1,5 +1,6 @@
 #include "ui/look_editor.h"
 
+#include "core/describe.h"
 #include "services/qt_image_bridge.h"
 #include "ui/curve_editor.h"
 #include "ui/icon_text_button.h"
@@ -137,31 +138,6 @@ QString shownValue(double value, int decimals, double minimum, const std::string
 }
 
 // The colour a hue reads as, for summaries ("teal").
-QString hueName(double degrees)
-{
-    struct Band
-    {
-        double upTo;
-        const char* name;
-    };
-    static constexpr std::array<Band, 9> kBands = {{
-        {15, QT_TRANSLATE_NOOP("LookEditor", "red")},
-        {45, QT_TRANSLATE_NOOP("LookEditor", "orange")},
-        {70, QT_TRANSLATE_NOOP("LookEditor", "yellow")},
-        {160, QT_TRANSLATE_NOOP("LookEditor", "green")},
-        {210, QT_TRANSLATE_NOOP("LookEditor", "teal")},
-        {255, QT_TRANSLATE_NOOP("LookEditor", "blue")},
-        {290, QT_TRANSLATE_NOOP("LookEditor", "purple")},
-        {340, QT_TRANSLATE_NOOP("LookEditor", "magenta")},
-        {361, QT_TRANSLATE_NOOP("LookEditor", "red")},
-    }};
-    for (const Band& b : kBands) {
-        if (degrees < b.upTo) {
-            return LookEditor::tr(b.name);
-        }
-    }
-    return LookEditor::tr("red");
-}
 
 // The curve's height at `x`, between its points.
 double curveAt(const pfx::Curve& curve, double x)
@@ -384,7 +360,7 @@ QString LookEditor::gradingSummary(const pfx::Settings& params)
             continue;
         }
         const double hue = params.number(key + ".hue", 0.0);
-        parts << u"%1 %2 %3\u00B0"_s.arg(tr(name), hueName(hue)).arg(std::lround(hue));
+        parts << u"%1 %2 %3\u00B0"_s.arg(tr(name), core::hueName(hue)).arg(std::lround(hue));
     }
     if (const double balance = params.number("grading.balance", 0.0); std::abs(balance) > 1e-9) {
         parts << tr("balance %1").arg(shownValue(balance, 0, -1.0, {}));

@@ -1,0 +1,84 @@
+{
+  "format": "pixelfx",
+  "kind": "preset",
+  "version": 2,
+  "name": "Bright everyday 400",
+  "group": "Profiles",
+  "workingSpace": "rec2020-linear",
+  "body": {
+    "settings": {
+      "bw": {
+        "enabled": false
+      },
+      "color": {
+        "saturation": 10.0,
+        "vibrance": 14.0
+      },
+      "detail": {
+        "denoise": {
+          "luminance": 0.0
+        },
+        "sharpen": {
+          "amount": 10.0
+        }
+      },
+      "effects": {
+        "grain": {
+          "amount": 33.0,
+          "roughness": 60.0,
+          "size": 35.0
+        }
+      },
+      "grading": {
+        "balance": 0.0,
+        "blending": 50.0,
+        "global": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "highlights": {
+          "amount": 5.0,
+          "hue": 50.0,
+          "luminance": 0.0
+        },
+        "midtones": {
+          "amount": 6.0,
+          "hue": 42.0,
+          "luminance": 0.0
+        },
+        "shadows": {
+          "amount": 5.0,
+          "hue": 35.0,
+          "luminance": 0.0
+        }
+      },
+      "light": {
+        "blacks": -18.0,
+        "contrast": 15.0,
+        "highlights": -8.0,
+        "shadows": 20.0,
+        "whites": 22.0
+      },
+      "mixer": {
+        "hue": {
+          "blue": -5.0,
+          "green": 5.0,
+          "red": -8.0,
+          "yellow": -8.0
+        },
+        "luminance": {
+          "blue": 5.0,
+          "red": 10.0
+        },
+        "saturation": {
+          "blue": 18.0,
+          "green": -8.0,
+          "orange": 10.0,
+          "red": 30.0,
+          "yellow": 15.0
+        }
+      }
+    }
+  }
+}

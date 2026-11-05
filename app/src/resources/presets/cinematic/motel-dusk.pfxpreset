@@ -1,0 +1,74 @@
+{
+  "format": "pixelfx",
+  "kind": "preset",
+  "version": 2,
+  "name": "Motel dusk",
+  "group": "Profiles",
+  "workingSpace": "rec2020-linear",
+  "body": {
+    "settings": {
+      "bw": {
+        "enabled": false
+      },
+      "color": {
+        "saturation": -8.0,
+        "vibrance": -6.0
+      },
+      "detail": {
+        "clarity": -8.0,
+        "dehaze": -10.0,
+        "sharpen": {
+          "amount": 40.0
+        },
+        "texture": 0.0
+      },
+      "grading": {
+        "balance": 20.0,
+        "blending": 75.0,
+        "global": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "highlights": {
+          "amount": 12.0,
+          "hue": 38.0,
+          "luminance": 0.0
+        },
+        "midtones": {
+          "amount": 10.0,
+          "hue": 250.0,
+          "luminance": 0.0
+        },
+        "shadows": {
+          "amount": 20.0,
+          "hue": 230.0,
+          "luminance": 0.0
+        }
+      },
+      "light": {
+        "blacks": -20.0,
+        "contrast": 15.0,
+        "exposure": -0.4,
+        "highlights": -50.0,
+        "shadows": 40.0,
+        "whites": -5.0
+      },
+      "mixer": {
+        "hue": {
+          "green": 10.0
+        },
+        "luminance": {
+          "blue": -15.0,
+          "orange": 8.0
+        },
+        "saturation": {
+          "aqua": -15.0,
+          "blue": -10.0,
+          "green": -35.0,
+          "magenta": 10.0
+        }
+      }
+    }
+  }
+}

@@ -1117,9 +1117,24 @@ void MainWindow::connectPresets()
             m_presets->setThumbnail(static_cast<std::size_t>(key % kThumbnailKeySpan), image);
         }
     });
-    connect(&m_document, &services::Document::opened, this, [this] { m_thumbnailTimer->start(0); });
-    connect(&m_document, &services::Document::historyChanged, this, [this] { m_thumbnailTimer->start(); });
+    connect(&m_document, &services::Document::opened, this, [this] {
+        m_presets->clearThumbnails();
+        m_thumbnailTimer->start(0);
+    });
+    connect(&m_document, &services::Document::historyChanged, this, [this] {
+        m_presets->clearThumbnails();
+        m_thumbnailTimer->start();
+    });
+    connect(m_presets, &PresetsPanel::thumbnailsWanted, this, &MainWindow::requestPresetThumbnails);
     connect(m_presets, &PresetsPanel::applyRequested, this, &MainWindow::applyPreset);
+    connectPresetAmount();
+    m_presets->setFavorites(m_settings.favoritePresets());
+    m_presets->setRecent(m_settings.recentPresets());
+    m_presets->setClosedCategories(m_settings.closedPresetCategories());
+    connect(m_presets, &PresetsPanel::favoritesChanged, this,
+            [this](const QStringList& ids) { m_settings.setFavoritePresets(ids); });
+    connect(m_presets, &PresetsPanel::closedCategoriesChanged, this,
+            [this](const QStringList& names) { m_settings.setClosedPresetCategories(names); });
     connect(m_presets, &PresetsPanel::previewRequested, this, [this](const core::PresetEntry* entry) {
         if (entry == nullptr || entry->autoEnhance || !m_document.isOpen() || isInTool()) {
             m_document.setHoverSettings(std::nullopt);
@@ -1411,7 +1426,12 @@ void MainWindow::requestPresetThumbnails()
     }
     ++m_thumbnailGeneration;
     const auto& entries = m_presets->entries();
-    for (std::size_t i = 0; i < entries.size() && i < kThumbnailKeySpan; ++i) {
+    // Only the tiles on show, and only those still without their picture: hundreds of presets
+    // would otherwise render after every edit.
+    for (const std::size_t i : m_presets->shownIndexes()) {
+        if (i >= kThumbnailKeySpan || m_presets->hasThumbnail(i)) {
+            continue;
+        }
         const core::PresetEntry& e = entries[i];
         const pfx::Settings s = e.autoEnhance ? m_document.settings().overlaidWith(pfx::autoAdjust(*source))
                                               : core::applyPreset(m_document.settings(), e.settings);
@@ -1431,9 +1451,62 @@ void MainWindow::applyPreset(const core::PresetEntry& entry)
         m_document.autoAdjust();
         return;
     }
+    const pfx::Settings before = m_document.settings();
     const pfx::Settings preset = entry.settings;
     applyToSelection([preset](const pfx::Settings& s) { return core::applyPreset(s, preset); },
                      tr("Preset %1").arg(entry.name));
+    m_appliedPreset = AppliedPreset{entry, before, m_document.settings()};
+    m_presets->setApplied(entry.id, entry.name, 100.0);
+    m_settings.notePresetUsed(entry.id);
+    m_presets->setRecent(m_settings.recentPresets());
+}
+
+void MainWindow::connectPresetAmount()
+{
+    // Undo, redo, another photo: the Amount belongs to the step that applied the preset.
+    const auto forget = [this] {
+        m_appliedPreset.reset();
+        m_presets->setApplied({}, {}, 100.0);
+    };
+    connect(&m_document, &services::Document::settingsReplaced, this, forget);
+    connect(&m_document, &services::Document::opened, this, forget);
+    connect(m_presets, &PresetsPanel::amountMoved, this,
+            [this](double amount) { blendAppliedPreset(amount, false); });
+    connect(m_presets, &PresetsPanel::amountReleased, this,
+            [this](double amount) { blendAppliedPreset(amount, true); });
+}
+
+void MainWindow::blendAppliedPreset(double amount, bool finished)
+{
+    if (!m_appliedPreset || !m_document.isOpen()) {
+        return;
+    }
+    AppliedPreset& a = *m_appliedPreset;
+    // A setting moved by hand since the preset keeps the user's value; the Amount moves the rest.
+    const pfx::Settings current = m_document.settings();
+    pfx::Settings blended = core::blendPreset(a.base, a.entry.settings, amount);
+    std::vector<std::string> keys = current.keys();
+    for (const std::string& k : a.last.keys()) {
+        if (!current.contains(k)) {
+            keys.push_back(k);
+        }
+    }
+    for (const std::string& key : keys) {
+        const pfx::Value* now = current.find(key);
+        const pfx::Value* was = a.last.find(key);
+        const bool same =
+            (now == nullptr && was == nullptr) || (now != nullptr && was != nullptr && *now == *was);
+        if (!same) {
+            now != nullptr ? blended.set(key, *now) : blended.erase(key);
+        }
+    }
+    a.last = blended;
+    m_document.setSettings(blended);
+    m_adjust->setSettings(blended);
+    if (finished) {
+        //: A history step: a preset at an amount, "Portrait film 400 at 80%".
+        m_document.commit(tr("%1 at %2%").arg(a.entry.name).arg(qRound(amount)));
+    }
 }
 
 void MainWindow::savePreset()

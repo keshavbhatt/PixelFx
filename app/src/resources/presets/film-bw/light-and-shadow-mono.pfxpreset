@@ -1,0 +1,73 @@
+{
+  "format": "pixelfx",
+  "kind": "preset",
+  "version": 2,
+  "name": "Light and shadow mono",
+  "group": "Profiles",
+  "workingSpace": "rec2020-linear",
+  "body": {
+    "settings": {
+      "bw": {
+        "enabled": true,
+        "mix": {
+          "aqua": -10.0,
+          "blue": -55.0,
+          "green": -25.0,
+          "magenta": -5.0,
+          "orange": 10.0,
+          "purple": 0.0,
+          "red": 25.0,
+          "yellow": 5.0
+        }
+      },
+      "detail": {
+        "clarity": 0.0,
+        "denoise": {
+          "luminance": 0.0
+        },
+        "sharpen": {
+          "amount": 10.0
+        },
+        "texture": 0.0
+      },
+      "effects": {
+        "grain": {
+          "amount": 25.0,
+          "roughness": 50.0,
+          "size": 23.0
+        }
+      },
+      "grading": {
+        "balance": 0.0,
+        "blending": 50.0,
+        "global": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "highlights": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "midtones": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "shadows": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        }
+      },
+      "light": {
+        "blacks": -30.0,
+        "contrast": 50.0,
+        "highlights": -60.0,
+        "shadows": 10.0,
+        "whites": 25.0
+      }
+    }
+  }
+}

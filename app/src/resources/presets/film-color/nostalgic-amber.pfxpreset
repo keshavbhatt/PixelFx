@@ -1,0 +1,80 @@
+{
+  "format": "pixelfx",
+  "kind": "preset",
+  "version": 2,
+  "name": "Nostalgic amber",
+  "group": "Profiles",
+  "workingSpace": "rec2020-linear",
+  "body": {
+    "settings": {
+      "bw": {
+        "enabled": false
+      },
+      "color": {
+        "saturation": 15.0,
+        "vibrance": 12.0
+      },
+      "detail": {
+        "clarity": 0.0,
+        "dehaze": 0.0,
+        "denoise": {
+          "luminance": 0.0
+        },
+        "sharpen": {
+          "amount": 10.0
+        },
+        "texture": 0.0
+      },
+      "effects": {
+        "grain": {
+          "amount": 35.0,
+          "roughness": 50.0,
+          "size": 15.0
+        }
+      },
+      "grading": {
+        "balance": 0.0,
+        "blending": 50.0,
+        "global": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "highlights": {
+          "amount": 8.0,
+          "hue": 45.0,
+          "luminance": 0.0
+        },
+        "midtones": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "shadows": {
+          "amount": 12.0,
+          "hue": 40.0,
+          "luminance": 0.0
+        }
+      },
+      "light": {
+        "blacks": 10.0,
+        "contrast": -5.0,
+        "exposure": 0.0,
+        "highlights": -10.0,
+        "shadows": 0.0,
+        "whites": -5.0
+      },
+      "mixer": {
+        "hue": {
+          "green": -10.0
+        },
+        "luminance": {
+          "orange": 10.0
+        },
+        "saturation": {
+          "green": -10.0
+        }
+      }
+    }
+  }
+}

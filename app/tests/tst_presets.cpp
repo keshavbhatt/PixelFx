@@ -1,9 +1,15 @@
+#include "core/describe.h"
 #include "core/presets.h"
 
 #include <QFile>
+#include <QRegularExpression>
+#include <QSet>
 #include <QTemporaryDir>
 #include <QTest>
 
+#include <algorithm>
+#include <cmath>
+#include <pfx/curve.h>
 #include <pfx/document.h>
 
 using namespace Qt::StringLiterals;
@@ -165,6 +171,86 @@ private Q_SLOTS:
         QCOMPARE(pixelfx::core::changedCount(s, u"effects"_s), 0);         // the default style
         const pfx::Settings preset = pixelfx::core::presetFrom(pfx::Settings(), {u"color"_s});
         QCOMPARE(preset.text("color.profile", ""), std::string("standard"));
+    }
+
+    void theAmountBlendsFromThePhotoToThePresetAndPast()
+    {
+        pfx::Settings photo;
+        photo.set("light.exposure", 0.2);
+        photo.set("detail.clarity", 10.0);
+        pfx::Settings preset;
+        preset.set("light.exposure", 0.6);
+        preset.set("light.contrast", 20.0);
+        preset.set("bw.enabled", true);
+        preset.set("curves.rgb", pfx::Curve{{0, 0}, {0.5, 0.7}, {1, 1}});
+        const pfx::Settings none = blendPreset(photo, preset, 0.0);
+        QCOMPARE(none.number("light.exposure", 0), 0.2);
+        QVERIFY(!none.contains("light.contrast"));
+        QVERIFY(!none.boolean("bw.enabled", false));
+        QCOMPARE(none.number("detail.clarity", 0), 10.0); // not the preset's: always the photo's
+        const pfx::Settings half = blendPreset(photo, preset, 50.0);
+        QCOMPARE(half.number("light.exposure", 0), 0.4);
+        QCOMPARE(half.number("light.contrast", 0), 10.0);
+        QVERIFY(half.boolean("bw.enabled", false)); // a switch follows from any amount
+        const std::vector<double> mid = pfx::sampleCurve(half.curve("curves.rgb"), 3);
+        QVERIFY(std::abs(mid[1] - 0.6) < 0.02);
+        QCOMPARE(blendPreset(photo, preset, 100.0), applyPreset(photo, preset));
+        const pfx::Settings twice = blendPreset(photo, preset, 200.0);
+        QCOMPARE(twice.number("light.contrast", 0), 40.0);
+        QVERIFY(std::abs(twice.number("light.exposure", 0) - 1.0) < 1e-9);
+        pfx::Settings strong;
+        strong.set("light.contrast", 80.0);
+        QCOMPARE(blendPreset({}, strong, 200.0).number("light.contrast", 0), 100.0); // held in range
+    }
+
+    void settingsAreToldInWords()
+    {
+        pfx::Settings s;
+        QCOMPARE(describeSettings(s), QString());
+        s.set("color.wb.temperature", 20.0);
+        s.set("effects.grain.amount", 30.0);
+        s.set("light.blacks", 15.0);
+        const QString text = describeSettings(s);
+        QVERIFY2(text.startsWith(u"Warm"_s), qPrintable(text));
+        QVERIFY(text.contains(u"faded blacks"_s));
+        QVERIFY(text.contains(u"grain"_s));
+        s.set("bw.enabled", true);
+        QVERIFY(describeSettings(s).contains(u"lack and white"_s));
+        QVERIFY(!describeSettings(s).contains(u"arm"_s)); // no colour words in black and white
+        QCOMPARE(hueName(200), u"teal"_s);
+        QCOMPARE(hueName(-10), u"red"_s);
+    }
+
+    void theCatalogLoadsWithUniqueNamesAndNoBrands()
+    {
+        const std::vector<PresetEntry> all = PresetLibrary::builtIn();
+        QVERIFY2(all.size() >= 400, qPrintable(QString::number(all.size())));
+        QSet<QString> names;
+        QSet<QString> ids;
+        // Names say what a preset looks like, never whose product or style it copies.
+        static const QStringList kForbidden = {
+            u"Kodak"_s,     u"Fuji"_s,     u"Ilford"_s,    u"Agfa"_s,       u"Portra"_s,     u"Ektar"_s,
+            u"Velvia"_s,    u"Provia"_s,   u"Tri-X"_s,     u"Kodachrome"_s, u"Ektachrome"_s, u"CineStill"_s,
+            u"Polaroid"_s,  u"Lomo"_s,     u"Holga"_s,     u"Rollei"_s,     u"Foma"_s,       u"Instagram"_s,
+            u"Clarendon"_s, u"Valencia"_s, u"Nashville"_s, u"Anderson"_s,   u"Wong"_s,       u"McCurry"_s,
+            u"Adams"_s,     u"LOTR"_s,     u"Canon"_s,     u"Ricoh"_s};
+        for (const PresetEntry& e : all) {
+            QVERIFY2(!names.contains(e.name), qPrintable(e.name));
+            names.insert(e.name);
+            QVERIFY2(!ids.contains(e.id), qPrintable(e.id));
+            ids.insert(e.id);
+            QVERIFY(e.isBuiltIn());
+            QVERIFY(!e.category.isEmpty());
+            QVERIFY2(e.autoEnhance || !e.settings.keys().empty(), qPrintable(e.name));
+            for (const QString& word : kForbidden) {
+                const QRegularExpression whole(u"\\b%1\\b"_s.arg(QRegularExpression::escape(word)),
+                                               QRegularExpression::CaseInsensitiveOption);
+                QVERIFY2(!whole.match(e.name).hasMatch(), qPrintable(e.name));
+            }
+        }
+        QVERIFY(std::ranges::any_of(all, [](const PresetEntry& e) {
+            return e.name == u"Portrait 400"_s && e.category == u"film-color"_s && !e.description.isEmpty();
+        }));
     }
 
     void lightroomPresetsComeInWithAReport()

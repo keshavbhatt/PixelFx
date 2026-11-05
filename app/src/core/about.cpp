@@ -35,6 +35,7 @@ const QList<Notice>& notices()
         {u"nlohmann/json"_s, u"MIT"_s, QObject::tr("Reading and writing presets and looks"),
          u"nlohmann-json.txt"_s},
         {u"Lucide icons"_s, u"ISC"_s, QObject::tr("The icons"), u"lucide.txt"_s},
+        {u"EmulsionPresets"_s, u"MIT"_s, QObject::tr("The built-in presets"), u"emulsion-presets.txt"_s},
     };
     return list;
 }

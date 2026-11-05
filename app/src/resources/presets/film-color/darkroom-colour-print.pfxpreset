@@ -1,0 +1,86 @@
+{
+  "format": "pixelfx",
+  "kind": "preset",
+  "version": 2,
+  "name": "Darkroom colour print",
+  "group": "Profiles",
+  "workingSpace": "rec2020-linear",
+  "body": {
+    "settings": {
+      "bw": {
+        "enabled": false
+      },
+      "color": {
+        "saturation": -3.0,
+        "vibrance": -1.0
+      },
+      "detail": {
+        "clarity": 0.0,
+        "dehaze": 0.0,
+        "denoise": {
+          "luminance": 0.0
+        },
+        "sharpen": {
+          "amount": 10.0
+        },
+        "texture": 0.0
+      },
+      "effects": {
+        "grain": {
+          "amount": 15.0,
+          "roughness": 50.0,
+          "size": 20.0
+        }
+      },
+      "grading": {
+        "balance": 10.0,
+        "blending": 50.0,
+        "global": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "highlights": {
+          "amount": 8.0,
+          "hue": 45.0,
+          "luminance": 0.0
+        },
+        "midtones": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "shadows": {
+          "amount": 5.0,
+          "hue": 50.0,
+          "luminance": 0.0
+        }
+      },
+      "light": {
+        "blacks": 10.0,
+        "contrast": 18.0,
+        "exposure": 0.15,
+        "highlights": -35.0,
+        "shadows": 25.0,
+        "whites": -5.0
+      },
+      "mixer": {
+        "hue": {
+          "green": 10.0,
+          "orange": -3.0,
+          "red": 5.0,
+          "yellow": -5.0
+        },
+        "luminance": {
+          "orange": 5.0
+        },
+        "saturation": {
+          "blue": -5.0,
+          "green": -10.0,
+          "orange": 5.0,
+          "red": 5.0
+        }
+      }
+    }
+  }
+}

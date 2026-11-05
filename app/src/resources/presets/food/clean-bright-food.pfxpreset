@@ -1,0 +1,63 @@
+{
+  "format": "pixelfx",
+  "kind": "preset",
+  "version": 2,
+  "name": "Clean bright food",
+  "group": "Profiles",
+  "workingSpace": "rec2020-linear",
+  "body": {
+    "settings": {
+      "bw": {
+        "enabled": false
+      },
+      "color": {
+        "saturation": 0.0,
+        "vibrance": 3.0
+      },
+      "detail": {
+        "clarity": 5.0
+      },
+      "grading": {
+        "balance": 0.0,
+        "blending": 75.0,
+        "global": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "highlights": {
+          "amount": 3.0,
+          "hue": 43.0,
+          "luminance": 0.0
+        },
+        "midtones": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "shadows": {
+          "amount": 3.0,
+          "hue": 210.0,
+          "luminance": 0.0
+        }
+      },
+      "light": {
+        "blacks": 0.0,
+        "contrast": 5.0,
+        "exposure": 0.4,
+        "highlights": -35.0,
+        "shadows": 20.0,
+        "whites": 15.0
+      },
+      "mixer": {
+        "luminance": {
+          "orange": 10.0
+        },
+        "saturation": {
+          "green": -10.0,
+          "red": -5.0
+        }
+      }
+    }
+  }
+}

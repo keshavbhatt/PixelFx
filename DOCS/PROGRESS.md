@@ -41,6 +41,8 @@ Decisions the work stopped at; everything else went ahead within the approved mo
 5. Real Lightroom `.xmp` exports should be tried on the importer (EmulsionPresets' 451 so far,
    2026-11-05; a second, real-world set is still wanted for the 95% target of FEATURES P8).
 6. Batch writes beside each original into a folder named "PixelFx": keep the name?
+   The catalog's 429 names (`scripts/catalog/catalog.tsv`) and whether Tools stays in it
+   (2026-11-05) are also waiting.
 7. Zoom has no FEATURES row; add one (it is built).
 8. Small departures from approved mocks, until their parts exist: no Favorites chip; the look
     editor previews on This photo and a colour ramp (no Portrait or Landscape test photos are
@@ -64,6 +66,23 @@ Decisions the work stopped at; everything else went ahead within the approved mo
     Heal); Reveal dust explains itself in its tooltip rather than a first-time line.
 
 ## Sessions (newest first)
+
+### 2026-11-05 (the preset catalog)
+
+- The Presets tab of the approved `editor-presets-catalog.html`: search, All, Favorites (F),
+  Mine and Recent, the user's groups, then Essentials and the twelve catalog categories as tiles
+  of the photo, six per open category with "All N" for the whole of one, categories closed by the
+  user remembered, a tile's menu (Apply, Apply to the selection, Favorites, Copy to My presets,
+  Export), and the Amount of the preset just applied (0 to 200, as Lightroom's): it blends from
+  the photo before the preset, a setting moved by hand since keeps the user's value, and undo
+  takes it away with its step. Only the tiles on show get their picture rendered.
+- The catalog: 429 of EmulsionPresets' 451 (MIT, ADR-009), converted by `scripts/catalog/
+  build_catalog.py` with the new `pfx import`, renamed without brands or people
+  (`scripts/catalog/catalog.tsv`, a test checks it), described from their settings
+  (`core::describeSettings`). On the 33 ColorWall photos every one renders and, outside Tools,
+  visibly changes the photo.
+- Shared pieces: `PhotoTile` and `tileGrid` for the Looks and Presets tabs, `core::hueName`.
+- Waiting for the owner: the names list, and whether Tools stays.
 
 ### 2026-11-05 (Lightroom compatibility, the panel)
 

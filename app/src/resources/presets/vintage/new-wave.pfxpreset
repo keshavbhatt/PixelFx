@@ -1,0 +1,73 @@
+{
+  "format": "pixelfx",
+  "kind": "preset",
+  "version": 2,
+  "name": "New wave",
+  "group": "Profiles",
+  "workingSpace": "rec2020-linear",
+  "body": {
+    "settings": {
+      "bw": {
+        "enabled": false
+      },
+      "color": {
+        "saturation": 12.0,
+        "vibrance": 10.0
+      },
+      "detail": {
+        "dehaze": 5.0,
+        "denoise": {
+          "luminance": 0.0
+        },
+        "sharpen": {
+          "amount": 10.0
+        }
+      },
+      "effects": {
+        "vignette": {
+          "amount": -10.0
+        }
+      },
+      "grading": {
+        "balance": 0.0,
+        "blending": 75.0,
+        "global": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "highlights": {
+          "amount": 12.0,
+          "hue": 310.0,
+          "luminance": 0.0
+        },
+        "midtones": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "shadows": {
+          "amount": 15.0,
+          "hue": 205.0,
+          "luminance": 0.0
+        }
+      },
+      "light": {
+        "blacks": -10.0,
+        "contrast": 25.0,
+        "exposure": 0.15,
+        "highlights": -40.0,
+        "shadows": 25.0,
+        "whites": 15.0
+      },
+      "mixer": {
+        "saturation": {
+          "blue": 15.0,
+          "green": -25.0,
+          "magenta": 15.0,
+          "yellow": 10.0
+        }
+      }
+    }
+  }
+}

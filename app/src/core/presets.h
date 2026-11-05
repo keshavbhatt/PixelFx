@@ -38,13 +38,30 @@ struct PresetUnit
 [[nodiscard]] pfx::Settings applyPreset(const pfx::Settings& current, const pfx::Settings& preset);
 /// "Light, Color, Curves": the units a preset holds, for its row in the list.
 [[nodiscard]] QString presetSummary(const pfx::Settings& preset);
+/// `base` with `preset` applied at `amount` percent, 0 to 200 (Lightroom's preset Amount): every
+/// number of the preset's units moves from its value in `base` (or its default) toward the
+/// preset's and, past 100, beyond it, held in its range; curves blend point by point. Switches
+/// and choices are the preset's from any amount above 0.
+[[nodiscard]] pfx::Settings blendPreset(const pfx::Settings& base, const pfx::Settings& preset,
+                                        double amount);
+
+/// A built-in category of the catalog: its folder name and what the panel calls it.
+struct PresetCategory
+{
+    QString id;   ///< "film-color"
+    QString name; ///< "Film, color", translated
+};
+/// The catalog's categories in the panel's order, Essentials first.
+[[nodiscard]] const std::vector<PresetCategory>& presetCategories();
 
 /// A preset in the library.
 struct PresetEntry
 {
+    QString id; ///< the file's path, or "builtin:<name>"; kept for Favorites and Recent
     QString name;
-    QString group; ///< "My presets", "Imported", "Built in" or the user's own
-    QString path;  ///< empty for built-in presets
+    QString group;    ///< "My presets", "Imported", the user's own, or a built-in category's name
+    QString category; ///< a built-in category's id; empty for the user's
+    QString path;     ///< empty for built-in presets
     pfx::Settings settings;
     QString description;      ///< what a built-in preset does, in words; empty for the user's
     bool autoEnhance = false; ///< "Auto enhance": works the settings out per photo
@@ -83,6 +100,7 @@ public:
     [[nodiscard]] static bool exportTo(const PresetEntry& entry, const QString& target);
 
     [[nodiscard]] static QString defaultFolder();
+    /// The built-in presets: the essentials made in code, then the catalog shipped with the app.
     [[nodiscard]] static std::vector<PresetEntry> builtIn();
     /// The group a preset goes in unless it names one.
     [[nodiscard]] static QString myPresetsGroup();

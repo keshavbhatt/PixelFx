@@ -1,0 +1,76 @@
+{
+  "format": "pixelfx",
+  "kind": "preset",
+  "version": 2,
+  "name": "Everyday green 200",
+  "group": "Profiles",
+  "workingSpace": "rec2020-linear",
+  "body": {
+    "settings": {
+      "bw": {
+        "enabled": false
+      },
+      "color": {
+        "saturation": 8.0,
+        "vibrance": 10.0
+      },
+      "detail": {
+        "denoise": {
+          "luminance": 0.0
+        },
+        "sharpen": {
+          "amount": 10.0
+        }
+      },
+      "effects": {
+        "grain": {
+          "amount": 23.0,
+          "roughness": 50.0,
+          "size": 22.0
+        }
+      },
+      "grading": {
+        "balance": 0.0,
+        "blending": 50.0,
+        "global": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "highlights": {
+          "amount": 5.0,
+          "hue": 38.0,
+          "luminance": 0.0
+        },
+        "midtones": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "shadows": {
+          "amount": 12.0,
+          "hue": 135.0,
+          "luminance": 0.0
+        }
+      },
+      "light": {
+        "blacks": -2.0,
+        "contrast": 12.0,
+        "exposure": 0.4,
+        "highlights": -15.0,
+        "shadows": 18.0
+      },
+      "mixer": {
+        "hue": {
+          "blue": -4.0,
+          "red": -7.0
+        },
+        "saturation": {
+          "blue": 3.0,
+          "green": 5.0,
+          "red": 8.0
+        }
+      }
+    }
+  }
+}

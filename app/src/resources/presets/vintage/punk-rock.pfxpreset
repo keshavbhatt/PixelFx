@@ -1,0 +1,81 @@
+{
+  "format": "pixelfx",
+  "kind": "preset",
+  "version": 2,
+  "name": "Punk rock",
+  "group": "Profiles",
+  "workingSpace": "rec2020-linear",
+  "body": {
+    "settings": {
+      "bw": {
+        "enabled": false
+      },
+      "color": {
+        "saturation": -10.0
+      },
+      "detail": {
+        "clarity": 0.0,
+        "dehaze": 0.0,
+        "denoise": {
+          "luminance": 0.0
+        },
+        "sharpen": {
+          "amount": 10.0
+        },
+        "texture": 0.0
+      },
+      "effects": {
+        "grain": {
+          "amount": 50.0,
+          "roughness": 68.0,
+          "size": 40.0
+        },
+        "vignette": {
+          "amount": -18.0
+        }
+      },
+      "grading": {
+        "balance": 0.0,
+        "blending": 70.0,
+        "global": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "highlights": {
+          "amount": 5.0,
+          "hue": 40.0,
+          "luminance": 0.0
+        },
+        "midtones": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "shadows": {
+          "amount": 8.0,
+          "hue": 225.0,
+          "luminance": 0.0
+        }
+      },
+      "light": {
+        "blacks": -25.0,
+        "contrast": 40.0,
+        "exposure": -0.25,
+        "highlights": -55.0,
+        "shadows": -15.0,
+        "whites": 10.0
+      },
+      "mixer": {
+        "luminance": {
+          "orange": 8.0
+        },
+        "saturation": {
+          "blue": -20.0,
+          "green": -35.0,
+          "red": 5.0
+        }
+      }
+    }
+  }
+}

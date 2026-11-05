@@ -1,0 +1,74 @@
+{
+  "format": "pixelfx",
+  "kind": "preset",
+  "version": 2,
+  "name": "Technical high contrast",
+  "group": "Profiles",
+  "workingSpace": "rec2020-linear",
+  "body": {
+    "settings": {
+      "bw": {
+        "enabled": true,
+        "mix": {
+          "aqua": -12.0,
+          "blue": -35.0,
+          "green": -10.0,
+          "magenta": -8.0,
+          "orange": 15.0,
+          "purple": -5.0,
+          "red": 20.0,
+          "yellow": 10.0
+        }
+      },
+      "detail": {
+        "clarity": 0.0,
+        "dehaze": 0.0,
+        "denoise": {
+          "luminance": 0.0
+        },
+        "sharpen": {
+          "amount": 10.0
+        },
+        "texture": 0.0
+      },
+      "effects": {
+        "grain": {
+          "amount": 5.0,
+          "roughness": 30.0,
+          "size": 10.0
+        }
+      },
+      "grading": {
+        "balance": 0.0,
+        "blending": 50.0,
+        "global": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "highlights": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "midtones": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "shadows": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        }
+      },
+      "light": {
+        "blacks": -25.0,
+        "contrast": 35.0,
+        "highlights": -20.0,
+        "shadows": 8.0,
+        "whites": 15.0
+      }
+    }
+  }
+}

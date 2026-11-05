@@ -1,0 +1,66 @@
+{
+  "format": "pixelfx",
+  "kind": "preset",
+  "version": 2,
+  "name": "Epic landscape",
+  "group": "Profiles",
+  "workingSpace": "rec2020-linear",
+  "body": {
+    "settings": {
+      "bw": {
+        "enabled": false
+      },
+      "color": {
+        "saturation": 10.0,
+        "vibrance": 10.0
+      },
+      "detail": {
+        "clarity": 15.0,
+        "dehaze": 10.0
+      },
+      "grading": {
+        "balance": 0.0,
+        "blending": 75.0,
+        "global": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "highlights": {
+          "amount": 8.0,
+          "hue": 43.0,
+          "luminance": 0.0
+        },
+        "midtones": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "shadows": {
+          "amount": 8.0,
+          "hue": 230.0,
+          "luminance": 0.0
+        }
+      },
+      "light": {
+        "blacks": -10.0,
+        "contrast": 25.0,
+        "exposure": 0.2,
+        "highlights": -45.0,
+        "shadows": 25.0,
+        "whites": 15.0
+      },
+      "mixer": {
+        "hue": {
+          "green": 15.0
+        },
+        "saturation": {
+          "aqua": 5.0,
+          "blue": 15.0,
+          "green": -15.0,
+          "yellow": 10.0
+        }
+      }
+    }
+  }
+}

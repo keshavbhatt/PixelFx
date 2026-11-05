@@ -1,0 +1,63 @@
+{
+  "format": "pixelfx",
+  "kind": "preset",
+  "version": 2,
+  "name": "Muted avant-garde",
+  "group": "Profiles",
+  "workingSpace": "rec2020-linear",
+  "body": {
+    "settings": {
+      "bw": {
+        "enabled": false
+      },
+      "color": {
+        "saturation": -30.0,
+        "vibrance": -25.0
+      },
+      "detail": {
+        "clarity": 10.0
+      },
+      "grading": {
+        "balance": 0.0,
+        "blending": 75.0,
+        "global": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "highlights": {
+          "amount": 5.0,
+          "hue": 35.0,
+          "luminance": 0.0
+        },
+        "midtones": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "shadows": {
+          "amount": 10.0,
+          "hue": 250.0,
+          "luminance": 0.0
+        }
+      },
+      "light": {
+        "blacks": -10.0,
+        "contrast": 20.0,
+        "exposure": -0.25,
+        "highlights": -40.0,
+        "shadows": 15.0,
+        "whites": 5.0
+      },
+      "mixer": {
+        "saturation": {
+          "blue": -30.0,
+          "green": -50.0,
+          "orange": -25.0,
+          "red": -20.0,
+          "yellow": -30.0
+        }
+      }
+    }
+  }
+}

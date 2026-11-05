@@ -1,0 +1,72 @@
+{
+  "format": "pixelfx",
+  "kind": "preset",
+  "version": 2,
+  "name": "Seaside flash",
+  "group": "Profiles",
+  "workingSpace": "rec2020-linear",
+  "body": {
+    "settings": {
+      "bw": {
+        "enabled": false
+      },
+      "color": {
+        "saturation": 16.0,
+        "vibrance": 18.0
+      },
+      "detail": {
+        "clarity": 8.0,
+        "dehaze": 0.0,
+        "sharpen": {
+          "amount": 40.0
+        },
+        "texture": 0.0
+      },
+      "grading": {
+        "balance": 0.0,
+        "blending": 75.0,
+        "global": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "highlights": {
+          "amount": 18.0,
+          "hue": 40.0,
+          "luminance": 0.0
+        },
+        "midtones": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "shadows": {
+          "amount": 10.0,
+          "hue": 210.0,
+          "luminance": 0.0
+        }
+      },
+      "light": {
+        "blacks": -10.0,
+        "contrast": 15.0,
+        "exposure": 0.3,
+        "highlights": -30.0,
+        "shadows": 30.0,
+        "whites": 20.0
+      },
+      "mixer": {
+        "luminance": {
+          "orange": 8.0
+        },
+        "saturation": {
+          "blue": -5.0,
+          "green": -20.0,
+          "magenta": 10.0,
+          "orange": 12.0,
+          "red": 18.0,
+          "yellow": 15.0
+        }
+      }
+    }
+  }
+}

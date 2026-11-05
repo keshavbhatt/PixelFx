@@ -1,0 +1,75 @@
+{
+  "format": "pixelfx",
+  "kind": "preset",
+  "version": 2,
+  "name": "Halloween dark",
+  "group": "Profiles",
+  "workingSpace": "rec2020-linear",
+  "body": {
+    "settings": {
+      "bw": {
+        "enabled": false
+      },
+      "detail": {
+        "denoise": {
+          "luminance": 0.0
+        },
+        "sharpen": {
+          "amount": 10.0
+        }
+      },
+      "effects": {
+        "grain": {
+          "amount": 35.0,
+          "roughness": 60.0,
+          "size": 30.0
+        },
+        "vignette": {
+          "amount": -20.0
+        }
+      },
+      "grading": {
+        "balance": 0.0,
+        "blending": 70.0,
+        "global": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "highlights": {
+          "amount": 15.0,
+          "hue": 40.0,
+          "luminance": 0.0
+        },
+        "midtones": {
+          "amount": 8.0,
+          "hue": 270.0,
+          "luminance": 0.0
+        },
+        "shadows": {
+          "amount": 18.0,
+          "hue": 220.0,
+          "luminance": 0.0
+        }
+      },
+      "light": {
+        "blacks": -20.0,
+        "contrast": 25.0,
+        "exposure": -0.4,
+        "highlights": -45.0,
+        "shadows": -15.0,
+        "whites": -5.0
+      },
+      "mixer": {
+        "luminance": {
+          "orange": 10.0
+        },
+        "saturation": {
+          "green": -40.0,
+          "orange": 8.0,
+          "yellow": -10.0
+        }
+      }
+    }
+  }
+}

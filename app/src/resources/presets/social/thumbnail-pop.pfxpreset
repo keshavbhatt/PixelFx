@@ -1,0 +1,69 @@
+{
+  "format": "pixelfx",
+  "kind": "preset",
+  "version": 2,
+  "name": "Thumbnail pop",
+  "group": "Profiles",
+  "workingSpace": "rec2020-linear",
+  "body": {
+    "settings": {
+      "bw": {
+        "enabled": false
+      },
+      "color": {
+        "saturation": 20.0,
+        "vibrance": 25.0
+      },
+      "detail": {
+        "clarity": 30.0,
+        "dehaze": 15.0,
+        "denoise": {
+          "luminance": 0.0
+        },
+        "sharpen": {
+          "amount": 10.0
+        },
+        "texture": 15.0
+      },
+      "effects": {
+        "vignette": {
+          "amount": -20.0
+        }
+      },
+      "grading": {
+        "blending": 50.0,
+        "global": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "highlights": {
+          "amount": 10.0,
+          "hue": 45.0
+        },
+        "shadows": {
+          "amount": 8.0,
+          "hue": 220.0
+        }
+      },
+      "light": {
+        "blacks": -20.0,
+        "contrast": 35.0,
+        "exposure": 0.2,
+        "highlights": -20.0,
+        "shadows": 10.0,
+        "whites": 25.0
+      },
+      "mixer": {
+        "luminance": {
+          "orange": 10.0
+        },
+        "saturation": {
+          "blue": 15.0,
+          "orange": 10.0,
+          "red": 15.0
+        }
+      }
+    }
+  }
+}

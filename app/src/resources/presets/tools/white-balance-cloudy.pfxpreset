@@ -1,0 +1,21 @@
+{
+  "format": "pixelfx",
+  "kind": "preset",
+  "version": 2,
+  "name": "White balance, cloudy",
+  "group": "Profiles",
+  "workingSpace": "rec2020-linear",
+  "body": {
+    "settings": {
+      "bw": {
+        "enabled": false
+      },
+      "color": {
+        "wb": {
+          "temperature": -0.08875392718485262,
+          "tint": 6.666666666666667
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,62 @@
+{
+  "format": "pixelfx",
+  "kind": "preset",
+  "version": 2,
+  "name": "Bright interior",
+  "group": "Profiles",
+  "workingSpace": "rec2020-linear",
+  "body": {
+    "settings": {
+      "bw": {
+        "enabled": false
+      },
+      "color": {
+        "saturation": 0.0
+      },
+      "detail": {
+        "clarity": 5.0
+      },
+      "grading": {
+        "balance": 0.0,
+        "blending": 75.0,
+        "global": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "highlights": {
+          "amount": 3.0,
+          "hue": 43.0,
+          "luminance": 0.0
+        },
+        "midtones": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "shadows": {
+          "amount": 3.0,
+          "hue": 220.0,
+          "luminance": 0.0
+        }
+      },
+      "light": {
+        "blacks": 0.0,
+        "contrast": 10.0,
+        "exposure": 0.4,
+        "highlights": -35.0,
+        "shadows": 30.0,
+        "whites": 10.0
+      },
+      "mixer": {
+        "luminance": {
+          "aqua": 15.0
+        },
+        "saturation": {
+          "blue": -10.0,
+          "orange": -5.0
+        }
+      }
+    }
+  }
+}

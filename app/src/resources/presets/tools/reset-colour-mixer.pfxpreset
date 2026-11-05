@@ -1,0 +1,81 @@
+{
+  "format": "pixelfx",
+  "kind": "preset",
+  "version": 2,
+  "name": "Reset colour mixer",
+  "group": "Profiles",
+  "workingSpace": "rec2020-linear",
+  "body": {
+    "settings": {
+      "bw": {
+        "enabled": false,
+        "mix": {
+          "aqua": 0.0,
+          "blue": 0.0,
+          "green": 0.0,
+          "magenta": 0.0,
+          "orange": 0.0,
+          "purple": 0.0,
+          "red": 0.0,
+          "yellow": 0.0
+        }
+      },
+      "grading": {
+        "balance": 0.0,
+        "blending": 50.0,
+        "global": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "highlights": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "midtones": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "shadows": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        }
+      },
+      "mixer": {
+        "hue": {
+          "aqua": 0.0,
+          "blue": 0.0,
+          "green": 0.0,
+          "magenta": 0.0,
+          "orange": 0.0,
+          "purple": 0.0,
+          "red": 0.0,
+          "yellow": 0.0
+        },
+        "luminance": {
+          "aqua": 0.0,
+          "blue": 0.0,
+          "green": 0.0,
+          "magenta": 0.0,
+          "orange": 0.0,
+          "purple": 0.0,
+          "red": 0.0,
+          "yellow": 0.0
+        },
+        "saturation": {
+          "aqua": 0.0,
+          "blue": 0.0,
+          "green": 0.0,
+          "magenta": 0.0,
+          "orange": 0.0,
+          "purple": 0.0,
+          "red": 0.0,
+          "yellow": 0.0
+        }
+      }
+    }
+  }
+}

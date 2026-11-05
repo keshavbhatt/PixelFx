@@ -1,0 +1,32 @@
+{
+  "format": "pixelfx",
+  "kind": "preset",
+  "version": 2,
+  "name": "Reset light and colour",
+  "group": "Profiles",
+  "workingSpace": "rec2020-linear",
+  "body": {
+    "settings": {
+      "bw": {
+        "enabled": false
+      },
+      "color": {
+        "saturation": 0.0,
+        "vibrance": 0.0
+      },
+      "detail": {
+        "clarity": 0.0,
+        "dehaze": 0.0,
+        "texture": 0.0
+      },
+      "light": {
+        "blacks": 0.0,
+        "contrast": 0.0,
+        "exposure": 0.0,
+        "highlights": 0.0,
+        "shadows": 0.0,
+        "whites": 0.0
+      }
+    }
+  }
+}

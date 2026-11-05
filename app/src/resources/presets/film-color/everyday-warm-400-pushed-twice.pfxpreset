@@ -1,0 +1,100 @@
+{
+  "format": "pixelfx",
+  "kind": "preset",
+  "version": 2,
+  "name": "Everyday warm 400, pushed twice",
+  "group": "Profiles",
+  "workingSpace": "rec2020-linear",
+  "body": {
+    "settings": {
+      "bw": {
+        "enabled": false
+      },
+      "color": {
+        "saturation": 6.5,
+        "vibrance": 1.5
+      },
+      "detail": {
+        "clarity": 0.0,
+        "dehaze": 0.0,
+        "denoise": {
+          "luminance": 0.0
+        },
+        "sharpen": {
+          "amount": 10.0
+        },
+        "texture": 0.0
+      },
+      "effects": {
+        "grain": {
+          "amount": 60.0,
+          "roughness": 71.0,
+          "size": 46.0
+        }
+      },
+      "grading": {
+        "balance": 22.0,
+        "blending": 50.0,
+        "global": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "highlights": {
+          "amount": 17.5,
+          "hue": 42.0,
+          "luminance": 0.0
+        },
+        "midtones": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "shadows": {
+          "amount": 13.0,
+          "hue": 205.0,
+          "luminance": 0.0
+        }
+      },
+      "light": {
+        "blacks": -30.0,
+        "contrast": 50.0,
+        "exposure": -0.2,
+        "highlights": -48.0,
+        "shadows": -4.0,
+        "whites": 20.0
+      },
+      "mixer": {
+        "hue": {
+          "aqua": -5.0,
+          "blue": 2.5,
+          "green": -17.5,
+          "magenta": 5.0,
+          "orange": -4.0,
+          "purple": 5.0,
+          "red": 6.5,
+          "yellow": -11.0
+        },
+        "luminance": {
+          "aqua": 3.0,
+          "blue": -14.0,
+          "green": -14.0,
+          "orange": -3.5,
+          "purple": 3.0,
+          "red": -4.5,
+          "yellow": -6.5
+        },
+        "saturation": {
+          "aqua": -10.0,
+          "blue": -5.0,
+          "green": -5.0,
+          "magenta": -5.0,
+          "orange": 25.0,
+          "purple": -10.0,
+          "red": 17.5,
+          "yellow": 13.0
+        }
+      }
+    }
+  }
+}

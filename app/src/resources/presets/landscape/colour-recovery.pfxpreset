@@ -1,0 +1,69 @@
+{
+  "format": "pixelfx",
+  "kind": "preset",
+  "version": 2,
+  "name": "Colour recovery",
+  "group": "Profiles",
+  "workingSpace": "rec2020-linear",
+  "body": {
+    "settings": {
+      "bw": {
+        "enabled": false
+      },
+      "color": {
+        "saturation": 15.0,
+        "vibrance": 15.0,
+        "wb": {
+          "temperature": 20.556333819557786,
+          "tint": 10.0
+        }
+      },
+      "detail": {
+        "clarity": 15.0,
+        "dehaze": 20.0
+      },
+      "grading": {
+        "balance": 0.0,
+        "blending": 75.0,
+        "global": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "highlights": {
+          "amount": 5.0,
+          "hue": 38.0,
+          "luminance": 0.0
+        },
+        "midtones": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "shadows": {
+          "amount": 10.0,
+          "hue": 40.0,
+          "luminance": 0.0
+        }
+      },
+      "light": {
+        "blacks": -10.0,
+        "contrast": 25.0,
+        "exposure": 0.5,
+        "highlights": -30.0,
+        "shadows": 25.0,
+        "whites": 10.0
+      },
+      "mixer": {
+        "saturation": {
+          "aqua": -10.0,
+          "blue": -20.0,
+          "green": -15.0,
+          "orange": 25.0,
+          "red": 30.0,
+          "yellow": 15.0
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,73 @@
+{
+  "format": "pixelfx",
+  "kind": "preset",
+  "version": 2,
+  "name": "Night mono 1600",
+  "group": "Profiles",
+  "workingSpace": "rec2020-linear",
+  "body": {
+    "settings": {
+      "bw": {
+        "enabled": true,
+        "mix": {
+          "aqua": -5.0,
+          "blue": -25.0,
+          "green": -10.0,
+          "magenta": 0.0,
+          "orange": 15.0,
+          "purple": -5.0,
+          "red": 20.0,
+          "yellow": 5.0
+        }
+      },
+      "detail": {
+        "clarity": 0.0,
+        "denoise": {
+          "luminance": 0.0
+        },
+        "sharpen": {
+          "amount": 10.0
+        },
+        "texture": 0.0
+      },
+      "effects": {
+        "grain": {
+          "amount": 50.0,
+          "roughness": 65.0,
+          "size": 45.0
+        }
+      },
+      "grading": {
+        "balance": 0.0,
+        "blending": 50.0,
+        "global": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "highlights": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "midtones": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "shadows": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        }
+      },
+      "light": {
+        "blacks": -30.0,
+        "contrast": 35.0,
+        "highlights": -30.0,
+        "shadows": 15.0,
+        "whites": 15.0
+      }
+    }
+  }
+}

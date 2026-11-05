@@ -1,0 +1,83 @@
+{
+  "format": "pixelfx",
+  "kind": "preset",
+  "version": 2,
+  "name": "Forties newsreel",
+  "group": "Profiles",
+  "workingSpace": "rec2020-linear",
+  "body": {
+    "settings": {
+      "bw": {
+        "enabled": false
+      },
+      "color": {
+        "saturation": -45.0,
+        "wb": {
+          "temperature": -32.28156341592108
+        }
+      },
+      "detail": {
+        "denoise": {
+          "luminance": 0.0
+        },
+        "sharpen": {
+          "amount": 10.0
+        }
+      },
+      "effects": {
+        "grain": {
+          "amount": 50.0,
+          "roughness": 70.0,
+          "size": 35.0
+        },
+        "vignette": {
+          "amount": -25.0
+        }
+      },
+      "grading": {
+        "balance": 0.0,
+        "blending": 70.0,
+        "global": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "highlights": {
+          "amount": 5.0,
+          "hue": 210.0,
+          "luminance": 0.0
+        },
+        "midtones": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "shadows": {
+          "amount": 8.0,
+          "hue": 220.0,
+          "luminance": 0.0
+        }
+      },
+      "light": {
+        "blacks": -25.0,
+        "contrast": 35.0,
+        "exposure": -0.2,
+        "highlights": -50.0,
+        "shadows": -10.0,
+        "whites": 5.0
+      },
+      "mixer": {
+        "saturation": {
+          "aqua": -45.0,
+          "blue": -40.0,
+          "green": -50.0,
+          "magenta": -45.0,
+          "orange": -40.0,
+          "purple": -45.0,
+          "red": -45.0,
+          "yellow": -45.0
+        }
+      }
+    }
+  }
+}

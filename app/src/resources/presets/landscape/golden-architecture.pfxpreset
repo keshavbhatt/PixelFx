@@ -1,0 +1,107 @@
+{
+  "format": "pixelfx",
+  "kind": "preset",
+  "version": 2,
+  "name": "Golden architecture",
+  "group": "Profiles",
+  "workingSpace": "rec2020-linear",
+  "body": {
+    "settings": {
+      "bw": {
+        "enabled": false
+      },
+      "color": {
+        "saturation": 5.0,
+        "vibrance": 10.0,
+        "wb": {
+          "temperature": -0.08875392718485262,
+          "tint": 10.0
+        }
+      },
+      "curves": {
+        "rgb": [
+          [
+            0.0,
+            0.0196078431372549
+          ],
+          [
+            0.17647058823529413,
+            0.13725490196078433
+          ],
+          [
+            0.5019607843137255,
+            0.5019607843137255
+          ],
+          [
+            0.7529411764705882,
+            0.7843137254901961
+          ],
+          [
+            1.0,
+            1.0
+          ]
+        ]
+      },
+      "detail": {
+        "clarity": 10.0,
+        "dehaze": 15.0,
+        "texture": 5.0
+      },
+      "effects": {
+        "vignette": {
+          "amount": -35.0,
+          "feather": 60.0,
+          "highlights": 0.0,
+          "midpoint": 40.0,
+          "roundness": 0.0
+        }
+      },
+      "grading": {
+        "balance": 0.0,
+        "blending": 75.0,
+        "global": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "highlights": {
+          "amount": 5.0,
+          "hue": 45.0,
+          "luminance": 0.0
+        },
+        "midtones": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "shadows": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        }
+      },
+      "light": {
+        "blacks": -15.0,
+        "contrast": 30.0,
+        "exposure": 0.45,
+        "highlights": -20.0,
+        "shadows": 15.0,
+        "whites": 20.0
+      },
+      "mixer": {
+        "hue": {
+          "yellow": -10.0
+        },
+        "luminance": {
+          "orange": 10.0,
+          "yellow": 5.0
+        },
+        "saturation": {
+          "green": -20.0,
+          "orange": 25.0,
+          "yellow": 15.0
+        }
+      }
+    }
+  }
+}

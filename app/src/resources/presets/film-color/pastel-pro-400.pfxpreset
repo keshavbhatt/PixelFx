@@ -1,0 +1,74 @@
+{
+  "format": "pixelfx",
+  "kind": "preset",
+  "version": 2,
+  "name": "Pastel pro 400",
+  "group": "Profiles",
+  "workingSpace": "rec2020-linear",
+  "body": {
+    "settings": {
+      "bw": {
+        "enabled": false
+      },
+      "detail": {
+        "sharpen": {
+          "amount": 10.0
+        }
+      },
+      "effects": {
+        "grain": {
+          "amount": 21.0,
+          "roughness": 50.0,
+          "size": 25.0
+        }
+      },
+      "grading": {
+        "balance": 0.0,
+        "blending": 50.0,
+        "global": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "highlights": {
+          "amount": 5.0,
+          "hue": 45.0,
+          "luminance": 0.0
+        },
+        "midtones": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "shadows": {
+          "amount": 8.0,
+          "hue": 190.0,
+          "luminance": 0.0
+        }
+      },
+      "light": {
+        "blacks": -15.0,
+        "contrast": -19.0,
+        "exposure": 0.48,
+        "highlights": -50.0,
+        "shadows": 33.0,
+        "whites": -5.0
+      },
+      "mixer": {
+        "hue": {
+          "blue": -5.0,
+          "green": -20.0
+        },
+        "luminance": {
+          "green": -5.0,
+          "orange": 10.0
+        },
+        "saturation": {
+          "blue": -18.0,
+          "green": -24.0,
+          "orange": -15.0
+        }
+      }
+    }
+  }
+}

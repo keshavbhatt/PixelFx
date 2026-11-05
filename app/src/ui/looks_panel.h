@@ -16,41 +16,8 @@ class QVBoxLayout;
 
 namespace pixelfx::ui {
 
+class PhotoTile;
 class SliderRow;
-
-/// One look as a picture of the photo with it.
-class LookTile : public QWidget
-{
-    Q_OBJECT
-    Q_DISABLE_COPY_MOVE(LookTile)
-
-public:
-    LookTile(QString id, QString name, bool mine, QWidget* parent = nullptr);
-    ~LookTile() override;
-
-    [[nodiscard]] const QString& id() const { return m_id; }
-    [[nodiscard]] const QString& name() const { return m_name; }
-    void setImage(const QImage& image);
-    void setSelected(bool selected);
-    [[nodiscard]] bool isSelected() const { return m_selected; }
-
-Q_SIGNALS:
-    void clicked();
-    void menuRequested(const QPoint& globalPos);
-
-protected:
-    void contextMenuEvent(QContextMenuEvent* event) override;
-    void paintEvent(QPaintEvent* event) override;
-    void mouseReleaseEvent(QMouseEvent* event) override;
-    void keyPressEvent(QKeyEvent* event) override;
-
-private:
-    QString m_id;
-    QString m_name;
-    bool m_mine = false;
-    bool m_selected = false;
-    QImage m_image;
-};
 
 /// The Looks tab of the left panel: search, category chips, the user's
 /// looks and the built-in ones as tiles of the photo, and the strength of the applied look.
@@ -70,7 +37,7 @@ public:
     [[nodiscard]] const QString& current() const { return m_current; }
     /// The picture for entry `index`; index -1 is "Original" (no look).
     void setThumbnail(int index, const QImage& image);
-    [[nodiscard]] std::vector<LookTile*> visibleTiles() const;
+    [[nodiscard]] std::vector<PhotoTile*> visibleTiles() const;
     [[nodiscard]] QSlider* strengthSlider() const;
 
 Q_SIGNALS:

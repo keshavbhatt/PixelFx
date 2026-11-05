@@ -1,0 +1,73 @@
+{
+  "format": "pixelfx",
+  "kind": "preset",
+  "version": 2,
+  "name": "Pro portrait 800",
+  "group": "Profiles",
+  "workingSpace": "rec2020-linear",
+  "body": {
+    "settings": {
+      "bw": {
+        "enabled": false
+      },
+      "color": {
+        "saturation": -5.0,
+        "vibrance": -5.0
+      },
+      "detail": {
+        "sharpen": {
+          "amount": 10.0
+        }
+      },
+      "effects": {
+        "grain": {
+          "amount": 35.0,
+          "roughness": 50.0,
+          "size": 30.0
+        }
+      },
+      "grading": {
+        "balance": 0.0,
+        "blending": 50.0,
+        "global": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "highlights": {
+          "amount": 8.0,
+          "hue": 40.0,
+          "luminance": 0.0
+        },
+        "midtones": {
+          "amount": 5.0,
+          "hue": 40.0,
+          "luminance": 0.0
+        },
+        "shadows": {
+          "amount": 5.0,
+          "hue": 35.0,
+          "luminance": 0.0
+        }
+      },
+      "light": {
+        "blacks": 5.0,
+        "contrast": -5.0,
+        "exposure": 0.33,
+        "highlights": -35.0,
+        "shadows": 25.0,
+        "whites": -5.0
+      },
+      "mixer": {
+        "luminance": {
+          "orange": 15.0
+        },
+        "saturation": {
+          "blue": -10.0,
+          "green": -15.0,
+          "red": -5.0
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,76 @@
+{
+  "format": "pixelfx",
+  "kind": "preset",
+  "version": 2,
+  "name": "Nineties cross process",
+  "group": "Profiles",
+  "workingSpace": "rec2020-linear",
+  "body": {
+    "settings": {
+      "bw": {
+        "enabled": false
+      },
+      "color": {
+        "saturation": -5.0
+      },
+      "detail": {
+        "denoise": {
+          "luminance": 0.0
+        },
+        "sharpen": {
+          "amount": 10.0
+        }
+      },
+      "effects": {
+        "grain": {
+          "amount": 25.0,
+          "roughness": 55.0,
+          "size": 28.0
+        },
+        "vignette": {
+          "amount": -12.0
+        }
+      },
+      "grading": {
+        "balance": 0.0,
+        "blending": 40.0,
+        "global": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "highlights": {
+          "amount": 20.0,
+          "hue": 320.0,
+          "luminance": 0.0
+        },
+        "midtones": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "shadows": {
+          "amount": 25.0,
+          "hue": 160.0,
+          "luminance": 0.0
+        }
+      },
+      "light": {
+        "blacks": -20.0,
+        "contrast": 30.0,
+        "exposure": -0.15,
+        "highlights": -50.0,
+        "shadows": 15.0,
+        "whites": 5.0
+      },
+      "mixer": {
+        "saturation": {
+          "blue": -15.0,
+          "green": -30.0,
+          "magenta": 15.0,
+          "orange": -10.0
+        }
+      }
+    }
+  }
+}

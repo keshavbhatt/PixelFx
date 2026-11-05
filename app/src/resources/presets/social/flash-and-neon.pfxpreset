@@ -1,0 +1,72 @@
+{
+  "format": "pixelfx",
+  "kind": "preset",
+  "version": 2,
+  "name": "Flash and neon",
+  "group": "Profiles",
+  "workingSpace": "rec2020-linear",
+  "body": {
+    "settings": {
+      "bw": {
+        "enabled": false
+      },
+      "color": {
+        "saturation": -5.0,
+        "vibrance": 0.0
+      },
+      "detail": {
+        "clarity": 25.0,
+        "dehaze": 10.0,
+        "denoise": {
+          "luminance": 0.0
+        },
+        "sharpen": {
+          "amount": 10.0
+        },
+        "texture": 15.0
+      },
+      "effects": {
+        "vignette": {
+          "amount": -12.0
+        }
+      },
+      "grading": {
+        "blending": 75.0,
+        "global": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "highlights": {
+          "amount": 12.0,
+          "hue": 315.0
+        },
+        "shadows": {
+          "amount": 15.0,
+          "hue": 240.0
+        }
+      },
+      "light": {
+        "blacks": -15.0,
+        "contrast": 35.0,
+        "exposure": 0.15,
+        "highlights": -40.0,
+        "shadows": 30.0,
+        "whites": 20.0
+      },
+      "mixer": {
+        "hue": {
+          "green": -40.0
+        },
+        "saturation": {
+          "blue": 15.0,
+          "green": -30.0,
+          "magenta": 25.0,
+          "purple": 20.0,
+          "red": 10.0,
+          "yellow": -20.0
+        }
+      }
+    }
+  }
+}

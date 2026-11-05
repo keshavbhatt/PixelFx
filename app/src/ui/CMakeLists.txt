@@ -59,6 +59,8 @@ qt_add_library(pixelfx_ui STATIC
     part_checklist.h
     paste_sheet.cpp
     paste_sheet.h
+    photo_tile.cpp
+    photo_tile.h
     preview_viewer.cpp
     region_curve.cpp
     region_curve.h

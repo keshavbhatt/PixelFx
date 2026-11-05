@@ -228,3 +228,26 @@ is on the host (a build tool); without it the C paths decode the same pixels, mo
 stamp of all pinned versions in the prefix triggers a clean rebuild when any pin changes. The
 runtime's libjxl 0.7 is not used.
 
+## ADR-009: the built-in preset catalog comes from EmulsionPresets (2026-11-05)
+
+**Context.** The owner wants a large preset catalog as a selling point (FEATURES P9), in the
+spirit of Lightroom's. Adobe's presets cannot be copied. EmulsionPresets
+(github.com/peva3/EmulsionPresets, v3.1.4) is 451 Lightroom presets under the MIT licence, free
+for commercial use, with a research note per preset. Its names use film brands, products and
+real people's names, and 20 of them are video copies of others.
+
+**Decision.** The catalog is built at development time, not by the build: `scripts/catalog/
+build_catalog.py` converts the presets listed in `scripts/catalog/catalog.tsv` with libpixelfx's
+own importer (`pfx import`), so they map exactly as an import in the app would, into
+`app/src/resources/presets/<category>/*.pfxpreset`, compiled into the app as resources. The table
+gives each preset a PixelFx category and a descriptive name without any brand, product or real
+person (Portra 400 is "Portrait 400"). Left out: the 20 video copies and the two lens-profile
+tools, which do nothing in PixelFx; 429 remain. The MIT notice ships with the app (About) and
+`REUSE.toml` marks the converted files MIT.
+
+**Consequences.** A new EmulsionPresets release is taken by running the script on it and
+reviewing the diff; new presets need a row in the table first. Descriptions are written from
+each preset's settings (`core::describeSettings`), so no text of the source is copied. The look of
+each preset is the source's intent on PixelFx's engine, not a pixel match with Lightroom
+(FEATURES P8); presets that read poorly are dropped from the table after review on real photos.
+

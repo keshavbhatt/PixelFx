@@ -1,0 +1,81 @@
+{
+  "format": "pixelfx",
+  "kind": "preset",
+  "version": 2,
+  "name": "Bright everyday 200",
+  "group": "Profiles",
+  "workingSpace": "rec2020-linear",
+  "body": {
+    "settings": {
+      "bw": {
+        "enabled": false
+      },
+      "color": {
+        "saturation": 8.0,
+        "vibrance": 12.0
+      },
+      "detail": {
+        "sharpen": {
+          "amount": 10.0
+        }
+      },
+      "effects": {
+        "grain": {
+          "amount": 21.0,
+          "roughness": 55.0,
+          "size": 30.0
+        }
+      },
+      "grading": {
+        "balance": 0.0,
+        "blending": 50.0,
+        "global": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "highlights": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "midtones": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "shadows": {
+          "amount": 5.0,
+          "hue": 35.0,
+          "luminance": 0.0
+        }
+      },
+      "light": {
+        "blacks": -15.0,
+        "contrast": 14.0,
+        "highlights": -11.0,
+        "shadows": 15.0,
+        "whites": 19.0
+      },
+      "mixer": {
+        "hue": {
+          "blue": -5.0,
+          "green": -5.0,
+          "red": -5.0,
+          "yellow": -5.0
+        },
+        "luminance": {
+          "blue": 5.0,
+          "red": 10.0
+        },
+        "saturation": {
+          "blue": 16.0,
+          "green": -5.0,
+          "orange": 8.0,
+          "red": 28.0,
+          "yellow": 12.0
+        }
+      }
+    }
+  }
+}

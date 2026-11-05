@@ -1,0 +1,76 @@
+{
+  "format": "pixelfx",
+  "kind": "preset",
+  "version": 2,
+  "name": "Cinema tungsten 500, lab",
+  "group": "Profiles",
+  "workingSpace": "rec2020-linear",
+  "body": {
+    "settings": {
+      "bw": {
+        "enabled": false
+      },
+      "detail": {
+        "clarity": 0.0,
+        "dehaze": 0.0,
+        "denoise": {
+          "luminance": 0.0
+        },
+        "sharpen": {
+          "amount": 10.0
+        },
+        "texture": 0.0
+      },
+      "effects": {
+        "grain": {
+          "amount": 31.0,
+          "roughness": 50.0,
+          "size": 35.0
+        }
+      },
+      "grading": {
+        "balance": 2.0,
+        "blending": 50.0,
+        "global": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "highlights": {
+          "amount": 8.0,
+          "hue": 35.0,
+          "luminance": 0.0
+        },
+        "midtones": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "shadows": {
+          "amount": 8.0,
+          "hue": 220.0,
+          "luminance": 0.0
+        }
+      },
+      "light": {
+        "blacks": -21.0,
+        "contrast": 36.0,
+        "exposure": 0.13,
+        "highlights": -51.0,
+        "shadows": 23.0,
+        "whites": -18.0
+      },
+      "mixer": {
+        "hue": {
+          "red": 7.0
+        },
+        "saturation": {
+          "blue": 8.0,
+          "green": -19.0,
+          "orange": -8.0,
+          "yellow": -11.0
+        }
+      }
+    }
+  }
+}

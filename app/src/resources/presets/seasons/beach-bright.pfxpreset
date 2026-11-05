@@ -1,0 +1,71 @@
+{
+  "format": "pixelfx",
+  "kind": "preset",
+  "version": 2,
+  "name": "Beach bright",
+  "group": "Profiles",
+  "workingSpace": "rec2020-linear",
+  "body": {
+    "settings": {
+      "bw": {
+        "enabled": false
+      },
+      "detail": {
+        "clarity": -8.0,
+        "dehaze": -8.0,
+        "denoise": {
+          "luminance": 0.0
+        },
+        "sharpen": {
+          "amount": 10.0
+        }
+      },
+      "grading": {
+        "balance": 0.0,
+        "blending": 75.0,
+        "global": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "highlights": {
+          "amount": 10.0,
+          "hue": 42.0,
+          "luminance": 0.0
+        },
+        "midtones": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "shadows": {
+          "amount": 10.0,
+          "hue": 200.0,
+          "luminance": 0.0
+        }
+      },
+      "light": {
+        "blacks": 5.0,
+        "contrast": -10.0,
+        "exposure": 0.7,
+        "highlights": -50.0,
+        "shadows": 35.0,
+        "whites": 20.0
+      },
+      "mixer": {
+        "hue": {
+          "blue": -5.0
+        },
+        "luminance": {
+          "aqua": 15.0,
+          "yellow": 10.0
+        },
+        "saturation": {
+          "aqua": 12.0,
+          "blue": 10.0,
+          "orange": 10.0
+        }
+      }
+    }
+  }
+}

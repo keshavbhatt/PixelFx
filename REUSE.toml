@@ -42,3 +42,10 @@ precedence = "override"
 SPDX-FileCopyrightText = "2026 Lucide Icons and Contributors"
 SPDX-License-Identifier = "ISC"
 
+
+# The built-in preset catalog: converted from EmulsionPresets (MIT) by scripts/catalog, renamed.
+[[annotations]]
+path = "app/src/resources/presets/**"
+precedence = "override"
+SPDX-FileCopyrightText = ["2026 peva3", "2026 Keshav Bhatt (Ktechpit)"]
+SPDX-License-Identifier = "MIT"

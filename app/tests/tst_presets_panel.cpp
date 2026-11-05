@@ -1,12 +1,16 @@
 #include "ui/paste_sheet.h"
+#include "ui/photo_tile.h"
 #include "ui/preset_save_sheet.h"
 #include "ui/presets_panel.h"
+#include "ui/slider_row.h"
 #include "ui/style.h"
 
 #include <QApplication>
 #include <QLabel>
 #include <QLineEdit>
+#include <QPushButton>
 #include <QSignalSpy>
+#include <QSlider>
 #include <QTest>
 
 using namespace Qt::StringLiterals;
@@ -33,15 +37,106 @@ private Q_SLOTS:
             entries.push_back(e);
         }
         panel.setEntries(entries);
-        QCOMPARE(panel.rows().size(), 3);
-        panel.findChild<QLineEdit*>()->setText(u"warm"_s);
-        QCOMPARE(panel.rows().size(), 1);
+        panel.showTab(1);
+        QCOMPARE(panel.tiles().size(), 3);
+        panel.findChild<QLineEdit*>(u"presetSearch"_s)->setText(u"warm"_s);
+        QCOMPARE(panel.tiles().size(), 1);
         QSignalSpy apply(&panel, &PresetsPanel::applyRequested);
         panel.show();
         QVERIFY(QTest::qWaitForWindowExposed(&panel));
-        QTest::mouseClick(panel.rows().first(), Qt::LeftButton, {}, QPoint(80, 10));
+        QTest::mouseClick(panel.tiles().front(), Qt::LeftButton, {}, QPoint(40, 10));
         QCOMPARE(apply.count(), 1);
         QCOMPARE(apply.first().first().value<PresetEntry>().name, u"Warm evening"_s);
+    }
+
+    static std::vector<PresetEntry> catalog()
+    {
+        std::vector<PresetEntry> entries;
+        PresetEntry mine;
+        mine.id = u"/x/Moody"_s;
+        mine.name = u"Moody"_s;
+        mine.group = u"My presets"_s;
+        mine.path = mine.id;
+        entries.push_back(mine);
+        for (int i = 0; i < 9; ++i) {
+            PresetEntry e;
+            e.id = u"builtin:film-color/%1"_s.arg(i);
+            e.name = u"Film %1"_s.arg(i);
+            e.group = u"Film, color"_s;
+            e.category = u"film-color"_s;
+            e.settings.set("color.wb.temperature", 10.0 + i);
+            entries.push_back(e);
+        }
+        return entries;
+    }
+
+    void categoriesShowSixTilesAndOpenInFull()
+    {
+        PresetsPanel panel;
+        panel.setEntries(catalog());
+        QCOMPARE(panel.tiles().size(), 7u); // one of mine, six of the nine
+        QPushButton* all = nullptr;
+        for (auto* b : panel.findChildren<QPushButton*>(u"link"_s)) {
+            if (b->text() == u"All 9"_s) {
+                all = b;
+            }
+        }
+        QVERIFY(all != nullptr);
+        all->click();
+        QCOMPARE(panel.shownCategory(), u"Film, color"_s);
+        QCOMPARE(panel.tiles().size(), 9u);
+        panel.showCategory({});
+        QCOMPARE(panel.tiles().size(), 7u);
+        // Closing a category hides its tiles and is reported to be remembered.
+        QSignalSpy closed(&panel, &PresetsPanel::closedCategoriesChanged);
+        for (auto* b : panel.findChildren<QPushButton*>(u"categoryHeading"_s)) {
+            if (b->accessibleName() == u"Film, color"_s) {
+                b->click();
+            }
+        }
+        QCOMPARE(closed.count(), 1);
+        QCOMPARE(panel.tiles().size(), 1u);
+        QVERIFY(panel.shownIndexes() == std::vector<std::size_t>{0});
+    }
+
+    void favoritesMineAndRecentFilter()
+    {
+        PresetsPanel panel;
+        panel.setEntries(catalog());
+        QSignalSpy favorites(&panel, &PresetsPanel::favoritesChanged);
+        pixelfx::ui::PhotoTile* film = panel.tiles().at(2);
+        const QString id = film->id();
+        QTest::keyClick(film, Qt::Key_F);
+        QCOMPARE(favorites.count(), 1);
+        QCOMPARE(panel.favorites(), QStringList{id});
+        panel.showFilter(1);
+        QCOMPARE(panel.tiles().size(), 1u);
+        QCOMPARE(panel.tiles().front()->id(), id);
+        QVERIFY(panel.tiles().front()->accessibleName().endsWith(u", in Favorites"_s));
+        panel.showFilter(2);
+        QCOMPARE(panel.tiles().size(), 1u);
+        QCOMPARE(panel.tiles().front()->name(), u"Moody"_s);
+        panel.setRecent({u"builtin:film-color/4"_s, u"builtin:film-color/1"_s});
+        panel.showFilter(3);
+        QCOMPARE(panel.tiles().size(), 2u);
+        QCOMPARE(panel.tiles().front()->name(), u"Film 4"_s); // newest first
+    }
+
+    void theAmountShowsOnceAPresetIsApplied()
+    {
+        PresetsPanel panel;
+        panel.setEntries(catalog());
+        auto* amount = panel.amountRow();
+        QVERIFY(amount->parentWidget()->isHidden());
+        panel.setApplied(u"builtin:film-color/0"_s, u"Film 0"_s, 100.0);
+        QVERIFY(!amount->parentWidget()->isHidden());
+        QCOMPARE(amount->ticks(), 100);
+        QSignalSpy released(&panel, &PresetsPanel::amountReleased);
+        amount->slider()->setValue(80); // a keyboard step: complete at once
+        QCOMPARE(released.count(), 1);
+        QCOMPARE(released.first().first().toDouble(), 80.0);
+        panel.setApplied({}, {}, 100.0);
+        QVERIFY(amount->parentWidget()->isHidden());
     }
 
     void pasteSheetOffersWhatWasCopied()

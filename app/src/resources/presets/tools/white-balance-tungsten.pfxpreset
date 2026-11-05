@@ -1,0 +1,21 @@
+{
+  "format": "pixelfx",
+  "kind": "preset",
+  "version": 2,
+  "name": "White balance, tungsten",
+  "group": "Profiles",
+  "workingSpace": "rec2020-linear",
+  "body": {
+    "settings": {
+      "bw": {
+        "enabled": false
+      },
+      "color": {
+        "wb": {
+          "temperature": -100.0,
+          "tint": 0.0
+        }
+      }
+    }
+  }
+}

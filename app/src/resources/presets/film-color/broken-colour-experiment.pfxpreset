@@ -1,0 +1,85 @@
+{
+  "format": "pixelfx",
+  "kind": "preset",
+  "version": 2,
+  "name": "Broken colour experiment",
+  "group": "Profiles",
+  "workingSpace": "rec2020-linear",
+  "body": {
+    "settings": {
+      "bw": {
+        "enabled": false
+      },
+      "color": {
+        "saturation": -25.0,
+        "vibrance": -22.0
+      },
+      "detail": {
+        "clarity": 0.0,
+        "dehaze": 0.0,
+        "denoise": {
+          "luminance": 0.0
+        },
+        "sharpen": {
+          "amount": 10.0
+        },
+        "texture": 0.0
+      },
+      "effects": {
+        "grain": {
+          "amount": 50.0,
+          "roughness": 70.0,
+          "size": 40.0
+        }
+      },
+      "grading": {
+        "balance": 0.0,
+        "blending": 55.0,
+        "global": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "highlights": {
+          "amount": 8.0,
+          "hue": 330.0,
+          "luminance": 0.0
+        },
+        "midtones": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "shadows": {
+          "amount": 12.0,
+          "hue": 80.0,
+          "luminance": 0.0
+        }
+      },
+      "light": {
+        "blacks": -10.0,
+        "contrast": -20.0,
+        "exposure": -0.1,
+        "highlights": -30.0,
+        "shadows": 25.0,
+        "whites": -10.0
+      },
+      "mixer": {
+        "luminance": {
+          "blue": 10.0,
+          "green": 5.0
+        },
+        "saturation": {
+          "aqua": -30.0,
+          "blue": -40.0,
+          "green": -35.0,
+          "magenta": 15.0,
+          "orange": -5.0,
+          "purple": 5.0,
+          "red": -10.0,
+          "yellow": 10.0
+        }
+      }
+    }
+  }
+}

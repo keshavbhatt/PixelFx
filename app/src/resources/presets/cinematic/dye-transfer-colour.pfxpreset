@@ -1,0 +1,69 @@
+{
+  "format": "pixelfx",
+  "kind": "preset",
+  "version": 2,
+  "name": "Dye transfer colour",
+  "group": "Profiles",
+  "workingSpace": "rec2020-linear",
+  "body": {
+    "settings": {
+      "bw": {
+        "enabled": false
+      },
+      "color": {
+        "saturation": 8.0,
+        "vibrance": 10.0
+      },
+      "detail": {
+        "clarity": 0.0,
+        "dehaze": 0.0,
+        "sharpen": {
+          "amount": 40.0
+        },
+        "texture": 0.0
+      },
+      "grading": {
+        "balance": 5.0,
+        "blending": 50.0,
+        "global": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "highlights": {
+          "amount": 8.0,
+          "hue": 42.0,
+          "luminance": 0.0
+        },
+        "midtones": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "shadows": {
+          "amount": 5.0,
+          "hue": 48.0,
+          "luminance": 0.0
+        }
+      },
+      "light": {
+        "blacks": -10.0,
+        "contrast": 10.0,
+        "exposure": 0.15,
+        "highlights": -25.0,
+        "shadows": 15.0,
+        "whites": 5.0
+      },
+      "mixer": {
+        "luminance": {
+          "orange": 8.0
+        },
+        "saturation": {
+          "blue": -8.0,
+          "green": -10.0,
+          "red": 14.0
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,97 @@
+{
+  "format": "pixelfx",
+  "kind": "preset",
+  "version": 2,
+  "name": "Expired warm 200",
+  "group": "Profiles",
+  "workingSpace": "rec2020-linear",
+  "body": {
+    "settings": {
+      "bw": {
+        "enabled": false
+      },
+      "color": {
+        "saturation": -10.0,
+        "vibrance": -10.0
+      },
+      "detail": {
+        "clarity": 0.0,
+        "dehaze": 0.0,
+        "denoise": {
+          "luminance": 0.0
+        },
+        "sharpen": {
+          "amount": 10.0
+        },
+        "texture": 0.0
+      },
+      "effects": {
+        "grain": {
+          "amount": 55.0,
+          "roughness": 70.0,
+          "size": 40.0
+        }
+      },
+      "grading": {
+        "balance": -30.0,
+        "blending": 50.0,
+        "global": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "highlights": {
+          "amount": 10.0,
+          "hue": 45.0,
+          "luminance": 0.0
+        },
+        "midtones": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "shadows": {
+          "amount": 15.0,
+          "hue": 30.0,
+          "luminance": 0.0
+        }
+      },
+      "light": {
+        "blacks": 20.0,
+        "contrast": -20.0,
+        "exposure": 0.15,
+        "highlights": -60.0,
+        "shadows": 35.0,
+        "whites": -25.0
+      },
+      "mixer": {
+        "hue": {
+          "aqua": -10.0,
+          "blue": -15.0,
+          "green": 15.0,
+          "magenta": -15.0,
+          "orange": 5.0,
+          "purple": -15.0,
+          "red": 10.0,
+          "yellow": -5.0
+        },
+        "luminance": {
+          "blue": -15.0,
+          "green": -10.0,
+          "orange": 10.0,
+          "yellow": 5.0
+        },
+        "saturation": {
+          "aqua": -15.0,
+          "blue": -25.0,
+          "green": -20.0,
+          "magenta": -30.0,
+          "orange": 0.0,
+          "purple": -25.0,
+          "red": 0.0,
+          "yellow": -5.0
+        }
+      }
+    }
+  }
+}

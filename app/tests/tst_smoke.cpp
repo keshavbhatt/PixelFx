@@ -7,7 +7,9 @@
 #include "ui/filmstrip.h"
 #include "ui/looks_panel.h"
 #include "ui/main_window.h"
+#include "ui/photo_tile.h"
 #include "ui/presets_panel.h"
+#include "ui/slider_row.h"
 #include "ui/straighten_dial.h"
 #include "ui/style.h"
 
@@ -22,6 +24,7 @@
 #include <QLineEdit>
 #include <QMenu>
 #include <QSignalSpy>
+#include <QSlider>
 #include <QStandardPaths>
 #include <QTemporaryDir>
 #include <QTest>
@@ -165,14 +168,23 @@ private Q_SLOTS:
             pfx::Settings before;
             before.set("light.exposure", 0.4);
             window.document().apply(before, u"Before"_s);
-            for (pixelfx::ui::PresetRow* row : window.presetsPanel()->rows()) {
-                if (row->name() == u"Crisp"_s) {
-                    QTest::mouseClick(row, Qt::LeftButton, {}, QPoint(80, 10));
+            for (pixelfx::ui::PhotoTile* tile : window.presetsPanel()->tiles()) {
+                if (tile->name() == u"Crisp"_s) {
+                    QTest::mouseClick(tile, Qt::LeftButton, {}, QPoint(40, 10));
                 }
             }
             QCOMPARE(window.document().settings().number("detail.clarity", 0), 25.0);
             QCOMPARE(window.document().settings().number("light.exposure", 0), 0.4);
             QCOMPARE(window.document().history().undoLabel(), u"Preset Crisp"_s);
+            // The Amount blends the preset back toward the photo as it was: half the clarity.
+            pixelfx::ui::SliderRow* amount = window.presetsPanel()->amountRow();
+            QVERIFY(!amount->parentWidget()->isHidden());
+            amount->slider()->setValue(50); // a keyboard step: complete at once
+            QCOMPARE(window.document().settings().number("detail.clarity", 0), 12.5);
+            QCOMPARE(window.document().settings().number("light.exposure", 0), 0.4);
+            QCOMPARE(window.document().history().undoLabel(), u"Crisp at 50%"_s);
+            window.document().undo();
+            QVERIFY(amount->parentWidget()->isHidden()); // the Amount belonged to that step
             QFile::remove(presetPath);
             window.document().apply({}, u"Clear"_s);
         }

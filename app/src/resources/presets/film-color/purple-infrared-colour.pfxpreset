@@ -1,0 +1,101 @@
+{
+  "format": "pixelfx",
+  "kind": "preset",
+  "version": 2,
+  "name": "Purple infrared colour",
+  "group": "Profiles",
+  "workingSpace": "rec2020-linear",
+  "body": {
+    "settings": {
+      "bw": {
+        "enabled": false
+      },
+      "color": {
+        "saturation": 5.0,
+        "vibrance": 0.0
+      },
+      "detail": {
+        "clarity": 0.0,
+        "dehaze": 0.0,
+        "denoise": {
+          "luminance": 0.0
+        },
+        "sharpen": {
+          "amount": 10.0
+        },
+        "texture": 0.0
+      },
+      "effects": {
+        "grain": {
+          "amount": 49.0,
+          "roughness": 60.0,
+          "size": 30.0
+        }
+      },
+      "grading": {
+        "balance": 16.0,
+        "blending": 50.0,
+        "global": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "highlights": {
+          "amount": 20.0,
+          "hue": 305.0,
+          "luminance": 0.0
+        },
+        "midtones": {
+          "amount": 18.0,
+          "hue": 300.0,
+          "luminance": 0.0
+        },
+        "shadows": {
+          "amount": 11.0,
+          "hue": 210.0,
+          "luminance": 0.0
+        }
+      },
+      "light": {
+        "blacks": 10.0,
+        "contrast": 18.0,
+        "exposure": 0.1,
+        "highlights": -15.0,
+        "shadows": 15.0,
+        "whites": 5.0
+      },
+      "mixer": {
+        "hue": {
+          "aqua": -45.0,
+          "blue": -100.0,
+          "green": 100.0,
+          "magenta": 20.0,
+          "orange": -5.0,
+          "purple": 35.0,
+          "red": 5.0,
+          "yellow": -40.0
+        },
+        "luminance": {
+          "aqua": -5.0,
+          "blue": 15.0,
+          "green": -15.0,
+          "magenta": 0.0,
+          "orange": 0.0,
+          "purple": -5.0,
+          "red": 0.0,
+          "yellow": 10.0
+        },
+        "saturation": {
+          "aqua": 12.0,
+          "blue": -45.0,
+          "green": 35.0,
+          "magenta": 45.0,
+          "orange": -5.0,
+          "purple": 35.0,
+          "red": -5.0,
+          "yellow": 18.0
+        }
+      }
+    }
+  }
+}

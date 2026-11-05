@@ -1,0 +1,65 @@
+{
+  "format": "pixelfx",
+  "kind": "preset",
+  "version": 2,
+  "name": "Getting ready",
+  "group": "Profiles",
+  "workingSpace": "rec2020-linear",
+  "body": {
+    "settings": {
+      "bw": {
+        "enabled": false
+      },
+      "detail": {
+        "clarity": -8.0,
+        "denoise": {
+          "luminance": 0.0
+        },
+        "sharpen": {
+          "amount": 10.0
+        }
+      },
+      "grading": {
+        "balance": 0.0,
+        "blending": 75.0,
+        "global": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "highlights": {
+          "amount": 6.0,
+          "hue": 40.0,
+          "luminance": 0.0
+        },
+        "midtones": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "shadows": {
+          "amount": 5.0,
+          "hue": 200.0,
+          "luminance": 0.0
+        }
+      },
+      "light": {
+        "blacks": 5.0,
+        "contrast": -10.0,
+        "exposure": 0.45,
+        "highlights": -45.0,
+        "shadows": 35.0,
+        "whites": 10.0
+      },
+      "mixer": {
+        "luminance": {
+          "orange": 12.0
+        },
+        "saturation": {
+          "green": -10.0,
+          "orange": -8.0
+        }
+      }
+    }
+  }
+}

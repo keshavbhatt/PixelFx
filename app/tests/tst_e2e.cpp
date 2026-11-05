@@ -195,6 +195,7 @@ private Q_SLOTS:
     {
         const QTemporaryDir folder;
         const QImage original = shown(m_sample, {});
+        QStringList unchanged;
         for (const pixelfx::core::PresetEntry& p : pixelfx::core::PresetLibrary(folder.path()).entries()) {
             if (!p.isBuiltIn()) {
                 continue;
@@ -205,8 +206,13 @@ private Q_SLOTS:
             const pfx::Settings settings = pixelfx::services::BatchRunner::settingsFor(recipe, {}, m_sample);
             const QImage out = shown(m_sample, settings);
             QVERIFY2(!out.isNull(), qPrintable(p.name));
-            QVERIFY2(difference(out, original) > 0.5, qPrintable(p.name + u": no visible change"_s));
+            // The Tools are corrections (noise reduction, a reset): on a clean photo they may change
+            // little. Every look of the catalog must show.
+            if (p.category != u"tools"_s && difference(out, original) <= 0.5) {
+                unchanged << p.name;
+            }
         }
+        QVERIFY2(unchanged.isEmpty(), qPrintable(u"No visible change: "_s + unchanged.join(u", "_s)));
     }
 
     void cropTurnsAndStraighteningGiveTheirSizes()

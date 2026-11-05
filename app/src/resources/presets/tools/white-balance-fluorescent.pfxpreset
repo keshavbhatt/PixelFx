@@ -1,0 +1,21 @@
+{
+  "format": "pixelfx",
+  "kind": "preset",
+  "version": 2,
+  "name": "White balance, fluorescent",
+  "group": "Profiles",
+  "workingSpace": "rec2020-linear",
+  "body": {
+    "settings": {
+      "bw": {
+        "enabled": false
+      },
+      "color": {
+        "wb": {
+          "temperature": -77.53278388567176,
+          "tint": 14.0
+        }
+      }
+    }
+  }
+}

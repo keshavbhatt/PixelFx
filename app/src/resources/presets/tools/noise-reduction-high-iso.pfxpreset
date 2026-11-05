@@ -1,0 +1,22 @@
+{
+  "format": "pixelfx",
+  "kind": "preset",
+  "version": 2,
+  "name": "Noise reduction, high ISO",
+  "group": "Profiles",
+  "workingSpace": "rec2020-linear",
+  "body": {
+    "settings": {
+      "bw": {
+        "enabled": false
+      },
+      "detail": {
+        "denoise": {
+          "color": 50.0,
+          "luminance": 60.0,
+          "luminanceDetail": 35.0
+        }
+      }
+    }
+  }
+}

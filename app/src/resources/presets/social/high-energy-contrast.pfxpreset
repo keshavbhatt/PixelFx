@@ -1,0 +1,69 @@
+{
+  "format": "pixelfx",
+  "kind": "preset",
+  "version": 2,
+  "name": "High energy contrast",
+  "group": "Profiles",
+  "workingSpace": "rec2020-linear",
+  "body": {
+    "settings": {
+      "bw": {
+        "enabled": false
+      },
+      "color": {
+        "saturation": 10.0,
+        "vibrance": 15.0
+      },
+      "detail": {
+        "clarity": 40.0,
+        "dehaze": 15.0,
+        "denoise": {
+          "luminance": 0.0
+        },
+        "sharpen": {
+          "amount": 10.0
+        },
+        "texture": 25.0
+      },
+      "effects": {
+        "vignette": {
+          "amount": -15.0
+        }
+      },
+      "grading": {
+        "blending": 60.0,
+        "global": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "highlights": {
+          "amount": 8.0,
+          "hue": 210.0
+        },
+        "shadows": {
+          "amount": 12.0,
+          "hue": 215.0
+        }
+      },
+      "light": {
+        "blacks": -20.0,
+        "contrast": 40.0,
+        "exposure": -0.1,
+        "highlights": -35.0,
+        "shadows": 15.0,
+        "whites": 20.0
+      },
+      "mixer": {
+        "luminance": {
+          "orange": 8.0
+        },
+        "saturation": {
+          "blue": 10.0,
+          "green": -20.0,
+          "orange": 5.0
+        }
+      }
+    }
+  }
+}

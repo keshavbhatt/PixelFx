@@ -2,6 +2,7 @@
 #include "ui/look_editor.h"
 #include "ui/looks_panel.h"
 #include "ui/message_line.h"
+#include "ui/photo_tile.h"
 #include "ui/preview_viewer.h"
 #include "ui/slider_row.h"
 #include "ui/step_list.h"

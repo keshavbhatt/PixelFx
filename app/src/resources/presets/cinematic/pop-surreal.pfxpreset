@@ -1,0 +1,72 @@
+{
+  "format": "pixelfx",
+  "kind": "preset",
+  "version": 2,
+  "name": "Pop surreal",
+  "group": "Profiles",
+  "workingSpace": "rec2020-linear",
+  "body": {
+    "settings": {
+      "bw": {
+        "enabled": false
+      },
+      "color": {
+        "saturation": 20.0,
+        "vibrance": 22.0
+      },
+      "detail": {
+        "clarity": 10.0,
+        "dehaze": 0.0,
+        "sharpen": {
+          "amount": 40.0
+        },
+        "texture": 0.0
+      },
+      "grading": {
+        "balance": -5.0,
+        "blending": 75.0,
+        "global": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "highlights": {
+          "amount": 15.0,
+          "hue": 38.0,
+          "luminance": 0.0
+        },
+        "midtones": {
+          "amount": 8.0,
+          "hue": 35.0,
+          "luminance": 0.0
+        },
+        "shadows": {
+          "amount": 12.0,
+          "hue": 215.0,
+          "luminance": 0.0
+        }
+      },
+      "light": {
+        "blacks": -20.0,
+        "contrast": 30.0,
+        "exposure": 0.2,
+        "highlights": -25.0,
+        "shadows": 15.0,
+        "whites": 15.0
+      },
+      "mixer": {
+        "luminance": {
+          "orange": 10.0,
+          "red": 5.0
+        },
+        "saturation": {
+          "blue": 5.0,
+          "magenta": 20.0,
+          "orange": 15.0,
+          "red": 25.0,
+          "yellow": 12.0
+        }
+      }
+    }
+  }
+}

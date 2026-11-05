@@ -8,6 +8,7 @@
 #include <QMainWindow>
 
 #include <functional>
+#include <optional>
 #include <pfx/settings.h>
 
 class QLabel;
@@ -154,6 +155,9 @@ private:
     /// Leaves Crop (applying it) and Heal.
     void leaveTools();
     void setupZoomActions();
+    void connectPresetAmount();
+    /// The preset just applied at `amount` (0 to 200) over the photo as it was before it.
+    void blendAppliedPreset(double amount, bool finished);
     /// Color or black and white (V), the menu item following the photo.
     void setupBlackAndWhiteAction();
     void connectZoom();
@@ -222,6 +226,14 @@ private:
     Filmstrip* m_strip = nullptr;
     services::Thumbnailer* m_stripThumbnails = nullptr;
     core::PresetLibrary m_library{core::PresetLibrary::defaultFolder()};
+    /// The preset just applied: what the photo was before it, and what the Amount last made.
+    struct AppliedPreset
+    {
+        core::PresetEntry entry;
+        pfx::Settings base;
+        pfx::Settings last;
+    };
+    std::optional<AppliedPreset> m_appliedPreset;
     services::Thumbnailer* m_presetThumbnails = nullptr;
     services::Thumbnailer* m_lookThumbnails = nullptr;
     int m_lookGeneration = 0;

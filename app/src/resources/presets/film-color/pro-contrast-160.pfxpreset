@@ -1,0 +1,78 @@
+{
+  "format": "pixelfx",
+  "kind": "preset",
+  "version": 2,
+  "name": "Pro contrast 160",
+  "group": "Profiles",
+  "workingSpace": "rec2020-linear",
+  "body": {
+    "settings": {
+      "bw": {
+        "enabled": false
+      },
+      "color": {
+        "saturation": 20.0,
+        "vibrance": 17.0
+      },
+      "detail": {
+        "sharpen": {
+          "amount": 10.0
+        }
+      },
+      "effects": {
+        "grain": {
+          "amount": 15.0,
+          "roughness": 50.0,
+          "size": 15.0
+        }
+      },
+      "grading": {
+        "balance": 0.0,
+        "blending": 50.0,
+        "global": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "highlights": {
+          "amount": 8.0,
+          "hue": 40.0,
+          "luminance": 0.0
+        },
+        "midtones": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "shadows": {
+          "amount": 5.0,
+          "hue": 200.0,
+          "luminance": 0.0
+        }
+      },
+      "light": {
+        "blacks": -10.0,
+        "contrast": 10.0,
+        "exposure": 0.33,
+        "highlights": -5.0,
+        "shadows": 15.0
+      },
+      "mixer": {
+        "hue": {
+          "green": 10.0,
+          "red": -3.0,
+          "yellow": -3.0
+        },
+        "luminance": {
+          "blue": -5.0,
+          "orange": 10.0
+        },
+        "saturation": {
+          "blue": 5.0,
+          "green": 5.0,
+          "orange": -5.0
+        }
+      }
+    }
+  }
+}

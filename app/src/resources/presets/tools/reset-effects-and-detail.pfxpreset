@@ -1,0 +1,58 @@
+{
+  "format": "pixelfx",
+  "kind": "preset",
+  "version": 2,
+  "name": "Reset effects and detail",
+  "group": "Profiles",
+  "workingSpace": "rec2020-linear",
+  "body": {
+    "settings": {
+      "bw": {
+        "enabled": false
+      },
+      "detail": {
+        "ca": {
+          "auto": true
+        },
+        "clarity": 0.0,
+        "defringe": {
+          "green": {
+            "amount": 0.0
+          },
+          "purple": {
+            "amount": 0.0
+          }
+        },
+        "dehaze": 0.0,
+        "denoise": {
+          "color": 25.0,
+          "colorDetail": 50.0,
+          "colorSmoothness": 50.0,
+          "luminance": 0.0,
+          "luminanceContrast": 0.0,
+          "luminanceDetail": 50.0
+        },
+        "sharpen": {
+          "amount": 40.0,
+          "detail": 25.0,
+          "masking": 0.0,
+          "radius": 0.00016666666666666666
+        },
+        "texture": 0.0
+      },
+      "effects": {
+        "grain": {
+          "amount": 0.0,
+          "roughness": 50.0,
+          "size": 25.0
+        },
+        "vignette": {
+          "amount": 0.0,
+          "feather": 50.0,
+          "midpoint": 50.0,
+          "roundness": 0.0
+        }
+      }
+    }
+  }
+}

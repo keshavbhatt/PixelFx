@@ -1,0 +1,74 @@
+{
+  "format": "pixelfx",
+  "kind": "preset",
+  "version": 2,
+  "name": "British classic 400, expired",
+  "group": "Profiles",
+  "workingSpace": "rec2020-linear",
+  "body": {
+    "settings": {
+      "bw": {
+        "enabled": true,
+        "mix": {
+          "aqua": -10.0,
+          "blue": -18.8,
+          "green": -5.0,
+          "magenta": 0.0,
+          "orange": 10.0,
+          "purple": 0.0,
+          "red": 15.0,
+          "yellow": 5.0
+        }
+      },
+      "detail": {
+        "clarity": 0.0,
+        "dehaze": 0.0,
+        "denoise": {
+          "luminance": 0.0
+        },
+        "sharpen": {
+          "amount": 10.0
+        },
+        "texture": 0.0
+      },
+      "effects": {
+        "grain": {
+          "amount": 58.3,
+          "roughness": 65.0,
+          "size": 39.5
+        }
+      },
+      "grading": {
+        "balance": -5.0,
+        "blending": 50.0,
+        "global": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "highlights": {
+          "amount": 5.0,
+          "hue": 50.0,
+          "luminance": 0.0
+        },
+        "midtones": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "shadows": {
+          "amount": 16.0,
+          "hue": 200.0,
+          "luminance": 0.0
+        }
+      },
+      "light": {
+        "blacks": 0.7,
+        "contrast": -4.5,
+        "highlights": -8.8,
+        "shadows": 26.3,
+        "whites": -10.0
+      }
+    }
+  }
+}

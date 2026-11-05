@@ -1,0 +1,72 @@
+{
+  "format": "pixelfx",
+  "kind": "preset",
+  "version": 2,
+  "name": "Rainy window colour",
+  "group": "Profiles",
+  "workingSpace": "rec2020-linear",
+  "body": {
+    "settings": {
+      "bw": {
+        "enabled": false
+      },
+      "color": {
+        "saturation": -10.0,
+        "vibrance": -10.0
+      },
+      "detail": {
+        "clarity": -12.0,
+        "dehaze": -8.0,
+        "sharpen": {
+          "amount": 40.0
+        },
+        "texture": -5.0
+      },
+      "grading": {
+        "balance": -5.0,
+        "blending": 75.0,
+        "global": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "highlights": {
+          "amount": 5.0,
+          "hue": 40.0,
+          "luminance": 0.0
+        },
+        "midtones": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "shadows": {
+          "amount": 10.0,
+          "hue": 200.0,
+          "luminance": 0.0
+        }
+      },
+      "light": {
+        "blacks": -10.0,
+        "contrast": -5.0,
+        "exposure": 0.0,
+        "highlights": -40.0,
+        "shadows": 25.0,
+        "whites": 5.0
+      },
+      "mixer": {
+        "luminance": {
+          "aqua": 10.0,
+          "orange": 5.0
+        },
+        "saturation": {
+          "aqua": -15.0,
+          "blue": -20.0,
+          "green": -30.0,
+          "orange": -10.0,
+          "red": -10.0
+        }
+      }
+    }
+  }
+}

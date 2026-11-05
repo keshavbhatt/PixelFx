@@ -1,0 +1,84 @@
+{
+  "format": "pixelfx",
+  "kind": "preset",
+  "version": 2,
+  "name": "Y2K compact",
+  "group": "Profiles",
+  "workingSpace": "rec2020-linear",
+  "body": {
+    "settings": {
+      "bw": {
+        "enabled": false
+      },
+      "color": {
+        "saturation": -8.0,
+        "wb": {
+          "temperature": -35.08300103288074,
+          "tint": 6.666666666666667
+        }
+      },
+      "detail": {
+        "denoise": {
+          "luminance": 0.0
+        },
+        "sharpen": {
+          "amount": 10.0
+        }
+      },
+      "effects": {
+        "grain": {
+          "amount": 15.0,
+          "roughness": 40.0,
+          "size": 20.0
+        },
+        "vignette": {
+          "amount": -20.0
+        }
+      },
+      "grading": {
+        "balance": 0.0,
+        "blending": 75.0,
+        "global": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "highlights": {
+          "amount": 10.0,
+          "hue": 210.0,
+          "luminance": 0.0
+        },
+        "midtones": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "shadows": {
+          "amount": 10.0,
+          "hue": 210.0,
+          "luminance": 0.0
+        }
+      },
+      "light": {
+        "blacks": -10.0,
+        "contrast": 15.0,
+        "exposure": 0.1,
+        "highlights": 5.0,
+        "shadows": 10.0,
+        "whites": 25.0
+      },
+      "mixer": {
+        "luminance": {
+          "orange": 10.0
+        },
+        "saturation": {
+          "blue": 5.0,
+          "green": -15.0,
+          "magenta": 8.0,
+          "red": 5.0,
+          "yellow": 5.0
+        }
+      }
+    }
+  }
+}

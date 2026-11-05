@@ -1,0 +1,23 @@
+{
+  "format": "pixelfx",
+  "kind": "preset",
+  "version": 2,
+  "name": "Vignette, strong",
+  "group": "Profiles",
+  "workingSpace": "rec2020-linear",
+  "body": {
+    "settings": {
+      "bw": {
+        "enabled": false
+      },
+      "effects": {
+        "vignette": {
+          "amount": -30.0,
+          "feather": 50.0,
+          "midpoint": 50.0,
+          "roundness": 0.0
+        }
+      }
+    }
+  }
+}

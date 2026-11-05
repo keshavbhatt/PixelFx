@@ -1,0 +1,65 @@
+{
+  "format": "pixelfx",
+  "kind": "preset",
+  "version": 2,
+  "name": "Showroom reflection",
+  "group": "Profiles",
+  "workingSpace": "rec2020-linear",
+  "body": {
+    "settings": {
+      "bw": {
+        "enabled": false
+      },
+      "color": {
+        "saturation": 0.0,
+        "vibrance": 5.0
+      },
+      "detail": {
+        "clarity": 30.0,
+        "dehaze": 10.0,
+        "denoise": {
+          "luminance": 0.0
+        },
+        "sharpen": {
+          "amount": 10.0
+        },
+        "texture": 20.0
+      },
+      "grading": {
+        "blending": 60.0,
+        "global": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "highlights": {
+          "amount": 3.0,
+          "hue": 210.0
+        },
+        "shadows": {
+          "amount": 6.0,
+          "hue": 210.0
+        }
+      },
+      "light": {
+        "blacks": -10.0,
+        "contrast": 20.0,
+        "exposure": 0.15,
+        "highlights": -30.0,
+        "shadows": 20.0,
+        "whites": 20.0
+      },
+      "mixer": {
+        "luminance": {
+          "orange": 5.0
+        },
+        "saturation": {
+          "aqua": 15.0,
+          "blue": 15.0,
+          "green": -15.0,
+          "orange": -5.0
+        }
+      }
+    }
+  }
+}

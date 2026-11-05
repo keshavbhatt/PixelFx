@@ -1,0 +1,63 @@
+{
+  "format": "pixelfx",
+  "kind": "preset",
+  "version": 2,
+  "name": "Overhead clean",
+  "group": "Profiles",
+  "workingSpace": "rec2020-linear",
+  "body": {
+    "settings": {
+      "bw": {
+        "enabled": false
+      },
+      "color": {
+        "saturation": 0.0,
+        "vibrance": 0.0
+      },
+      "detail": {
+        "clarity": 10.0,
+        "dehaze": 0.0,
+        "denoise": {
+          "luminance": 0.0
+        },
+        "sharpen": {
+          "amount": 10.0
+        },
+        "texture": 10.0
+      },
+      "grading": {
+        "blending": 50.0,
+        "global": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "highlights": {
+          "amount": 3.0,
+          "hue": 45.0
+        },
+        "shadows": {
+          "amount": 2.0,
+          "hue": 45.0
+        }
+      },
+      "light": {
+        "blacks": 15.0,
+        "contrast": 10.0,
+        "exposure": 0.5,
+        "highlights": -25.0,
+        "shadows": 35.0,
+        "whites": 20.0
+      },
+      "mixer": {
+        "luminance": {
+          "orange": 10.0
+        },
+        "saturation": {
+          "blue": -5.0,
+          "green": -10.0
+        }
+      }
+    }
+  }
+}

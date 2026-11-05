@@ -1,0 +1,87 @@
+{
+  "format": "pixelfx",
+  "kind": "preset",
+  "version": 2,
+  "name": "Victorian plate",
+  "group": "Profiles",
+  "workingSpace": "rec2020-linear",
+  "body": {
+    "settings": {
+      "bw": {
+        "enabled": false
+      },
+      "color": {
+        "saturation": -48.0,
+        "wb": {
+          "temperature": -14.061230293846172
+        }
+      },
+      "detail": {
+        "denoise": {
+          "luminance": 0.0
+        },
+        "sharpen": {
+          "amount": 10.0
+        }
+      },
+      "effects": {
+        "grain": {
+          "amount": 18.0,
+          "roughness": 70.0,
+          "size": 38.0
+        },
+        "vignette": {
+          "amount": -35.0
+        }
+      },
+      "grading": {
+        "balance": 0.0,
+        "blending": 80.0,
+        "global": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "highlights": {
+          "amount": 10.0,
+          "hue": 38.0,
+          "luminance": 0.0
+        },
+        "midtones": {
+          "amount": 0.0,
+          "hue": 0.0,
+          "luminance": 0.0
+        },
+        "shadows": {
+          "amount": 15.0,
+          "hue": 32.0,
+          "luminance": 0.0
+        }
+      },
+      "light": {
+        "blacks": -18.0,
+        "contrast": 30.0,
+        "exposure": -0.3,
+        "highlights": -35.0,
+        "shadows": 15.0,
+        "whites": 10.0
+      },
+      "mixer": {
+        "luminance": {
+          "orange": 10.0,
+          "yellow": 5.0
+        },
+        "saturation": {
+          "aqua": -50.0,
+          "blue": -50.0,
+          "green": -50.0,
+          "magenta": -45.0,
+          "orange": -40.0,
+          "purple": -45.0,
+          "red": -45.0,
+          "yellow": -45.0
+        }
+      }
+    }
+  }
+}
