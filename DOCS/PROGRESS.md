@@ -57,14 +57,14 @@ Decisions the work stopped at; everything else went ahead within the approved mo
     the sky" in the mock needs scene recognition); Reset takes off the spots made since Heal
     opened and Done keeps them (each spot is also its own history step, and undo works in
     Heal); Reveal dust explains itself in its tooltip rather than a first-time line.
-13. Sheets are native dialogs (they work on Wayland and have the system's close button); the
-    mocks draw them inside the window over a dimmed backdrop. Their insides now follow the mocks
-    (title row with a close button, body, footer bar). Keep native dialogs, or move every sheet
-    into the window as drawn?
 
 ## Sessions (newest first)
 
 ### 2026-11-05 (UI against the mocks)
+
+- Decided by the owner: sheets stay native dialog windows (with the system's title bar),
+  not drawn inside the window over a dimmed backdrop as the mocks show; their insides follow
+  the mocks.
 
 - The owner found the Batch page far from `batch.html` and raw Fusion controls everywhere.
   Every screen was grabbed and set beside its mock; the gaps were shared, so they were fixed
