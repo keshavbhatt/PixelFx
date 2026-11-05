@@ -49,12 +49,23 @@ internal units, so a file reads like the panel.
 ```json
 "settings": {
   "light":   { "exposure": 0.35, "contrast": 18, "highlights": -35, "shadows": 28, "whites": 6, "blacks": -10 },
-  "color":   { "wb": { "mode": "relative", "temperature": 14, "tint": 0 }, "vibrance": 22, "saturation": 0 },
+  "color":   { "wb": { "mode": "relative", "temperature": 14, "tint": 0 }, "profile": "standard", "vibrance": 22, "saturation": 0 },
   "mixer":   { "hue": { "yellow": -8 }, "saturation": { "green": -30 }, "luminance": {} },
-  "curves":  { "rgb": [[0,0],[0.28,0.2],[0.72,0.76],[1,1]], "r": null, "g": null, "b": null },
-  "grading": { "shadows": { "hue": 200, "amount": 20 }, "highlights": { "hue": 35, "amount": 15 }, "balance": 10 },
-  "detail":  { "clarity": 15, "sharpen": { "amount": 30, "radius": 0.0004, "masking": 0 }, "denoise": { "luminance": 0, "color": 25 }, "dehaze": 0 },
-  "effects": { "vignette": { "amount": -22, "midpoint": 50, "roundness": 0 }, "grain": { "amount": 0, "size": 25 }, "fade": 0 },
+  "curves":  { "rgb": [[0,0],[0.28,0.2],[0.72,0.76],[1,1]], "r": null, "g": null, "b": null,
+               "parametric": { "shadows": 0, "darks": 0, "lights": 0, "highlights": 0,
+                               "split": { "shadows": 25, "midtones": 50, "highlights": 75 } } },
+  "grading": { "shadows": { "hue": 200, "amount": 20, "luminance": 0 }, "midtones": { "hue": 40, "amount": 8, "luminance": 0 },
+               "highlights": { "hue": 35, "amount": 15, "luminance": 0 }, "global": { "hue": 0, "amount": 0, "luminance": 0 },
+               "balance": 10, "blending": 50 },
+  "bw":      { "enabled": false, "mix": { "red": 0, "orange": 10, "yellow": 0, "green": 0, "aqua": 0, "blue": -30, "purple": 0, "magenta": 0 } },
+  "calibration": { "shadows": { "tint": 0 }, "red": { "hue": 0, "saturation": 0 }, "green": { "hue": 0, "saturation": 0 },
+                   "blue": { "hue": 0, "saturation": 0 } },
+  "detail":  { "clarity": 15, "texture": 0, "sharpen": { "amount": 30, "radius": 0.0004, "masking": 0, "detail": 25 },
+               "denoise": { "luminance": 0, "luminanceDetail": 50, "luminanceContrast": 0, "color": 25, "colorDetail": 50,
+                            "colorSmoothness": 50 }, "dehaze": 0, "ca": { "auto": false },
+               "defringe": { "purple": { "amount": 0, "hueLow": 30, "hueHigh": 70 }, "green": { "amount": 0, "hueLow": 40, "hueHigh": 60 } } },
+  "effects": { "vignette": { "amount": -22, "midpoint": 50, "roundness": 0, "feather": 50, "style": "highlight", "highlights": 0 },
+               "grain": { "amount": 0, "size": 25, "roughness": 50 }, "fade": 0 },
   "geometry":{ "crop": { "x": 0.04, "y": 0.03, "w": 0.88, "h": 0.87 }, "angle": 1.5, "rotate90": 0, "flipH": false, "flipV": false,
                "perspective": { "vertical": 0, "horizontal": 0, "corners": null } },
   "look":    { "id": "builtin:golden-hour", "strength": 72 },
@@ -83,6 +94,19 @@ internal units, so a file reads like the panel.
   same offset. Values outside the ranges are clamped; a list that cannot be read is dropped
   with a warning; at most 1000 spots and 4096 points per stroke are kept. Spots belong to one
   photo: Save as preset, copy and paste, and batch recipes never carry them.
+- The Lightroom-compatible settings (presets version 2, recipes and batch recipes version 3,
+  FEATURES P8), each defaulting to no change: `bw` turns the photo black and white and sets how
+  light each colour band turns (-100 to 100). `grading` has four ranges (shadows, midtones,
+  highlights, global), each with a hue, an amount and a luminance (-100 to 100), plus balance and
+  blending (0 to 100, 50 the even overlap). `calibration` moves the red, green and blue primaries
+  (hue and saturation, -100 to 100) and tints the shadows (-100 green to 100 magenta), keeping
+  greys neutral. `color.profile` is the base rendering: `standard` or `vivid`. `curves.parametric`
+  lifts or lowers four tone regions (-100 to 100) split at three points (5 to 95). `detail.texture`
+  (-100 to 100), `detail.sharpen.detail` (0 to 100, 25 the plain mask), the noise reduction detail,
+  contrast and smoothness (0 to 100), `detail.ca.auto` (lateral chromatic aberration measured on
+  the photo) and `detail.defringe` (purple and green, amount 0 to 20 and a hue range 0 to 100).
+  `effects.vignette` gains `feather` (0 to 100), `style` (`highlight`, `color` or `paint`) and
+  `highlights` (0 to 100); `effects.grain` gains `roughness` (0 to 100, 50 one even layer).
 - `look.id` refers to a look by id: `builtin:<slug>` for shipped looks, a UUID for the user's.
   A file that must stand alone (export, sharing) embeds the look instead:
   `"look": { "embedded": { ...look body with its id and name... }, "strength": 72 }`; a batch
@@ -149,9 +173,10 @@ internal units, so a file reads like the panel.
 }
 ```
 
-- Recipes are at **version 2**: version 2 added the `heal` group (section 2). A version 1
-  recipe has no spots and reads unchanged; a file above version 2 is refused as made by a newer
-  PixelFx.
+- Recipes are at **version 3**: version 2 added the `heal` group (section 2), version 3 the
+  Lightroom-compatible settings (section 2). Older recipes read unchanged; a file above version 3
+  is refused as made by a newer PixelFx. Presets are at **version 2** for the same settings; a
+  version 1 preset reads unchanged.
 - The fingerprint (size plus a hash of the first and last 64 KiB) re-attaches a sidecar to a
   photo that was moved or renamed within the library folder.
 - History entries store only the changed groups (deltas), capped at 200 steps per photo.
@@ -171,7 +196,8 @@ internal units, so a file reads like the panel.
 }
 ```
 
-Batch recipes are at **version 2** (recipes, presets and looks stay at version 1).
+Batch recipes are at **version 3** (version 3 added the Lightroom-compatible settings of
+section 2; looks stay at version 1).
 
 - The stack is applied in order onto each photo's settings (later entries win per key). A step
   is a preset (its settings, embedded) or a look on its own (`id`, `strength` 0 to 100,
@@ -192,15 +218,17 @@ Batch recipes are at **version 2** (recipes, presets and looks stay at version 1
   watermark. Opening the file adds the watermark to the user's watermarks unless an identical
   one is there already.
 - Version 1 batch recipes had none of these keys and read unchanged; there is nothing to
-  migrate. A file with a `version` above 2 is refused as made by a newer PixelFx.
+  migrate. A file with a `version` above 3 is refused as made by a newer PixelFx.
 
 ## 5. Pipeline order (fixed, documented here and in ADR-004)
 
-Input decode and orientation, RAW development, then: spot heal -> geometry (crop, rotate, perspective, as
-one resampling) -> noise reduction -> white balance -> exposure -> dehaze -> tone (highlights,
-shadows, whites, blacks, contrast) -> clarity -> curves -> colour mixer -> vibrance and
-saturation -> colour grading -> **look** (blended by strength) -> sharpen -> vignette -> grain
--> fade -> output transform (colour space, bit depth). Identity settings are skipped.
+Input decode and orientation, RAW development, then: chromatic aberration -> defringe -> spot
+heal -> geometry (crop, rotate, perspective, as one resampling) -> noise reduction -> white
+balance -> calibration -> profile -> exposure -> dehaze -> tone (highlights, shadows, whites,
+blacks, contrast) -> clarity -> texture -> curves (parametric, then points) -> colour mixer ->
+black and white -> vibrance and saturation -> colour grading -> **look** (blended by strength)
+-> sharpen -> vignette -> grain -> fade -> output transform (colour space, bit depth). Identity
+settings are skipped.
 
 ## 6. Imports
 
@@ -208,7 +236,7 @@ saturation -> colour grading -> **look** (blended by strength) -> sharpen -> vig
 |---|---|---|
 | `.cube` (1D, 3D), `.3dl`, HaldCLUT `.png` | look with one LUT step | exact |
 | RawTherapee `.pp3` | LATER (subset) | |
-| Lightroom / Camera Raw `.xmp` preset (`crs:` namespace) | preset | Exposure2012, Contrast2012, Highlights2012, Shadows2012, Whites2012, Blacks2012, Temperature/Tint (relative), Vibrance, Saturation, Clarity2012, Dehaze, HSL (8 bands), ToneCurvePV2012 (and per channel), SplitToning / ColorGrade, Sharpness, LuminanceSmoothing, ColorNoiseReduction, PostCropVignette, Grain; approximate, a report lists every setting skipped (profiles, masks, lens and camera calibration) |
+| Lightroom / Camera Raw `.xmp` preset (`crs:` namespace) | preset | Every global develop setting (FEATURES P8): Basic (Exposure2012 to Blacks2012, Temperature and Tint relative or Kelvin, Vibrance, Saturation, Texture, Clarity2012, Dehaze), Treatment and ConvertToGrayscale, HSL and GrayMixer (8 bands), ToneCurvePV2012 (and per channel) and the parametric curve with its splits, SplitToning and ColorGrade (all four ranges, luminance, blending, balance), Detail (sharpening amount, radius, detail, masking; noise reduction with detail, contrast and smoothness), AutoLateralCA and Defringe, PostCropVignette (with feather, style, highlights), Grain (with roughness), Calibration (primaries and shadow tint), and the profile (Adobe Monochrome as black and white, Adobe Vivid as the vivid profile, the other Adobe standard profiles as PixelFx's own rendering). The same kind of result, not pixel-identical. A report lists what is skipped: lens profiles (LensProfileEnable, an ADR to come), creative and camera profiles PixelFx does not have, masks |
 | darktable style (`.dtstyle`) | LATER | |
 
 ## 7. Watermark (`.pfxwatermark`, version 1)

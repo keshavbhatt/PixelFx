@@ -251,7 +251,9 @@ std::optional<Error> readEnvelope(const Json& json, Document& doc)
     }
     // Migrations, one step per version, each with a test. Batch 1 to 2: version 2 only added
     // keys (embedded looks, a size preset, the watermark), so a version 1 body reads unchanged.
-    // Recipe 1 to 2: version 2 only added the "heal" group (spots), likewise.
+    // Recipe 1 to 2: version 2 only added the "heal" group (spots), likewise. Preset 1 to 2,
+    // recipe 2 to 3 and batch 2 to 3: the new version only added settings whose defaults are
+    // no change (FEATURES P8), so an older body reads unchanged and renders as before.
     doc.version = currentVersion(doc.kind);
     doc.id = stringField(json, "id");
     doc.name = stringField(json, "name");
@@ -736,6 +738,7 @@ int currentVersion(DocumentKind kind)
     case DocumentKind::Recipe:
         return kRecipeVersion;
     case DocumentKind::Preset:
+        return kPresetVersion;
     case DocumentKind::Look:
         break;
     }

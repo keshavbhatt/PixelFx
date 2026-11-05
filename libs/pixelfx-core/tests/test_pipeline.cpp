@@ -35,7 +35,58 @@ std::vector<Case> cases()
     pfx::Settings curve;
     curve.set("curves.rgb", pfx::Curve{{0, 0.03}, {0.3, 0.22}, {0.7, 0.8}, {1, 1}});
     curve.set("curves.b", pfx::Curve{{0, 0.06}, {1, 0.95}});
+    pfx::Settings bw = with({{"bw.mix.blue", -60}, {"bw.mix.orange", 40}, {"bw.mix.green", 20}});
+    bw.set("bw.enabled", true);
+    pfx::Settings vivid;
+    vivid.set("color.profile", std::string("vivid"));
+    pfx::Settings paint = with({{"effects.vignette.amount", -50}, {"effects.vignette.feather", 80}});
+    paint.set("effects.vignette.style", std::string("paint"));
+    pfx::Settings ca;
+    ca.set("detail.ca.auto", true);
     return {
+        {"bw", bw, 0.004},
+        {"profile_vivid", vivid, 0.004},
+        {"calibration",
+         with({{"calibration.red.hue", 40},
+               {"calibration.green.saturation", -30},
+               {"calibration.blue.hue", -25},
+               {"calibration.shadows.tint", 30}}),
+         0.004},
+        {"grading_full",
+         with({{"grading.midtones.hue", 40},
+               {"grading.midtones.amount", 30},
+               {"grading.global.hue", 210},
+               {"grading.global.amount", 10},
+               {"grading.shadows.luminance", -20},
+               {"grading.highlights.luminance", 15},
+               {"grading.blending", 80}}),
+         0.004},
+        {"curves_parametric",
+         with({{"curves.parametric.shadows", 40},
+               {"curves.parametric.darks", -20},
+               {"curves.parametric.lights", 25},
+               {"curves.parametric.highlights", -30},
+               {"curves.parametric.split.shadows", 20}}),
+         0.004},
+        {"texture", with({{"detail.texture", 70}}), 0.015},
+        {"sharpen_detail",
+         with(
+             {{"detail.sharpen.amount", 80}, {"detail.sharpen.radius", 0.004}, {"detail.sharpen.detail", 5}}),
+         0.015},
+        {"denoise_detail",
+         with({{"detail.denoise.luminance", 70},
+               {"detail.denoise.luminanceDetail", 80},
+               {"detail.denoise.luminanceContrast", 50},
+               {"detail.denoise.color", 60},
+               {"detail.denoise.colorSmoothness", 90}}),
+         0.012},
+        {"vignette_paint", paint, 0.004},
+        {"grain_rough",
+         with({{"effects.grain.amount", 40}, {"effects.grain.size", 80}, {"effects.grain.roughness", 90}}),
+         0.05},
+        {"chromatic_aberration", ca, 0.004},
+        {"defringe", with({{"detail.defringe.purple.amount", 15}, {"detail.defringe.green.amount", 10}}),
+         0.012},
         {"exposure", with({{"light.exposure", 0.7}}), 0.004},
         {"tone",
          with({{"light.contrast", 35},

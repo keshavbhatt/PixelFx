@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-// Noise reduction, clarity and sharpening. Radii are fractions of the image's long edge
+// Noise reduction, clarity, texture and sharpening. Radii are fractions of the image's long edge
 // (ADR-004), so the same settings look the same on a preview and on the full-size export.
 #include "image/filters.h"
 #include "ops/ops.h"
@@ -98,10 +98,13 @@ bool denoiseActive(const Settings& s)
 namespace {
 
 // Colour noise: blur each channel's difference from luminance, keep luminance as is.
-void denoiseColor(Image& image, double colorAmount, const OpContext& ctx)
+// Detail 50 and smoothness 50 are the base radius; more detail keeps smaller colour areas apart,
+// more smoothness spreads the blur over larger blotches.
+void denoiseColor(Image& image, double colorAmount, double detail, double smoothness, const OpContext& ctx)
 {
     constexpr double kColorRadius = 0.004;
-    const double sigma = pixels(kColorRadius, image, 1.0);
+    const double radius = kColorRadius * std::exp2((0.5 - detail) * 2.0) * std::exp2(smoothness - 0.5);
+    const double sigma = pixels(radius, image, 1.0);
     Plane diff[3] = {Plane(image.width(), image.height()), Plane(image.width(), image.height()),
                      Plane(image.width(), image.height())};
     parallelFor(image.height(), ctx.threads, [&](int y0, int y1) {
@@ -136,17 +139,19 @@ void denoiseColor(Image& image, double colorAmount, const OpContext& ctx)
 }
 
 // Luminance noise: pull towards a small blur where the difference looks like noise, not
-// where it looks like an edge.
-void denoiseLuma(Image& image, double lumaAmount, const OpContext& ctx)
+// where it looks like an edge. Detail (50 the base) sets what counts as an edge; contrast gives
+// back some of the local contrast the smoothing takes.
+void denoiseLuma(Image& image, double lumaAmount, double detail, double contrast, const OpContext& ctx)
 {
     constexpr double kLumaRadius = 0.0012;
-    constexpr double kEdge = 0.04;
+    const double edge = 0.04 * std::exp2((0.5 - detail) * 2.0);
+    const double keepContrast = 0.5 * contrast;
     Plane p = perceptualLuma(image, ctx.threads);
     const Plane blurred = gaussianBlur(p, pixels(kLumaRadius, image, 0.6), ctx.threads);
     forEachValue(p, ctx.threads, [&](std::size_t i) {
         const auto d = double{blurred.values[i] - p.values[i]};
-        const double keep = std::exp(-(d * d) / (kEdge * kEdge));
-        p.values[i] = static_cast<float>(double{p.values[i]} + lumaAmount * keep * d);
+        const double keep = std::exp(-(d * d) / (edge * edge));
+        p.values[i] = static_cast<float>(double{p.values[i]} + lumaAmount * keep * d * (1.0 - keepContrast));
     });
     setPerceptualLuma(image, p, ctx.threads);
 }
@@ -158,10 +163,12 @@ void denoiseApply(Image& image, const Settings& s, const OpContext& ctx)
     const double lumaAmount = s.number("detail.denoise.luminance", 0.0) / 100.0;
     const double colorAmount = s.number("detail.denoise.color", 0.0) / 100.0;
     if (colorAmount > 0.0) {
-        denoiseColor(image, colorAmount, ctx);
+        denoiseColor(image, colorAmount, s.number("detail.denoise.colorDetail", 50.0) / 100.0,
+                     s.number("detail.denoise.colorSmoothness", 50.0) / 100.0, ctx);
     }
     if (lumaAmount > 0.0) {
-        denoiseLuma(image, lumaAmount, ctx);
+        denoiseLuma(image, lumaAmount, s.number("detail.denoise.luminanceDetail", 50.0) / 100.0,
+                    s.number("detail.denoise.luminanceContrast", 0.0) / 100.0, ctx);
     }
 }
 
@@ -188,23 +195,56 @@ void clarityApply(Image& image, const Settings& s, const OpContext& ctx)
     setPerceptualLuma(image, p, ctx.threads);
 }
 
+bool textureActive(const Settings& s)
+{
+    return s.number("detail.texture", 0.0) != 0.0;
+}
+
+// Texture: the medium-fine detail (skin, foliage, fabric), between the finest pixels that
+// sharpening and noise live in and the broad areas clarity works on. Negative smooths it.
+void textureApply(Image& image, const Settings& s, const OpContext& ctx)
+{
+    constexpr double kFine = 0.0004;
+    constexpr double kCoarse = 0.003;
+    constexpr double kStrength = 0.9;
+    const double amount = kStrength * s.number("detail.texture", 0.0) / 100.0;
+    Plane p = perceptualLuma(image, ctx.threads);
+    const Plane fine = gaussianBlur(p, pixels(kFine, image, 0.5), ctx.threads);
+    const Plane coarse = gaussianBlur(p, pixels(kCoarse, image, 1.0), ctx.threads);
+    forEachValue(p, ctx.threads, [&](std::size_t i) {
+        const auto v = double{p.values[i]};
+        const double centred = (2.0 * std::clamp(v, 0.0, 1.0)) - 1.0;
+        const double mid = 1.0 - (centred * centred);
+        const auto band = double{fine.values[i] - coarse.values[i]};
+        p.values[i] = static_cast<float>(std::max(0.0, v + (amount * band * mid)));
+    });
+    setPerceptualLuma(image, p, ctx.threads);
+}
+
 bool sharpenActive(const Settings& s)
 {
     return s.number("detail.sharpen.amount", 0.0) > 0.0;
 }
 
-// Unsharp mask on perceptual luminance (no colour fringes); masking limits it to edges.
+// Unsharp mask on perceptual luminance (no colour fringes); masking limits it to edges. Detail
+// 25 is the plain mask; lower softens the halos along strong edges, higher lifts fine detail.
 void sharpenApply(Image& image, const Settings& s, const OpContext& ctx)
 {
+    constexpr double kBaseDetail = 0.25;
     const double amount = s.number("detail.sharpen.amount", 0.0) / 100.0;
     const double radius = s.number("detail.sharpen.radius", 0.0004);
     const double threshold = s.number("detail.sharpen.masking", 0.0) / 100.0 * 0.05;
+    const double detail = s.number("detail.sharpen.detail", 25.0) / 100.0;
+    const double haloLimit = detail < kBaseDetail ? 0.01 + (0.2 * detail / kBaseDetail) : 0.0;
+    const double gain =
+        detail > kBaseDetail ? 1.0 + (0.6 * (detail - kBaseDetail) / (1.0 - kBaseDetail)) : 1.0;
     Plane p = perceptualLuma(image, ctx.threads);
     const Plane blurred = gaussianBlur(p, pixels(radius, image, 0.3), ctx.threads);
     forEachValue(p, ctx.threads, [&](std::size_t i) {
         const auto d = double{p.values[i] - blurred.values[i]};
         const double mask = threshold > 0.0 ? smoothstep(0.0, threshold, std::abs(d)) : 1.0;
-        p.values[i] = static_cast<float>(std::max(0.0, double{p.values[i]} + amount * d * mask));
+        const double shaped = haloLimit > 0.0 ? d / (1.0 + (std::abs(d) / haloLimit)) : d * gain;
+        p.values[i] = static_cast<float>(std::max(0.0, double{p.values[i]} + amount * shaped * mask));
     });
     setPerceptualLuma(image, p, ctx.threads);
 }

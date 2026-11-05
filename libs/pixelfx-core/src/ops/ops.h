@@ -24,10 +24,18 @@ struct OpImpl
 };
 
 // Implementations, one translation unit per group.
+bool chromaticAberrationActive(const Settings& s);
+void chromaticAberrationApply(Image& image, const Settings& s, const OpContext& ctx);
+bool defringeActive(const Settings& s);
+void defringeApply(Image& image, const Settings& s, const OpContext& ctx);
 bool healActive(const Settings& s);
 void healApply(Image& image, const Settings& s, const OpContext& ctx);
 bool geometryActive(const Settings& s);
 void geometryApply(Image& image, const Settings& s, const OpContext& ctx);
+bool calibrationActive(const Settings& s);
+void calibrationApply(Image& image, const Settings& s, const OpContext& ctx);
+bool profileActive(const Settings& s);
+void profileApply(Image& image, const Settings& s, const OpContext& ctx);
 bool exposureActive(const Settings& s);
 void exposureApply(Image& image, const Settings& s, const OpContext& ctx);
 bool toneActive(const Settings& s);
@@ -42,10 +50,14 @@ bool denoiseActive(const Settings& s);
 void denoiseApply(Image& image, const Settings& s, const OpContext& ctx);
 bool clarityActive(const Settings& s);
 void clarityApply(Image& image, const Settings& s, const OpContext& ctx);
+bool textureActive(const Settings& s);
+void textureApply(Image& image, const Settings& s, const OpContext& ctx);
 bool sharpenActive(const Settings& s);
 void sharpenApply(Image& image, const Settings& s, const OpContext& ctx);
 bool mixerActive(const Settings& s);
 void mixerApply(Image& image, const Settings& s, const OpContext& ctx);
+bool blackAndWhiteActive(const Settings& s);
+void blackAndWhiteApply(Image& image, const Settings& s, const OpContext& ctx);
 bool gradingActive(const Settings& s);
 void gradingApply(Image& image, const Settings& s, const OpContext& ctx);
 bool dehazeActive(const Settings& s);

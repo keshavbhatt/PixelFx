@@ -62,6 +62,9 @@ add_library(pfx_core
     src/ops/effects.cpp
     src/ops/mixer.cpp
     src/ops/grading.cpp
+    src/ops/bw.cpp
+    src/ops/calibration.cpp
+    src/ops/lens.cpp
     src/ops/heal.cpp
     src/ops/dehaze.cpp
     src/pipeline/pipeline.cpp

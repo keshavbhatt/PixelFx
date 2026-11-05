@@ -96,17 +96,58 @@ void addMixer(std::vector<OpSpec>& ops)
     ops.push_back({"mixer", "mixer", 1, 80, true, std::move(params)});
 }
 
+// Version 2 added midtones, global, a luminance per wheel and blending.
 void addGrading(std::vector<OpSpec>& ops)
 {
+    std::vector<ParamSpec> params;
+    for (const char* zone : {"shadows", "midtones", "highlights", "global"}) {
+        const std::string key = std::string("grading.") + zone;
+        params.push_back(number(key + ".hue", 0, 360, 0, "degrees"));
+        params.push_back(number(key + ".amount", 0, 100));
+        params.push_back(number(key + ".luminance", -100, 100));
+    }
+    params.push_back(number("grading.balance", -100, 100));
+    params.push_back(number("grading.blending", 0, 100, 50));
+    ops.push_back({"grading", "grading", 2, 90, true, std::move(params)});
+}
+
+// Black and white: the treatment and how bright each colour band turns (Lightroom's B&W mix).
+void addBlackAndWhite(std::vector<OpSpec>& ops)
+{
+    std::vector<ParamSpec> params = {boolean("bw.enabled")};
+    for (const char* band : {"red", "orange", "yellow", "green", "aqua", "blue", "purple", "magenta"}) {
+        params.push_back(number(std::string("bw.mix.") + band, -100, 100));
+    }
+    ops.push_back({"bw", "bw", 1, 82, true, std::move(params)});
+}
+
+// Calibration: moves the red, green and blue primaries and tints the shadows, as a camera
+// profile would; neutrals stay neutral.
+void addCalibration(std::vector<OpSpec>& ops)
+{
+    std::vector<ParamSpec> params = {number("calibration.shadows.tint", -100, 100)};
+    for (const char* primary : {"red", "green", "blue"}) {
+        params.push_back(number(std::string("calibration.") + primary + ".hue", -100, 100));
+        params.push_back(number(std::string("calibration.") + primary + ".saturation", -100, 100));
+    }
+    ops.push_back({"calibration", "calibration", 1, 32, true, std::move(params)});
+}
+
+// Lens corrections that need no lens profile: lateral chromatic aberration found from the
+// photo itself, and purple and green fringes along high-contrast edges.
+void addLensCorrections(std::vector<OpSpec>& ops)
+{
+    ops.push_back({"chromatic_aberration", "detail", 1, 3, false, {boolean("detail.ca.auto")}});
     ops.push_back(
-        {"grading",
-         "grading",
+        {"defringe",
+         "detail",
          1,
-         90,
-         true,
-         {number("grading.shadows.hue", 0, 360, 0, "degrees"), number("grading.shadows.amount", 0, 100),
-          number("grading.highlights.hue", 0, 360, 0, "degrees"), number("grading.highlights.amount", 0, 100),
-          number("grading.balance", -100, 100)}});
+         4,
+         false,
+         {number("detail.defringe.purple.amount", 0, 20), number("detail.defringe.purple.hueLow", 0, 100, 30),
+          number("detail.defringe.purple.hueHigh", 0, 100, 70), number("detail.defringe.green.amount", 0, 20),
+          number("detail.defringe.green.hueLow", 0, 100, 40),
+          number("detail.defringe.green.hueHigh", 0, 100, 60)}});
 }
 
 void addEffects(std::vector<OpSpec>& ops)
@@ -114,33 +155,25 @@ void addEffects(std::vector<OpSpec>& ops)
     ops.push_back(
         {"vignette",
          "effects",
-         1,
+         2,
          120,
          false,
          {number("effects.vignette.amount", -100, 100), number("effects.vignette.midpoint", 0, 100, 50),
-          number("effects.vignette.roundness", -100, 100)}});
+          number("effects.vignette.roundness", -100, 100), number("effects.vignette.feather", 0, 100, 50),
+          choice("effects.vignette.style", {"highlight", "color", "paint"}),
+          number("effects.vignette.highlights", 0, 100)}});
     ops.push_back({"grain",
                    "effects",
-                   1,
+                   2,
                    130,
                    false,
-                   {number("effects.grain.amount", 0, 100), number("effects.grain.size", 0, 100, 25)}});
+                   {number("effects.grain.amount", 0, 100), number("effects.grain.size", 0, 100, 25),
+                    number("effects.grain.roughness", 0, 100, 50)}});
     ops.push_back({"fade", "effects", 1, 140, true, {number("effects.fade", 0, 100)}});
 }
 
-// Stages follow DOCS/presets.md section 5; gaps leave room for the operations of later
-// milestones (heal 5, geometry 10, dehaze 45, mixer 80, grading 90, look 100, vignette 120 ...).
-std::vector<OpSpec> builtInOps()
+void addLightAndColor(std::vector<OpSpec>& ops)
 {
-    std::vector<OpSpec> ops;
-    addHeal(ops);
-    addGeometry(ops);
-    ops.push_back({"denoise",
-                   "detail",
-                   1,
-                   20,
-                   false,
-                   {number("detail.denoise.luminance", 0, 100), number("detail.denoise.color", 0, 100)}});
     ops.push_back({"white_balance",
                    "color",
                    1,
@@ -148,6 +181,8 @@ std::vector<OpSpec> builtInOps()
                    true,
                    {choice("color.wb.mode", {"relative"}), number("color.wb.temperature", -100, 100),
                     number("color.wb.tint", -100, 100)}});
+    // The base rendering a Lightroom profile stands for: standard, or vivid (more contrast and colour).
+    ops.push_back({"profile", "color", 1, 35, true, {choice("color.profile", {"standard", "vivid"})}});
     ops.push_back({"exposure", "light", 1, 40, true, {number("light.exposure", -5, 5, 0, "EV")}});
     ops.push_back({"tone",
                    "light",
@@ -157,29 +192,70 @@ std::vector<OpSpec> builtInOps()
                    {number("light.contrast", -100, 100), number("light.highlights", -100, 100),
                     number("light.shadows", -100, 100), number("light.whites", -100, 100),
                     number("light.blacks", -100, 100)}});
-    ops.push_back({"clarity", "detail", 1, 60, false, {number("detail.clarity", -100, 100)}});
-    ops.push_back({"curves",
-                   "curves",
-                   1,
-                   70,
-                   true,
-                   {curve("curves.rgb"), curve("curves.r"), curve("curves.g"), curve("curves.b")}});
     ops.push_back({"vibrance_saturation",
                    "color",
                    1,
                    85,
                    true,
                    {number("color.vibrance", -100, 100), number("color.saturation", -100, 100)}});
+}
+
+void addDetail(std::vector<OpSpec>& ops)
+{
+    ops.push_back({"denoise",
+                   "detail",
+                   2,
+                   20,
+                   false,
+                   {number("detail.denoise.luminance", 0, 100), number("detail.denoise.color", 0, 100),
+                    number("detail.denoise.luminanceDetail", 0, 100, 50),
+                    number("detail.denoise.luminanceContrast", 0, 100),
+                    number("detail.denoise.colorDetail", 0, 100, 50),
+                    number("detail.denoise.colorSmoothness", 0, 100, 50)}});
+    ops.push_back({"clarity", "detail", 1, 60, false, {number("detail.clarity", -100, 100)}});
+    ops.push_back({"texture", "detail", 1, 62, false, {number("detail.texture", -100, 100)}});
     ops.push_back(
         {"sharpen",
          "detail",
-         1,
+         2,
          110,
          false,
          {number("detail.sharpen.amount", 0, 150), relative("detail.sharpen.radius", 0.0001, 0.003, 0.0004),
-          number("detail.sharpen.masking", 0, 100)}});
+          number("detail.sharpen.masking", 0, 100), number("detail.sharpen.detail", 0, 100, 25)}});
     ops.push_back({"dehaze", "detail", 1, 45, false, {number("detail.dehaze", -100, 100)}});
+}
+
+void addCurves(std::vector<OpSpec>& ops)
+{
+    ops.push_back(
+        {"curves",
+         "curves",
+         2,
+         70,
+         true,
+         {curve("curves.rgb"), curve("curves.r"), curve("curves.g"), curve("curves.b"),
+          number("curves.parametric.shadows", -100, 100), number("curves.parametric.darks", -100, 100),
+          number("curves.parametric.lights", -100, 100), number("curves.parametric.highlights", -100, 100),
+          number("curves.parametric.split.shadows", 5, 95, 25),
+          number("curves.parametric.split.midtones", 5, 95, 50),
+          number("curves.parametric.split.highlights", 5, 95, 75)}});
+}
+
+// Stages follow DOCS/presets.md section 5; gaps leave room for the operations of later
+// milestones (CA 3, defringe 4, heal 5, geometry 10, calibration 32, profile 35, dehaze 45,
+// texture 62, mixer 80, B&W 82, grading 90, look 100, vignette 120 ...).
+std::vector<OpSpec> builtInOps()
+{
+    std::vector<OpSpec> ops;
+    addHeal(ops);
+    addGeometry(ops);
+    addLightAndColor(ops);
+    addDetail(ops);
+    addCurves(ops);
     addMixer(ops);
+    addBlackAndWhite(ops);
+    addCalibration(ops);
+    addLensCorrections(ops);
     addGrading(ops);
     addEffects(ops);
     std::ranges::sort(ops, [](const OpSpec& a, const OpSpec& b) { return a.stage < b.stage; });

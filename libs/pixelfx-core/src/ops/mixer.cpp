@@ -2,6 +2,7 @@
 // Colour mixer: hue, saturation and luminance for eight colour bands (FEATURES E3). Works on
 // the perceptual encoding in HSV terms; each pixel's change is blended from the two bands its
 // hue lies between, and fades out toward grey so neutral tones never shift.
+#include "ops/hue_bands.h"
 #include "ops/ops.h"
 
 #include <algorithm>
@@ -13,10 +14,7 @@ namespace pfx::detail {
 
 namespace {
 
-constexpr std::array<const char*, 8> kBands = {"red",  "orange", "yellow", "green",
-                                               "aqua", "blue",   "purple", "magenta"};
-constexpr std::array<double, 8> kCentres = {0, 30, 60, 120, 180, 240, 270, 300}; // degrees
-constexpr double kHueReach = 30.0;                                               // degrees at +-100
+constexpr double kHueReach = 30.0;      // degrees at +-100
 constexpr double kLuminanceReach = 0.4; // share of the value at +-100
 
 struct Band
@@ -29,8 +27,8 @@ struct Band
 std::array<Band, 8> bandsOf(const Settings& s)
 {
     std::array<Band, 8> bands{};
-    for (std::size_t i = 0; i < kBands.size(); ++i) {
-        const std::string name = kBands.at(i);
+    for (std::size_t i = 0; i < kHueBands.size(); ++i) {
+        const std::string name = kHueBands.at(i);
         bands.at(i) = {s.number("mixer.hue." + name, 0) / 100.0,
                        s.number("mixer.saturation." + name, 0) / 100.0,
                        s.number("mixer.luminance." + name, 0) / 100.0};
@@ -41,26 +39,12 @@ std::array<Band, 8> bandsOf(const Settings& s)
 /// The change at `hue` (degrees): linear between the two neighbouring band centres.
 Band blend(const std::array<Band, 8>& bands, double hue)
 {
-    std::size_t lo = kCentres.size() - 1;
-    for (std::size_t i = 0; i < kCentres.size(); ++i) {
-        if (hue >= kCentres.at(i)) {
-            lo = i;
-        }
-    }
-    const std::size_t hi = (lo + 1) % kCentres.size();
-    const double start = kCentres.at(lo);
-    const double end = hi == 0 ? 360.0 : kCentres.at(hi);
-    const double t = (hue - start) / (end - start);
-    const Band& a = bands.at(lo);
-    const Band& b = bands.at(hi);
+    const BandPosition at = bandAt(hue);
+    const double t = at.t;
+    const Band& a = bands.at(at.lo);
+    const Band& b = bands.at(at.hi);
     return {a.hue + (t * (b.hue - a.hue)), a.saturation + (t * (b.saturation - a.saturation)),
             a.luminance + (t * (b.luminance - a.luminance))};
-}
-
-double smoothstep(double edge0, double edge1, double x)
-{
-    const double t = std::clamp((x - edge0) / (edge1 - edge0), 0.0, 1.0);
-    return t * t * (3.0 - (2.0 * t));
 }
 
 void hsvToRgb(double h, double s, double v, double* rgb)
@@ -122,20 +106,13 @@ void mixerApply(Image& image, const Settings& s, const OpContext& ctx)
                 for (std::size_t c = 0; c < 3; ++c) {
                     e.at(c) = color::perceptualEncode(std::max(0.0, double{p[c]}));
                 }
-                const double v = std::max({e[0], e[1], e[2]});
-                const double chroma = v - std::min({e[0], e[1], e[2]});
-                if (v <= 0.0 || chroma <= 0.0) {
+                const Hsv hsv = toHsv(e);
+                if (hsv.saturation <= 0.0) {
                     continue; // grey: no hue to act on
                 }
-                const double sat = chroma / v;
-                double hue = 0;
-                if (v == e[0]) {
-                    hue = 60.0 * std::fmod((e[1] - e[2]) / chroma + 6.0, 6.0);
-                } else if (v == e[1]) {
-                    hue = 60.0 * (((e[2] - e[0]) / chroma) + 2.0);
-                } else {
-                    hue = 60.0 * (((e[0] - e[1]) / chroma) + 4.0);
-                }
+                const double hue = hsv.hue;
+                const double sat = hsv.saturation;
+                const double v = hsv.value;
                 const Band change = blend(bands, hue);
                 const double weight = smoothstep(0.0, 0.2, sat); // near-grey pixels barely move
                 const double newHue = std::fmod(hue + (change.hue * kHueReach * weight) + 360.0, 360.0);

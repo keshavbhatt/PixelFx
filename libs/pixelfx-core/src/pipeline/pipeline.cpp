@@ -14,17 +14,23 @@ namespace {
 constexpr int kLookStage = 100; // between grading (90) and sharpen (110)
 
 // Implementations in pipeline order; every id must be in the registry (checked by a test).
-constexpr std::array<detail::OpImpl, 16> kImpls = {{
+constexpr std::array<detail::OpImpl, 22> kImpls = {{
+    {"chromatic_aberration", detail::chromaticAberrationActive, detail::chromaticAberrationApply},
+    {"defringe", detail::defringeActive, detail::defringeApply},
     {"heal", detail::healActive, detail::healApply},
     {"geometry", detail::geometryActive, detail::geometryApply},
     {"denoise", detail::denoiseActive, detail::denoiseApply},
     {"white_balance", detail::whiteBalanceActive, detail::whiteBalanceApply},
+    {"calibration", detail::calibrationActive, detail::calibrationApply},
+    {"profile", detail::profileActive, detail::profileApply},
     {"exposure", detail::exposureActive, detail::exposureApply},
     {"dehaze", detail::dehazeActive, detail::dehazeApply},
     {"tone", detail::toneActive, detail::toneApply},
     {"clarity", detail::clarityActive, detail::clarityApply},
+    {"texture", detail::textureActive, detail::textureApply},
     {"curves", detail::curvesActive, detail::curvesApply},
     {"mixer", detail::mixerActive, detail::mixerApply},
+    {"bw", detail::blackAndWhiteActive, detail::blackAndWhiteApply},
     {"vibrance_saturation", detail::vibranceSaturationActive, detail::vibranceSaturationApply},
     {"grading", detail::gradingActive, detail::gradingApply},
     {"sharpen", detail::sharpenActive, detail::sharpenApply},

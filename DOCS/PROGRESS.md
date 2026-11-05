@@ -36,7 +36,8 @@ Decisions the work stopped at; everything else went ahead within the approved mo
 3. The theme applies at the next start (icons are tinted when made). Accept, or ask for a live
    switch.
 4. macOS CI skips one curve-editor test (a crash only on the runner, clean under ASan locally).
-5. Real Lightroom `.xmp` exports should be tried on the importer (only hand-made ones so far).
+5. Real Lightroom `.xmp` exports should be tried on the importer (EmulsionPresets' 451 so far,
+   2026-11-05; a second, real-world set is still wanted for the 95% target of FEATURES P8).
 6. Batch writes beside each original into a folder named "PixelFx": keep the name?
 7. Zoom has no FEATURES row; add one (it is built).
 8. Small departures from approved mocks, until their parts exist: no Favorites chip; the look
@@ -61,6 +62,27 @@ Decisions the work stopped at; everything else went ahead within the approved mo
     Heal); Reveal dust explains itself in its tooltip rather than a first-time line.
 
 ## Sessions (newest first)
+
+### 2026-11-05 (Lightroom compatibility, library)
+
+- Decided by the owner: PixelFx reads and renders every global develop setting a Lightroom
+  preset uses (FEATURES P8), each shown as a control; secondary sliders sit under a "More"
+  disclosure in their group; colour grading gets midtones and global (the approved grading mock
+  is reopened); lens profiles wait for their own ADR (lensfun). A large built-in preset catalog
+  follows (P9), browsed as tiles with an Amount slider (mock first).
+- Measured on EmulsionPresets (451 MIT-licensed Lightroom presets, 103 settings): before, 413
+  presets lost a setting on import, the 83 black-and-white ones came in as colour. Now 449 import
+  with nothing skipped; the other 2 switch on a lens profile.
+- libpixelfx: black and white with the B&W mix; colour grading with midtones, global, a
+  luminance per range and blending; Texture; Calibration (primaries, shadow tint); the vivid
+  profile; the parametric curve with its splits; sharpen detail; noise reduction detail,
+  contrast and smoothness; vignette feather, style and highlights; grain roughness; lateral
+  chromatic aberration measured on the photo; defringe. Every default renders as before (the
+  golden images are unchanged); each new setting has a golden image, a scale test and a
+  behaviour test. The importer maps all of them, profiles included.
+- Formats: presets version 2, recipes and batch recipes version 3, older files read unchanged.
+- Next: the app's preset parts for B&W and Calibration (they change the Save as preset and Paste
+  sheets), the controls mock, then the catalog mock.
 
 ### 2026-11-05 (UI against the mocks)
 

@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
+#include <string>
 
 namespace pfx::detail {
 
@@ -31,6 +32,7 @@ VignetteShape vignetteShape(const Settings& s, int width, int height)
 {
     const double roundness = s.number("effects.vignette.roundness", 0.0) / 100.0;
     const double midpoint = s.number("effects.vignette.midpoint", 50.0) / 100.0;
+    const double feather = s.number("effects.vignette.feather", 50.0) / 100.0;
     // Round toward a circle of the image's mean half-size; square toward a rectangle.
     const double circle = std::sqrt(static_cast<double>(width) * static_cast<double>(height)) / 2.0;
     const double toCircle = std::max(0.0, roundness);
@@ -39,7 +41,7 @@ VignetteShape vignetteShape(const Settings& s, int width, int height)
     v.halfH = (height / 2.0) + (toCircle * (circle - (height / 2.0)));
     v.power = 2.0 * std::pow(4.0, std::max(0.0, -roundness));
     v.inner = 0.2 + (0.8 * midpoint);
-    v.outer = v.inner + 0.9;
+    v.outer = v.inner + 0.05 + (1.7 * feather); // feather 50 is the even falloff
     return v;
 }
 
@@ -69,6 +71,36 @@ double valueNoise(double x, double y)
     return top + (ty * (bottom - top));
 }
 
+/// Roughness 50 is one even layer of grains; higher adds a finer, uneven layer, lower blends in
+/// a larger, smoother one.
+class GrainRoughness
+{
+public:
+    explicit GrainRoughness(double roughness)
+        : m_fine(std::max(0.0, (roughness - 50.0) / 50.0) * 0.7)
+        , m_smooth(std::max(0.0, (50.0 - roughness) / 50.0) * 0.6)
+        , m_norm(1.0 / std::sqrt(1.0 + (m_fine * m_fine)))
+    {}
+
+    /// Grain noise at (x, y) in grain cells, in about [-1, 1].
+    [[nodiscard]] double noise(double x, double y) const
+    {
+        double n = valueNoise(x, y);
+        if (m_fine > 0.0) {
+            n = (n + (m_fine * valueNoise((x * 2.3) + 17.0, (y * 2.3) + 31.0))) * m_norm;
+        }
+        if (m_smooth > 0.0) {
+            n = ((1.0 - m_smooth) * n) + (m_smooth * valueNoise((x * 0.5) + 53.0, (y * 0.5) + 7.0));
+        }
+        return n;
+    }
+
+private:
+    double m_fine;
+    double m_smooth;
+    double m_norm;
+};
+
 } // namespace
 
 bool vignetteActive(const Settings& s)
@@ -76,10 +108,62 @@ bool vignetteActive(const Settings& s)
     return s.number("effects.vignette.amount", 0.0) != 0.0;
 }
 
+namespace {
+
+enum class VignetteStyle
+{
+    Highlight, // darkens like less exposure, sparing the brightest tones as highlights asks
+    Color,     // keeps each pixel's hue and saturation, changing only its lightness
+    Paint,     // mixes toward black or white, which also flattens contrast
+};
+
+VignetteStyle vignetteStyle(const Settings& s)
+{
+    const std::string style = s.text("effects.vignette.style", "highlight");
+    if (style == "color") {
+        return VignetteStyle::Color;
+    }
+    return style == "paint" ? VignetteStyle::Paint : VignetteStyle::Highlight;
+}
+
+/// A pixel `f` of the way into the vignette (-1 black to 1 white).
+void vignettePixel(float* p, double f, VignetteStyle style, double highlights)
+{
+    if (style == VignetteStyle::Paint) {
+        const double target = f < 0.0 ? 0.0 : 1.0;
+        for (int c = 0; c < 3; ++c) {
+            const double e = color::perceptualEncode(std::max(0.0, double{p[c]}));
+            p[c] = static_cast<float>(color::perceptualDecode(e + ((target - e) * std::abs(f))));
+        }
+        return;
+    }
+    const double luma = std::max(0.0, color::luminance(p[0], p[1], p[2]));
+    if (f < 0.0 && highlights > 0.0) {
+        f *= 1.0 - (highlights * smoothstep(0.55, 0.95, color::perceptualEncode(luma)));
+    }
+    if (style == VignetteStyle::Color && luma > 0.0) {
+        const double e = color::perceptualEncode(luma);
+        const double target = color::perceptualDecode(f < 0.0 ? e * (1.0 + f) : e + ((1.0 - e) * f));
+        for (int c = 0; c < 3; ++c) {
+            p[c] = static_cast<float>(double{p[c]} * (target / luma));
+        }
+        return;
+    }
+    for (int c = 0; c < 3; ++c) {
+        const auto value = double{p[c]};
+        // Darkening scales toward black; lightening mixes toward white.
+        p[c] = static_cast<float>(f < 0.0 ? value * (1.0 + f) : value + ((1.0 - value) * f));
+    }
+}
+
+} // namespace
+
 void vignetteApply(Image& image, const Settings& s, const OpContext& ctx)
 {
     const double amount = s.number("effects.vignette.amount", 0.0) / 100.0;
     const VignetteShape v = vignetteShape(s, image.width(), image.height());
+    const VignetteStyle style = vignetteStyle(s);
+    const double highlights = s.number("effects.vignette.highlights", 0.0) / 100.0;
     const double cx = image.width() / 2.0;
     const double cy = image.height() / 2.0;
     parallelFor(image.height(), ctx.threads, [&](int y0, int y1) {
@@ -95,12 +179,7 @@ void vignetteApply(Image& image, const Settings& s, const OpContext& ctx)
                 if (d <= v.inner) {
                     continue; // inside the untouched middle
                 }
-                const double f = smoothstep(v.inner, v.outer, d) * amount;
-                for (int c = 0; c < 3; ++c) {
-                    const auto value = double{p[c]};
-                    // Darkening scales toward black; lightening mixes toward white.
-                    p[c] = static_cast<float>(f < 0.0 ? value * (1.0 + f) : value + ((1.0 - value) * f));
-                }
+                vignettePixel(p, smoothstep(v.inner, v.outer, d) * amount, style, highlights);
             }
         }
     });
@@ -115,6 +194,7 @@ void grainApply(Image& image, const Settings& s, const OpContext& ctx)
 {
     const double amount = s.number("effects.grain.amount", 0.0) / 100.0;
     const double size = s.number("effects.grain.size", 25.0) / 100.0;
+    const GrainRoughness rough(s.number("effects.grain.roughness", 50.0));
     // A grain is 0.05% to 0.3% of the long edge. The lattice is tied to the image, so a preview
     // shows the same grains, smaller; where they shrink below a pixel they average out, as
     // they would when the full-size photo is scaled down.
@@ -127,7 +207,7 @@ void grainApply(Image& image, const Settings& s, const OpContext& ctx)
             for (int x = 0; x < image.width(); ++x, p += 4) {
                 const double luma = std::max(0.0, color::luminance(p[0], p[1], p[2]));
                 const double e = color::perceptualEncode(luma);
-                const double n = valueNoise((x + 0.5) / cell, (y + 0.5) / cell);
+                const double n = rough.noise((x + 0.5) / cell, (y + 0.5) / cell);
                 // Strongest in the midtones, as film grain shows.
                 const double shifted =
                     std::max(0.0, e + (strength * n * (0.35 + (2.6 * e * (1.0 - std::min(e, 1.0))))));
