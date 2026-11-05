@@ -67,6 +67,16 @@ Decisions the work stopped at; everything else went ahead within the approved mo
   drawn as the mocks draw them (rounded, bordered, over a dimmed window) and moved by dragging
   them; the system's own dialogs (file and colour pickers, short questions) stay native.
 
+- Sheets against their mocks, one at a time: Export, Watermark, Save as preset, Paste settings,
+  Settings, Keyboard shortcuts, About, What's new and the look editor. Shared pieces came out of
+  it: `Sheet` (frameless, over a dimmed window), `PartChecklist` (the parts of a preset or a
+  paste with what changed), `StepList` (reorderable steps), `ElidedLabel`, `setLabelColumn`
+  (muted form labels in one column), `coverThumbnail`, `icons::toggle`. Sliders anywhere are
+  `SliderRow`s, so every value can be typed and shows in the accent when changed.
+- Left for later, from the mocks (drift list, section B): Export's Sharpen for, Color space and
+  size estimate; Paste's Replace their settings; Settings' other pages; the watermark font
+  weight. The mocks are drawn at 13 px; PixelFx uses the system font, which reads near 12 px
+  on the owner's desktop.
 - The owner found the Batch page far from `batch.html` and raw Fusion controls everywhere.
   Every screen was grabbed and set beside its mock; the gaps were shared, so they were fixed
   at the root: the style sheet now draws every standard control as `mock.css` does
