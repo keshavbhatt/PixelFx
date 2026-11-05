@@ -112,6 +112,9 @@ private:
 
     std::vector<core::PresetEntry> m_entries;
     std::vector<QImage> m_thumbnails;
+    // The tiles of the list as built: Qt reports new children of a shown panel as hidden until
+    // the next event loop pass, so their visibility cannot tell which are on show.
+    std::vector<PhotoTile*> m_tiles;
     QStringList m_favorites;
     QStringList m_recent;
     QStringList m_closed;

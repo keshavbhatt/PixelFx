@@ -284,14 +284,7 @@ bool PresetsPanel::hasThumbnail(std::size_t index) const
 
 std::vector<PhotoTile*> PresetsPanel::tiles() const
 {
-    const QList<PhotoTile*> found = m_listBox->findChildren<PhotoTile*>();
-    std::vector<PhotoTile*> out;
-    for (PhotoTile* t : found) {
-        if (!t->isHidden()) {
-            out.push_back(t);
-        }
-    }
-    return out;
+    return m_tiles;
 }
 
 std::vector<std::size_t> PresetsPanel::shownIndexes() const
@@ -383,6 +376,7 @@ std::vector<std::size_t> PresetsPanel::indexesOf(const QStringList& ids) const
 
 void PresetsPanel::clearList()
 {
+    m_tiles.clear();
     // Later, not now: a tile may be the one whose menu or click led here.
     const auto retire = [](QWidget* w) {
         if (w != nullptr) {
@@ -455,7 +449,7 @@ void PresetsPanel::addGroupSections(bool mineOnly, bool searching)
         }
     }
     if (inCategory) {
-        m_backCount->setText(QString::number(tiles().size()));
+        m_backCount->setText(QString::number(m_tiles.size()));
     }
 }
 
@@ -526,6 +520,7 @@ void PresetsPanel::addSection(const QString& title, const std::vector<std::size_
     const std::size_t limit = limited ? kFirstTiles : indexes.size();
     for (std::size_t k = 0; k < indexes.size() && k < limit; ++k) {
         shown.push_back(makeTile(indexes[k]));
+        m_tiles.push_back(shown.back());
     }
     m_list->addLayout(tileGrid(shown, m_listBox));
 }

@@ -99,6 +99,27 @@ private Q_SLOTS:
         QVERIFY(panel.shownIndexes() == std::vector<std::size_t>{0});
     }
 
+    void aCategoryOpenedOnScreenCountsAndWantsEveryPicture()
+    {
+        PresetsPanel panel;
+        panel.showTab(1);
+        panel.resize(272, 800);
+        panel.show();
+        QVERIFY(QTest::qWaitForWindowExposed(&panel));
+        panel.setEntries(catalog());
+        QSignalSpy wanted(&panel, &PresetsPanel::thumbnailsWanted);
+        panel.showCategory(u"Film, color"_s); // while on screen, as a click on "All 9" does
+        QCOMPARE(wanted.count(), 1);
+        QCOMPARE(panel.shownIndexes().size(), 9u);
+        QLabel* count = nullptr;
+        for (auto* l : panel.findChildren<QLabel*>(u"muted"_s)) {
+            if (l->text() == u"9"_s) {
+                count = l;
+            }
+        }
+        QVERIFY(count != nullptr);
+    }
+
     void favoritesMineAndRecentFilter()
     {
         PresetsPanel panel;
