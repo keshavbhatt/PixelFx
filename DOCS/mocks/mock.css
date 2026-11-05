@@ -1,7 +1,7 @@
 /* PixelFx mock sheet. These tokens are the ones DOCS/DESIGN.md section 1 promises to the
    app's style code; every mock reads only these. Neutral greys with no hue, so the chrome
    never tints the user's judgement of colour. Dark is the default; light is first class. */
-:root {
+:root, [data-theme=light] {
   --accent: #2560CC; --accent-strong: #2560CC; --accent-hover: #1F52B0; --accent-text: #FFFFFF; --accent-soft: #E3ECFC;
   --bg: #EDEDED; --canvas: #D6D6D6; --bar: #FAFAFA; --panel: #F5F5F5; --elevated: #FFFFFF; --hover: #E6E6E6;
   --input: #FFFFFF; --border: #D4D4D4; --text: #1A1A1A; --muted: #555555; --faint: #676767; --link: #2560CC;
