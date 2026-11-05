@@ -360,6 +360,9 @@ public:
         if (hint == SH_Slider_AbsoluteSetButtons) {
             return Qt::LeftButton; // a click on a slider's track moves it there
         }
+        if (hint == SH_ComboBox_Popup) {
+            return 0; // a list opens below its box, as tall as its choices
+        }
         return QProxyStyle::styleHint(hint, option, widget, returnData);
     }
 

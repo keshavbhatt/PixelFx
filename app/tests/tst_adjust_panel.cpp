@@ -3,7 +3,9 @@
 #include "ui/curve_editor.h"
 #include "ui/style.h"
 
+#include <QAbstractItemView>
 #include <QApplication>
+#include <QComboBox>
 #include <QGuiApplication>
 #include <QLabel>
 #include <QLineEdit>
@@ -409,6 +411,23 @@ private Q_SLOTS:
             sub->hide();
             parent.hide();
         }
+    }
+
+    void aListOpensAsTallAsItsChoices()
+    {
+        AdjustPanel panel;
+        panel.resize(316, 800);
+        panel.show();
+        QVERIFY(QTest::qWaitForWindowExposed(&panel));
+        auto* box = panel.findChild<QComboBox*>(u"compact"_s);
+        QVERIFY(box);
+        box->showPopup();
+        QWidget* popup = box->view()->window();
+        QTRY_VERIFY(popup->isVisible());
+        QVERIFY2(popup->height() < 40 * box->count(), qPrintable(QString::number(popup->height())));
+        QVERIFY2(popup->geometry().top() >= box->mapToGlobal(QPoint(0, 0)).y(),
+                 "the list opens below its box");
+        box->hidePopup();
     }
 
     void setSettingsDoesNotEmit()
