@@ -82,6 +82,12 @@ Decisions the work stopped at; everything else went ahead within the approved mo
   already ended.
 - Owner: the ring always turns. `BusyRing` no longer stands still when the desktop turns
   animations off, and `animationsWanted` went with it (nothing else used it).
+- Build: the host's Qt went to 6.12 and the dev build broke, because CMake had been taking
+  moc, rcc and uic from the host (it searches the SDK's `lib/x86_64-linux-gnu` only on a
+  Debian-style host). `scripts/dev-build.sh` now finds Qt's tool packages in the SDK and drops
+  any found on the host before; the snap and Flatpak builds are not affected.
+- Checks: 35 app suites, 134 library tests, the linters; the real app headless with a 6021 by
+  3422 photo shows "Preparing preview" and no tag until the preview arrives, as in the mock.
 
 ### 2026-11-05 (Looks, hover preview)
 
