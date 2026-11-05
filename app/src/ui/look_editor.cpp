@@ -4,7 +4,8 @@
 #include "ui/curve_editor.h"
 #include "ui/icon_text_button.h"
 #include "ui/icons.h"
-#include "ui/panel_slider.h"
+#include "ui/slider_row.h"
+#include "ui/step_list.h"
 #include "ui/style.h"
 
 #include <QButtonGroup>
@@ -16,7 +17,6 @@
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QLineEdit>
-#include <QListWidget>
 #include <QMenu>
 #include <QPushButton>
 #include <QSaveFile>
@@ -43,7 +43,8 @@ namespace pixelfx::ui {
 
 namespace {
 
-constexpr int kSliderTicks = 1000;
+constexpr int kVisibleSteps = 5; // rows shown before the list scrolls
+constexpr int kNewLookStrength = 80;
 
 struct Category
 {
@@ -115,6 +116,124 @@ int decimalsFor(const pfx::ParamSpec& p)
     return range <= 10.0 ? 2 : 0;
 }
 
+// A value as the panel shows it: signed when it can go both ways, with its unit ("+10", "200°").
+QString shownValue(double value, int decimals, double minimum, const std::string& unit)
+{
+    QString text = QString::number(value, 'f', decimals);
+    if (minimum < 0.0 && value > 0.0) {
+        text.prepend(u'+');
+    }
+    if (unit == "degrees") {
+        text += u'\u00B0';
+    } else if (unit == "EV") {
+        text += LookEditor::tr(" EV");
+    }
+    return text;
+}
+
+// The colour a hue reads as, for summaries ("teal").
+QString hueName(double degrees)
+{
+    struct Band
+    {
+        double upTo;
+        const char* name;
+    };
+    static constexpr std::array<Band, 9> kBands = {{
+        {15, QT_TRANSLATE_NOOP("LookEditor", "red")},
+        {45, QT_TRANSLATE_NOOP("LookEditor", "orange")},
+        {70, QT_TRANSLATE_NOOP("LookEditor", "yellow")},
+        {160, QT_TRANSLATE_NOOP("LookEditor", "green")},
+        {210, QT_TRANSLATE_NOOP("LookEditor", "teal")},
+        {255, QT_TRANSLATE_NOOP("LookEditor", "blue")},
+        {290, QT_TRANSLATE_NOOP("LookEditor", "purple")},
+        {340, QT_TRANSLATE_NOOP("LookEditor", "magenta")},
+        {361, QT_TRANSLATE_NOOP("LookEditor", "red")},
+    }};
+    for (const Band& b : kBands) {
+        if (degrees < b.upTo) {
+            return LookEditor::tr(b.name);
+        }
+    }
+    return LookEditor::tr("red");
+}
+
+// The curve's height at `x`, between its points.
+double curveAt(const pfx::Curve& curve, double x)
+{
+    if (curve.empty()) {
+        return x;
+    }
+    if (x <= curve.front().x) {
+        return curve.front().y;
+    }
+    for (std::size_t i = 1; i < curve.size(); ++i) {
+        const pfx::CurvePoint& a = curve[i - 1];
+        const pfx::CurvePoint& b = curve[i];
+        if (x <= b.x) {
+            return b.x > a.x ? a.y + ((b.y - a.y) * (x - a.x) / (b.x - a.x)) : b.y;
+        }
+    }
+    return curve.back().y;
+}
+
+// A curve in the words photographers use: "S curve, lifted blacks".
+QString curveWords(const pfx::Curve& curve)
+{
+    constexpr double kNoticeable = 0.02;
+    const double low = curveAt(curve, 0.25) - 0.25;
+    const double high = curveAt(curve, 0.75) - 0.75;
+    QStringList words;
+    if (low < -kNoticeable && high > kNoticeable) {
+        words << LookEditor::tr("S curve");
+    } else if (low > kNoticeable && high < -kNoticeable) {
+        words << LookEditor::tr("flatter contrast");
+    } else if (low > kNoticeable || high > kNoticeable) {
+        words << LookEditor::tr("brighter");
+    } else if (low < -kNoticeable || high < -kNoticeable) {
+        words << LookEditor::tr("darker");
+    }
+    if (curveAt(curve, 0.0) > kNoticeable) {
+        words << LookEditor::tr("lifted blacks");
+    }
+    if (curveAt(curve, 1.0) < 1.0 - kNoticeable) {
+        words << LookEditor::tr("softer whites");
+    }
+    if (words.isEmpty()) {
+        return LookEditor::tr("Straight curve");
+    }
+    words.front()[0] = words.front().at(0).toUpper();
+    return words.join(u", "_s);
+}
+
+// The icon of a step, the same as its group in the adjust panel.
+QString stepGlyph(const std::string& op)
+{
+    static const std::array<std::pair<const char*, const char*>, 15> glyphs = {{
+        {"denoise", "detail"},
+        {"white_balance", "droplet"},
+        {"exposure", "sun"},
+        {"dehaze", "detail"},
+        {"tone", "sun"},
+        {"clarity", "detail"},
+        {"curves", "curves"},
+        {"mixer", "palette"},
+        {"vibrance_saturation", "droplet"},
+        {"grading", "blend"},
+        {"sharpen", "detail"},
+        {"vignette", "sparkles"},
+        {"grain", "sparkles"},
+        {"fade", "sparkles"},
+        {"lut", "image"},
+    }};
+    for (const auto& [id, glyph] : glyphs) {
+        if (op == id) {
+            return QString::fromLatin1(glyph);
+        }
+    }
+    return u"sliders"_s;
+}
+
 } // namespace
 
 LookEditor::LookEditor(const std::shared_ptr<const pfx::Image>& source, const pfx::Settings& settings,
@@ -129,7 +248,7 @@ LookEditor::LookEditor(const std::shared_ptr<const pfx::Image>& source, const pf
         m_look = *entry.look;
     } else {
         m_look.category = "color";
-        m_look.defaultStrength = 80;
+        m_look.defaultStrength = kNewLookStrength;
     }
     // The preview at a fixed, modest size: quick to render while sliders move.
     if (source) {
@@ -226,6 +345,9 @@ QString LookEditor::stepSummary(const pfx::LookStep& step) const
     if (op == nullptr) {
         return tr("Not known to this version: skipped");
     }
+    if (step.op == "grading") {
+        return gradingSummary(step.params);
+    }
     QStringList parts;
     for (const pfx::ParamSpec& p : op->params) {
         const pfx::Value* v = step.params.find(p.key);
@@ -233,32 +355,50 @@ QString LookEditor::stepSummary(const pfx::LookStep& step) const
             continue;
         }
         if (const auto* d = std::get_if<double>(v); d != nullptr && std::abs(*d - p.defaultValue) > 1e-9) {
-            parts << u"%1 %2"_s.arg(paramName(*op, p.key)).arg(*d, 0, 'f', decimalsFor(p));
-        } else if (std::holds_alternative<pfx::Curve>(*v)) {
-            parts << tr("a curve");
+            parts << u"%1 %2"_s.arg(paramName(*op, p.key), shownValue(*d, decimalsFor(p), p.minimum, p.unit));
+        } else if (const auto* curve = std::get_if<pfx::Curve>(v)) {
+            parts << curveWords(*curve);
         }
     }
     return parts.isEmpty() ? tr("No change yet") : parts.mid(0, 3).join(u", "_s);
 }
 
-void LookEditor::showStepMenu(const QPoint& at)
+QString LookEditor::gradingSummary(const pfx::Settings& params)
 {
-    const int row = m_steps->row(m_steps->itemAt(at));
+    // "Shadows teal 200°, highlights orange 35°"
+    QStringList parts;
+    const std::array<std::pair<const char*, const char*>, 2> zones = {{
+        {"shadows", QT_TRANSLATE_NOOP("LookEditor", "shadows")},
+        {"highlights", QT_TRANSLATE_NOOP("LookEditor", "highlights")},
+    }};
+    for (const auto& [zone, name] : zones) {
+        const std::string key = std::string("grading.") + zone;
+        if (params.number(key + ".amount", 0.0) <= 0.0) {
+            continue;
+        }
+        const double hue = params.number(key + ".hue", 0.0);
+        parts << u"%1 %2 %3\u00B0"_s.arg(tr(name), hueName(hue)).arg(std::lround(hue));
+    }
+    if (const double balance = params.number("grading.balance", 0.0); std::abs(balance) > 1e-9) {
+        parts << tr("balance %1").arg(shownValue(balance, 0, -1.0, {}));
+    }
+    if (parts.isEmpty()) {
+        return tr("No change yet");
+    }
+    parts.front()[0] = parts.front().at(0).toUpper();
+    return parts.join(u", "_s);
+}
+
+void LookEditor::showStepMenu(int row, const QPoint& at)
+{
     if (row < 0) {
         return;
     }
     QMenu menu(this);
-    const auto move = [this, row](int to) {
-        if (to < 0 || std::cmp_greater_equal(to, m_look.steps.size())) {
-            return;
-        }
-        std::swap(m_look.steps[static_cast<std::size_t>(row)], m_look.steps[static_cast<std::size_t>(to)]);
-        refreshSteps();
-        selectStep(to);
-        schedulePreview();
-    };
-    connect(menu.addAction(tr("Move up")), &QAction::triggered, this, [move, row] { move(row - 1); });
-    connect(menu.addAction(tr("Move down")), &QAction::triggered, this, [move, row] { move(row + 1); });
+    connect(menu.addAction(tr("Move up")), &QAction::triggered, this,
+            [this, row] { m_steps->moveRow(row, row - 1); });
+    connect(menu.addAction(tr("Move down")), &QAction::triggered, this,
+            [this, row] { m_steps->moveRow(row, row + 1); });
     connect(menu.addAction(tr("Duplicate")), &QAction::triggered, this, [this, row] {
         const pfx::LookStep copy = m_look.steps[static_cast<std::size_t>(row)];
         m_look.steps.insert(m_look.steps.begin() + row + 1, copy);
@@ -272,7 +412,7 @@ void LookEditor::showStepMenu(const QPoint& at)
         selectStep(std::min(row, static_cast<int>(m_look.steps.size()) - 1));
         schedulePreview();
     });
-    menu.exec(m_steps->viewport()->mapToGlobal(at));
+    menu.exec(at);
 }
 
 QHBoxLayout* LookEditor::buildStepButtons(QWidget* side)
@@ -306,24 +446,23 @@ QWidget* LookEditor::buildSteps()
     side->setFixedWidth(320);
     auto* label = new QLabel(tr("Steps, applied top to bottom").toUpper(), side);
     label->setObjectName(u"section"_s);
-    m_steps = new QListWidget(side);
-    m_steps->setObjectName(u"lookSteps"_s);
-    m_steps->setDragDropMode(QAbstractItemView::InternalMove);
-    m_steps->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    m_steps->setTextElideMode(Qt::ElideRight);
-    m_steps->setWordWrap(false);
-    m_steps->setContextMenuPolicy(Qt::CustomContextMenu);
+    m_steps = new StepList(side);
     m_steps->setAccessibleName(tr("Steps"));
-    connect(m_steps, &QListWidget::currentRowChanged, this, &LookEditor::showParams);
-    connect(m_steps->model(), &QAbstractItemModel::rowsMoved, this, &LookEditor::stepsReordered);
-    connect(m_steps, &QListWidget::itemChanged, this, [this](QListWidgetItem* item) {
-        const int index = item->data(Qt::UserRole).toInt();
-        if (index >= 0 && std::cmp_less(index, m_look.steps.size())) {
-            m_look.steps[static_cast<std::size_t>(index)].enabled = item->checkState() == Qt::Checked;
+    connect(m_steps, &StepList::currentChanged, this, &LookEditor::showParams);
+    connect(m_steps, &StepList::moved, this, &LookEditor::moveStep);
+    connect(m_steps, &StepList::toggled, this, [this](int row, bool on) {
+        if (row >= 0 && std::cmp_less(row, m_look.steps.size())) {
+            m_look.steps[static_cast<std::size_t>(row)].enabled = on;
             schedulePreview();
         }
     });
-    connect(m_steps, &QListWidget::customContextMenuRequested, this, &LookEditor::showStepMenu);
+    connect(m_steps, &StepList::menuRequested, this, &LookEditor::showStepMenu);
+    m_stepsScroll = new QScrollArea(side);
+    m_stepsScroll->setObjectName(u"adjustScroll"_s);
+    m_stepsScroll->setWidget(m_steps);
+    m_stepsScroll->setWidgetResizable(true);
+    m_stepsScroll->setFrameShape(QFrame::NoFrame);
+    m_stepsScroll->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 
     QHBoxLayout* buttons = buildStepButtons(side);
 
@@ -345,7 +484,7 @@ QWidget* LookEditor::buildSteps()
     column->setSpacing(4);
     column->addWidget(label);
     label->setContentsMargins(14, 0, 14, 0);
-    column->addWidget(m_steps, 1);
+    column->addWidget(m_stepsScroll);
     column->addLayout(buttons);
     m_paramsTitle->setContentsMargins(14, 4, 14, 0);
     column->addWidget(m_paramsTitle);
@@ -385,26 +524,17 @@ QWidget* LookEditor::buildPreviewBar(QWidget* side)
         schedulePreview();
     });
     layout->addStretch();
-    auto* strengthName = new QLabel(tr("Default strength"), bar);
-    strengthName->setObjectName(u"adjustName"_s);
-    m_strengthValue = new QLabel(bar);
-    m_strengthValue->setObjectName(u"adjustValue"_s);
-    m_strength = new PanelSlider(Qt::Horizontal, bar);
-    m_strength->setRange(0, 100);
-    m_strength->setFixedWidth(130);
-    m_strength->setAccessibleName(tr("Default strength"));
-    connect(m_strength, &QSlider::valueChanged, this, [this](int v) {
+    m_strength = new SliderRow(tr("Default strength"), bar);
+    m_strength->setRange(0, 100, kNewLookStrength);
+    m_strength->setTicks(m_look.defaultStrength);
+    m_strength->setFixedWidth(180);
+    m_strength->setToolTip(
+        tr("How strongly the look applies when it is chosen; the strength slider changes it per photo"));
+    connect(m_strength, &SliderRow::ticksMoved, this, [this](int v) {
         m_look.defaultStrength = v;
-        m_strengthValue->setText(QString::number(v));
         schedulePreview();
     });
-    m_strength->setValue(m_look.defaultStrength);
-    m_strengthValue->setText(QString::number(m_look.defaultStrength));
-    layout->addWidget(strengthName);
-    layout->addSpacing(6);
     layout->addWidget(m_strength);
-    layout->addSpacing(6);
-    layout->addWidget(m_strengthValue);
     return bar;
 }
 
@@ -430,7 +560,8 @@ QWidget* LookEditor::buildPreview()
 
 void LookEditor::buildFooter(QVBoxLayout* column)
 {
-    auto* exportButton = new QPushButton(tr("Export look..."), this);
+    auto* exportButton =
+        new IconTextButton(icons::themed(u"share"_s, tokens().text), tr("Export look..."), this);
     connect(exportButton, &QPushButton::clicked, this, &LookEditor::exportLook);
     auto* bake = new QPushButton(tr("Bake to .cube..."), this);
     bake->setToolTip(tr("The colour-only steps as a LUT for other apps"));
@@ -453,38 +584,33 @@ void LookEditor::buildFooter(QVBoxLayout* column)
 
 void LookEditor::refreshSteps()
 {
-    const QSignalBlocker block(m_steps);
-    m_steps->clear();
-    for (std::size_t i = 0; i < m_look.steps.size(); ++i) {
-        const pfx::LookStep& step = m_look.steps[i];
-        auto* item =
-            new QListWidgetItem(stepName(QString::fromStdString(step.op)) + u'\n' + stepSummary(step));
-        item->setData(Qt::UserRole, static_cast<int>(i));
-        item->setFlags(item->flags() | Qt::ItemIsUserCheckable | Qt::ItemIsDragEnabled);
-        item->setCheckState(step.enabled ? Qt::Checked : Qt::Unchecked);
-        item->setToolTip(tr("Drag to reorder; right-click to duplicate or remove"));
-        m_steps->addItem(item);
+    QList<StepList::Row> rows;
+    for (const pfx::LookStep& step : m_look.steps) {
+        rows.append(
+            {stepGlyph(step.op), stepName(QString::fromStdString(step.op)), stepSummary(step), step.enabled});
     }
+    m_steps->setRows(rows);
+    // The list is as tall as its steps, up to a few; then it scrolls.
+    const int all = m_steps->sizeHint().height();
+    const int rowHeight = m_steps->count() > 0 ? all / m_steps->count() : all;
+    m_stepsScroll->setFixedHeight(m_steps->count() <= kVisibleSteps
+                                      ? std::max(all, rowHeight)
+                                      : (kVisibleSteps * rowHeight) - (rowHeight / 2));
 }
 
 void LookEditor::selectStep(int row)
 {
-    m_steps->setCurrentRow(row);
-    showParams(row);
+    m_steps->setCurrent(row);
 }
 
-void LookEditor::stepsReordered()
+void LookEditor::moveStep(int from, int to)
 {
-    // The list's new order of the steps it was built from.
-    std::vector<pfx::LookStep> ordered;
-    for (int r = 0; r < m_steps->count(); ++r) {
-        const int index = m_steps->item(r)->data(Qt::UserRole).toInt();
-        ordered.push_back(m_look.steps[static_cast<std::size_t>(index)]);
-    }
-    m_look.steps = std::move(ordered);
-    const int row = m_steps->currentRow();
-    refreshSteps();
-    selectStep(row);
+    // The list has moved its row already; the steps follow, and the parameters shown point at
+    // the new places.
+    pfx::LookStep step = m_look.steps[static_cast<std::size_t>(from)];
+    m_look.steps.erase(m_look.steps.begin() + from);
+    m_look.steps.insert(m_look.steps.begin() + to, std::move(step));
+    showParams(m_steps->current());
     schedulePreview();
 }
 
@@ -507,42 +633,30 @@ void LookEditor::addStep(const QString& op)
 
 void LookEditor::updateStepRow(int row)
 {
-    if (QListWidgetItem* item = m_steps->item(row)) {
-        const QSignalBlocker block(m_steps);
-        const pfx::LookStep& s = m_look.steps[static_cast<std::size_t>(row)];
-        item->setText(stepName(QString::fromStdString(s.op)) + u'\n' + stepSummary(s));
+    if (row >= 0 && std::cmp_less(row, m_look.steps.size())) {
+        m_steps->setSubtitle(row, stepSummary(m_look.steps[static_cast<std::size_t>(row)]));
     }
     schedulePreview();
 }
 
-void LookEditor::addParamSlider(int row, const QString& name, double low, double high, double value,
-                                int decimals, const std::string& key)
+void LookEditor::addParamSlider(int row, const QString& name, const pfx::ParamSpec& spec, double value)
 {
-    auto* label = new QLabel(name, m_params);
-    label->setObjectName(u"adjustName"_s);
-    auto* shown = new QLabel(QString::number(value, 'f', decimals), m_params);
-    shown->setObjectName(u"adjustValue"_s);
-    auto* slider = new PanelSlider(Qt::Horizontal, m_params);
-    slider->setRange(0, kSliderTicks);
-    slider->setAccessibleName(name);
-    slider->setValue(static_cast<int>(std::lround((value - low) / (high - low) * kSliderTicks)));
-    connect(slider, &QSlider::valueChanged, this, [this, row, low, high, decimals, key, shown](int t) {
-        const double v = low + ((high - low) * t / kSliderTicks);
-        m_look.steps[static_cast<std::size_t>(row)].params.set(key, v);
-        shown->setText(QString::number(v, 'f', decimals));
+    // Whole ticks of the shown precision: hundredths for small ranges, whole numbers otherwise.
+    const int decimals = decimalsFor(spec);
+    const double scale = std::pow(10.0, decimals);
+    const auto ticks = [scale](double v) { return static_cast<int>(std::lround(v * scale)); };
+    auto* slider = new SliderRow(name, m_params);
+    slider->setRange(ticks(spec.minimum), ticks(spec.maximum), ticks(spec.defaultValue));
+    slider->setTicksPerUnit(scale);
+    slider->setFormat(
+        [scale, decimals, spec](int t) { return shownValue(t / scale, decimals, spec.minimum, spec.unit); });
+    slider->setTicks(ticks(value));
+    const std::string key = spec.key;
+    connect(slider, &SliderRow::ticksMoved, this, [this, row, scale, key](int t) {
+        m_look.steps[static_cast<std::size_t>(row)].params.set(key, t / scale);
         updateStepRow(row);
     });
-    auto* top = new QHBoxLayout;
-    top->addWidget(label);
-    top->addStretch();
-    top->addWidget(shown);
-    auto* box = new QWidget(m_params);
-    auto* column = new QVBoxLayout(box);
-    column->setContentsMargins(0, 2, 0, 2);
-    column->setSpacing(0);
-    column->addLayout(top);
-    column->addWidget(slider);
-    m_paramsLayout->addWidget(box);
+    m_paramsLayout->addWidget(slider);
 }
 
 void LookEditor::showParams(int row)
@@ -558,12 +672,15 @@ void LookEditor::showParams(int row)
     const pfx::LookStep& step = m_look.steps[static_cast<std::size_t>(row)];
     m_paramsTitle->setText(tr("Step: %1").arg(stepName(QString::fromStdString(step.op))).toUpper());
     if (step.op == "lut") {
-        addParamSlider(row, tr("Mix"), 0, 100, step.params.number("mix", 100.0), 0, "mix");
+        pfx::ParamSpec mix;
+        mix.key = "mix";
+        mix.maximum = 100.0;
+        mix.defaultValue = 100.0;
+        addParamSlider(row, tr("Mix"), mix, step.params.number("mix", 100.0));
     } else if (const pfx::OpSpec* op = pfx::registry().op(step.op)) {
         for (const pfx::ParamSpec& p : op->params) {
             if (p.type == pfx::ParamType::Number) {
-                addParamSlider(row, paramName(*op, p.key), p.minimum, p.maximum,
-                               step.params.number(p.key, p.defaultValue), decimalsFor(p), p.key);
+                addParamSlider(row, paramName(*op, p.key), p, step.params.number(p.key, p.defaultValue));
             } else if (p.type == pfx::ParamType::Points && p.key == "curves.rgb") {
                 auto* curve = new CurveEditor(m_params);
                 curve->setCurve(step.params.curve(p.key));

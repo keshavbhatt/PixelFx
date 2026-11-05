@@ -1,5 +1,6 @@
 #include "ui/look_editor.h"
 #include "ui/looks_panel.h"
+#include "ui/step_list.h"
 #include "ui/style.h"
 
 #include <QApplication>
@@ -72,7 +73,7 @@ private Q_SLOTS:
         editor.addStep(u"grain"_s);
         QCOMPARE(editor.stepList()->count(), 2);
         // The exposure step's slider: the selected step is grain; pick exposure and move its first slider.
-        editor.stepList()->setCurrentRow(0);
+        editor.stepList()->setCurrent(0);
         QSlider* exposure = nullptr;
         for (auto* slider : editor.findChildren<QSlider*>()) {
             if (slider->accessibleName() == u"Exposure"_s) {
@@ -80,15 +81,19 @@ private Q_SLOTS:
             }
         }
         QVERIFY(exposure);
-        exposure->setValue(600); // -5 to 5 over 1000 ticks: +1 EV
+        exposure->setValue(100); // hundredths of a stop: +1 EV
         QCOMPARE(editor.look().steps.front().params.number("light.exposure", 0), 1.0);
         rendered.clear();
         QVERIFY(rendered.wait(5000));
         const QColor shown = editor.previewImage().pixelColor(60, 40);
         QVERIFY2(shown.red() > 130,
                  qPrintable(QString::number(shown.red()))); // brighter than 0.2 linear (124)
+        // Moving a step moves it in the look.
+        editor.stepList()->moveRow(1, 0);
+        QCOMPARE(editor.look().steps.front().op, std::string("grain"));
+        editor.stepList()->moveRow(0, 1);
         // Switching a step off leaves it in the look, not run.
-        editor.stepList()->item(1)->setCheckState(Qt::Unchecked);
+        editor.stepList()->setOn(1, false);
         QVERIFY(!editor.look().steps.back().enabled);
         QVERIFY(editor.saveLook());
         const auto entries = pixelfx::core::LookLibrary(dir.filePath(u"looks"_s)).entries();

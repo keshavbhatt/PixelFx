@@ -22,6 +22,7 @@ public:
 
     void setIcon(const QString& glyph);
     void setTitle(const QString& title);
+    /// The line under the title; cut with "..." when it does not fit.
     void setSubtitle(const QString& subtitle);
     /// Adds the action button at the right end (for example a × that removes the row).
     void setAction(const QString& glyph, const QString& tip);

@@ -120,7 +120,7 @@ const QString kSheet = uR"(
         #mono { font-family: monospace; font-size: 12px; }
         QPushButton#segment { border-radius: 0; padding: 5px 12px; background: {{input}}; }
         QPushButton#segment:checked { background: {{accentSoft}}; color: {{accent}}; font-weight: 600; }
-        QPushButton#segment::menu-indicator { image: none; width: 0; }
+        QPushButton::menu-indicator { image: none; width: 0; }
         QLineEdit, QComboBox, QSpinBox { background: {{input}}; border: 1px solid {{border}}; border-radius: 7px; padding: 5px 8px; }
         QLineEdit:focus, QComboBox:focus, QSpinBox:focus { border-color: {{accent}}; }
         #toast { background: {{elevated}}; border: 1px solid {{border}}; border-radius: 9px; padding: 7px 12px; }

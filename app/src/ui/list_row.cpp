@@ -1,5 +1,6 @@
 #include "ui/list_row.h"
 
+#include "ui/elided_label.h"
 #include "ui/icons.h"
 #include "ui/style.h"
 
@@ -20,7 +21,7 @@ ListRow::ListRow(QWidget* parent)
     , m_row(new QHBoxLayout(this))
     , m_icon(new QLabel(this))
     , m_title(new QLabel(this))
-    , m_subtitle(new QLabel(this))
+    , m_subtitle(new ElidedLabel(this))
 {
     setObjectName(u"listRow"_s);
     setAttribute(Qt::WA_StyledBackground);
@@ -58,6 +59,7 @@ void ListRow::setTitle(const QString& title)
 void ListRow::setSubtitle(const QString& subtitle)
 {
     m_subtitle->setText(subtitle);
+    m_subtitle->setToolTip(subtitle);
     m_subtitle->setVisible(!subtitle.isEmpty());
 }
 

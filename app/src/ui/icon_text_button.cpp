@@ -57,6 +57,7 @@ void IconTextButton::paintEvent(QPaintEvent* event)
     const bool rtl = layoutDirection() == Qt::RightToLeft;
     QStyleOptionButton label = option;
     label.icon = QIcon();
+    label.features &= ~QStyleOptionButton::HasMenu; // the menu shows no arrow, so the text keeps its place
     painter.save();
     painter.translate(rtl ? -shift : shift, 0);
     painter.drawControl(QStyle::CE_PushButtonLabel, label);

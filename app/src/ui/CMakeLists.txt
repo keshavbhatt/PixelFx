@@ -17,6 +17,8 @@ qt_add_library(pixelfx_ui STATIC
     color_wheel.h
     curve_editor.cpp
     curve_editor.h
+    elided_label.cpp
+    elided_label.h
     export_sheet.cpp
     filmstrip.cpp
     flow_layout.cpp
@@ -62,6 +64,8 @@ qt_add_library(pixelfx_ui STATIC
     slider_row.h
     style.cpp
     style.h
+    step_list.cpp
+    step_list.h
     straighten_dial.cpp
     straighten_dial.h
     watermark_sheet.cpp

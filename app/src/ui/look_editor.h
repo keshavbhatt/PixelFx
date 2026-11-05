@@ -7,19 +7,22 @@
 
 #include <memory>
 #include <pfx/image.h>
+#include <pfx/registry.h>
 #include <pfx/settings.h>
 
 class QComboBox;
 class QHBoxLayout;
 class QLabel;
 class QLineEdit;
-class QListWidget;
 class QPushButton;
-class QSlider;
+class QScrollArea;
 class QVBoxLayout;
 class QWidget;
 
 namespace pixelfx::ui {
+
+class SliderRow;
+class StepList;
 
 /// New look / Edit look: a named stack of steps from the same
 /// operations as the sliders, plus LUTs; reorder by dragging, switch off, duplicate, remove;
@@ -42,7 +45,7 @@ public:
     [[nodiscard]] const QString& savedId() const { return m_savedId; }
     /// Adds a step of a registry operation with its default values, or "lut" (tests and Add step).
     void addStep(const QString& op);
-    [[nodiscard]] QListWidget* stepList() const { return m_steps; }
+    [[nodiscard]] StepList* stepList() const { return m_steps; }
     bool saveLook();
     /// The preview as last rendered (tests).
     [[nodiscard]] const QImage& previewImage() const { return m_previewImage; }
@@ -55,15 +58,14 @@ private:
     QWidget* buildPreview();
     QWidget* buildPreviewBar(QWidget* side);
     QHBoxLayout* buildStepButtons(QWidget* side);
-    void showStepMenu(const QPoint& at);
-    void addParamSlider(int row, const QString& name, double low, double high, double value, int decimals,
-                        const std::string& key);
+    void showStepMenu(int row, const QPoint& at);
+    void addParamSlider(int row, const QString& name, const pfx::ParamSpec& spec, double value);
     void updateStepRow(int row);
     void buildFooter(QVBoxLayout* column);
     void refreshSteps();
     void selectStep(int row);
     void showParams(int row);
-    void stepsReordered();
+    void moveStep(int from, int to);
     void importLut();
     void exportLook();
     void bakeCube();
@@ -71,6 +73,7 @@ private:
     void renderPreview();
     [[nodiscard]] static QString stepName(const QString& op);
     [[nodiscard]] QString stepSummary(const pfx::LookStep& step) const;
+    [[nodiscard]] static QString gradingSummary(const pfx::Settings& params);
 
     pfx::Look m_look;
     QString m_path;
@@ -86,13 +89,13 @@ private:
     bool m_pending = false;
     QLineEdit* m_name = nullptr;
     QComboBox* m_category = nullptr;
-    QListWidget* m_steps = nullptr;
+    StepList* m_steps = nullptr;
+    QScrollArea* m_stepsScroll = nullptr;
     QLabel* m_paramsTitle = nullptr;
     QWidget* m_params = nullptr;
     QVBoxLayout* m_paramsLayout = nullptr;
     QLabel* m_preview = nullptr;
-    QSlider* m_strength = nullptr;
-    QLabel* m_strengthValue = nullptr;
+    SliderRow* m_strength = nullptr;
     class QTimer* m_previewTimer = nullptr;
 };
 
