@@ -95,10 +95,10 @@ const QString kSheet = uR"(
         #panelTabLine { background: {{border}}; }
         #itemTitle { font-weight: 500; }
         #itemDetail { color: {{muted}}; font-size: 11px; }
+        QLabel#itemDetail[error="true"] { color: {{danger}}; }
         QToolButton#stripAdd { border: 1.5px dashed {{faint}}; border-radius: 6px; background: transparent; }
         QToolButton#stripAdd:hover { background: {{hover}}; }
         #accentText { color: {{accent}}; font-size: 12px; }
-        #batchReason { color: {{danger}}; font-size: 12px; }
         #kbd { font-size: 11px; color: {{text}}; background: {{panel}}; border: 1px solid {{border}}; border-bottom-width: 2px; border-radius: 5px; padding: 1px 6px; }
         #zoomBar, #zoomChip { background: {{elevated}}; border: 1px solid {{border}}; border-radius: 10px; }
         #zoomBusy { color: {{muted}}; font-size: 12px; }
@@ -265,6 +265,7 @@ const QString kControls = uR"(
         #batchHead { border-bottom: 1px solid {{border}}; }
         #batchBar { background: {{panel}}; border-top: 1px solid {{border}}; }
         QLabel#comparePicture { background: {{canvas}}; border-radius: 6px; }
+        QLabel#batchThumb { background: {{input}}; border-radius: 4px; }
         QFrame#segmentBox { border: 1px solid {{border}}; border-radius: 7px; background: {{input}}; }
         QFrame#segmentBox QPushButton#segment { border: 0; border-right: 1px solid {{border}}; background: transparent; }
         QFrame#segmentBox QPushButton#segment:checked { background: {{accentSoft}}; }
@@ -281,7 +282,6 @@ const QString kControls = uR"(
         QFrame#pill[kind="bad"] QLabel#pillText { color: {{danger}}; }
         QFrame#pill[kind="accent"] QLabel#pillText { color: {{accent}}; }
         QLineEdit#monoField { font-family: monospace; font-size: 12px; }
-        #batchReason { color: {{danger}}; font-size: 12px; }
     )"_s;
 
 // The glyphs the control rules use, written once per start in the theme's colours.
@@ -608,6 +608,27 @@ QWidget* sheetHeaderBar(QDialog* sheet, QLayout* titleRow)
     titleRow->setContentsMargins(kSheetPadding, 16, kSheetPadding, 12);
     bar->setLayout(titleRow);
     return bar;
+}
+
+QPixmap roundedPixmap(const QImage& image, const QSize& size, qreal ratio, qreal radius)
+{
+    const QSize device = (QSizeF(size) * ratio).toSize();
+    QPixmap out(device);
+    out.fill(Qt::transparent);
+    if (image.isNull() || device.isEmpty()) {
+        return out;
+    }
+    const QImage filled = image.scaled(device, Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation);
+    QPainter p(&out);
+    p.setRenderHint(QPainter::Antialiasing);
+    QPainterPath clip;
+    clip.addRoundedRect(QRectF(QPointF(0, 0), QSizeF(device)), radius * ratio, radius * ratio);
+    p.setClipPath(clip);
+    p.drawImage(QPointF((device.width() - filled.width()) / 2.0, (device.height() - filled.height()) / 2.0),
+                filled);
+    p.end();
+    out.setDevicePixelRatio(ratio);
+    return out;
 }
 
 QString buttonText(QString text)

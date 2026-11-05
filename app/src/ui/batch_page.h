@@ -6,6 +6,7 @@
 #include "core/presets.h"
 #include "services/batch_runner.h"
 #include "services/thumbnailer.h"
+#include "ui/file_row.h"
 
 #include <QElapsedTimer>
 #include <QHash>
@@ -202,6 +203,7 @@ private:
     QStackedWidget* m_views = nullptr;
     QVBoxLayout* m_rows = nullptr;
     QWidget* m_rowsBox = nullptr;
+    std::vector<FileRow> m_fileRows; ///< the list's rows, in the order of m_files
     QListWidget* m_grid = nullptr;
     QButtonGroup* m_viewModes = nullptr;
     QWidget* m_status = nullptr;

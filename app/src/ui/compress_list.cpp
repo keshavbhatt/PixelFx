@@ -1,5 +1,6 @@
 #include "ui/compress_list.h"
 
+#include "ui/file_row.h"
 #include "ui/list_row.h"
 #include "ui/status_pill.h"
 #include "ui/style.h"
@@ -23,7 +24,6 @@ namespace pixelfx::ui {
 namespace {
 
 constexpr int kBarWidth = 180;
-constexpr int kPillWidth = 76;
 
 QString bytesText(qint64 bytes)
 {
@@ -144,14 +144,6 @@ void CompressList::build()
         Row r;
         r.path = file;
         r.before = QFileInfo(file).size();
-        r.row = new ListRow(this);
-        r.row->setTitle(QFileInfo(file).fileName());
-        r.row->setSubtitle(u"%1 · %2"_s.arg(formatOf(file), bytesText(r.before)));
-        r.thumb = new QLabel;
-        r.thumb->setObjectName(u"batchThumb"_s);
-        r.thumb->setFixedSize(72, 48);
-        r.thumb->setAlignment(Qt::AlignCenter);
-        r.row->addLeading(r.thumb);
         r.sizes = new QWidget;
         r.sizeText = new QLabel(r.sizes);
         r.sizeText->setObjectName(u"mono"_s);
@@ -166,12 +158,9 @@ void CompressList::build()
         sizes->addWidget(r.sizeText);
         sizes->addWidget(r.bar);
         r.sizes->hide();
-        r.row->addTrailing(r.sizes);
-        r.pill = new StatusPill;
-        r.pill->setMinimumWidth(kPillWidth);
-        r.row->addTrailing(r.pill);
-        const QString name = QFileInfo(file).fileName();
-        r.row->setAction(u"close"_s, tr("Leave %1 out").arg(name));
+        r.file = makeFileRow(this, file, u"%1 \u00B7 %2"_s.arg(formatOf(file), bytesText(r.before)), r.sizes);
+        r.row = r.file.row;
+        r.pill = r.file.pill;
         r.row->setSelected(file == m_selected);
         r.row->installEventFilter(this);
         connect(r.row, &ListRow::clicked, this, [this, file] { select(file); });
@@ -183,6 +172,9 @@ void CompressList::build()
 
 void CompressList::order()
 {
+    if (m_rows.empty()) {
+        return; // the empty list's note stays as build() placed it
+    }
     std::vector<const Row*> sorted;
     sorted.reserve(m_rows.size());
     for (const Row& r : m_rows) {
@@ -220,9 +212,7 @@ void CompressList::setThumbnail(const QString& path, const QImage& image)
 {
     for (const Row& r : m_rows) {
         if (r.path == path) {
-            r.thumb->setPixmap(
-                QPixmap::fromImage(image.scaled(r.thumb->size() * devicePixelRatioF(),
-                                                Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation)));
+            setFileThumb(r.file, image);
         }
     }
 }
@@ -244,6 +234,7 @@ void CompressList::showResult(Row& r, const services::BatchRunner& runner, int i
     case S::Failed:
         r.pill->setStatus(K::Bad, tr("Not saved"), u"alert"_s);
         r.row->setSubtitle(runner.reason(index));
+        r.row->setSubtitleError(true);
         return;
     case S::Saved:
         break;
@@ -251,6 +242,7 @@ void CompressList::showResult(Row& r, const services::BatchRunner& runner, int i
     const services::CompressResult& c = runner.compressed(index);
     r.saved = std::max<qint64>(0, c.before - c.after);
     r.row->setSubtitle(describe(c, r.path));
+    r.row->setSubtitleError(false);
     //: Sizes before and after: "8.4 MB → 5.1 MB".
     r.sizeText->setText(tr("%1 → <b>%2</b>").arg(bytesText(c.before), bytesText(c.after)));
     r.bar->setValue(c.before > 0 ? static_cast<int>(1000 * c.after / c.before) : 1000);
@@ -273,6 +265,7 @@ void CompressList::refresh(const services::BatchRunner& runner)
             r.sizes->hide();
             r.pill->setStatus(StatusPill::Kind::Plain, {});
             r.row->setSubtitle(u"%1 · %2"_s.arg(formatOf(r.path), bytesText(r.before)));
+            r.row->setSubtitleError(false);
             r.saved = -1;
             continue;
         }

@@ -24,6 +24,7 @@ ListRow::ListRow(QWidget* parent)
     , m_subtitle(new ElidedLabel(this))
 {
     setObjectName(u"listRow"_s);
+    setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed); // as tall as its content, never more
     setAttribute(Qt::WA_StyledBackground);
     setAttribute(Qt::WA_Hover);
     setFocusPolicy(Qt::StrongFocus);
@@ -32,10 +33,13 @@ ListRow::ListRow(QWidget* parent)
     m_title->setObjectName(u"itemTitle"_s);
     m_subtitle->setObjectName(u"itemDetail"_s);
     m_subtitle->hide();
+    // The title and its line stay together in the middle of a row taller than they are.
     auto* text = new QVBoxLayout;
     text->setSpacing(0);
+    text->addStretch();
     text->addWidget(m_title);
     text->addWidget(m_subtitle);
+    text->addStretch();
     m_row->setContentsMargins(10, 7, 10, 7);
     m_row->setSpacing(kGapItems);
     m_row->addWidget(m_icon);
@@ -61,6 +65,15 @@ void ListRow::setSubtitle(const QString& subtitle)
     m_subtitle->setText(subtitle);
     m_subtitle->setToolTip(subtitle);
     m_subtitle->setVisible(!subtitle.isEmpty());
+}
+
+void ListRow::setSubtitleError(bool error)
+{
+    if (m_subtitle->property("error").toBool() != error) {
+        m_subtitle->setProperty("error", error);
+        m_subtitle->style()->unpolish(m_subtitle);
+        m_subtitle->style()->polish(m_subtitle);
+    }
 }
 
 void ListRow::setAction(const QString& glyph, const QString& tip)

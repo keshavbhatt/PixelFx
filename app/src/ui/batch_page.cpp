@@ -10,8 +10,10 @@
 #include "ui/compress_panel.h"
 #include "ui/elided_label.h"
 #include "ui/export_sheet.h"
+#include "ui/file_row.h"
 #include "ui/icon_text_button.h"
 #include "ui/icons.h"
+#include "ui/list_row.h"
 #include "ui/name_field.h"
 #include "ui/preview_viewer.h"
 #include "ui/sheet.h"
@@ -126,13 +128,12 @@ BatchPage::BatchPage(core::ExportOptions output, core::CompressJob job, bool com
         if (t.image.isNull()) {
             return;
         }
-        for (QLabel* thumb : m_rowsBox->findChildren<QLabel*>(u"batchThumb"_s)) {
-            if (thumb->property("path").toString() == t.path) {
-                thumb->setPixmap(QPixmap::fromImage(t.image.scaled(thumb->size() * devicePixelRatioF(),
-                                                                   Qt::KeepAspectRatioByExpanding,
-                                                                   Qt::SmoothTransformation)));
+        for (const FileRow& fileRow : m_fileRows) {
+            if (fileRow.thumb->property("path").toString() == t.path) {
+                setFileThumb(fileRow, t.image);
             }
         }
+
         for (int i = 0; i < m_grid->count(); ++i) {
             if (m_grid->item(i)->data(Qt::UserRole).toString() == t.path) {
                 m_grid->item(i)->setIcon(QPixmap::fromImage(t.image));
@@ -273,8 +274,8 @@ QWidget* BatchPage::buildList()
     m_rowsBox = new QWidget(box);
     m_rowsBox->setObjectName(u"batchRows"_s);
     m_rows = new QVBoxLayout(m_rowsBox);
-    m_rows->setContentsMargins(kPanelPadding, 8, kPanelPadding, 8);
-    m_rows->setSpacing(0);
+    m_rows->setContentsMargins(8, 6, 8, 6);
+    m_rows->setSpacing(1);
     auto* scroll = new QScrollArea(box);
     scroll->setWidget(m_rowsBox);
     scroll->setWidgetResizable(true);
@@ -1164,47 +1165,16 @@ void BatchPage::process()
 
 QWidget* BatchPage::makeRow(const QString& file)
 {
-    auto* row = new QWidget(m_rowsBox);
-    row->setObjectName(u"batchRow"_s);
-    auto* name = new QLabel(QFileInfo(file).fileName(), row);
-    name->setObjectName(u"itemTitle"_s);
-    auto* meta = new QLabel(describe(file), row);
-    meta->setObjectName(u"itemDetail"_s);
-    auto* reason = new QLabel(row); // why a photo was not saved, in plain words (batch-done.html)
-    reason->setObjectName(u"batchReason"_s);
-    reason->setWordWrap(true);
-    reason->hide();
-    auto* text = new QVBoxLayout;
-    text->setSpacing(0);
-    text->addWidget(name);
-    text->addWidget(meta);
-    text->addWidget(reason);
-    auto* thumb = new QLabel(row);
-    thumb->setObjectName(u"batchThumb"_s);
-    thumb->setProperty("path", file);
-    thumb->setFixedSize(72, 48);
-    thumb->setAlignment(Qt::AlignCenter);
-    auto* state = new StatusPill(row);
-    auto* remove = new QToolButton(row);
-    remove->setObjectName(u"flatIcon"_s);
-    remove->setIcon(icons::themed(u"close"_s, tokens().muted));
-    remove->setToolTip(tr("Leave %1 out").arg(QFileInfo(file).fileName()));
-    remove->setAccessibleName(tr("Leave %1 out").arg(QFileInfo(file).fileName()));
-    connect(remove, &QToolButton::clicked, this, [this, file] {
+    const FileRow f = makeFileRow(m_rowsBox, file, describe(file));
+    connect(f.row, &ListRow::actionClicked, this, [this, file] {
         if (!m_runner.isRunning()) {
             m_files.removeAll(file);
             rebuildRows();
         }
     });
-    auto* line = new QHBoxLayout(row);
-    line->setContentsMargins(0, 7, 0, 7);
-    line->setSpacing(kGapItems);
-    line->addWidget(thumb);
-    line->addLayout(text, 1);
-    line->addWidget(state, 0, Qt::AlignVCenter);
-    line->addWidget(remove, 0, Qt::AlignVCenter);
+    m_fileRows.push_back(f);
     m_thumbnails->request(file, 160, m_sidecarFolder);
-    return row;
+    return f.row;
 }
 
 void BatchPage::rebuildRows()
@@ -1213,12 +1183,13 @@ void BatchPage::rebuildRows()
         delete item->widget();
         delete item;
     }
+    m_fileRows.clear();
     m_grid->clear();
     if (m_files.isEmpty()) {
         auto* empty = new QLabel(
             tr("Drop photos or folders here, or use Add photos and Add folder at the top."), m_rowsBox);
         empty->setObjectName(u"muted"_s);
-        empty->setContentsMargins(0, 20, 0, 0);
+        empty->setContentsMargins(kPanelPadding - 8, 20, 0, 0);
         m_rows->addWidget(empty);
     }
     for (const QString& file : m_files) {
@@ -1461,11 +1432,12 @@ void BatchPage::refreshRow(int index)
             m_compressList->select(m_runner.files().at(index));
         }
     }
-    const QLayoutItem* item = m_rows->itemAt(index);
-    if (item == nullptr || item->widget() == nullptr || index >= m_runner.total()) {
+    if (index < 0 || std::cmp_greater_equal(index, m_fileRows.size()) || index >= m_runner.total() ||
+        m_runner.files() != m_files) {
         return;
     }
-    auto* pill = item->widget()->findChild<StatusPill*>();
+    const FileRow& row = m_fileRows.at(static_cast<std::size_t>(index));
+    StatusPill* pill = row.pill;
     using S = services::BatchRunner::State;
     using K = StatusPill::Kind;
     switch (m_runner.state(index)) {
@@ -1485,10 +1457,10 @@ void BatchPage::refreshRow(int index)
         pill->setStatus(K::Bad, tr("Not saved"), u"alert"_s);
         break;
     }
-    auto* reason = item->widget()->findChild<QLabel*>(u"batchReason"_s);
+    // Why a photo was not saved, in plain words, in place of its size (batch-done.html).
     const bool explain = m_runner.state(index) == S::Failed || m_runner.state(index) == S::Skipped;
-    reason->setText(explain ? m_runner.reason(index) : QString());
-    reason->setVisible(explain);
+    row.row->setSubtitle(explain ? m_runner.reason(index) : describe(m_files.at(index)));
+    row.row->setSubtitleError(explain);
 }
 
 void BatchPage::refreshStatus()

@@ -18,7 +18,8 @@
 //                                      GRAB, grab once the full-size render is shown
 //   PIXELFX_DEBUG_BUSY=1               with ZOOM and GRAB, grab while the busy chip shows instead
 //   PIXELFX_DEBUG_BATCH=<folder>       open Batch with this folder and process it; with GRAB, grab
-//                                      when the batch is done
+//                                      when the batch is done (PIXELFX_DEBUG_BATCH_STATE=ready:
+//                                      before processing, running: after the first photo)
 //   PIXELFX_DEBUG_EXPAND=<group>       open this adjustment group ("Color grading") and close the
 //                                      others
 //   PIXELFX_DEBUG_HEAL=<x,y;x,y...>    enter Heal once the photo is open and heal a spot at each
@@ -335,12 +336,32 @@ void applyBatchHook(pixelfx::ui::MainWindow& window, const QString& grab)
     if (folder.isEmpty()) {
         return;
     }
-    QTimer::singleShot(200, &window, [&window, folder] {
+    // PIXELFX_DEBUG_BATCH_STATE: "ready" grabs the page before processing, "running" once the
+    // first photo is done; by default the grab waits for the end.
+    const QString state = qEnvironmentVariable("PIXELFX_DEBUG_BATCH_STATE");
+    const auto save = [&window, grab] {
+        window.grab().save(grab);
+        QCoreApplication::quit();
+    };
+    QTimer::singleShot(200, &window, [&window, folder, state, grab, save] {
         window.enterBatch();
         window.batchPage()->addPaths({folder});
+        if (state == u"ready"_s && !grab.isEmpty()) {
+            QTimer::singleShot(2000, &window, save);
+            return;
+        }
         window.batchPage()->process();
     });
-    if (!grab.isEmpty()) {
+    if (state == u"running"_s && !grab.isEmpty()) {
+        QObject::connect(&window.batchPage()->runner(), &pixelfx::services::BatchRunner::progress, &window,
+                         [&window, save](int done) {
+                             if (done == 1) {
+                                 QTimer::singleShot(300, &window, save);
+                             }
+                         });
+        return;
+    }
+    if (!grab.isEmpty() && state != u"ready"_s) {
         QObject::connect(&window.batchPage()->runner(), &pixelfx::services::BatchRunner::finished, &window,
                          [&window, grab] {
                              QTimer::singleShot(300, &window, [&window, grab] {

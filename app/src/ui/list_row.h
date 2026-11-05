@@ -24,6 +24,8 @@ public:
     void setTitle(const QString& title);
     /// The line under the title; cut with "..." when it does not fit.
     void setSubtitle(const QString& subtitle);
+    /// The line under the title says what went wrong (in the danger colour).
+    void setSubtitleError(bool error);
     /// Adds the action button at the right end (for example a × that removes the row).
     void setAction(const QString& glyph, const QString& tip);
     void addLeading(QWidget* widget);

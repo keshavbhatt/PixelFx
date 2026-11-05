@@ -1,6 +1,7 @@
 #pragma once
 
 #include "services/batch_runner.h"
+#include "ui/file_row.h"
 
 #include <QWidget>
 
@@ -58,8 +59,8 @@ private:
     struct Row
     {
         QString path;
+        FileRow file;
         ListRow* row = nullptr;
-        QLabel* thumb = nullptr;
         QWidget* sizes = nullptr;
         QLabel* sizeText = nullptr;
         QProgressBar* bar = nullptr;

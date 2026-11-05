@@ -1,7 +1,9 @@
 #pragma once
 
 #include <QColor>
+#include <QImage>
 #include <QList>
+#include <QPixmap>
 #include <QString>
 #include <QStringList>
 #include <Qt>
@@ -113,6 +115,10 @@ QFrame* segmentBox(const QStringList& names, int checked, QButtonGroup* group, Q
                    SegmentFit fit = SegmentFit::Content);
 /// `text` for a button or a tool button, whose "&" would otherwise mark a shortcut letter.
 [[nodiscard]] QString buttonText(QString text);
+
+/// `image` cropped to fill `size` (logical pixels at `ratio`), with rounded corners: the
+/// pictures of list rows.
+[[nodiscard]] QPixmap roundedPixmap(const QImage& image, const QSize& size, qreal ratio, qreal radius);
 /// A section heading of a panel or sheet ("SPOTS (3)", "1. RECIPE"): small, bold, muted capitals.
 QLabel* sectionLabel(const QString& text, QWidget* parent);
 /// A section heading on a line of its own: 12 px above it, 4 px below, `sides` px from the edges

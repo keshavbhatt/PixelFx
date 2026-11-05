@@ -73,6 +73,19 @@ Decisions the work stopped at; everything else went ahead within the approved mo
 
 ## Sessions (newest first)
 
+### 2026-11-06 (Batch: the views as their mocks)
+
+- Owner: Batch had inconsistencies and misalignments with its mocks. Compared `batch.html`,
+  `batch-running.html` and `batch-done.html` with headless grabs (the Batch hook gained
+  `PIXELFX_DEBUG_BATCH_STATE=ready|running`). Fixed: both lists now build their rows with one
+  `makeFileRow` (ListRow: hover, the mock's padding and edge, a picture with rounded corners, the
+  name and its line together in the middle); a failed photo's reason replaces its size line in
+  the danger colour on both lists (`ListRow::setSubtitleError`); rows are exactly as tall as their
+  content; the Compress list no longer leaves its empty-list note behind the first row; an
+  unreadable file's picture has a placeholder.
+- Left as is: the mock's per-photo percentage while saving ("62%") needs progress from inside a
+  render, which the engine does not report; the row says "Saving".
+
 ### 2026-11-06 (Export: sizes as the mock)
 
 - Owner: the Export sheet's size did not match `export-sizes.html`. Built what was missing: the

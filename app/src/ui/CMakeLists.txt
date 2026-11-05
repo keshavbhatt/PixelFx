@@ -54,6 +54,8 @@ qt_add_library(pixelfx_ui STATIC
     icons.h
     look_editor.cpp
     look_editor.h
+    file_row.cpp
+    file_row.h
     frame_picker.cpp
     frame_picker.h
     list_row.cpp
