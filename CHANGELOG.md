@@ -24,7 +24,8 @@ A new editor, a new image engine, and a new look.
 - Batch (B): add photos or whole folders, pick a preset (and a second on top), Auto enhance if
   you like, a size and a format, and process them all in the background; each photo says whether
   it was saved, and why not when it was not. Save the page as a batch recipe to run it again, here
-  or from the command line: `pixelfx --batch recipe.pfxbatch photos...`.
+  or from the command line: `pixelfx --batch recipe.pfxbatch photos...`. A recipe carries your
+  own looks, the size and the watermark inside it, so it works on another computer too.
 - Watermarks on export and in Batch: your name, the year or the camera, or a logo; placed in a
   corner or anywhere you drag it, or repeated across the photo for proofs. The colour can follow
   the photo, light on dark areas and dark on light ones, and the size follows the photo, so a

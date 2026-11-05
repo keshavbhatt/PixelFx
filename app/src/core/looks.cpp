@@ -340,6 +340,13 @@ void setLookFolder(const QString& folder)
     r.mine.clear();
 }
 
+QString lookFolder()
+{
+    Registry& r = lookRegistry();
+    const QMutexLocker lock(&r.mutex);
+    return r.folder.isEmpty() ? LookLibrary::defaultFolder() : r.folder;
+}
+
 void lookFolderChanged()
 {
     Registry& r = lookRegistry();

@@ -28,6 +28,7 @@ struct Lut
     std::array<float, 3> domainMax{1.0F, 1.0F, 1.0F};
     std::vector<float> table; // size (1D) or size^3 (3D) triples
     std::string title;
+    bool operator==(const Lut&) const = default;
 
     // The table's colour for an input already in its encoding, interpolated (tetrahedral in
     // 3D, linear in 1D); inputs outside the domain are clamped to it.

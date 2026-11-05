@@ -21,10 +21,15 @@ enum class DocumentKind
     Batch,
 };
 
+// The version this library writes, per kind (DOCS/presets.md). Recipes, presets and looks are
+// at 1. Batch recipes are at 2: version 2 added the user's looks embedded, size presets and
+// the watermark; a version 1 batch reads as it always did.
 inline constexpr int kDocumentVersion = 1;
+inline constexpr int kBatchVersion = 2;
+[[nodiscard]] int currentVersion(DocumentKind kind);
 
-// A batch recipe's body (DOCS/presets.md section 4): presets applied in order onto each photo,
-// then how the photos are written. Looks in the stack arrive with looks.
+// A step of a batch recipe's stack (DOCS/presets.md section 4): settings applied onto each
+// photo. A look on its own is a step whose settings are only `look.id` and `look.strength`.
 struct BatchStep
 {
     std::string name;
@@ -32,12 +37,26 @@ struct BatchStep
     bool operator==(const BatchStep&) const = default;
 };
 
+// A look of the user's that a batch stack refers to by id, carried inside the batch file so it
+// runs on another machine. Built-in looks stay references.
+struct EmbeddedLook
+{
+    std::string id;
+    std::string name;
+    Look look;
+    bool operator==(const EmbeddedLook&) const = default;
+};
+
 struct BatchBody
 {
     std::vector<BatchStep> stack;
+    std::vector<EmbeddedLook> looks; // version 2
     bool autoFirst = false;
     bool keepExistingEdits = true;
     int longEdge = 0;            // 0: original size; never enlarges
+    std::string sizePreset;      // version 2: a named size of the app's (an id), wins over longEdge
+    bool fitInside = false;      // with sizePreset: fit inside with a border instead of cropping
+    std::string watermark;       // version 2: the watermark as JSON text (the app's format), or empty
     std::string format = "jpeg"; // jpeg, png, tiff, webp, avif, heic, jxl
     int quality = 90;
     bool keepCamera = true;

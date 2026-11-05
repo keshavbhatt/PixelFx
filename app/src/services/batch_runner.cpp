@@ -40,6 +40,8 @@ BatchRecipe recipeFromBody(const pfx::BatchBody& body, const QString& sidecarFol
     r.keepEdits = body.keepExistingEdits;
     r.sidecarFolder = sidecarFolder;
     r.output.longEdge = body.longEdge;
+    r.output.sizePreset = QString::fromStdString(body.sizePreset);
+    r.output.fitInside = body.fitInside;
     for (const auto& [name, ext] : kFormats) {
         if (body.format == name) {
             r.output.extension = QString::fromLatin1(ext);
@@ -71,6 +73,10 @@ pfx::BatchBody bodyFromRecipe(const BatchRecipe& recipe, const QStringList& name
     body.autoFirst = recipe.autoFirst;
     body.keepExistingEdits = recipe.keepEdits;
     body.longEdge = recipe.output.longEdge;
+    if (core::sizePreset(recipe.output.sizePreset) != nullptr) {
+        body.sizePreset = recipe.output.sizePreset.toStdString();
+        body.fitInside = recipe.output.fitInside;
+    }
     for (const auto& [name, ext] : kFormats) {
         if (recipe.output.extension == QLatin1StringView(ext)) {
             body.format = name;

@@ -86,6 +86,11 @@ TEST_CASE("documents from a newer PixelFx, other formats and broken JSON are ref
     const auto look = pfx::parseDocument(R"({"format":"pixelfx","kind":"look","version":2})");
     REQUIRE_FALSE(look.ok());
     CHECK(look.error().code == pfx::ErrorCode::NewerVersion);
+    // Batch recipes are at version 2: 2 reads, 3 is newer.
+    CHECK(pfx::parseDocument(R"({"format":"pixelfx","kind":"batch","version":2})").ok());
+    const auto batch = pfx::parseDocument(R"({"format":"pixelfx","kind":"batch","version":3})");
+    REQUIRE_FALSE(batch.ok());
+    CHECK(batch.error().code == pfx::ErrorCode::NewerVersion);
 }
 
 TEST_CASE("presets keep only the ticked groups and overlay onto a photo's settings")
@@ -179,18 +184,113 @@ TEST_CASE("batch recipes: the stack and the output round-trip")
     CHECK(again.value().settings.isEmpty());
 }
 
-TEST_CASE("batch recipes: looks in the stack are skipped with a reason")
+TEST_CASE("batch recipes: a version 1 file reads unchanged and is written as version 2")
 {
     const std::string text = R"({"format": "pixelfx", "kind": "batch", "version": 1, "name": "x",
-        "body": {"stack": [{"look": {"id": "builtin:golden-hour", "strength": 72}},
-                           {"preset": {"embedded": {"name": "P", "settings": {"light": {"exposure": 0.5}}}}}],
-                 "resize": {"mode": "longEdge", "value": 1600}}})";
+        "body": {"stack": [{"preset": {"embedded": {"name": "P", "settings": {"light": {"exposure": 0.5}}}}}],
+                 "autoFirst": true, "resize": {"mode": "longEdge", "value": 1600, "noEnlarge": true},
+                 "output": {"format": "png", "quality": 70, "folder": "/out", "name": "{name}", "ifExists": "skip"}}})";
     pfx::ParseReport report;
     const auto doc = pfx::parseDocument(text, &report);
     REQUIRE(doc.ok());
-    REQUIRE(doc.value().batch.stack.size() == 1);
-    CHECK(doc.value().batch.stack.front().settings.number("light.exposure", 0) == 0.5);
-    CHECK(doc.value().batch.longEdge == 1600);
+    CHECK(report.warnings.empty());
+    CHECK(doc.value().version == 2);
+    const pfx::BatchBody& b = doc.value().batch;
+    REQUIRE(b.stack.size() == 1);
+    CHECK(b.stack.front().name == "P");
+    CHECK(b.stack.front().settings.number("light.exposure", 0) == 0.5);
+    CHECK(b.autoFirst);
+    CHECK(b.longEdge == 1600);
+    CHECK(b.sizePreset.empty());
+    CHECK(b.looks.empty());
+    CHECK(b.watermark.empty());
+    CHECK(b.format == "png");
+    CHECK(b.ifExists == "skip");
+    const std::string written = pfx::serializeDocument(doc.value());
+    CHECK(written.find("\"version\": 2") != std::string::npos);
+    const auto again = pfx::parseDocument(written);
+    REQUIRE(again.ok());
+    CHECK(again.value().batch == b);
+}
+
+namespace {
+
+pfx::Look sampleLook()
+{
+    pfx::Look look;
+    look.category = "film";
+    look.defaultStrength = 80;
+    pfx::LookStep step;
+    step.op = "light";
+    step.params.set("light.contrast", 20.0);
+    look.steps.push_back(step);
+    pfx::Lut lut;
+    lut.size = 2;
+    lut.table = {0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 1, 0,
+                 0, 0, 1, 1, 0, 1, 0, 1, 1, 1, 1, 0.5F}; // exact in half floats
+    look.resources.emplace("tone", lut);
+    pfx::LookStep lutStep;
+    lutStep.op = "lut";
+    lutStep.params.set("resource", std::string("tone"));
+    lutStep.params.set("mix", 50.0);
+    look.steps.push_back(lutStep);
+    return look;
+}
+
+} // namespace
+
+TEST_CASE("batch recipes version 2: looks, embedded user looks, a size preset and the watermark round-trip")
+{
+    pfx::Document doc;
+    doc.kind = pfx::DocumentKind::Batch;
+    pfx::BatchStep golden{"Golden hour", {}};
+    golden.settings.set("look.id", std::string("builtin:golden-hour"));
+    golden.settings.set("look.strength", 72.0);
+    pfx::BatchStep mine{"Dusk walk", {}};
+    mine.settings.set("look.id", std::string("1f0c2b9e-mine"));
+    mine.settings.set("look.strength", 60.0);
+    pfx::BatchStep preset{"Product white", {}};
+    preset.settings.set("light.exposure", 0.3);
+    preset.settings.set("look.id", std::string("1f0c2b9e-mine"));
+    preset.settings.set("look.strength", 40.0);
+    doc.batch.stack = {golden, mine, preset};
+    doc.batch.looks = {{"1f0c2b9e-mine", "Dusk walk", sampleLook()}};
+    doc.batch.sizePreset = "instagram-portrait";
+    doc.batch.fitInside = true;
+    doc.batch.watermark = R"({"name":"Studio","body":{"type":"text","text":"(c) {year}"}})";
+    const std::string text = pfx::serializeDocument(doc);
+    // A look on its own is a look step; a preset keeps its look by id.
+    CHECK(text.find("\"look\": {") != std::string::npos);
+    const auto again = pfx::parseDocument(text);
+    REQUIRE(again.ok());
+    CHECK(again.value().batch == doc.batch);
+}
+
+TEST_CASE("batch recipes: a look embedded in a step, as presets.md section 2 allows, is kept once")
+{
+    const std::string text = R"({"format": "pixelfx", "kind": "batch", "version": 2,
+        "body": {"stack": [
+            {"look": {"embedded": {"id": "abc", "name": "Mine", "defaultStrength": 90,
+                                   "steps": [{"op": "light", "params": {"contrast": 10}}]}, "strength": 50}},
+            {"preset": {"embedded": {"name": "P", "settings": {"light": {"exposure": 0.5},
+                "look": {"embedded": {"id": "abc", "name": "Mine"}, "strength": 30}}}}},
+            {"look": {"embedded": {"name": "no id"}, "strength": 50}},
+            {"look": {"id": "builtin:noir"}}]}})";
+    pfx::ParseReport report;
+    const auto doc = pfx::parseDocument(text, &report);
+    REQUIRE(doc.ok());
+    const pfx::BatchBody& b = doc.value().batch;
+    REQUIRE(b.looks.size() == 1);
+    CHECK(b.looks.front().id == "abc");
+    CHECK(b.looks.front().look.defaultStrength == 90);
+    REQUIRE(b.stack.size() == 3); // the look with no id is left out, with a warning
+    CHECK(b.stack[0].settings.text("look.id", "") == "abc");
+    CHECK(b.stack[0].settings.number("look.strength", 0) == 50);
+    CHECK(b.stack[1].settings.number("light.exposure", 0) == 0.5);
+    CHECK(b.stack[1].settings.text("look.id", "") == "abc");
+    CHECK(b.stack[1].settings.number("look.strength", 0) == 30);
+    CHECK_FALSE(b.stack[1].settings.contains("look.embedded.id"));
+    CHECK(b.stack[2].settings.number("look.strength", 0) == 100);
     CHECK_FALSE(report.warnings.empty());
 }
 

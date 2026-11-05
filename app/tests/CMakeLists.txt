@@ -50,6 +50,7 @@ pixelfx_add_test(tst_looks_panel     tst_looks_panel.cpp     pixelfx_ui GUI)
 pixelfx_add_test(tst_filmstrip      tst_filmstrip.cpp       pixelfx_ui GUI)
 pixelfx_add_test(tst_about_sheet     tst_about_sheet.cpp     pixelfx_ui GUI)
 target_compile_definitions(tst_about_sheet PRIVATE PIXELFX_VERSION="${PROJECT_VERSION}")
+pixelfx_add_test(tst_batch_resources tst_batch_resources.cpp pixelfx_ui GUI)
 pixelfx_add_test(tst_smoke           tst_smoke.cpp           pixelfx_ui GUI)
 pixelfx_add_test(tst_instance        tst_instance.cpp        pixelfx_core GUI)
 target_compile_definitions(tst_instance PRIVATE

@@ -50,7 +50,8 @@ public:
     void process();
     /// Writes the page as a batch recipe (.pfxbatch) to `path`; false when it cannot.
     [[nodiscard]] bool saveRecipe(const QString& path) const;
-    /// Sets the page from a batch recipe; the reason when it cannot be read.
+    /// Sets the page from a batch recipe, adding the looks and the watermark it carries to the
+    /// user's own; the reason when it cannot be read, or what could not be added.
     [[nodiscard]] QString loadRecipe(const QString& path);
     [[nodiscard]] services::BatchRunner& runner() { return m_runner; }
 
@@ -60,6 +61,8 @@ public:
 Q_SIGNALS:
     /// The output choices changed (remembered like the Export sheet's).
     void outputChanged(const pixelfx::core::ExportOptions& output);
+    /// An opened recipe added looks to the user's looks.
+    void looksAdded();
 
 protected:
     void dragEnterEvent(QDragEnterEvent* event) override;
@@ -72,7 +75,10 @@ private:
     QWidget* buildPanel();
     QWidget* buildRecipe(QWidget* parent);
     QWidget* buildOutput(QWidget* parent);
+    static QComboBox* buildSizes(QWidget* parent);
     void rebuildRows();
+    /// Chooses the size preset `sizePreset`, else the long edge, else Original size.
+    void showSize(const QString& sizePreset, int longEdge);
     QWidget* makeRow(const QString& file);
     void refreshRow(int index);
     void refreshStatus();

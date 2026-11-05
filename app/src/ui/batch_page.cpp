@@ -1,5 +1,7 @@
 #include "ui/batch_page.h"
 
+#include "core/batch_resources.h"
+#include "core/looks.h"
 #include "core/sidecar_store.h"
 #include "ui/icons.h"
 #include "ui/style.h"
@@ -7,6 +9,7 @@
 
 #include <QCheckBox>
 #include <QComboBox>
+#include <QCoreApplication>
 #include <QDesktopServices>
 #include <QDirIterator>
 #include <QDragEnterEvent>
@@ -299,15 +302,29 @@ QWidget* BatchPage::buildRecipe(QWidget* parent)
     return box;
 }
 
+QComboBox* BatchPage::buildSizes(QWidget* parent)
+{
+    auto* sizes = new QComboBox(parent);
+    sizes->addItem(tr("Original size"), 0);
+    for (const int edge : {3840, 2048, 1600, 1080}) {
+        sizes->addItem(tr("%1 px long edge").arg(edge), edge);
+    }
+    // The Export sheet's named sizes too (mock batch.html: "Web · 2048 long edge").
+    for (const core::SizePreset& p : core::sizePresets()) {
+        const QString size =
+            p.longEdge > 0 ? tr("%1 long edge").arg(p.longEdge) : tr("%1 x %2").arg(p.width).arg(p.height);
+        //: A size choice of Batch: where the photos go, then the size, "Web · 2048 long edge".
+        sizes->addItem(tr("%1 · %2").arg(QCoreApplication::translate("SizePresets", p.name), size),
+                       QString(u"preset:"_s + QString::fromLatin1(p.id)));
+    }
+    return sizes;
+}
+
 QWidget* BatchPage::buildOutput(QWidget* parent)
 {
     auto* box = new QWidget(parent);
-    m_size = new QComboBox(box);
-    m_size->addItem(tr("Original size"), 0);
-    for (const int edge : {3840, 2048, 1600, 1080}) {
-        m_size->addItem(tr("%1 px long edge").arg(edge), edge);
-    }
-    m_size->setCurrentIndex(std::max(0, m_size->findData(m_output.longEdge)));
+    m_size = buildSizes(box);
+    showSize(m_output.sizePreset, m_output.longEdge);
     m_format = new QComboBox(box);
     for (const std::string& ext : pfx::writableExtensions()) {
         const QString e = QString::fromStdString(ext).mid(1);
@@ -417,6 +434,15 @@ void BatchPage::addPaths(const QStringList& paths)
     rebuildRows();
 }
 
+void BatchPage::showSize(const QString& sizePreset, int longEdge)
+{
+    int index = sizePreset.isEmpty() ? -1 : m_size->findData(QString(u"preset:"_s + sizePreset));
+    if (index < 0) {
+        index = m_size->findData(longEdge);
+    }
+    m_size->setCurrentIndex(std::max(0, index));
+}
+
 services::BatchRecipe BatchPage::recipe() const
 {
     services::BatchRecipe r;
@@ -450,7 +476,9 @@ services::BatchRecipe BatchPage::recipe() const
     r.keepEdits = m_keepEdits->isChecked();
     r.sidecarFolder = m_sidecarFolder;
     r.output = m_output;
-    r.output.longEdge = m_size->currentData().toInt();
+    const QString size = m_size->currentData().toString();
+    r.output.sizePreset = size.startsWith(u"preset:"_s) ? size.mid(7) : QString();
+    r.output.longEdge = r.output.sizePreset.isEmpty() ? m_size->currentData().toInt() : 0;
     r.output.extension = m_format->currentData().toString();
     r.output.quality = m_quality->value();
     r.output.watermark = m_watermark->path();
@@ -478,7 +506,9 @@ bool BatchPage::saveRecipe(const QString& path) const
     pfx::Document doc;
     doc.kind = pfx::DocumentKind::Batch;
     doc.name = QFileInfo(path).completeBaseName().toStdString();
-    doc.batch = services::bodyFromRecipe(recipe(), names);
+    const services::BatchRecipe r = recipe();
+    doc.batch = services::bodyFromRecipe(r, names);
+    core::embedBatchResources(doc.batch, r.output.watermark); // so the file runs anywhere
     return pfx::saveDocument(doc, path.toStdString()).ok();
 }
 
@@ -510,10 +540,17 @@ QString BatchPage::loadRecipe(const QString& path)
         m_preset->setCurrentIndex(0);
     }
     m_second->setCurrentIndex(0);
+    const core::AdoptedResources adopted =
+        core::adoptBatchResources(body, core::lookFolder(), m_watermark->folder());
+    if (!adopted.addedLooks.isEmpty()) {
+        Q_EMIT looksAdded();
+    }
+    m_watermark->setPath(adopted.watermarkPath);
     const services::BatchRecipe r = services::recipeFromBody(body, m_sidecarFolder);
     m_auto->setChecked(r.autoFirst);
     m_keepEdits->setChecked(r.keepEdits);
-    m_size->setCurrentIndex(std::max(0, m_size->findData(r.output.longEdge)));
+    m_output.fitInside = r.output.fitInside;
+    showSize(r.output.sizePreset, r.output.longEdge);
     m_format->setCurrentIndex(std::max(0, m_format->findData(r.output.extension)));
     m_quality->setValue(r.output.quality);
     m_beside->setChecked(r.besideOriginals);
@@ -525,7 +562,7 @@ QString BatchPage::loadRecipe(const QString& path)
         m_output.folder = r.output.folder;
         m_folder->setText(QDir::toNativeSeparators(m_output.folder));
     }
-    return {};
+    return adopted.problems.join(u' ');
 }
 
 void BatchPage::process()

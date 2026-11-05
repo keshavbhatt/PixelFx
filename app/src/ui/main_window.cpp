@@ -444,6 +444,7 @@ void MainWindow::buildBatch()
     m_batch = new BatchPage(m_settings.exportOptions(), this);
     connect(m_batch, &BatchPage::outputChanged, this,
             [this](const core::ExportOptions& output) { m_settings.setExportOptions(output); });
+    connect(m_batch, &BatchPage::looksAdded, this, &MainWindow::refreshLooks);
     // The window title shows a running batch, so it can be followed from the task bar.
     connect(&m_batch->runner(), &services::BatchRunner::progress, this,
             [this](int done, int total) { setWindowTitle(tr("Batch %1 of %2").arg(done).arg(total)); });

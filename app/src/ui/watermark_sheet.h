@@ -150,6 +150,9 @@ public:
     void setBatchPhotos(const QStringList& paths) { m_batchPhotos = paths; }
     /// The chosen watermark's file, empty for None.
     [[nodiscard]] QString path() const;
+    /// Lists the folder again and chooses the watermark at `file` (empty: None).
+    void setPath(const QString& file);
+    [[nodiscard]] const QString& folder() const { return m_folder; }
     [[nodiscard]] QStringList names() const;
 
 Q_SIGNALS:

@@ -28,35 +28,49 @@
 
 Decisions the work stopped at; everything else went ahead within the approved mocks.
 
-1. Batch format version 2 (`.pfxbatch`): carry the watermark, size presets and user looks
-   embedded. Today a saved batch recipe keeps neither the watermark nor a size preset, and refers
-   to a user's look by id only.
-2. Built-in looks (13) and presets (4): the values are drafts by eye; tune or replace them.
-3. Kelvin white balance presets (Daylight, Cloudy, Shade, Tungsten in the mock) are left out:
+1. Built-in looks (13) and presets (4): the values are drafts by eye; tune or replace them.
+2. Kelvin white balance presets (Daylight, Cloudy, Shade, Tungsten in the mock) are left out:
    the engine's white balance is relative; keep them out or add absolute Kelvin.
-4. The theme applies at the next start (icons are tinted when made). Accept, or ask for a live
+3. The theme applies at the next start (icons are tinted when made). Accept, or ask for a live
    switch.
-5. macOS CI skips one curve-editor test (a crash only on the runner, clean under ASan locally).
-6. Spot heal needs a `spots` key in recipes (presets.md, a version bump of recipes).
-7. Real Lightroom `.xmp` exports should be tried on the importer (only hand-made ones so far).
-8. Batch writes beside each original into a folder named "PixelFx": keep the name?
-9. Zoom has no FEATURES row; add one (it is built).
-10. Small departures from approved mocks, until their parts exist: no Favorites chip; the look
+4. macOS CI skips one curve-editor test (a crash only on the runner, clean under ASan locally).
+5. Spot heal needs a `spots` key in recipes (presets.md, a version bump of recipes).
+6. Real Lightroom `.xmp` exports should be tried on the importer (only hand-made ones so far).
+7. Batch writes beside each original into a folder named "PixelFx": keep the name?
+8. Zoom has no FEATURES row; add one (it is built).
+9. Small departures from approved mocks, until their parts exist: no Favorites chip; the look
     editor previews on This photo and a colour ramp (no Portrait or Landscape test photos are
-    shipped); the main menu leaves out Save edit with the file and Online guide (item 12);
+    shipped); the main menu leaves out Save edit with the file and Online guide (item 11);
     Copy to clipboard has no shortcut (the mock's
     Ctrl+Shift+C is Copy settings).
-11. Still to plan: monitor profile, GPU preview, sidecars next to the photo, the batch-end
+10. Still to plan: monitor profile, GPU preview, sidecars next to the photo, the batch-end
     notification (needs Qt D-Bus on Linux, a dependency decision).
-12. Online guide: the main menu and About leave it out until there is a guide to point at.
+11. Online guide: the main menu and About leave it out until there is a guide to point at.
     Where should it go (a page on ktechpit.com, the GitHub wiki, the README)?
-13. Small choices made with the approved About, What's new and grading mocks, easy to change:
+12. Small choices made with the approved About, What's new and grading mocks, easy to change:
     What's new does not open on a first install (nothing is new yet), only after an update from
     an earlier version, PixelFx 1 included; Diagnostics leaves out "memory for previews" (there
     is no such limit yet); the Color grading group starts closed, like the Color mixer; the
     open-source notices list what PixelFx ships (THIRD_PARTY.md), not the licensing module.
 
 ## Sessions (newest first)
+
+### 2026-11-05 (batch format version 2)
+
+- The owner approved batch format version 2 and the spots format for heal.
+- Batch recipes (`.pfxbatch`) are at version 2 (presets.md section 4): the user's looks the
+  stack refers to are embedded once each, a look on its own is a look step, a named size of the
+  Export sheet can be the resize, and the watermark travels whole, its logo as base64. Opening
+  a recipe (Batch page or `pixelfx --batch`) adds its looks to the user's looks when their id is
+  new and its watermark unless an identical one is there (`core::adoptBatchResources`). Version 1
+  files read unchanged, version 3 is refused as newer; library tests for both, app tests for the
+  embedding, the adoption (twice, nothing doubled), a broken watermark and the page's round trip.
+- The Batch page's Resize lists the Export sheet's named sizes, as `batch.html` shows ("Web ·
+  2048 long edge"). This also fixes a bug: a size preset last used in Export silently decided
+  the batch's size whatever Resize showed.
+- Checked by hand: a version 2 recipe with a look and a centred text watermark, run with
+  `pixelfx --batch` in a scratch profile, wrote a 1080 x 1080 square with the mark and added the
+  look and the watermark. 32 app suites and 107 library tests pass.
 
 ### 2026-11-05 (mocks approved: grading, About, What's new)
 

@@ -173,13 +173,14 @@ std::optional<Error> readEnvelope(const Json& json, Document& doc)
     if (versionIt == json.end() || !versionIt->is_number_integer()) {
         return parseError("The document has no version.");
     }
-    if (versionIt->get<int>() > kDocumentVersion) {
+    const int version = versionIt->get<int>();
+    if (version > currentVersion(doc.kind)) {
         return Error{ErrorCode::NewerVersion,
                      "This file was made by a newer PixelFx. Update PixelFx to open it."};
     }
-    // Version 1 is the first published format. When version 2 exists, a migration from 1 to 2
-    // goes here, one step per version, each with a test.
-    doc.version = kDocumentVersion;
+    // Migrations, one step per version, each with a test. Batch 1 to 2: version 2 only added
+    // keys (embedded looks, a size preset, the watermark), so a version 1 body reads unchanged.
+    doc.version = currentVersion(doc.kind);
     doc.id = stringField(json, "id");
     doc.name = stringField(json, "name");
     doc.group = stringField(json, "group");
@@ -213,21 +214,87 @@ int intField(const Json& json, const char* name, int fallback)
     return it != json.end() && it->is_number() ? static_cast<int>(it->get<double>()) : fallback;
 }
 
+bool readLookField(const std::string& name, const Json& value, Look& look, ParseReport* report);
+Json lookToJson(const Look& look, Json body);
+
+// An embedded look (`{"id", "name", ...look body...}`), kept once per id. Its id, or empty
+// when it has none.
+std::string readEmbeddedLook(const Json& value, BatchBody& batch, ParseReport* report)
+{
+    if (!value.is_object()) {
+        return {};
+    }
+    EmbeddedLook e;
+    e.id = stringField(value, "id");
+    e.name = stringField(value, "name");
+    if (e.id.empty() || e.id.starts_with("builtin:")) {
+        if (report != nullptr) {
+            report->warnings.emplace_back("Left out an embedded look with no id of its own");
+        }
+        return {};
+    }
+    for (const auto& [key, field] : value.items()) {
+        readLookField(key, field, e.look, report);
+    }
+    if (std::ranges::none_of(batch.looks, [&](const EmbeddedLook& l) { return l.id == e.id; })) {
+        batch.looks.push_back(std::move(e));
+    }
+    return stringField(value, "id");
+}
+
+// `{"id" | "embedded", "strength"}` as look settings; an embedded look is kept in the body.
+Settings lookSettings(const Json& look, BatchBody& batch, ParseReport* report)
+{
+    Settings s;
+    std::string id = stringField(look, "id");
+    if (const auto embedded = look.find("embedded"); embedded != look.end()) {
+        id = readEmbeddedLook(*embedded, batch, report);
+    }
+    if (!id.empty()) {
+        s.set("look.id", id);
+        const auto strength = look.find("strength");
+        s.set("look.strength",
+              strength != look.end() && strength->is_number() ? strength->get<double>() : 100.0);
+    }
+    return s;
+}
+
 void readStack(const Json& value, BatchBody& batch, ParseReport* report)
 {
     for (const Json& step : value) {
+        if (!step.is_object()) {
+            continue;
+        }
         const auto preset = step.find("preset");
-        if (preset != step.end() && preset->is_object() && preset->contains("embedded")) {
-            const Json& embedded = (*preset)["embedded"];
+        const auto look = step.find("look");
+        if (preset != step.end() && preset->is_object() && preset->contains("embedded") &&
+            (*preset)["embedded"].is_object()) {
+            Json embedded = (*preset)["embedded"];
             BatchStep s;
             s.name = stringField(embedded, "name");
-            if (const auto settings = embedded.find("settings"); settings != embedded.end()) {
+            if (const auto settings = embedded.find("settings");
+                settings != embedded.end() && settings->is_object()) {
+                // A look embedded in the preset's own settings (presets.md section 2).
+                Settings lookPart;
+                if (const auto l = settings->find("look");
+                    l != settings->end() && l->is_object() && l->contains("embedded")) {
+                    lookPart = lookSettings(*l, batch, report);
+                    settings->erase("look");
+                }
                 flatten(*settings, {}, s.settings, report);
                 dropValuesThatAreGroups(s.settings, report);
+                s.settings = s.settings.overlaidWith(lookPart);
             }
             batch.stack.push_back(std::move(s));
+        } else if (look != step.end() && look->is_object()) {
+            BatchStep s;
+            s.name = stringField(*look, "name");
+            s.settings = lookSettings(*look, batch, report);
+            if (!s.settings.isEmpty()) {
+                batch.stack.push_back(std::move(s));
+            }
         } else if (report != nullptr) {
-            report->warnings.emplace_back("Skipped a step of the stack: looks and preset references are not "
+            report->warnings.emplace_back("Skipped a step of the stack: preset references are not "
                                           "supported by this version yet");
         }
     }
@@ -251,6 +318,9 @@ void readOutput(const Json& value, BatchBody& batch)
     if (const std::string policy = stringField(value, "ifExists"); !policy.empty()) {
         batch.ifExists = policy;
     }
+    if (const auto watermark = value.find("watermark"); watermark != value.end() && watermark->is_object()) {
+        batch.watermark = watermark->dump();
+    }
 }
 
 // One field of a batch body; false when the name is not a batch field (kept as unknown).
@@ -269,8 +339,16 @@ bool readBatchField(const std::string& name, const Json& value, BatchBody& batch
         return true;
     }
     if (name == "resize" && value.is_object()) {
-        batch.longEdge =
-            stringField(value, "mode") == "longEdge" ? std::max(0, intField(value, "value", 0)) : 0;
+        const std::string mode = stringField(value, "mode");
+        batch.longEdge = mode == "longEdge" ? std::max(0, intField(value, "value", 0)) : 0;
+        batch.sizePreset = mode == "preset" ? stringField(value, "preset") : std::string();
+        batch.fitInside = mode == "preset" && boolField(value, "fitInside", false);
+        return true;
+    }
+    if (name == "looks" && value.is_array()) {
+        for (const Json& look : value) {
+            readEmbeddedLook(look, batch, report);
+        }
         return true;
     }
     if (name == "output" && value.is_object()) {
@@ -280,19 +358,49 @@ bool readBatchField(const std::string& name, const Json& value, BatchBody& batch
     return false;
 }
 
+// A step whose settings are only a look is written as a look step.
+bool isLookStep(const BatchStep& step)
+{
+    return step.settings.contains("look.id") &&
+           std::ranges::all_of(step.settings.keys(),
+                               [](const std::string& k) { return k.starts_with("look."); });
+}
+
 Json batchToJson(const BatchBody& batch, Json body)
 {
     Json stack = Json::array();
     for (const BatchStep& step : batch.stack) {
-        stack.push_back(
-            {{"preset", {{"embedded", {{"name", step.name}, {"settings", unflatten(step.settings)}}}}}});
+        if (isLookStep(step)) {
+            stack.push_back({{"look",
+                              {{"id", step.settings.text("look.id", "")},
+                               {"strength", step.settings.number("look.strength", 100.0)},
+                               {"name", step.name}}}});
+        } else {
+            stack.push_back(
+                {{"preset", {{"embedded", {{"name", step.name}, {"settings", unflatten(step.settings)}}}}}});
+        }
     }
     body["stack"] = stack;
+    if (!batch.looks.empty()) {
+        Json looks = Json::array();
+        for (const EmbeddedLook& e : batch.looks) {
+            Json look = lookToJson(e.look, Json::object());
+            look["id"] = e.id;
+            look["name"] = e.name;
+            looks.push_back(std::move(look));
+        }
+        body["looks"] = looks;
+    }
     body["autoFirst"] = batch.autoFirst;
     body["keepExistingEdits"] = batch.keepExistingEdits;
-    body["resize"] = batch.longEdge > 0
-                         ? Json{{"mode", "longEdge"}, {"value", batch.longEdge}, {"noEnlarge", true}}
-                         : Json{{"mode", "none"}};
+    if (!batch.sizePreset.empty()) {
+        body["resize"] =
+            Json{{"mode", "preset"}, {"preset", batch.sizePreset}, {"fitInside", batch.fitInside}};
+    } else {
+        body["resize"] = batch.longEdge > 0
+                             ? Json{{"mode", "longEdge"}, {"value", batch.longEdge}, {"noEnlarge", true}}
+                             : Json{{"mode", "none"}};
+    }
     body["output"] = {{"format", batch.format},
                       {"quality", batch.quality},
                       {"colorSpace", "srgb"},
@@ -301,6 +409,10 @@ Json batchToJson(const BatchBody& batch, Json body)
                       {"beside", batch.beside},
                       {"name", batch.name},
                       {"ifExists", batch.ifExists}};
+    if (const Json watermark = Json::parse(batch.watermark, nullptr, false);
+        !batch.watermark.empty() && watermark.is_object()) {
+        body["output"]["watermark"] = watermark;
+    }
     return body;
 }
 
@@ -542,6 +654,11 @@ std::string_view kindName(DocumentKind kind)
     return "preset";
 }
 
+int currentVersion(DocumentKind kind)
+{
+    return kind == DocumentKind::Batch ? kBatchVersion : kDocumentVersion;
+}
+
 Result<Document> parseDocument(std::string_view text, ParseReport* report)
 {
     if (text.size() > kMaxDocumentBytes) {
@@ -571,7 +688,7 @@ std::string serializeDocument(const Document& document)
     Json json = Json::object();
     json["format"] = "pixelfx";
     json["kind"] = std::string(kindName(document.kind));
-    json["version"] = kDocumentVersion;
+    json["version"] = currentVersion(document.kind);
     const auto put = [&](const char* name, const std::string& value) {
         if (!value.empty()) {
             json[name] = value;

@@ -19,10 +19,12 @@
 //   PIXELFX_DEBUG_GRAB=<file.png>      grab the window once the photo is shown (or after 2 s
 //                                      with nothing to show) and quit
 #include "app/application.h"
+#include "core/batch_resources.h"
 #include "core/log_sink.h"
 #include "core/looks.h"
 #include "core/settings/settings.h"
 #include "core/sidecar_store.h"
+#include "core/watermark.h"
 #include "services/batch_runner.h"
 #include "ui/about_sheet.h"
 #include "ui/batch_page.h"
@@ -256,6 +258,13 @@ int runBatch(pixelfx::app::Application& app)
     if (recipe.output.folder.isEmpty()) {
         recipe.output.folder = app.settings().exportOptions().folder;
     }
+    // The user's looks and the watermark the recipe carries (presets.md section 4, version 2).
+    const pixelfx::core::AdoptedResources adopted = pixelfx::core::adoptBatchResources(
+        doc.value().batch, pixelfx::core::lookFolder(), pixelfx::core::WatermarkLibrary::defaultFolder());
+    for (const QString& problem : adopted.problems) {
+        err << "pixelfx: " << problem << '\n';
+    }
+    recipe.output.watermark = adopted.watermarkPath;
     pixelfx::services::BatchRunner runner;
     QObject::connect(&runner, &pixelfx::services::BatchRunner::photoChanged, &runner, [&](int i) {
         using S = pixelfx::services::BatchRunner::State;

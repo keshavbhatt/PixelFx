@@ -30,6 +30,7 @@ struct Look
     int defaultStrength = 100; // 0 to 100
     std::vector<LookStep> steps;
     std::map<std::string, Lut> resources; // LUTs, embedded so a look is one file
+    bool operator==(const Look&) const = default;
 };
 
 // Runs the look's enabled steps on the image, then blends the result with the input by

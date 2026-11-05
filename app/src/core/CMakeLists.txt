@@ -2,6 +2,8 @@
 qt_add_library(pixelfx_core STATIC
     about.cpp
     about.h
+    batch_resources.cpp
+    batch_resources.h
     changelog.cpp
     changelog.h
     crop_geometry.cpp

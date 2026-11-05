@@ -54,6 +54,8 @@ private:
 
 /// Where findLook looks for the user's looks (set once at start; tests point it elsewhere).
 void setLookFolder(const QString& folder);
+/// The folder findLook reads the user's looks from.
+[[nodiscard]] QString lookFolder();
 /// The look `id` names, built-in or the user's; null when there is none. Thread-safe: renders
 /// call it from workers. The user's looks are read again when their folder changes.
 [[nodiscard]] std::shared_ptr<const pfx::Look> findLook(const QString& id);

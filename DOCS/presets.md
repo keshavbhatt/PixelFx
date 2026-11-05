@@ -1,7 +1,8 @@
 # Presets, looks, recipes and batch recipes: the file formats
 
 Status: DRAFT for owner review (M0). Becomes binding with ADR-005 once approved; from then on
-any change bumps `version` and adds a migration in `libs/pixelfx-core/src/recipe/migrate.cpp`.
+any change bumps `version` and adds a migration where documents are read (`readEnvelope` in
+`libs/pixelfx-core/src/recipe/document.cpp`), with a test.
 
 One JSON envelope for every kind, read and written by libpixelfx (`pfx::Document`), so the
 app, the `pfx` CLI and any other program using the library share one implementation.
@@ -70,8 +71,9 @@ internal units, so a file reads like the panel.
 - White balance in a preset is `relative` (shift from the photo's own) by default; `absolute`
   (Kelvin) is stored only when the user picked Kelvin.
 - `look.id` refers to a look by id: `builtin:<slug>` for shipped looks, a UUID for the user's.
-  A recipe or batch file that must stand alone (export, sharing) embeds the look instead:
-  `"look": { "embedded": { ...look body... }, "strength": 72 }`.
+  A file that must stand alone (export, sharing) embeds the look instead:
+  `"look": { "embedded": { ...look body with its id and name... }, "strength": 72 }`; a batch
+  recipe keeps its embedded looks once each in its `looks` list (section 4).
 
 ## 3. Look body (the user's "filter")
 
@@ -140,18 +142,41 @@ internal units, so a file reads like the panel.
 
 ```json
 "body": {
-  "stack": [ { "look": { "id": "builtin:golden-hour", "strength": 72 } }, { "preset": { "embedded": { ... } } } ],
+  "stack": [ { "look": { "id": "builtin:golden-hour", "strength": 72, "name": "Golden hour" } },
+             { "look": { "id": "1f0c2b9e-...", "strength": 60, "name": "Dusk walk" } },
+             { "preset": { "embedded": { "name": "Product white", "settings": { ... } } } } ],
+  "looks": [ { "id": "1f0c2b9e-...", "name": "Dusk walk", ...look body (section 3)... } ],
   "autoFirst": false,
   "keepExistingEdits": false,
   "resize": { "mode": "longEdge", "value": 2048, "noEnlarge": true },
   "output": { "format": "jpeg", "quality": 90, "colorSpace": "srgb", "metadata": { "camera": true, "location": false },
-              "folder": "~/Pictures/PixelFx/Batch", "beside": false, "name": "{name}-{preset}", "ifExists": "number" }
+              "folder": "~/Pictures/PixelFx/Batch", "beside": false, "name": "{name}-{preset}", "ifExists": "number",
+              "watermark": { ...a watermark document (section 7)..., "logoData": "<base64 PNG or SVG>" } }
 }
 ```
 
-- The stack is applied in order onto each photo's settings (later entries win per key).
-  A batch file always embeds user presets and looks so it runs on another machine;
-  `builtin:` references stay references.
+Batch recipes are at **version 2** (recipes, presets and looks stay at version 1).
+
+- The stack is applied in order onto each photo's settings (later entries win per key). A step
+  is a preset (its settings, embedded) or a look on its own (`id`, `strength` 0 to 100,
+  `name` for people). A step is written as a look step when its settings are only `look.*`.
+- `looks` (version 2) embeds every look of the user's that the stack refers to, once each, as
+  a look body (section 3) with its `id` and `name`, so the file runs on another machine;
+  `builtin:` references stay references. Reading also accepts a look embedded in its step,
+  `"look": { "embedded": { ... }, "strength": 72 }` in a look step or in a preset's settings
+  (section 2); it is kept once in `looks`. An embedded look without an id of its own is left
+  out with a warning. Opening the file adds those looks to the user's looks when an id is not
+  there yet.
+- `resize` (version 2 adds `preset`): `{ "mode": "none" }`, `{ "mode": "longEdge", "value":
+  2048, "noEnlarge": true }`, or `{ "mode": "preset", "preset": "instagram-portrait",
+  "fitInside": false }`, a size of the Export sheet by id (crop to fill, or fit inside with a
+  border); an id this version does not know means the original size.
+- `output.watermark` (version 2): the whole watermark document of section 7, and for a logo
+  `logoData`, the logo file's bytes in base64, so the mark travels with the recipe. Absent: no
+  watermark. Opening the file adds the watermark to the user's watermarks unless an identical
+  one is there already.
+- Version 1 batch recipes had none of these keys and read unchanged; there is nothing to
+  migrate. A file with a `version` above 2 is refused as made by a newer PixelFx.
 
 ## 5. Pipeline order (fixed, documented here and in ADR-004)
 
@@ -217,5 +242,5 @@ so a watermark never points outside its folder.
   and wins over `anchor`; the mark is kept inside the photo.
 - `repeat` tiles the mark over the photo in offset rows turned by `angle` degrees (-90 to 90).
 - Applied on export after resizing, so it is sized for the final pixels; never on the editor
-  view, never stored in a photo's settings. Batch recipes (section 4) do not carry a watermark
-  yet: that is a batch format version 2.
+  view, never stored in a photo's settings. Batch recipes carry it embedded (section 4,
+  version 2).

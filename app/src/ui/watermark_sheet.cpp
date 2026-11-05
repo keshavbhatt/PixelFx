@@ -734,6 +734,11 @@ QString WatermarkPicker::path() const
     return file == u"new"_s ? QString() : file;
 }
 
+void WatermarkPicker::setPath(const QString& file)
+{
+    refresh(file);
+}
+
 QStringList WatermarkPicker::names() const
 {
     QStringList out;

@@ -26,6 +26,11 @@ Semantic Versioning (the API may change before 1.0).
 
 ### Added
 
+- Batch documents are at version 2 (`kBatchVersion`, `currentVersion`): `BatchBody` carries the
+  user's looks the stack refers to (`looks`, `EmbeddedLook`), a named size (`sizePreset`,
+  `fitInside`) and the watermark as JSON text for the app. A look on its own is written as a
+  look step; looks embedded in a step are read too. Version 1 batch files read unchanged; a
+  version above 2 is refused as newer. `Look` and `Lut` compare with `==`.
 - `engineVersions` names the libvips and Little CMS versions loaded at run time, for an About
   box or a bug report.
 - `blendOverlay` lays an 8-bit sRGB picture with premultiplied alpha (a watermark drawn by the
