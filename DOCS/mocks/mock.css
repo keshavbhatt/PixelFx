@@ -241,3 +241,41 @@ body.clean .pin, body.clean .notes { display: none; }
 .posgrid i { width: 26px; height: 26px; border-radius: 5px; border: 1.5px solid var(--track); }
 .posgrid i.on { background: var(--accent-strong); border-color: var(--accent-strong); }
 .seg.small span { padding: 4px 9px; font-size: 12px; }
+
+/* Lightroom-compatible controls: "More" disclosure, colour wheels, coloured tracks. */
+.disclose { display: flex; align-items: center; gap: 4px; height: 24px; margin: 4px 0 0; font-size: 12px; color: var(--muted); }
+.disclose .ic { color: var(--muted); }
+.subcap { font-size: 11px; font-weight: 600; color: var(--muted); margin: 10px 0 0; }
+.adj.off { opacity: .45; }
+.wheel { position: relative; border-radius: 50%; margin: 0 auto;
+  background: radial-gradient(closest-side, #7A7A7A, rgba(122,122,122,0)), conic-gradient(#E04F4F, #E0C04F, #4FC060, #4FC0C0, #4F80E0, #E04FB0, #E04F4F);
+  box-shadow: 0 0 0 1px var(--faint); }
+.wheel i { position: absolute; width: 14px; height: 14px; margin: -7px; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 0 0 1px rgba(0,0,0,.55); }
+.wheel.mini { width: 44px; height: 44px; } .wheel.mini i { width: 8px; height: 8px; margin: -4px; border-width: 1.5px; }
+.wheel.big { width: 120px; height: 120px; }
+.ranges { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; margin: 6px 0 4px; }
+.ranges .r { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 6px 0 4px; border-radius: 8px; font-size: 12px; color: var(--muted); }
+.ranges .r.on { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+.adj.rh input::-webkit-slider-runnable-track { background: linear-gradient(90deg, #D04FA0, #E04F4F 50%, #E8904A); }
+.adj.gh2 input::-webkit-slider-runnable-track { background: linear-gradient(90deg, #C8C04F, #4FC060 50%, #4FC0B0); }
+.adj.bh input::-webkit-slider-runnable-track { background: linear-gradient(90deg, #4FB0C8, #4F70E0 50%, #8A4FE0); }
+.adj.rs input::-webkit-slider-runnable-track { background: linear-gradient(90deg, #8A8A8A, #E04F4F); }
+.adj.gs input::-webkit-slider-runnable-track { background: linear-gradient(90deg, #8A8A8A, #4FC060); }
+.adj.bs input::-webkit-slider-runnable-track { background: linear-gradient(90deg, #8A8A8A, #4F70E0); }
+.adj.bwband input::-webkit-slider-runnable-track { background: linear-gradient(90deg, #1E1E1E, #8A8A8A 50%, #F0F0F0); }
+.adj.rh input::-moz-range-track { background: linear-gradient(90deg, #D04FA0, #E04F4F 50%, #E8904A); }
+.adj.gh2 input::-moz-range-track { background: linear-gradient(90deg, #C8C04F, #4FC060 50%, #4FC0B0); }
+.adj.bh input::-moz-range-track { background: linear-gradient(90deg, #4FB0C8, #4F70E0 50%, #8A4FE0); }
+.adj.rs input::-moz-range-track { background: linear-gradient(90deg, #8A8A8A, #E04F4F); }
+.adj.gs input::-moz-range-track { background: linear-gradient(90deg, #8A8A8A, #4FC060); }
+.adj.bs input::-moz-range-track { background: linear-gradient(90deg, #8A8A8A, #4F70E0); }
+.adj.bwband input::-moz-range-track { background: linear-gradient(90deg, #1E1E1E, #8A8A8A 50%, #F0F0F0); }
+/* A mock page that shows several panel states side by side under the window. */
+.specs { display: flex; flex-wrap: wrap; gap: 20px; padding: 24px; align-items: flex-start; }
+.specs .spec { width: var(--right-w); }
+.specs .spec > .cap { font-size: 12px; color: var(--muted); margin: 0 0 6px 2px; }
+.specs .spec > .side { border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+/* Coloured tracks carry a 1 px rim in --faint so their edge passes 3:1 on both panels, whatever
+   the colour at that end (the same fix as the grading wheel's rim). */
+.adj:is(.temp, .tint, .sat, .rh, .gh2, .bh, .rs, .gs, .bs, .bwband) input::-webkit-slider-runnable-track { box-shadow: 0 0 0 1px var(--faint); }
+.adj:is(.temp, .tint, .sat, .rh, .gh2, .bh, .rs, .gs, .bs, .bwband) input::-moz-range-track { box-shadow: 0 0 0 1px var(--faint); }
