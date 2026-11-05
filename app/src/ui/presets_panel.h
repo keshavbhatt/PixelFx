@@ -50,6 +50,7 @@ Q_SIGNALS:
     void renameRequested(const pixelfx::core::PresetEntry& entry);
     void updateRequested(const pixelfx::core::PresetEntry& entry);
     void exportRequested(const pixelfx::core::PresetEntry& entry);
+    void duplicateRequested(const pixelfx::core::PresetEntry& entry);
     void showFileRequested(const pixelfx::core::PresetEntry& entry);
     void deleteRequested(const pixelfx::core::PresetEntry& entry);
 
@@ -75,6 +76,7 @@ private:
     LooksPanel* m_looks = nullptr;
     QStackedWidget* m_pages = nullptr;
     QButtonGroup* m_tabs = nullptr;
+    int m_targetCount = 1;
 };
 
 /// One preset: its picture on the photo, name, what it holds, and a menu button.

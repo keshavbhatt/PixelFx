@@ -43,6 +43,7 @@ struct PresetEntry
     QString group; ///< "My presets", "Imported", "Built in" or the user's own
     QString path;  ///< empty for built-in presets
     pfx::Settings settings;
+    QString description;      ///< what a built-in preset does, in words; empty for the user's
     bool autoEnhance = false; ///< "Auto enhance": works the settings out per photo
     [[nodiscard]] bool isBuiltIn() const { return path.isEmpty(); }
 };
@@ -80,6 +81,8 @@ public:
 
     [[nodiscard]] static QString defaultFolder();
     [[nodiscard]] static std::vector<PresetEntry> builtIn();
+    /// The group a preset goes in unless it names one.
+    [[nodiscard]] static QString myPresetsGroup();
 
 private:
     [[nodiscard]] QString freePath(const QString& name) const;

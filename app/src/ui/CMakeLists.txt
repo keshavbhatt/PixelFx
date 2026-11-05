@@ -1,5 +1,7 @@
 # ui: widgets. Tokens come from DOCS/DESIGN.md section 1; screens follow the approved mocks.
 qt_add_library(pixelfx_ui STATIC
+    adjust_group.cpp
+    adjust_group.h
     about_sheet.cpp
     about_sheet.h
     adjust_panel.cpp

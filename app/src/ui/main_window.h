@@ -248,6 +248,9 @@ private:
     QLabel* m_wordmark = nullptr;
     /// The header for the page on show: start page, editor or Batch.
     void updateHeader();
+    void buildBatchHeaderButtons();
+    /// A new render of the photo, on the canvas (or as Heal shows it).
+    void showPreview(const QImage& image);
 };
 
 } // namespace pixelfx::ui

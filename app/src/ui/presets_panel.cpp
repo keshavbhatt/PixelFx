@@ -130,10 +130,10 @@ QHBoxLayout* PresetsPanel::buildHead()
     m_search->addAction(icons::themed(u"search"_s, tokens().muted), QLineEdit::LeadingPosition);
     connect(m_search, &QLineEdit::textChanged, this, &PresetsPanel::rebuild);
     auto* import = new QToolButton(this);
-    import->setObjectName(u"groupReset"_s);
+    import->setObjectName(u"iconButton"_s);
     import->setIcon(icons::themed(u"import"_s, tokens().text));
-    import->setToolTip(tr("Import PixelFx, Lightroom and Camera Raw presets"));
-    import->setAccessibleName(tr("Import presets"));
+    import->setToolTip(tr("Import presets and looks: PixelFx, Lightroom and Camera Raw presets, .cube LUTs"));
+    import->setAccessibleName(tr("Import presets and looks"));
     connect(import, &QToolButton::clicked, this, &PresetsPanel::importRequested);
     auto* head = new QHBoxLayout;
     head->setContentsMargins(10, 10, 10, 6);
@@ -148,6 +148,7 @@ PresetsPanel::~PresetsPanel() = default;
 
 void PresetsPanel::setTargetCount(int count)
 {
+    m_targetCount = count;
     m_target->setText(tr("Applies to %n photos", nullptr, count));
     m_target->setVisible(count > 1);
 }
@@ -219,12 +220,14 @@ void PresetsPanel::showMenu(PresetRow* row)
 {
     const core::PresetEntry& e = m_entries.at(row->index());
     QMenu menu(this);
-    menu.addAction(tr("Apply"), this, [this, e] { Q_EMIT applyRequested(e); });
+    menu.addAction(m_targetCount > 1 ? tr("Apply to %n photos", nullptr, m_targetCount) : tr("Apply"), this,
+                   [this, e] { Q_EMIT applyRequested(e); });
     if (!e.isBuiltIn()) {
         menu.addAction(tr("Rename..."), this, [this, e] { Q_EMIT renameRequested(e); });
         menu.addAction(tr("Update with current settings"), this, [this, e] { Q_EMIT updateRequested(e); });
     }
     if (!e.autoEnhance) {
+        menu.addAction(tr("Duplicate"), this, [this, e] { Q_EMIT duplicateRequested(e); });
         menu.addAction(tr("Export..."), this, [this, e] { Q_EMIT exportRequested(e); });
     }
     if (!e.isBuiltIn()) {
@@ -246,7 +249,7 @@ PresetRow::PresetRow(std::size_t index, const core::PresetEntry& entry, QWidget*
     setCursor(Qt::PointingHandCursor);
     setAccessibleName(entry.name);
     const QString summary =
-        entry.autoEnhance ? tr("Analyses each photo") : core::presetSummary(entry.settings);
+        entry.description.isEmpty() ? core::presetSummary(entry.settings) : entry.description;
     setToolTip(tr("Apply %1. Hover to see it on the photo.").arg(entry.name));
     auto* name = new QLabel(entry.name, this);
     name->setObjectName(u"presetName"_s);
@@ -264,7 +267,7 @@ PresetRow::PresetRow(std::size_t index, const core::PresetEntry& entry, QWidget*
     connect(more, &QToolButton::clicked, this, &PresetRow::menuRequested);
     m_more = more;
     auto* row = new QHBoxLayout(this);
-    row->setContentsMargins(18 + kThumbWidth + 10, 7, 14, 7);
+    row->setContentsMargins(18 + kThumbWidth + 10, 8, 14, 9);
     row->setSpacing(10);
     row->addLayout(text, 1);
     row->addWidget(more);

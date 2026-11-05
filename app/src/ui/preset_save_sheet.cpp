@@ -33,7 +33,7 @@ PresetSaveSheet::PresetSaveSheet(const pfx::Settings& settings, const QStringLis
     m_name->setPlaceholderText(tr("For example: Warm evening"));
     connect(m_name, &QLineEdit::textChanged, this, &PresetSaveSheet::refreshSave);
     QStringList all = groups;
-    const QString mine = tr("My presets");
+    const QString mine = core::PresetLibrary::myPresetsGroup();
     all.removeAll(tr("Built in"));
     all.removeAll(mine);
     all.prepend(mine);

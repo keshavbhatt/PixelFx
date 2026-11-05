@@ -5,6 +5,7 @@
 #include <QWidget>
 
 #include <array>
+#include <functional>
 #include <pfx/settings.h>
 #include <vector>
 
@@ -74,18 +75,27 @@ Q_SIGNALS:
     /// The picker button: the next click on the photo picks a neutral point.
     void whiteBalancePickRequested(bool on);
     void pasteRequested();
+    /// "Crop and perspective" in the Geometry group.
+    void cropRequested();
 
 private:
     void setValue(const QString& key, double value, bool finished);
     void resetGroup(AdjustGroup* group);
     void refreshGroups();
     void buildCurvesGroup(QWidget* content, QVBoxLayout* groups);
+    AdjustSlider* addSlider(AdjustGroup* group, const QString& key, const QString& label);
+    void addGroup(AdjustGroup* group, QVBoxLayout* groups);
+    /// Shows the settings in the controls that are not sliders (curve, wheels).
+    void refreshControls();
     void buildMixerGroup(QWidget* content, QVBoxLayout* groups);
+    void buildGeometryGroup(QWidget* content, QVBoxLayout* groups);
+    /// A change to the turns, flips or straightening, through crop_geometry so the crop stays
+    /// on the same part of the photo; a history step when `label` is given.
+    void editGeometry(const std::function<void(pfx::Settings&)>& change, const QString& label);
     void buildGradingGroup(QWidget* content, QVBoxLayout* groups);
     QWidget* buildWheel(int zone, QWidget* parent);
     void wheelEdited(int zone, double hue, double amount, bool finished);
     void refreshWheels();
-    [[nodiscard]] bool gradingWheelsChanged() const;
     QHBoxLayout* buildTopRow();
     QWidget* buildWhiteBalanceRow(QWidget* parent);
     void refreshWhiteBalance();
@@ -98,7 +108,6 @@ private:
     QComboBox* m_wbMode = nullptr;
     QToolButton* m_picker = nullptr;
     bool m_wbAuto = false;
-    AdjustGroup* m_curvesGroup = nullptr;
     CurveEditor* m_curve = nullptr;
     QButtonGroup* m_curveChannels = nullptr;
     QString m_curveKey = QStringLiteral("curves.rgb");
@@ -107,7 +116,6 @@ private:
     std::vector<AdjustSlider*> m_mixerSliders;
     QButtonGroup* m_mixerModes = nullptr;
     QButtonGroup* m_mixerBands = nullptr;
-    AdjustGroup* m_gradingGroup = nullptr;
     std::array<ColorWheel*, 2> m_wheels{};
     std::array<QLabel*, 2> m_wheelValues{};
 };

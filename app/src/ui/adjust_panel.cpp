@@ -1,5 +1,7 @@
 #include "ui/adjust_panel.h"
 
+#include "core/crop_geometry.h"
+#include "ui/adjust_group.h"
 #include "ui/color_wheel.h"
 #include "ui/curve_editor.h"
 #include "ui/histogram_view.h"
@@ -21,6 +23,7 @@
 
 #include <array>
 #include <cmath>
+#include <functional>
 #include <pfx/registry.h>
 #include <string_view>
 
@@ -87,98 +90,6 @@ void repolish(QWidget* widget)
 
 } // namespace
 
-/// A collapsible group: header (chevron, glyph, name, changed dot, reset) and its sliders.
-class AdjustGroup : public QWidget
-{
-public:
-    AdjustGroup(const QString& name, const QString& glyph, QWidget* parent)
-        : QWidget(parent)
-        , m_name(name)
-        , m_toggle(new QToolButton(this))
-        , m_chevron(new QLabel(this))
-        , m_dot(new QLabel(this))
-        , m_reset(new QToolButton(this))
-        , m_body(new QWidget(this))
-        , m_bodyLayout(new QVBoxLayout(m_body))
-    {
-        setObjectName(u"adjustGroup"_s);
-        setAttribute(Qt::WA_StyledBackground);
-        m_toggle->setObjectName(u"groupToggle"_s);
-        m_toggle->setText(name);
-        m_toggle->setIcon(icons::themed(glyph, tokens().muted));
-        m_toggle->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
-        m_toggle->setCheckable(true);
-        m_toggle->setChecked(true);
-        m_toggle->setAccessibleName(name);
-        m_toggle->setToolTip(tr("Show or hide %1").arg(name));
-        m_dot->setObjectName(u"changedDot"_s);
-        m_dot->setFixedSize(6, 6);
-        m_dot->setToolTip(tr("Changed"));
-        m_reset->setObjectName(u"groupReset"_s);
-        m_reset->setIcon(icons::themed(u"reset"_s, tokens().muted));
-        m_reset->setToolTip(tr("Reset %1").arg(name));
-        m_reset->setAccessibleName(tr("Reset %1").arg(name));
-        auto* header = new QHBoxLayout;
-        header->setContentsMargins(12, 8, 10, 6);
-        header->setSpacing(6);
-        header->addWidget(m_chevron);
-        header->addWidget(m_toggle);
-        header->addWidget(m_dot);
-        header->addStretch();
-        header->addWidget(m_reset);
-        m_bodyLayout->setContentsMargins(14, 0, 14, 10);
-        m_bodyLayout->setSpacing(2);
-        auto* column = new QVBoxLayout(this);
-        column->setContentsMargins(0, 0, 0, 0);
-        column->setSpacing(0);
-        column->addLayout(header);
-        column->addWidget(m_body);
-        connect(m_toggle, &QToolButton::toggled, this, [this](bool open) {
-            m_body->setVisible(open);
-            updateChevron();
-        });
-        updateChevron();
-        setChanged(false);
-    }
-
-    void addContent(QWidget* widget)
-    {
-        widget->setParent(m_body);
-        m_bodyLayout->addWidget(widget);
-    }
-    void addSlider(AdjustSlider* slider)
-    {
-        slider->setParent(m_body);
-        m_bodyLayout->addWidget(slider);
-        m_sliders.push_back(slider);
-    }
-    [[nodiscard]] const std::vector<AdjustSlider*>& sliders() const { return m_sliders; }
-    [[nodiscard]] QToolButton* resetButton() const { return m_reset; }
-    void setExpanded(bool open) { m_toggle->setChecked(open); }
-    [[nodiscard]] const QString& name() const { return m_name; }
-    void setChanged(bool changed)
-    {
-        m_dot->setVisible(changed);
-        m_reset->setVisible(changed);
-    }
-
-private:
-    void updateChevron()
-    {
-        m_chevron->setPixmap(icons::pixmap(m_toggle->isChecked() ? u"expanded"_s : u"collapsed"_s,
-                                           tokens().muted, 14, devicePixelRatioF()));
-    }
-
-    QString m_name;
-    QToolButton* m_toggle;
-    QLabel* m_chevron;
-    QLabel* m_dot;
-    QToolButton* m_reset;
-    QWidget* m_body;
-    QVBoxLayout* m_bodyLayout;
-    std::vector<AdjustSlider*> m_sliders;
-};
-
 // ---------------------------------------------------------------------------------------------
 
 AdjustSlider::AdjustSlider(const QString& key, const QString& label, QWidget* parent)
@@ -212,8 +123,8 @@ AdjustSlider::AdjustSlider(const QString& key, const QString& label, QWidget* pa
     top->addStretch();
     top->addWidget(m_value);
     auto* column = new QVBoxLayout(this);
-    column->setContentsMargins(0, 4, 0, 4);
-    column->setSpacing(1);
+    column->setContentsMargins(0, 7, 0, 7);
+    column->setSpacing(4);
     column->addLayout(top);
     column->addWidget(m_slider);
 
@@ -359,24 +270,19 @@ AdjustPanel::AdjustPanel(QWidget* parent)
             group->addContent(buildWhiteBalanceRow(group));
         }
         for (const ControlSpec& c : g.controls) {
-            auto* s = new AdjustSlider(QString::fromLatin1(c.key), tr(c.label), group);
+            const AdjustSlider* s = addSlider(group, QString::fromLatin1(c.key), tr(c.label));
             if (c.track[0] != '\0') {
                 s->findChild<QSlider*>()->setObjectName(QString::fromLatin1(c.track));
             }
-            group->addSlider(s);
-            m_sliders.push_back(s);
-            connect(s, &AdjustSlider::moved, this, [this, s](double v) { setValue(s->key(), v, false); });
-            connect(s, &AdjustSlider::released, this, [this, s](double v) { setValue(s->key(), v, true); });
         }
-        connect(group->resetButton(), &QToolButton::clicked, this, [this, group] { resetGroup(group); });
-        groups->addWidget(group);
-        m_groups.push_back(group);
+        addGroup(group, groups);
         if (std::string_view(g.name) == "Color") {
             buildMixerGroup(content, groups);
             buildGradingGroup(content, groups);
             buildCurvesGroup(content, groups);
         }
     }
+    buildGeometryGroup(content, groups);
     groups->addStretch();
 
     auto* scroll = new QScrollArea(this);
@@ -397,17 +303,35 @@ AdjustPanel::AdjustPanel(QWidget* parent)
 
 AdjustPanel::~AdjustPanel() = default;
 
+AdjustSlider* AdjustPanel::addSlider(AdjustGroup* group, const QString& key, const QString& label)
+{
+    auto* s = new AdjustSlider(key, label, group);
+    group->addSlider(s);
+    m_sliders.push_back(s);
+    connect(s, &AdjustSlider::moved, this, [this, s](double v) { setValue(s->key(), v, false); });
+    connect(s, &AdjustSlider::released, this, [this, s](double v) { setValue(s->key(), v, true); });
+    return s;
+}
+
+void AdjustPanel::addGroup(AdjustGroup* group, QVBoxLayout* groups)
+{
+    connect(group->resetButton(), &QToolButton::clicked, this, [this, group] { resetGroup(group); });
+    groups->addWidget(group);
+    m_groups.push_back(group);
+}
+
 QWidget* AdjustPanel::buildWhiteBalanceRow(QWidget* parent)
 {
     auto* row = new QWidget(parent);
     auto* label = new QLabel(tr("White balance"), row);
     label->setObjectName(u"adjustName"_s);
     m_wbMode = new QComboBox(row);
+    m_wbMode->setObjectName(u"compact"_s);
     m_wbMode->addItems({tr("As shot"), tr("Auto"), tr("Custom")});
     m_wbMode->setAccessibleName(tr("White balance"));
     m_wbMode->setToolTip(tr("As shot keeps the camera's colours; Auto neutralises a colour cast"));
     m_picker = new QToolButton(row);
-    m_picker->setObjectName(u"groupReset"_s);
+    m_picker->setObjectName(u"iconButton"_s);
     m_picker->setIcon(icons::themed(u"pipette"_s, tokens().text));
     m_picker->setCheckable(true);
     m_picker->setToolTip(tr("Pick a neutral point (W): click something that should be grey or white"));
@@ -428,8 +352,8 @@ QWidget* AdjustPanel::buildWhiteBalanceRow(QWidget* parent)
         }
     });
     auto* layout = new QHBoxLayout(row);
-    layout->setContentsMargins(0, 4, 0, 4);
-    layout->setSpacing(4);
+    layout->setContentsMargins(0, 5, 0, 5);
+    layout->setSpacing(6);
     layout->addWidget(label);
     layout->addStretch();
     layout->addWidget(m_wbMode);
@@ -571,19 +495,12 @@ void AdjustPanel::buildMixerGroup(QWidget* content, QVBoxLayout* groups)
             //: A colour band and what changes in it, for example "Yellows hue".
             const QString label =
                 tr("%1 %2").arg(tr(band.label), modeNames.at(static_cast<qsizetype>(m)).toLower());
-            auto* s = new AdjustSlider(key, label, group);
-            group->addSlider(s);
-            m_sliders.push_back(s);
-            m_mixerSliders.push_back(s);
-            connect(s, &AdjustSlider::moved, this, [this, s](double v) { setValue(s->key(), v, false); });
-            connect(s, &AdjustSlider::released, this, [this, s](double v) { setValue(s->key(), v, true); });
+            m_mixerSliders.push_back(addSlider(group, key, label));
         }
     }
     connect(m_mixerModes, &QButtonGroup::idClicked, this, &AdjustPanel::showMixerSlider);
     connect(m_mixerBands, &QButtonGroup::idClicked, this, &AdjustPanel::showMixerSlider);
-    connect(group->resetButton(), &QToolButton::clicked, this, [this, group] { resetGroup(group); });
-    groups->addWidget(group);
-    m_groups.push_back(group);
+    addGroup(group, groups);
     showMixerSlider();
 }
 
@@ -612,29 +529,23 @@ std::string gradingKey(int zone, const char* part)
 
 void AdjustPanel::buildGradingGroup(QWidget* content, QVBoxLayout* groups)
 {
-    m_gradingGroup = new AdjustGroup(tr("Color grading"), u"blend"_s, content);
-    m_gradingGroup->setExpanded(false); // like the mixer: closed until needed
-    auto* wheels = new QWidget(m_gradingGroup);
+    auto* group = new AdjustGroup(tr("Color grading"), u"blend"_s, content);
+    group->setExpanded(false);
+    auto* wheels = new QWidget(group);
     auto* row = new QHBoxLayout(wheels);
     row->setContentsMargins(0, 6, 0, 4);
     row->setSpacing(8);
     for (int zone = 0; zone < 2; ++zone) {
         row->addWidget(buildWheel(zone, wheels), 1);
     }
-    m_gradingGroup->addContent(wheels);
-    auto* balance = new AdjustSlider(u"grading.balance"_s, tr("Balance"), m_gradingGroup);
+    group->addContent(wheels);
+    for (int zone = 0; zone < 2; ++zone) {
+        group->addKeys({gradingKey(zone, "hue"), gradingKey(zone, "amount")});
+    }
+    AdjustSlider* balance = addSlider(group, u"grading.balance"_s, tr("Balance"));
     balance->setToolTip(tr("Where shadows end and highlights begin: to the right gives the highlight "
                            "colour more of the photo."));
-    m_gradingGroup->addSlider(balance);
-    m_sliders.push_back(balance);
-    connect(balance, &AdjustSlider::moved, this,
-            [this, balance](double v) { setValue(balance->key(), v, false); });
-    connect(balance, &AdjustSlider::released, this,
-            [this, balance](double v) { setValue(balance->key(), v, true); });
-    connect(m_gradingGroup->resetButton(), &QToolButton::clicked, this,
-            [this] { resetGroup(m_gradingGroup); });
-    groups->addWidget(m_gradingGroup);
-    m_groups.push_back(m_gradingGroup);
+    addGroup(group, groups);
     refreshWheels();
 }
 
@@ -720,12 +631,70 @@ void AdjustPanel::refreshWheels()
     }
 }
 
-bool AdjustPanel::gradingWheelsChanged() const
+void AdjustPanel::buildGeometryGroup(QWidget* content, QVBoxLayout* groups)
 {
-    return std::ranges::any_of(std::array{0, 1}, [this](int zone) {
-        return m_settings.contains(gradingKey(zone, "hue")) ||
-               m_settings.contains(gradingKey(zone, "amount"));
+    auto* group = new AdjustGroup(tr("Geometry"), u"scaling"_s, content);
+    group->setExpanded(false);
+    group->addKeys({"geometry.rotate90", "geometry.flipH", "geometry.flipV"});
+    auto* straighten = new AdjustSlider(u"geometry.angle"_s, tr("Straighten"), group);
+    group->addSlider(straighten);
+    m_sliders.push_back(straighten);
+    connect(straighten, &AdjustSlider::moved, this,
+            [this](double v) { editGeometry([v](pfx::Settings& s) { core::setAngle(s, v); }, {}); });
+    connect(straighten, &AdjustSlider::released, this, [this, straighten](double v) {
+        editGeometry([v](pfx::Settings& s) { core::setAngle(s, v); },
+                     u"%1 %2"_s.arg(straighten->label(), straighten->valueText()));
     });
+    struct Turn
+    {
+        const char* glyph;
+        const char* name;
+        std::function<void(pfx::Settings&)> apply;
+    };
+    const std::array<Turn, 4> turns = {{
+        {"rotate-ccw", QT_TRANSLATE_NOOP("AdjustPanel", "Rotate left"),
+         [](pfx::Settings& s) { core::turn(s, false); }},
+        {"rotate-cw", QT_TRANSLATE_NOOP("AdjustPanel", "Rotate right"),
+         [](pfx::Settings& s) { core::turn(s, true); }},
+        {"flip-h", QT_TRANSLATE_NOOP("AdjustPanel", "Flip horizontal"),
+         [](pfx::Settings& s) { core::flip(s, Qt::Horizontal); }},
+        {"flip-v", QT_TRANSLATE_NOOP("AdjustPanel", "Flip vertical"),
+         [](pfx::Settings& s) { core::flip(s, Qt::Vertical); }},
+    }};
+    auto* row = new QWidget(group);
+    auto* buttons = new QHBoxLayout(row);
+    buttons->setContentsMargins(0, 6, 0, 0);
+    buttons->setSpacing(6);
+    for (const Turn& t : turns) {
+        auto* b = new QToolButton(row);
+        b->setObjectName(u"iconButton"_s);
+        b->setIcon(icons::themed(QString::fromLatin1(t.glyph), tokens().text));
+        b->setToolTip(tr(t.name));
+        b->setAccessibleName(tr(t.name));
+        connect(b, &QToolButton::clicked, this, [this, t] { editGeometry(t.apply, tr(t.name)); });
+        buttons->addWidget(b);
+    }
+    buttons->addStretch();
+    auto* crop = new QPushButton(tr("Crop and perspective"), row);
+    crop->setObjectName(u"link"_s);
+    crop->setToolTip(tr("Crop and rotate (C)"));
+    connect(crop, &QPushButton::clicked, this, &AdjustPanel::cropRequested);
+    buttons->addWidget(crop);
+    group->addContent(row);
+    addGroup(group, groups);
+}
+
+void AdjustPanel::editGeometry(const std::function<void(pfx::Settings&)>& change, const QString& label)
+{
+    change(m_settings);
+    if (const AdjustSlider* s = slider(u"geometry.angle"_s); s != nullptr && !s->isChanged()) {
+        m_settings.erase("geometry.angle");
+    }
+    refreshGroups();
+    Q_EMIT settingsChanged(m_settings);
+    if (!label.isEmpty()) {
+        Q_EMIT editFinished(label);
+    }
 }
 
 void AdjustPanel::showMixerSlider()
@@ -756,8 +725,12 @@ void AdjustPanel::showMixer(int mode, int band)
 
 void AdjustPanel::buildCurvesGroup(QWidget* content, QVBoxLayout* groups)
 {
-    m_curvesGroup = new AdjustGroup(tr("Curves"), u"curves"_s, content);
-    auto* channels = new QWidget(m_curvesGroup);
+    auto* group = new AdjustGroup(tr("Curves"), u"curves"_s, content);
+    group->setExpanded(false);
+    for (const QString& key : curveKeys()) {
+        group->addKeys({key.toStdString()});
+    }
+    auto* channels = new QWidget(group);
     auto* channelRow = new QHBoxLayout(channels);
     channelRow->setContentsMargins(0, 4, 0, 4);
     channelRow->setSpacing(0);
@@ -776,28 +749,19 @@ void AdjustPanel::buildCurvesGroup(QWidget* content, QVBoxLayout* groups)
     }
     connect(m_curveChannels, &QButtonGroup::buttonClicked, this,
             [this](QAbstractButton* b) { showCurve(b->property("curveKey").toString()); });
-    m_curve = new CurveEditor(m_curvesGroup);
-    auto* hint = new QLabel(tr("Double-click a point to remove it"), m_curvesGroup);
+    m_curve = new CurveEditor(group);
+    auto* hint = new QLabel(tr("Double-click a point to remove it"), group);
     hint->setObjectName(u"faint"_s);
-    m_curvesGroup->addContent(channels);
-    m_curvesGroup->addContent(m_curve);
-    m_curvesGroup->addContent(hint);
+    group->addContent(channels);
+    group->addContent(m_curve);
+    group->addContent(hint);
     connect(m_curve, &CurveEditor::curveChanged, this, &AdjustPanel::curveEdited);
     connect(m_curve, &CurveEditor::editFinished, this, [this] {
         const auto* channel = m_curveChannels->checkedButton();
         Q_EMIT editFinished(m_curveKey == u"curves.rgb"_s ? tr("Curve")
                                                           : tr("%1 curve").arg(channel->text()));
     });
-    connect(m_curvesGroup->resetButton(), &QToolButton::clicked, this, [this] {
-        for (const QString& key : curveKeys()) {
-            m_settings.erase(key.toStdString());
-        }
-        m_curve->setCurve({});
-        refreshGroups();
-        Q_EMIT settingsChanged(m_settings);
-        Q_EMIT editFinished(tr("Reset Curves"));
-    });
-    groups->addWidget(m_curvesGroup);
+    addGroup(group, groups);
 }
 
 void AdjustPanel::showCurve(const QString& key)
@@ -852,10 +816,15 @@ void AdjustPanel::setSettings(const pfx::Settings& settings)
     for (AdjustSlider* s : m_sliders) {
         s->setValue(settings.number(s->key().toStdString(), s->defaultValue()));
     }
-    m_curve->setCurve(settings.curve(m_curveKey.toStdString()));
-    refreshWheels();
+    refreshControls();
     refreshGroups();
     refreshWhiteBalance();
+}
+
+void AdjustPanel::refreshControls()
+{
+    m_curve->setCurve(m_settings.curve(m_curveKey.toStdString()));
+    refreshWheels();
 }
 
 void AdjustPanel::setValue(const QString& key, double value, bool finished)
@@ -881,17 +850,8 @@ void AdjustPanel::setValue(const QString& key, double value, bool finished)
 
 void AdjustPanel::resetGroup(AdjustGroup* group)
 {
-    for (AdjustSlider* s : group->sliders()) {
-        m_settings.erase(s->key().toStdString());
-        s->setValue(s->defaultValue());
-    }
-    if (group == m_gradingGroup) {
-        for (int zone = 0; zone < 2; ++zone) {
-            m_settings.erase(gradingKey(zone, "hue"));
-            m_settings.erase(gradingKey(zone, "amount"));
-        }
-        refreshWheels();
-    }
+    group->reset(m_settings);
+    refreshControls();
     refreshGroups();
     Q_EMIT settingsChanged(m_settings);
     Q_EMIT editFinished(tr("Reset %1").arg(group->name()));
@@ -903,8 +863,7 @@ void AdjustPanel::resetAll()
     for (AdjustSlider* s : m_sliders) {
         s->setValue(s->defaultValue());
     }
-    m_curve->setCurve({});
-    refreshWheels();
+    refreshControls();
     refreshGroups();
     Q_EMIT settingsChanged(m_settings);
     Q_EMIT editFinished(tr("Reset all"));
@@ -913,14 +872,7 @@ void AdjustPanel::resetAll()
 void AdjustPanel::refreshGroups()
 {
     for (AdjustGroup* group : m_groups) {
-        const auto& sliders = group->sliders();
-        group->setChanged(
-            std::ranges::any_of(sliders, [](const AdjustSlider* s) { return s->isChanged(); }) ||
-            (group == m_gradingGroup && gradingWheelsChanged()));
-    }
-    if (m_curvesGroup != nullptr) {
-        m_curvesGroup->setChanged(std::ranges::any_of(
-            curveKeys(), [this](const QString& k) { return m_settings.contains(k.toStdString()); }));
+        group->setChanged(group->isChanged(m_settings));
     }
 }
 

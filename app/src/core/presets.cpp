@@ -248,13 +248,12 @@ std::vector<PresetEntry> PresetLibrary::entries() const
         if (e.name.isEmpty()) {
             e.name = file.completeBaseName();
         }
-        e.group = doc.value().group.empty() ? QCoreApplication::translate(kContext, "My presets")
-                                            : QString::fromStdString(doc.value().group);
+        e.group = doc.value().group.empty() ? myPresetsGroup() : QString::fromStdString(doc.value().group);
         e.path = file.absoluteFilePath();
         e.settings = doc.value().settings;
         out.push_back(std::move(e));
     }
-    const QString mine = QCoreApplication::translate(kContext, "My presets");
+    const QString mine = myPresetsGroup();
     const QString imported = QCoreApplication::translate(kContext, "Imported");
     const auto rank = [&mine, &imported](const QString& group) {
         if (group == mine) {
@@ -368,37 +367,48 @@ bool PresetLibrary::exportTo(const PresetEntry& entry, const QString& target)
     return pfx::saveDocument(doc, target.toStdString()).ok();
 }
 
+QString PresetLibrary::myPresetsGroup()
+{
+    return QCoreApplication::translate(kContext, "My presets");
+}
+
 std::vector<PresetEntry> PresetLibrary::builtIn()
 {
     const QString group = QCoreApplication::translate(kContext, "Built in");
-    const auto make = [&group](const char* name,
+    const auto make = [&group](const char* name, const char* description,
                                std::initializer_list<std::pair<const char*, double>> values) {
         PresetEntry e;
         e.name = QCoreApplication::translate(kContext, name);
+        e.description = QCoreApplication::translate(kContext, description);
         e.group = group;
         for (const auto& [key, value] : values) {
             e.settings.set(key, value);
         }
         return e;
     };
-    // Starting points made from the operations there are today (FEATURES P7); the looks of M4
-    // will give them more character.
-    PresetEntry autoEnhance = make(QT_TRANSLATE_NOOP("PresetUnits", "Auto enhance"), {});
+    PresetEntry autoEnhance = make(QT_TRANSLATE_NOOP("PresetUnits", "Auto enhance"),
+                                   QT_TRANSLATE_NOOP("PresetUnits", "Analyses each image"), {});
     autoEnhance.autoEnhance = true;
     return {
         autoEnhance,
-        make(QT_TRANSLATE_NOOP("PresetUnits", "Bright and airy"), {{"light.exposure", 0.35},
-                                                                   {"light.shadows", 35},
-                                                                   {"light.highlights", -20},
-                                                                   {"light.contrast", -10},
-                                                                   {"color.vibrance", 10},
-                                                                   {"effects.fade", 15}}),
+        make(QT_TRANSLATE_NOOP("PresetUnits", "Bright and airy"),
+             QT_TRANSLATE_NOOP("PresetUnits", "Exposure, Shadows, Pastel"),
+             {{"light.exposure", 0.35},
+              {"light.shadows", 35},
+              {"light.highlights", -20},
+              {"light.contrast", -10},
+              {"color.vibrance", 10},
+              {"effects.fade", 15}}),
         make(QT_TRANSLATE_NOOP("PresetUnits", "Punchy"),
+             QT_TRANSLATE_NOOP("PresetUnits", "Contrast, Vibrance, Clarity"),
              {{"light.contrast", 30}, {"color.vibrance", 30}, {"detail.clarity", 25}, {"light.blacks", -10}}),
-        make(QT_TRANSLATE_NOOP("PresetUnits", "Soft matte"), {{"light.contrast", -15},
-                                                              {"effects.fade", 35},
-                                                              {"color.saturation", -15},
-                                                              {"effects.grain.amount", 15}})};
+        make(QT_TRANSLATE_NOOP("PresetUnits", "High key B&W"),
+             QT_TRANSLATE_NOOP("PresetUnits", "Mono, Exposure, Whites"),
+             {{"color.saturation", -100},
+              {"light.exposure", 0.5},
+              {"light.whites", 30},
+              {"light.highlights", -15},
+              {"light.contrast", 10}})};
 }
 
 } // namespace pixelfx::core

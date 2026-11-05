@@ -169,14 +169,6 @@ const QString kControls = uR"(
         QListWidget::item:selected { background: {{accentSoft}}; color: {{text}}; }
         QListWidget::item:hover:!selected { background: {{hover}}; }
         QScrollArea { border: 0; background: transparent; }
-        QScrollBar:vertical { background: transparent; width: 10px; margin: 0; }
-        QScrollBar:horizontal { background: transparent; height: 10px; margin: 0; }
-        QScrollBar::handle { background: {{border}}; border-radius: 3px; margin: 2px; }
-        QScrollBar::handle:hover { background: {{track}}; }
-        QScrollBar::handle:vertical { min-height: 28px; }
-        QScrollBar::handle:horizontal { min-width: 28px; }
-        QScrollBar::add-line, QScrollBar::sub-line { width: 0; height: 0; border: 0; background: none; }
-        QScrollBar::add-page, QScrollBar::sub-page { background: none; }
         QToolTip { background: {{elevated}}; color: {{text}}; border: 1px solid {{border}}; border-radius: 6px; padding: 4px 8px; }
         QMenu::indicator { width: 14px; height: 14px; left: 6px; }
         QMenu::indicator:checked { image: url({{glyphs}}/check-muted.svg); }
@@ -188,6 +180,7 @@ const QString kControls = uR"(
         QCheckBox#switch::indicator { width: 34px; height: 20px; border: 0; border-radius: 10px; background: transparent; image: url({{glyphs}}/switch-off.svg); }
         QCheckBox#switch::indicator:checked { image: url({{glyphs}}/switch-on.svg); }
         QCheckBox#switch::indicator:disabled { image: url({{glyphs}}/switch-off.svg); }
+        QComboBox#compact { padding: 2px 24px 2px 8px; min-height: 18px; font-size: 12px; }
         QToolButton#iconButton { border: 1px solid {{border}}; border-radius: 7px; background: {{panel}}; padding: 4px; }
         QToolButton#iconButton:hover { background: {{hover}}; }
         QToolButton#iconButton:checked { background: {{accentSoft}}; border-color: transparent; }
@@ -322,6 +315,15 @@ public:
             return 1;
         }
         return QProxyStyle::styleHint(hint, option, widget, returnData);
+    }
+
+    // Scroll bars lie over the scrolled content instead of taking width from it.
+    int pixelMetric(PixelMetric metric, const QStyleOption* option, const QWidget* widget) const override
+    {
+        if (metric == PM_ScrollView_ScrollBarOverlap) {
+            return QProxyStyle::pixelMetric(PM_ScrollBarExtent, option, widget);
+        }
+        return QProxyStyle::pixelMetric(metric, option, widget);
     }
 };
 

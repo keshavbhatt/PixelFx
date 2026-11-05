@@ -106,7 +106,7 @@ preview and export use resolution-independent parameters so they match (v1 defec
 | P4 | `.pfxpreset` JSON format, versioned, documented in `DOCS/presets.md`, readable by the library and the CLI | none | KEEP | done: `.pfxpreset` read and written through libpixelfx; presets hold whole units so they stack (`core::presets`) |
 | P5 | Import Lightroom / Camera Raw `.xmp` presets: map the settings PixelFx has, report what was skipped. A headline feature: "use your Lightroom presets without a subscription" (owner, 2026-11-04) | none | KEEP | wip: `.xmp` import in the library (`pfx::importXmpPreset`) and the Presets panel, with the list of what was left out; checked on hand-made presets, real Lightroom exports to be tried |
 | P6 | Import darktable styles | none | LATER | |
-| P7 | Built-in presets including "Auto enhance" (per-image analysis) | none | KEEP | wip: Auto enhance, Bright and airy, Punchy, Soft matte from the operations there are; more with looks |
+| P7 | Built-in presets including "Auto enhance" (per-image analysis) | none | KEEP | wip: Auto enhance, Bright and airy, Punchy, High key B&W, each with a line saying what it does |
 
 ## F. Crop and geometry
 

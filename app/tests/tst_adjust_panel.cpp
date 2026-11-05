@@ -4,6 +4,7 @@
 #include "ui/style.h"
 
 #include <QApplication>
+#include <QPushButton>
 #include <QSignalSpy>
 #include <QSlider>
 #include <QTest>
@@ -211,6 +212,69 @@ private Q_SLOTS:
         QVERIFY(!panel.settings().contains("grading.shadows.amount"));
         QVERIFY(!panel.settings().contains("grading.balance"));
         QCOMPARE(panel.gradingWheel(0)->amount(), 0.0);
+    }
+
+    void geometryTurnsFlipsStraightensAndResets()
+    {
+        AdjustPanel panel;
+        QSignalSpy finished(&panel, &AdjustPanel::editFinished);
+        QSignalSpy crop(&panel, &AdjustPanel::cropRequested);
+        QToolButton* rotateRight = nullptr;
+        QToolButton* flip = nullptr;
+        for (auto* b : panel.findChildren<QToolButton*>(u"iconButton"_s)) {
+            if (b->accessibleName() == u"Rotate right"_s) {
+                rotateRight = b;
+            } else if (b->accessibleName() == u"Flip horizontal"_s) {
+                flip = b;
+            }
+        }
+        QVERIFY(rotateRight != nullptr && flip != nullptr);
+        rotateRight->click();
+        flip->click();
+        QCOMPARE(panel.settings().number("geometry.rotate90", 0), 1.0);
+        QVERIFY(panel.settings().boolean("geometry.flipH", false) ||
+                panel.settings().boolean("geometry.flipV", false));
+        QCOMPARE(finished.count(), 2);
+        panel.slider(u"geometry.angle"_s)->findChild<QSlider*>()->setValue(30); // tenths at most
+        QVERIFY(panel.settings().contains("geometry.angle"));
+        QToolButton* reset = nullptr;
+        for (auto* b : panel.findChildren<QToolButton*>(u"groupReset"_s)) {
+            if (b->accessibleName() == u"Reset Geometry"_s) {
+                reset = b;
+            }
+        }
+        QVERIFY(reset != nullptr && !reset->isHidden());
+        reset->click();
+        for (const char* key : {"geometry.rotate90", "geometry.flipH", "geometry.flipV", "geometry.angle"}) {
+            QVERIFY2(!panel.settings().contains(key), key);
+        }
+        QVERIFY(reset->isHidden());
+        for (auto* b : panel.findChildren<QPushButton*>(u"link"_s)) {
+            if (b->text() == u"Crop and perspective"_s) {
+                b->click();
+            }
+        }
+        QCOMPARE(crop.count(), 1);
+    }
+
+    void everyGroupResetsTheKeysItOwns()
+    {
+        AdjustPanel panel;
+        pfx::Settings s;
+        s.set("curves.rgb", pfx::Curve{{0, 0}, {0.5, 0.6}, {1, 1}});
+        s.set("light.contrast", 20.0);
+        panel.setSettings(s);
+        QToolButton* resetCurves = nullptr;
+        for (auto* b : panel.findChildren<QToolButton*>(u"groupReset"_s)) {
+            if (b->accessibleName() == u"Reset Curves"_s) {
+                resetCurves = b;
+            }
+        }
+        QVERIFY(resetCurves != nullptr && !resetCurves->isHidden());
+        resetCurves->click();
+        QVERIFY(!panel.settings().contains("curves.rgb"));
+        QCOMPARE(panel.settings().number("light.contrast", 0), 20.0); // other groups untouched
+        QVERIFY(panel.curveEditor()->isIdentity());
     }
 
     void setSettingsDoesNotEmit()

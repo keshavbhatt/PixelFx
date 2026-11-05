@@ -13,7 +13,7 @@ FlowLayout::FlowLayout(QWidget* parent, int spacing)
 
 FlowLayout::~FlowLayout()
 {
-    while (QLayoutItem* item = takeAt(0)) {
+    while (const QLayoutItem* item = takeAt(0)) {
         delete item;
     }
 }

@@ -168,6 +168,15 @@ MainWindow::MainWindow(core::Settings& settings, QWidget* parent)
     updateHeader();
 }
 
+void MainWindow::showPreview(const QImage& image)
+{
+    if (isHealing()) {
+        showHealImage(image);
+    } else if (!m_showingOriginal) {
+        m_canvas->setImage(image, m_document.displaySize());
+    }
+}
+
 void MainWindow::connectDocument()
 {
     connect(&m_document, &services::Document::openStarted, this, [this](const QString& path) {
@@ -181,13 +190,7 @@ void MainWindow::connectDocument()
     connect(&m_document, &services::Document::opened, this, &MainWindow::showOpened);
     connect(&m_document, &services::Document::opened, this,
             [this] { m_canvas->setImage(m_document.preview(), m_document.displaySize()); });
-    connect(&m_document, &services::Document::previewReady, this, [this](const QImage& image) {
-        if (isHealing()) {
-            showHealImage(image);
-        } else if (!m_showingOriginal) {
-            m_canvas->setImage(image, m_document.displaySize());
-        }
-    });
+    connect(&m_document, &services::Document::previewReady, this, &MainWindow::showPreview);
     connect(&m_document, &services::Document::originalReady, this, [this](const QImage& image) {
         m_canvas->setOriginal(image);
         if (m_showingOriginal) {
@@ -201,6 +204,7 @@ void MainWindow::connectDocument()
     connect(m_adjust, &AdjustPanel::settingsChanged, &m_document, &services::Document::setSettings);
     connect(m_adjust, &AdjustPanel::editFinished, &m_document, &services::Document::commit);
     connect(m_adjust, &AdjustPanel::autoRequested, &m_document, &services::Document::autoAdjust);
+    connect(m_adjust, &AdjustPanel::cropRequested, this, &MainWindow::enterCrop);
     connect(&m_exporter, &services::Exporter::finished, this, [this](const QString& target) {
         ++m_exportSaved;
         if (m_exportTotal <= 1) {
@@ -413,9 +417,12 @@ void MainWindow::buildHeader()
     m_docMeta->setObjectName(u"docMeta"_s);
     auto* doc = new QVBoxLayout;
     doc->setSpacing(0);
+    doc->addStretch();
     doc->addWidget(m_docName);
     doc->addWidget(m_docMeta);
+    doc->addStretch();
     buildEditButtons();
+    buildBatchHeaderButtons();
     m_menuButton = headerButton(m_header, u"menu"_s, tr("Main menu (F10)"));
     m_menuButton->setPopupMode(QToolButton::InstantPopup);
 
@@ -428,13 +435,6 @@ void MainWindow::buildHeader()
     };
     QWidget* sepHistory = separator();
     QWidget* sepView = separator();
-    // Batch's own: Add photos and Add folder.
-    auto* addPhotos = new QPushButton(icons::themed(u"plus"_s, tokens().text), tr("Add photos"), m_header);
-    auto* addFolder = new QPushButton(icons::themed(u"folder"_s, tokens().text), tr("Add folder"), m_header);
-    addFolder->setToolTip(tr("Every photo in a folder, subfolders included"));
-    connect(addPhotos, &QPushButton::clicked, this, [this] { m_batch->chooseFiles(); });
-    connect(addFolder, &QPushButton::clicked, this, [this] { m_batch->chooseFolder(); });
-    m_batchHeader = {addPhotos, addFolder};
     auto* header = new QHBoxLayout(m_header);
     header->setContentsMargins(12, 0, 10, 0);
     header->setSpacing(6);
@@ -455,10 +455,21 @@ void MainWindow::buildHeader()
     header->addWidget(m_original);
     header->addWidget(sepView);
     header->addWidget(m_export);
-    header->addWidget(addPhotos);
-    header->addWidget(addFolder);
+    for (QWidget* w : std::as_const(m_batchHeader)) {
+        header->addWidget(w);
+    }
     header->addWidget(m_menuButton);
     m_editHeader = {open, m_undo, m_redo, m_history, sepHistory, m_compare, m_original, sepView, m_export};
+}
+
+void MainWindow::buildBatchHeaderButtons()
+{
+    auto* addPhotos = new QPushButton(icons::themed(u"plus"_s, tokens().text), tr("Add photos"), m_header);
+    auto* addFolder = new QPushButton(icons::themed(u"folder"_s, tokens().text), tr("Add folder"), m_header);
+    addFolder->setToolTip(tr("Every photo in a folder, subfolders included"));
+    connect(addPhotos, &QPushButton::clicked, this, [this] { m_batch->chooseFiles(); });
+    connect(addFolder, &QPushButton::clicked, this, [this] { m_batch->chooseFolder(); });
+    m_batchHeader = {addPhotos, addFolder};
     for (QWidget* w : std::as_const(m_batchHeader)) {
         w->hide();
     }
@@ -1068,6 +1079,13 @@ QString MainWindow::ImportTally::summary(int files) const
 void MainWindow::connectPresetActions()
 {
     connect(m_presets, &PresetsPanel::importRequested, this, &MainWindow::importPresets);
+    connect(m_presets, &PresetsPanel::duplicateRequested, this, [this](const core::PresetEntry& e) {
+        const QString group = e.isBuiltIn() ? core::PresetLibrary::myPresetsGroup() : e.group;
+        if (m_library.save(tr("%1 copy").arg(e.name), group, e.settings).isEmpty()) {
+            showToast(tr("The preset could not be copied."));
+        }
+        refreshPresets();
+    });
     connect(m_presets, &PresetsPanel::renameRequested, this, [this](const core::PresetEntry& e) {
         bool ok = false;
         const QString name =
