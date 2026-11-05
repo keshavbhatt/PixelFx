@@ -31,6 +31,7 @@
 #include <QTimer>
 #include <QToolButton>
 
+#include <algorithm>
 #include <cmath>
 #include <numbers>
 #include <pfx/io.h>
@@ -194,6 +195,18 @@ private Q_SLOTS:
             window.enterCrop();
             QVERIFY(!window.isColorTargeting());
             window.leaveCrop(false);
+            // A hover preview names the photo only once its picture is on it.
+            const auto& shown = window.presetsPanel()->entries();
+            const auto crisp =
+                std::find_if(shown.begin(), shown.end(), [](const auto& e) { return e.name == u"Crisp"_s; });
+            QVERIFY(crisp != shown.end());
+            Q_EMIT window.presetsPanel()->previewRequested(&*crisp);
+            QVERIFY(window.canvas()->previewName().isEmpty());
+            QCOMPARE(window.document().hoverState(), pixelfx::services::Document::HoverState::Preparing);
+            QVERIFY(ready.wait(10000));
+            QCOMPARE(window.canvas()->previewName(), u"Crisp"_s);
+            Q_EMIT window.presetsPanel()->previewRequested(nullptr);
+            QVERIFY(window.canvas()->previewName().isEmpty());
             QFile::remove(presetPath);
             window.document().apply({}, u"Clear"_s);
         }

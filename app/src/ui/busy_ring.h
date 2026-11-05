@@ -7,8 +7,7 @@ class QTimer;
 namespace pixelfx::ui {
 
 /// A small turning ring for work that does not say how far it is (the full-size picture
-/// loading). Turns only while shown; stands still, three quarters drawn, when the desktop asks
-/// for no animation (animationsWanted).
+/// loading, a preview being prepared). Turns only while shown.
 class BusyRing : public QWidget
 {
     Q_OBJECT

@@ -86,9 +86,6 @@ void applyStyle(QApplication& app);
 /// keyboard (Tab, a shortcut), not from a click. Style sheet rules match the same with
 /// [focusVisible="true"].
 [[nodiscard]] bool showsFocusRing(const QWidget* widget);
-/// Whether the desktop wants animations. Qt has no "reduced motion" setting; the desktop's
-/// animation switch (KDE's instant animation speed, for one) reaches it as UI effects off.
-[[nodiscard]] bool animationsWanted();
 
 /// Lays out a sheet: the returned layout is the padded body
 /// (title row first), and `foot`, the buttons, sits on a bar with a top border, edge to edge.

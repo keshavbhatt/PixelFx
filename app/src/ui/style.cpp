@@ -522,11 +522,6 @@ protected:
 
 } // namespace
 
-bool animationsWanted()
-{
-    return QApplication::isEffectEnabled(Qt::UI_General);
-}
-
 bool showsFocusRing(const QWidget* widget)
 {
     return widget->hasFocus() && widget->property("focusVisible").toBool();

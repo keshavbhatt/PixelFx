@@ -32,9 +32,7 @@ BusyRing::~BusyRing() = default;
 void BusyRing::showEvent(QShowEvent* event)
 {
     QWidget::showEvent(event);
-    if (animationsWanted()) {
-        m_timer->start();
-    }
+    m_timer->start();
 }
 
 void BusyRing::hideEvent(QHideEvent* event)
@@ -51,11 +49,10 @@ void BusyRing::paintEvent(QPaintEvent* /*event*/)
     const QRectF r = QRectF(rect()).adjusted(kPen / 2, kPen / 2, -kPen / 2, -kPen / 2);
     p.setPen(QPen(t.border, kPen));
     p.drawEllipse(r);
-    // A quarter arc turning; three quarters still when there is no animation.
-    const bool still = !animationsWanted();
+    // A quarter arc turning.
     p.setPen(QPen(t.text, kPen, Qt::SolidLine, Qt::RoundCap));
     constexpr int kSixteenths = 16; // QPainter angles are in 1/16 of a degree
-    p.drawArc(r, (90 - m_angle) * kSixteenths, (still ? -270 : -90) * kSixteenths);
+    p.drawArc(r, (90 - m_angle) * kSixteenths, -90 * kSixteenths);
 }
 
 } // namespace pixelfx::ui

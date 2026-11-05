@@ -7,7 +7,6 @@
 .spin { width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--border); border-top-color: var(--text); animation: turn 0.9s linear infinite; box-sizing: border-box; }
 .spin.still { animation: none; border-color: var(--border); border-top-color: var(--text); border-right-color: var(--text); }
 @keyframes turn { to { transform: rotate(360deg); } }
-@media (prefers-reduced-motion: reduce) { .spin { animation: none; } }
 .zoomed { position: absolute; inset: 0; overflow: hidden; }
 .zoomed img { position: absolute; width: 260%; left: -70%; top: -55%; filter: blur(3px); }
 .sbox { border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; display: flex; flex-direction: column; gap: 14px; }
@@ -46,7 +45,7 @@
 <ol class="notes">
 <li><b>While the sharp picture is made</b> (1) a small chip at the zoom bar's right says so, beside the zoom it was asked by, without moving the bar's buttons: a ring turning and "Loading" the first time the photo is read at full size, "Updating" when an edit is redrawn. Until then the photo shows the preview enlarged, soft, as now.</li>
 <li>It shows only once the wait passes 0.3 s, so a quick render shows nothing, and goes the moment the sharp picture is on show. The full-screen viewer's zoom bar does the same.</li>
-<li>With reduced motion the ring stands still (3/4 drawn); the word carries the meaning either way.</li>
+<li>The ring always turns (owner, 2026-11-05); the word carries the meaning.</li>
 <li><b>A slow preview</b> (4): when a preset or a look has been rested on long enough but its picture takes more than 0.3 s to make, the chip says "Preparing preview", zoomed in or not. The Preview tag and the line come only with the previewed picture, never on the edit; moving to another tile drops the render on the way and waits for the new one.</li>
 </ol>
 </body></html>

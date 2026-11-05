@@ -36,7 +36,8 @@ beside the zoom bar, there only while the wait is long enough to see.
 ## Accessibility
 
 - The chip is a status: screen readers hear "Loading full size" or "Updating" once, politely.
-- Reduced motion: the ring stands still, three quarters drawn; nothing else depends on motion.
+- The ring always turns, whatever the desktop's animation setting (owner, 2026-11-05): it is
+  small and slow (one turn in 0.9 s), and the word carries the meaning on its own.
 - It never takes focus and is never a target.
 
 ## Remove one thing

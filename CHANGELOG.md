@@ -80,4 +80,5 @@ A new editor, a new image engine, and a new look.
 - Copy a photo's settings and paste them onto another (Ctrl+Shift+C, Ctrl+Shift+V); each
   photo keeps its own crop.
 - Zoom in to check detail: the scroll wheel, the zoom bar, Ctrl+0 to fit and Ctrl+1 for 100%,
-  drag to look around. At 100% and beyond the photo is shown at its full resolution.
+  drag to look around. At 100% and beyond the photo is shown at its full resolution, and a
+  small sign beside the zoom bar says when the sharp picture or a preview is still being made.

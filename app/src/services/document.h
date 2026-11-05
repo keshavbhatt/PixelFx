@@ -54,6 +54,15 @@ public:
     /// Shows `settings` on the photo without changing anything (hovering a preset); nullopt
     /// goes back to the photo's own settings.
     void setHoverSettings(const std::optional<pfx::Settings>& settings);
+    /// Where a hover preview is: none, asked for but its picture still being made, or on the
+    /// photo (previewReady has delivered it).
+    enum class HoverState
+    {
+        Off,
+        Preparing,
+        Shown,
+    };
+    [[nodiscard]] HoverState hoverState() const { return m_hoverState; }
     /// The photo at thumbnail size (about 120 px), for preset pictures; null until open.
     [[nodiscard]] std::shared_ptr<const pfx::Image> thumbnailSource() const { return m_thumbnailSource; }
     /// The decoded photo at preview size, before any settings (the look editor's preview).
@@ -145,6 +154,7 @@ Q_SIGNALS:
     void fullReady(const QImage& image);
     void fullStale();
     void fullStateChanged(pixelfx::services::Document::FullState state);
+    void hoverStateChanged(pixelfx::services::Document::HoverState state);
     /// The settings changed from outside the editing controls (open, undo, redo).
     void settingsReplaced(const pfx::Settings& settings);
     void historyChanged();
@@ -181,6 +191,12 @@ private:
     bool m_healEditing = false;
     bool m_openAsLeft = true;
     std::optional<pfx::Settings> m_hover;
+    HoverState m_hoverState = HoverState::Off;
+    // Set when a hover preview starts or ends: until the render of the settings now wanted
+    // arrives, renders made for earlier settings are dropped, so the photo never shows a
+    // preview the pointer has left.
+    bool m_previewExact = false;
+    void setHoverState(HoverState state);
     std::shared_ptr<const pfx::Image> m_thumbnailSource;
     bool m_fullOn = false;
     QImage m_full;

@@ -31,6 +31,7 @@
 | `editor-collapse-all.html` | 2026-11-05 (`mocks/reviews/editor-collapse-all.md`) | approved 2026-11-05 |
 | `editor-zoom-loading.html` | 2026-11-05 (`mocks/reviews/editor-zoom-loading.md`) | approved 2026-11-05 |
 | `editor-looks-preview.html` | 2026-11-05 (`mocks/reviews/editor-looks-preview.md`) | approved 2026-11-05 |
+| `editor-zoom-loading.html`, slow preview | 2026-11-05 (same review, "Slow preview") | approved 2026-11-05 (the ring always turns) |
 | `editor-presets-catalog.html`, hover preview | 2026-11-05 (same review, "Hover preview, reworked") | approved 2026-11-05 |
 
 ## Waiting for the owner (2026-11-05)
@@ -71,6 +72,17 @@ Decisions the work stopped at; everything else went ahead within the approved mo
 
 ## Sessions (newest first)
 
+### 2026-11-05 (a slow preview)
+
+- The approved slow preview of `editor-zoom-loading.html`: the Preview tag and the line come
+  with the previewed picture, not when it is asked for, so the photo never claims a preview it
+  does not show yet. `Document::HoverState` (Off, Preparing, Shown) reports it; past 0.3 s the
+  chip says "Preparing preview", zoomed in or not, then "Updating" while the sharp picture of the
+  preview renders. A render made for a tile already left is dropped, and so is one for a preview
+  already ended.
+- Owner: the ring always turns. `BusyRing` no longer stands still when the desktop turns
+  animations off, and `animationsWanted` went with it (nothing else used it).
+
 ### 2026-11-05 (Looks, hover preview)
 
 - The approved `editor-looks-preview.html`: resting on a look previews it as presets do (the look
@@ -85,8 +97,8 @@ Decisions the work stopped at; everything else went ahead within the approved mo
 - The approved `editor-zoom-loading.html`: zoomed in past the preview, a chip beside the zoom bar
   says "Loading" while the photo is read at full size and "Updating" while an edit is redrawn,
   once the wait passes 0.3 s; the bar itself never moves. `Document::FullState` reports where the
-  full-size picture is; `BusyRing` turns, and stands still when the desktop wants no animation
-  (`animationsWanted`); screen readers hear it as an announcement. The full-screen viewer shows
+  full-size picture is; `BusyRing` turns (it stood still when the desktop wanted no animation until the
+  owner asked for it always on, below); screen readers hear it as an announcement. The full-screen viewer shows
   the chip when going to the next photo.
 - Owner's finding: zoomed in, a preset's preview did not show (only the small preview and the
   histogram changed, the sharp picture of the edit stayed on top). A preview now comes after a

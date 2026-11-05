@@ -278,6 +278,39 @@ private Q_SLOTS:
         QCOMPARE(doc.fullState(), Document::FullState::Off);
     }
 
+    void aHoverPreviewIsShownOnlyWithItsOwnPicture()
+    {
+        QTemporaryDir dir;
+        const QString path = writePhoto(dir, u"photo.png"_s, 400, 300);
+        Document doc;
+        QSignalSpy ready(&doc, &Document::previewReady);
+        doc.open(path, 300);
+        QVERIFY(ready.wait(10000));
+        const auto lightness = [&doc] { return qGray(doc.preview().pixel(150, 110)); };
+        const int edit = lightness();
+        pfx::Settings dark;
+        dark.set("light.exposure", -3.0);
+        pfx::Settings bright;
+        bright.set("light.exposure", 3.0);
+        // Moving on before the first tile's picture is made: only the last one reaches the photo.
+        ready.clear();
+        doc.setHoverSettings(dark);
+        QCOMPARE(doc.hoverState(), Document::HoverState::Preparing);
+        doc.setHoverSettings(bright);
+        QTRY_COMPARE_WITH_TIMEOUT(doc.hoverState(), Document::HoverState::Shown, 10000);
+        QCOMPARE(ready.count(), 1);
+        QVERIFY(lightness() > edit);
+        // Ending it before its picture is made: the photo goes straight back to the edit.
+        doc.setHoverSettings(dark);
+        doc.setHoverSettings(std::nullopt);
+        QCOMPARE(doc.hoverState(), Document::HoverState::Off);
+        ready.clear();
+        QVERIFY(ready.wait(10000));
+        QTest::qWait(200); // nothing later replaces it
+        QCOMPARE(ready.count(), 1);
+        QCOMPARE(lightness(), edit);
+    }
+
     void whiteBalancePickerNeutralisesTheCast()
     {
         QTemporaryDir dir;

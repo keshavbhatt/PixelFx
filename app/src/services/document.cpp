@@ -62,11 +62,18 @@ Document::Document(QObject* parent)
     m_saveTimer->setInterval(400);
     connect(m_saveTimer, &QTimer::timeout, this, [this] { saveNow(false); });
     connect(m_scheduler, &RenderScheduler::rendered, this,
-            [this](const QImage& image, const pfx::Settings&, const core::Histogram& histogram) {
+            [this](const QImage& image, const pfx::Settings& settings, const core::Histogram& histogram) {
+                if (m_previewExact && settings != renderSettings()) {
+                    return;
+                }
+                m_previewExact = false;
                 m_preview = image;
                 m_histogram = histogram;
                 Q_EMIT previewReady(m_preview);
                 Q_EMIT histogramReady(m_histogram);
+                if (m_hover) {
+                    setHoverState(HoverState::Shown);
+                }
             });
     connect(m_originalScheduler, &RenderScheduler::rendered, this,
             [this](const QImage& image, const pfx::Settings& settings, const core::Histogram&) {
@@ -240,6 +247,8 @@ void Document::deliver(const Result& result)
     m_beforeMixer = {}; // a new photo: colorBeforeMixer renders again
     m_scheduler->setSource(result.source);
     m_hover.reset();
+    m_previewExact = false;
+    setHoverState(HoverState::Off);
     if (auto small = pfx::fitLongEdge(*result.source, 120)) {
         m_thumbnailSource = std::make_shared<const pfx::Image>(std::move(small).value());
     }
@@ -291,6 +300,8 @@ void Document::setHoverSettings(const std::optional<pfx::Settings>& settings)
         return;
     }
     m_hover = settings;
+    m_previewExact = true;
+    setHoverState(m_hover ? HoverState::Preparing : HoverState::Off);
     // A preview comes after a deliberate wait on its tile, so zoomed in it is drawn at full size
     // too; when it ends, the edit's own full-size picture comes straight back if it still holds.
     if (!m_hover && m_fullOn && !m_fullOfEdit.isNull() && m_fullOfEditSettings == renderSettings()) {
@@ -302,6 +313,14 @@ void Document::setHoverSettings(const std::optional<pfx::Settings>& settings)
         return;
     }
     requestRender();
+}
+
+void Document::setHoverState(HoverState state)
+{
+    if (state != m_hoverState) {
+        m_hoverState = state;
+        Q_EMIT hoverStateChanged(state);
+    }
 }
 
 void Document::setFullState(FullState state)

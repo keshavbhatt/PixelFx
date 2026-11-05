@@ -1464,8 +1464,32 @@ void MainWindow::previewOnPhoto(const QString& name, const std::optional<pfx::Se
 {
     const bool show = settings.has_value() && m_document.isOpen() && !isInTool() && !isColorTargeting();
     m_endPreview->setEnabled(show);
-    m_canvas->setPreviewName(show ? name : QString());
+    m_previewName = show ? name : QString();
     m_document.setHoverSettings(show ? settings : std::nullopt);
+    if (m_document.hoverState() == services::Document::HoverState::Shown) {
+        m_canvas->setPreviewName(m_previewName); // another tile with the same settings
+    }
+}
+
+void MainWindow::refreshBusy()
+{
+    using Full = services::Document::FullState;
+    if (m_document.hoverState() == services::Document::HoverState::Preparing) {
+        m_canvas->setBusy(tr("Preparing preview"));
+        return;
+    }
+    switch (m_document.fullState()) {
+    case Full::Loading:
+        m_canvas->setBusy(tr("Loading"));
+        break;
+    case Full::Updating:
+        m_canvas->setBusy(tr("Updating"));
+        break;
+    case Full::Off:
+    case Full::Ready:
+        m_canvas->setBusy(QString());
+        break;
+    }
 }
 
 void MainWindow::applyPreset(const core::PresetEntry& entry)
@@ -1612,12 +1636,16 @@ void MainWindow::connectZoom()
     });
     connect(&m_document, &services::Document::fullReady, m_canvas, &Canvas::setDetail);
     connect(&m_document, &services::Document::fullStale, this, [this] { m_canvas->setDetail(QImage()); });
-    connect(&m_document, &services::Document::fullStateChanged, this,
-            [this](services::Document::FullState state) {
-                using State = services::Document::FullState;
-                m_canvas->setBusy(state == State::Loading    ? tr("Loading")
-                                  : state == State::Updating ? tr("Updating")
-                                                             : QString());
+    connect(&m_document, &services::Document::fullStateChanged, this, &MainWindow::refreshBusy);
+    connect(&m_document, &services::Document::hoverStateChanged, this,
+            [this](services::Document::HoverState state) {
+                // While the next preview is prepared the photo still shows the last one, so its
+                // name stays until the new picture replaces it.
+                using Hover = services::Document::HoverState;
+                if (state != Hover::Preparing) {
+                    m_canvas->setPreviewName(state == Hover::Shown ? m_previewName : QString());
+                }
+                refreshBusy();
             });
     connect(m_canvas, &Canvas::fullScreenRequested, this,
             [this] { isFullScreen() ? showNormal() : showFullScreen(); });
