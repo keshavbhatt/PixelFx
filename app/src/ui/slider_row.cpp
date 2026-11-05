@@ -159,6 +159,9 @@ std::optional<int> SliderRow::parse(const QString& typed) const
     if (!ok) {
         value = QLocale::c().toDouble(number, &ok);
     }
+    if (m_typedUnit && ok) {
+        value = m_typedUnit(value);
+    }
     if (!ok || !std::isfinite(value)) {
         return std::nullopt;
     }

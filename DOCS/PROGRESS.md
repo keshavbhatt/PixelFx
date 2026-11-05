@@ -72,6 +72,25 @@ Decisions the work stopped at; everything else went ahead within the approved mo
 
 ## Sessions (newest first)
 
+### 2026-11-06 (Camera RAW)
+
+- The approved `editor-raw.html`, built (ADR-012). libpixelfx reads linear DNG itself (the owner's
+  Galaxy S22 Ultra file: DNG 1.7, one JPEG XL strip of 4000 by 3000, decoded by libvips in 0.3 s),
+  through the DNG default rendering: levels, colour and forward matrices with calibration
+  interpolated for the white, the as-shot neutral, baseline exposure, crop and orientation, the
+  profile gain table map for Camera (flat in that file); a clean Exif carries the camera. Other
+  RAWs go to LibRaw as before. `color.profile` gained `camera`: presets version 3, recipes and
+  batch recipes version 4 (presets.md, tests).
+- The app: a RAW shows its JPEG at once with "Developing RAW", opens on Camera, develops again when
+  the profile leaves or returns to Camera (the file's tone), shows Temperature in Kelvin around its
+  as-shot white with Daylight to Flash; thumbnails of unedited RAWs use the JPEG inside; export
+  develops with the right tone; a RAW that cannot be read offers "Open its preview instead".
+- Changed while building: Kelvin's reach is the engine's (as-shot white halved to doubled), see
+  `reviews/editor-raw.md`.
+- Checks: 148 library tests (a written DNG, uncompressed and JPEG XL: levels, colour, exposure,
+  orientation, Exif, the gain table map; a RAW's preview), 38 app suites (`tst_raw`), the linters;
+  the owner's DNG (a copy in the scratchpad) opened headless while developing and after.
+
 ### 2026-11-06 (batch notification)
 
 - FEATURES S6 on Linux (ADR-011, owner's approval of Qt D-Bus): `services::Notifier` notifies

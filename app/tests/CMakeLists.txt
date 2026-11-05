@@ -54,6 +54,7 @@ target_compile_definitions(tst_about_sheet PRIVATE PIXELFX_VERSION="${PROJECT_VE
 pixelfx_add_test(tst_batch_resources tst_batch_resources.cpp pixelfx_ui GUI)
 pixelfx_add_test(tst_batch_compress  tst_batch_compress.cpp  pixelfx_ui GUI)
 pixelfx_add_test(tst_theme           tst_theme.cpp           pixelfx_ui GUI)
+pixelfx_add_test(tst_raw             tst_raw.cpp             pixelfx_services GUI)
 pixelfx_add_test(tst_heal            tst_heal.cpp            pixelfx_ui GUI)
 pixelfx_add_test(tst_smoke           tst_smoke.cpp           pixelfx_ui GUI)
 pixelfx_add_test(tst_instance        tst_instance.cpp        pixelfx_core GUI)

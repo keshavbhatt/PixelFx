@@ -32,7 +32,9 @@ struct DocumentInfo
     int bitsPerSample = 8;
     QString camera; ///< "Canon EOS R5", empty when the photo does not say
     QString lens;
-    QString exposure; ///< "ISO 100 · f/8 · 1/250 s · 24 mm"
+    QString exposure;     ///< "ISO 100 · f/8 · 1/250 s · 24 mm"
+    bool raw = false;     ///< a camera RAW file
+    int asShotKelvin = 0; ///< a RAW's as-shot white balance, when it says (DNG)
 };
 
 /// One open photo (PLAN section 6): its decoded preview-size source, its settings and their
@@ -51,6 +53,10 @@ public:
     void setSidecarFolder(const QString& folder);
     /// Whether a photo opens with its remembered edits (true) or as the original.
     void setOpenAsLeft(bool on) { m_openAsLeft = on; }
+    /// Opens the JPEG preview inside a RAW file instead of developing it (editor-raw.html).
+    void openPreview(const QString& path, int previewLongEdge);
+    /// A RAW is being developed: its preview shows meanwhile.
+    [[nodiscard]] bool isDeveloping() const { return m_developing; }
     /// Shows `settings` on the photo without changing anything (hovering a preset); nullopt
     /// goes back to the photo's own settings.
     void setHoverSettings(const std::optional<pfx::Settings>& settings);
@@ -154,6 +160,9 @@ Q_SIGNALS:
     void fullReady(const QImage& image);
     void fullStale();
     void fullStateChanged(pixelfx::services::Document::FullState state);
+    /// A RAW's embedded JPEG, shown while the RAW itself is developed.
+    void earlyPreview(const QImage& image, const QSize& size);
+    void developingChanged(bool developing);
     void hoverStateChanged(pixelfx::services::Document::HoverState state);
     /// The settings changed from outside the editing controls (open, undo, redo).
     void settingsReplaced(const pfx::Settings& settings);
@@ -174,6 +183,9 @@ private:
     /// Renders the original again when the geometry it needs changed.
     void refreshOriginal();
     void scheduleFull();
+    /// Develops a RAW again when the profile moves between Camera (the file's tone) and the rest.
+    void followRawTone();
+    void setDeveloping(bool on);
     void saveNow(bool wait);
 
     DocumentInfo m_info;
@@ -191,6 +203,10 @@ private:
     bool m_healEditing = false;
     bool m_openAsLeft = true;
     std::optional<pfx::Settings> m_hover;
+    int m_previewLongEdge = 2048;
+    bool m_rawTone = true; ///< the source was developed with the RAW's own tone (Camera)
+    bool m_developing = false;
+    quint64 m_developGeneration = 0;
     HoverState m_hoverState = HoverState::Off;
     // Set when a hover preview starts or ends: until the render of the settings now wanted
     // arrives, renders made for earlier settings are dropped, so the photo never shows a

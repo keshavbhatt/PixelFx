@@ -6,6 +6,7 @@
 #include <QComboBox>
 #include <QHBoxLayout>
 #include <QLabel>
+#include <QListView>
 #include <QSignalBlocker>
 #include <QVBoxLayout>
 
@@ -82,6 +83,22 @@ void CheckRow::setChecked(bool on)
 {
     const QSignalBlocker block(m_box);
     m_box->setChecked(on);
+}
+
+} // namespace pixelfx::ui
+
+namespace pixelfx::ui {
+
+void ChoiceRow::setAvailable(const std::string& value, bool available)
+{
+    const auto it = std::ranges::find(m_values, value);
+    if (it == m_values.end()) {
+        return;
+    }
+    auto* view = qobject_cast<QListView*>(m_list->view());
+    if (view != nullptr) {
+        view->setRowHidden(static_cast<int>(it - m_values.begin()), !available);
+    }
 }
 
 } // namespace pixelfx::ui

@@ -25,6 +25,8 @@ public:
     [[nodiscard]] const std::string& value() const;
     /// Shows `value` (the first choice when it is not one) without emitting.
     void setValue(const std::string& value);
+    /// Offers or hides one of the choices (Camera, for RAW files only).
+    void setAvailable(const std::string& value, bool available);
     [[nodiscard]] QComboBox* list() const { return m_list; }
 
 Q_SIGNALS:

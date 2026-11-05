@@ -237,6 +237,7 @@ void Canvas::resizeEvent(QResizeEvent* event)
     QWidget::resizeEvent(event);
     clampCentre();
     updateZoomBar();
+    placeErrorAction();
 }
 
 QSizeF Canvas::zoomedSize() const
@@ -397,6 +398,9 @@ void Canvas::setImage(const QImage& image, const QSize& fullSize)
     m_fullSize = full;
     m_status.clear();
     m_error.clear();
+    if (m_errorAction != nullptr) {
+        m_errorAction->hide();
+    }
     clampCentre();
     updateZoomBar();
     update();
@@ -754,14 +758,36 @@ void Canvas::setStatus(const QString& text)
 {
     m_status = text;
     m_error.clear();
+    if (m_errorAction != nullptr) {
+        m_errorAction->hide();
+    }
     update();
 }
 
-void Canvas::setError(const QString& text)
+void Canvas::setError(const QString& text, const QString& action)
 {
     m_error = text;
     m_status.clear();
+    if (m_errorAction == nullptr && !action.isEmpty()) {
+        m_errorAction = new QPushButton(this);
+        connect(m_errorAction, &QPushButton::clicked, this, &Canvas::errorActionTriggered);
+    }
+    if (m_errorAction != nullptr) {
+        m_errorAction->setText(action);
+        m_errorAction->setVisible(!action.isEmpty());
+        placeErrorAction();
+    }
     update();
+}
+
+void Canvas::placeErrorAction()
+{
+    if (m_errorAction != nullptr && m_errorAction->isVisibleTo(this)) {
+        m_errorAction->adjustSize();
+        constexpr int kBelowText = 36;
+        m_errorAction->move((width() - m_errorAction->width()) / 2, (height() / 2) + kBelowText);
+        m_errorAction->raise();
+    }
 }
 
 QRect Canvas::fitRect() const

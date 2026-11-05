@@ -44,3 +44,18 @@ badge on every tile of a RAW folder says nothing.
 ## Questions for the owner
 
 - Kelvin for RAW white balance: approved with the mock (owner, 2026-11-06).
+
+## Changed while building (2026-11-06)
+
+- **Kelvin's range** follows the engine's white balance, which is relative: Temperature keeps its
+  -100 to +100 and reads as the as-shot white times 2 to the power of the value over 100, so a
+  photo shot at 4350 K reads 2175 to 8700 K, not 2000 to 50000 K. Widening it would change what
+  Temperature means in every saved edit; the light sources outside that reach stop at its end.
+  Tint keeps -100 to +100. Typing a Kelvin value works.
+- **Kelvin and the light sources** show only when the RAW says its as-shot white (DNG); a RAW
+  developed by LibRaw keeps the relative scale.
+- **Camera marks Color as changed** (the dot): it is the RAW's starting point, but not the
+  default of the setting. Left so: the dot says where the photo differs from the plain rendering.
+- **The owner's photo** develops darker and a little more yellow than the phone's own JPEG: the
+  phone tone-maps locally beyond what the DNG says. The Camera curve is global (ADR-012).
+

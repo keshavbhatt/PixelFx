@@ -27,6 +27,8 @@ public:
 
     void setRange(int minimum, int maximum, int defaultTicks);
     void setFormat(std::function<QString(int)> format);
+    /// A typed number is in a unit of its own (Kelvin): this turns it into the slider's unit.
+    void setTypedUnit(std::function<double(double)> toUnit) { m_typedUnit = std::move(toUnit); }
     void setTicksPerUnit(double ticks);
     [[nodiscard]] int ticks() const;
     /// Shows `ticks` without emitting.
@@ -65,6 +67,7 @@ private:
     int m_default = 0;
     std::function<QString(int)> m_format;
     double m_ticksPerUnit = 1.0;
+    std::function<double(double)> m_typedUnit;
     QSlider* m_slider;
     QLabel* m_name;
     QLabel* m_value;

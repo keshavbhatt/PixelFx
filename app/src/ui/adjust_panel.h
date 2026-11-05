@@ -53,6 +53,9 @@ public:
     /// Shows `settings` without emitting anything (open, undo, redo).
     void setSettings(const pfx::Settings& settings);
     [[nodiscard]] const pfx::Settings& settings() const { return m_settings; }
+    /// A RAW file (editor-raw.html): the Camera profile is offered, Temperature reads in Kelvin
+    /// around the as-shot white, and White balance offers the light sources.
+    void setRaw(bool raw, int asShotKelvin);
     [[nodiscard]] AdjustSlider* slider(const QString& key) const;
     [[nodiscard]] CurveEditor* curveEditor() const { return m_curve; }
     /// Shows the curve of `key` (curves.rgb, curves.r, curves.g, curves.b) in the editor.
@@ -193,6 +196,9 @@ private:
     QPushButton* m_collapseAll = nullptr;
     bool m_solo = false;
     QComboBox* m_wbMode = nullptr;
+    bool m_raw = false;
+    int m_asShotKelvin = 0;
+    void fillWhiteBalanceModes();
     QToolButton* m_picker = nullptr;
     bool m_wbAuto = false;
     CurveEditor* m_curve = nullptr;
@@ -263,7 +269,13 @@ private:
     [[nodiscard]] double fromTicks(int ticks) const;
     [[nodiscard]] QString format(int ticks) const;
 
+public:
+    /// Reads in Kelvin around `asShot` (a RAW's white balance); 0 goes back to the plain scale.
+    void setKelvin(int asShot);
+
+private:
     QString m_key;
+    int m_kelvin = 0;
     double m_default = 0.0;
     double m_scale = 1.0;   // ticks per shown unit
     double m_display = 1.0; // shown unit per setting unit

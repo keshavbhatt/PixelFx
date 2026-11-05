@@ -266,6 +266,7 @@ private:
     QAction* m_colorTargetStop = nullptr;
     QAction* m_endPreview = nullptr;
     services::Notifier* m_notifier = nullptr;
+    QString m_failedRaw; ///< a RAW that could not be developed, for Open its preview instead
     // The name of the preview asked for; the photo shows it once its picture is on the photo.
     QString m_previewName;
     class HealPanel* m_healPanel = nullptr;

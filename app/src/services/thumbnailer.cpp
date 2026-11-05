@@ -31,10 +31,6 @@ Thumbnail Thumbnailer::make(const QString& path, int longEdge, const QString& si
 {
     Thumbnail thumb{path, {}, {}};
     const QString absolute = QFileInfo(path).absoluteFilePath();
-    auto loaded = pfx::load(absolute.toStdString(), {longEdge});
-    if (!loaded) {
-        return thumb;
-    }
     pfx::Settings settings;
     if (!sidecarFolder.isEmpty()) {
         const core::SidecarStore store(sidecarFolder);
@@ -43,6 +39,15 @@ Thumbnail Thumbnailer::make(const QString& path, int longEdge, const QString& si
             settings = std::move(*stored);
             thumb.edited = QFileInfo(store.pathFor(fingerprint)).lastModified();
         }
+    }
+    // An unedited RAW shows the JPEG inside it, fast; an edited one is developed as it was edited.
+    pfx::LoadOptions options;
+    options.maxLongEdge = longEdge;
+    options.embeddedPreview = settings.isEmpty();
+    options.rawTone = settings.isEmpty() || settings.text("color.profile", "standard") == "camera";
+    auto loaded = pfx::load(absolute.toStdString(), options);
+    if (!loaded) {
+        return thumb;
     }
     const auto rendered = settings.isEmpty() ? pfx::Result<pfx::Image>(std::move(loaded).value().image)
                                              : core::renderPhoto(loaded.value().image, settings);

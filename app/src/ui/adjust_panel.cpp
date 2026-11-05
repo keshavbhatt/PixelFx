@@ -280,7 +280,7 @@ const std::vector<GroupSpec>& groupSpecs()
 QStringList choiceTexts(std::string_view key)
 {
     if (key == "color.profile") {
-        return {AdjustPanel::tr("Standard"), AdjustPanel::tr("Vivid")};
+        return {AdjustPanel::tr("Standard"), AdjustPanel::tr("Vivid"), AdjustPanel::tr("Camera")};
     }
     if (key == "effects.vignette.style") {
         return {AdjustPanel::tr("Highlight priority"), AdjustPanel::tr("Color priority"),
@@ -362,8 +362,25 @@ void AdjustSlider::setValue(double value)
     setTicks(toTicks(value));
 }
 
+void AdjustSlider::setKelvin(int asShot)
+{
+    m_kelvin = asShot;
+    // Typed Kelvin becomes the relative temperature the engine keeps.
+    setTypedUnit(asShot > 0 ? std::function<double(double)>([asShot](double kelvin) {
+        return kelvin > 0.0 ? 100.0 * std::log2(kelvin / asShot) : 0.0;
+    })
+                            : std::function<double(double)>());
+    setTicks(ticks()); // the value reads again in the new unit
+}
+
 QString AdjustSlider::format(int ticks) const
 {
+    if (m_kelvin > 0) {
+        // The light the photo is treated as lit by, around the as-shot white, to 50 K.
+        const double kelvin = m_kelvin * std::exp2(static_cast<double>(ticks) / m_scale / 100.0);
+        //: A RAW's colour temperature: "5150 K".
+        return AdjustPanel::tr("%1 K").arg(std::lround(kelvin / 50.0) * 50);
+    }
     const double v = static_cast<double>(ticks) / m_scale; // in the shown unit
     int decimals = 0;
     if (m_scale >= 100.0) {
@@ -793,7 +810,7 @@ QWidget* AdjustPanel::buildWhiteBalanceRow(QWidget* parent)
     label->setObjectName(u"adjustName"_s);
     m_wbMode = new QComboBox(row);
     m_wbMode->setObjectName(u"compact"_s);
-    m_wbMode->addItems({tr("As shot"), tr("Auto"), tr("Custom")});
+    fillWhiteBalanceModes();
     m_wbMode->setAccessibleName(tr("White balance"));
     m_wbMode->setToolTip(tr("As shot keeps the camera's colours; Auto neutralises a colour cast"));
     m_picker = new QToolButton(row);
@@ -804,15 +821,27 @@ QWidget* AdjustPanel::buildWhiteBalanceRow(QWidget* parent)
     m_picker->setAccessibleName(tr("Pick a neutral point"));
     connect(m_picker, &QToolButton::toggled, this, &AdjustPanel::whiteBalancePickRequested);
     connect(m_wbMode, &QComboBox::activated, this, [this](int index) {
-        if (index == 0) {
+        const QVariant mode = m_wbMode->itemData(index);
+        if (mode.toString() == u"asShot"_s) {
             m_settings.erase("color.wb.temperature");
             m_settings.erase("color.wb.tint");
             m_wbAuto = false;
             setSettings(m_settings);
             Q_EMIT settingsChanged(m_settings);
             Q_EMIT editFinished(tr("White balance as shot"));
-        } else if (index == 1) {
+        } else if (mode.toString() == u"auto"_s) {
             Q_EMIT whiteBalanceAutoRequested();
+        } else if (mode.typeId() == QMetaType::Int && m_asShotKelvin > 0) {
+            // A light source: its temperature relative to the as-shot white.
+            const double t = std::clamp(100.0 * std::log2(mode.toInt() / static_cast<double>(m_asShotKelvin)),
+                                        -100.0, 100.0);
+            m_settings.set("color.wb.temperature", t);
+            m_settings.erase("color.wb.tint");
+            m_wbAuto = false;
+            setSettings(m_settings);
+            Q_EMIT settingsChanged(m_settings);
+            //: A history step: a light source chosen for a RAW's white balance, "White balance Daylight".
+            Q_EMIT editFinished(tr("White balance %1").arg(m_wbMode->itemText(index)));
         } else {
             refreshWhiteBalance(); // Custom is what the sliders say; picking it changes nothing
         }
@@ -839,19 +868,71 @@ void AdjustPanel::setPicking(bool on)
     m_picker->setChecked(on);
 }
 
+void AdjustPanel::fillWhiteBalanceModes()
+{
+    const QSignalBlocker block(m_wbMode);
+    m_wbMode->clear();
+    m_wbMode->addItem(tr("As shot"), u"asShot"_s);
+    m_wbMode->addItem(tr("Auto"), u"auto"_s);
+    if (m_raw && m_asShotKelvin > 0) {
+        // The light sources of RAW files, as Lightroom offers them.
+        const std::array<std::pair<const char*, int>, 6> sources = {{{QT_TR_NOOP("Daylight"), 5500},
+                                                                     {QT_TR_NOOP("Cloudy"), 6500},
+                                                                     {QT_TR_NOOP("Shade"), 7500},
+                                                                     {QT_TR_NOOP("Tungsten"), 2850},
+                                                                     {QT_TR_NOOP("Fluorescent"), 3800},
+                                                                     {QT_TR_NOOP("Flash"), 5500}}};
+        for (const auto& [name, kelvin] : sources) {
+            m_wbMode->addItem(tr(name), kelvin);
+        }
+    }
+    m_wbMode->addItem(tr("Custom"), u"custom"_s);
+}
+
+void AdjustPanel::setRaw(bool raw, int asShotKelvin)
+{
+    m_raw = raw;
+    m_asShotKelvin = raw ? asShotKelvin : 0;
+    for (const auto& [key, row] : m_choices) {
+        if (key == u"color.profile"_s) {
+            static_cast<ChoiceRow*>(row)->setAvailable("camera", raw);
+        }
+    }
+    for (AdjustSlider* slider : m_sliders) {
+        if (slider->key() == u"color.wb.temperature"_s) {
+            slider->setKelvin(m_asShotKelvin);
+        }
+    }
+    fillWhiteBalanceModes();
+    refreshWhiteBalance();
+}
+
 void AdjustPanel::refreshWhiteBalance()
 {
     const bool asShot = !m_settings.contains("color.wb.temperature") && !m_settings.contains("color.wb.tint");
     if (asShot) {
         m_wbAuto = false;
     }
-    int index = 2; // Custom
+    QVariant mode = u"custom"_s;
     if (asShot) {
-        index = 0;
+        mode = u"asShot"_s;
     } else if (m_wbAuto) {
-        index = 1;
+        mode = u"auto"_s;
+    } else if (m_asShotKelvin > 0 && m_settings.number("color.wb.tint", 0.0) == 0.0) {
+        // A light source whose temperature the slider is at.
+        const double t = m_settings.number("color.wb.temperature", 0.0);
+        for (int i = 0; i < m_wbMode->count(); ++i) {
+            const QVariant k = m_wbMode->itemData(i);
+            if (k.typeId() == QMetaType::Int &&
+                std::abs(std::clamp(100.0 * std::log2(k.toInt() / static_cast<double>(m_asShotKelvin)),
+                                    -100.0, 100.0) -
+                         t) < 0.5) {
+                mode = k;
+                break;
+            }
+        }
     }
-    m_wbMode->setCurrentIndex(index);
+    m_wbMode->setCurrentIndex(std::max(0, m_wbMode->findData(mode)));
 }
 
 void AdjustPanel::setPasteEnabled(bool enabled)

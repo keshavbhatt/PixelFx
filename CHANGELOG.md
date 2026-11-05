@@ -39,6 +39,10 @@ A new editor, a new image engine, and a new look.
   the first names as they will be saved while you type; Batch warns when every photo would get
   the same name.
 - Choose how many photos Batch works on at once in Settings.
+- Camera RAW: open RAW files from cameras and phones, including the JPEG XL DNG of Samsung Expert
+  RAW. A RAW shows its preview at once while it develops, starts on the Camera profile so it looks
+  as it did on the camera, and gives white balance in Kelvin with Daylight, Cloudy, Shade and
+  more. A RAW PixelFx cannot read yet can be opened as the preview inside it.
 - Watermarks on export and in Batch: your name, the year or the camera, or a logo; placed in a
   corner or anywhere you drag it, or repeated across the photo for proofs. The colour can follow
   the photo, light on dark areas and dark on light ones, and the size follows the photo, so a

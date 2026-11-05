@@ -106,6 +106,15 @@ PreparedExport prepareExport(const QString& source,
     }
     out.metadata = std::move(loaded.value().metadata);
     const pfx::Settings settings = settingsFor(loaded.value().image);
+    // A RAW is developed with its own tone only for the Camera profile.
+    const bool tone = settings.text("color.profile", "standard") == "camera";
+    if (loaded.value().info.raw && tone != load.rawTone) {
+        pfx::LoadOptions again = load;
+        again.rawTone = tone;
+        if (auto redeveloped = pfx::load(QFileInfo(source).absoluteFilePath().toStdString(), again)) {
+            loaded = std::move(redeveloped);
+        }
+    }
     auto rendered = core::renderPhoto(std::move(loaded.value().image), settings);
     if (!rendered) {
         out.error = QString::fromStdString(rendered.error().message);

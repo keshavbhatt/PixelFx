@@ -142,7 +142,7 @@ QString describe(const services::DocumentInfo& info)
     const QString suffix = QFileInfo(info.path).suffix().toUpper();
     if (format == u"HEIF"_s && !suffix.isEmpty()) {
         format = suffix; // one loader for HEIC, HEIF and AVIF: name the file's own kind
-    } else if (format == u"DCRAW"_s) {
+    } else if (info.raw) {
         format = u"RAW (%1)"_s.arg(suffix); // camera raw: say which maker's format
     }
     const QString size =
@@ -216,6 +216,17 @@ void MainWindow::connectDocument()
         }
     });
     connect(&m_document, &services::Document::failed, this, &MainWindow::showFailed);
+    connect(m_canvas, &Canvas::errorActionTriggered, this, [this] {
+        if (!m_failedRaw.isEmpty()) {
+            m_document.openPreview(m_failedRaw, previewLongEdge());
+        }
+    });
+    // A RAW: its JPEG at once, then the developed picture (editor-raw.html).
+    connect(&m_document, &services::Document::earlyPreview, this,
+            [this](const QImage& image, const QSize& size) { m_canvas->setImage(image, size); });
+    connect(&m_document, &services::Document::developingChanged, this, &MainWindow::refreshBusy);
+    connect(&m_document, &services::Document::opened, this,
+            [this](const services::DocumentInfo& info) { m_adjust->setRaw(info.raw, info.asShotKelvin); });
     connect(&m_document, &services::Document::settingsReplaced, m_adjust, &AdjustPanel::setSettings);
     connect(&m_document, &services::Document::historyChanged, this, &MainWindow::updateHistoryButtons);
     connect(&m_document, &services::Document::histogramReady, m_adjust, &AdjustPanel::setHistogram);
@@ -1521,6 +1532,10 @@ void MainWindow::refreshBusy()
         m_canvas->setBusy(tr("Preparing preview"));
         return;
     }
+    if (m_document.isDeveloping()) {
+        m_canvas->setBusy(tr("Developing RAW"));
+        return;
+    }
     switch (m_document.fullState()) {
     case Full::Loading:
         m_canvas->setBusy(tr("Loading"));
@@ -2029,7 +2044,13 @@ void MainWindow::showOpened(const services::DocumentInfo& info)
 void MainWindow::showFailed(const QString& path, const QString& message)
 {
     m_stack->setCurrentWidget(m_canvasPage);
-    m_canvas->setError(tr("Could not open %1. %2").arg(QFileInfo(path).fileName(), message));
+    // A RAW that cannot be developed may still hold a JPEG to open instead (editor-raw.html).
+    QString action;
+    if (pfx::isRawFile(path.toStdString()) && pfx::loadPreview(path.toStdString(), {64})) {
+        action = tr("Open its preview instead");
+        m_failedRaw = path;
+    }
+    m_canvas->setError(tr("Could not open %1. %2").arg(QFileInfo(path).fileName(), message), action);
 }
 
 int MainWindow::previewLongEdge() const

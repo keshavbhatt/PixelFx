@@ -7,6 +7,7 @@
 #include <QString>
 #include <QWidget>
 
+class QPushButton;
 class QLabel;
 class QMouseEvent;
 class QPainter;
@@ -73,7 +74,8 @@ public:
     /// An empty name ends it.
     void setPreviewName(const QString& name);
     [[nodiscard]] const QString& previewName() const { return m_previewName; }
-    void setError(const QString& text);
+    /// A reason shown in place of the photo; `action` adds a button under it (errorActionTriggered).
+    void setError(const QString& text, const QString& action = {});
     [[nodiscard]] const QImage& image() const { return m_image; }
     /// Where the photo is drawn, in widget coordinates.
     [[nodiscard]] QRect photoRect() const;
@@ -138,6 +140,8 @@ Q_SIGNALS:
     void levelLineDrawn(double degrees);
     /// The busy chip came on show (after the delay) or went.
     void busyChanged(bool shown);
+    /// The button under an error was pressed.
+    void errorActionTriggered();
     /// A click while picking, as fractions of the photo.
     void pointPicked(QPointF fraction);
     void fullScreenRequested();
@@ -211,6 +215,8 @@ private:
     QSize m_fullSize;
     QString m_status;
     QString m_error;
+    QPushButton* m_errorAction = nullptr;
+    void placeErrorAction();
 };
 
 } // namespace pixelfx::ui

@@ -37,6 +37,9 @@ struct Document::Result
     pfx::Settings stored;
     std::vector<pfx::BatchStep> snapshots;
     QString error;
+    bool openAsLeft = true;
+    bool previewOnly = false; ///< the JPEG inside a RAW, not the RAW
+    bool rawTone = true;
 };
 
 namespace {
@@ -44,6 +47,12 @@ namespace {
 QString fromStd(const std::string& text)
 {
     return QString::fromStdString(text);
+}
+
+// Whether settings ask for a RAW's own tone: the Camera profile.
+bool wantsRawTone(const pfx::Settings& s)
+{
+    return s.text("color.profile", "standard") == "camera";
 }
 
 } // namespace
@@ -161,25 +170,8 @@ Document::Result Document::openOnWorker(Result result,
 {
     const std::string path = QFileInfo(result.info.path).absoluteFilePath().toStdString();
     const auto probed = pfx::probe(path);
-    if (!probed) {
+    if (!probed && !result.previewOnly) {
         result.error = fromStd(probed.error().message);
-        return result;
-    }
-    result.info.size = QSize(probed.value().width, probed.value().height);
-    result.info.format = fromStd(probed.value().format);
-    result.info.bitsPerSample = probed.value().bitsPerSample;
-    auto loaded = pfx::load(path, {previewLongEdge});
-    if (!loaded) {
-        result.error = fromStd(loaded.error().message);
-        return result;
-    }
-    const pfx::ExifSummary exif = pfx::readExif(loaded.value().metadata.exif);
-    result.info.camera = core::cameraName(exif);
-    result.info.lens = QString::fromStdString(exif.lens).trimmed();
-    result.info.exposure = core::exposureLine(exif);
-    const auto display = pfx::toSrgb8(loaded.value().image);
-    if (!display) {
-        result.error = fromStd(display.error().message);
         return result;
     }
     if (!result.sidecarFolder.isEmpty()) {
@@ -190,10 +182,57 @@ Document::Result Document::openOnWorker(Result result,
         }
         result.snapshots = store.readSnapshots(result.fingerprint);
     }
+    // A RAW opens on its Camera profile unless its remembered edits say otherwise.
+    const bool remembered = result.openAsLeft && !result.stored.isEmpty();
+    result.rawTone = remembered ? wantsRawTone(result.stored) : true;
+    pfx::LoadOptions options;
+    options.maxLongEdge = previewLongEdge;
+    options.rawTone = result.rawTone;
+    auto loaded = result.previewOnly ? pfx::loadPreview(path, options) : pfx::load(path, options);
+    if (!loaded) {
+        result.error = fromStd(loaded.error().message);
+        return result;
+    }
+    // The preview inside a RAW is its own, smaller picture.
+    const pfx::ImageInfo& info = result.previewOnly ? loaded.value().info : probed.value();
+    result.info.size = result.previewOnly ? QSize(loaded.value().image.width(), loaded.value().image.height())
+                                          : QSize(info.width, info.height);
+    result.info.format = fromStd(info.format);
+    result.info.bitsPerSample = info.bitsPerSample;
+    result.info.raw = loaded.value().info.raw;
+    result.info.asShotKelvin = loaded.value().info.asShotKelvin;
+    const pfx::ExifSummary exif = pfx::readExif(loaded.value().metadata.exif);
+    result.info.camera = core::cameraName(exif);
+    result.info.lens = QString::fromStdString(exif.lens).trimmed();
+    result.info.exposure = core::exposureLine(exif);
+    const auto display = pfx::toSrgb8(loaded.value().image);
+    if (!display) {
+        result.error = fromStd(display.error().message);
+        return result;
+    }
     result.original = toQImage(display.value());
     result.histogram = core::histogramOf(result.original);
     result.source = std::make_shared<const pfx::Image>(std::move(loaded).value().image);
     return result;
+}
+
+void Document::openPreview(const QString& path, int previewLongEdge)
+{
+    flush();
+    Result request;
+    request.generation = ++m_generation;
+    request.info.path = path;
+    request.previewOnly = true;
+    ++m_pending;
+    m_previewLongEdge = previewLongEdge;
+    Q_EMIT openStarted(path);
+    auto* watcher = new QFutureWatcher<Result>(this);
+    connect(watcher, &QFutureWatcher<Result>::finished, this, [this, watcher] {
+        --m_pending;
+        deliver(watcher->result());
+        watcher->deleteLater();
+    });
+    watcher->setFuture(QtConcurrent::run(&Document::openOnWorker, request, previewLongEdge));
 }
 
 void Document::open(const QString& path, int previewLongEdge)
@@ -203,8 +242,37 @@ void Document::open(const QString& path, int previewLongEdge)
     request.generation = ++m_generation;
     request.info.path = path;
     request.sidecarFolder = m_sidecars ? m_sidecars->folder() : QString();
+    request.openAsLeft = m_openAsLeft;
     ++m_pending;
+    m_previewLongEdge = previewLongEdge;
     Q_EMIT openStarted(path);
+    if (pfx::isRawFile(QFileInfo(path).absoluteFilePath().toStdString())) {
+        // The JPEG inside shows at once while the RAW itself is developed.
+        setDeveloping(true);
+        const quint64 generation = request.generation;
+        using Early = std::pair<QImage, QSize>;
+        auto* early = new QFutureWatcher<Early>(this);
+        connect(early, &QFutureWatcher<Early>::finished, this, [this, early, generation] {
+            const Early e = early->result();
+            early->deleteLater();
+            if (generation == m_generation && m_developing && !e.first.isNull()) {
+                Q_EMIT earlyPreview(e.first, e.second);
+            }
+        });
+        early->setFuture(QtConcurrent::run([path, previewLongEdge]() -> Early {
+            const auto loaded =
+                pfx::loadPreview(QFileInfo(path).absoluteFilePath().toStdString(), {previewLongEdge});
+            if (!loaded) {
+                return {};
+            }
+            const auto display = pfx::toSrgb8(loaded.value().image);
+            return display ? Early{toQImage(display.value()),
+                                   QSize(loaded.value().image.width(), loaded.value().image.height())}
+                           : Early{};
+        }));
+    } else {
+        setDeveloping(false);
+    }
     auto* watcher = new QFutureWatcher<Result>(this);
     connect(watcher, &QFutureWatcher<Result>::finished, this, [this, watcher] {
         --m_pending;
@@ -220,12 +288,14 @@ void Document::deliver(const Result& result)
         qCDebug(lcDocument) << "dropped a stale open of" << result.info.path;
         return;
     }
+    setDeveloping(false);
     if (!result.error.isEmpty()) {
         qCWarning(lcDocument) << "could not open" << result.info.path << result.error;
         Q_EMIT failed(result.info.path, result.error);
         return;
     }
     m_info = result.info;
+    m_rawTone = result.rawTone;
     m_plainOriginal = result.original;
     m_original = result.original;
     m_originalGeometry = {};
@@ -254,7 +324,10 @@ void Document::deliver(const Result& result)
     }
     m_originalScheduler->setSource(result.source);
     // As it was left (FEATURES E17): the remembered edits are the starting point of the history.
-    const pfx::Settings start = m_openAsLeft ? result.stored : pfx::Settings{};
+    pfx::Settings start = m_openAsLeft ? result.stored : pfx::Settings{};
+    if (m_info.raw && start.isEmpty()) {
+        start.set("color.profile", std::string("camera")); // a RAW looks as its camera showed it
+    }
     m_history.reset(start, tr("Opened"));
     replaceSettings(start, !start.isEmpty()); // no settings: the original is the render
     qCInfo(lcDocument) << "opened" << m_info.path << m_info.size << m_info.format;
@@ -274,6 +347,56 @@ void Document::setSettings(const pfx::Settings& settings)
     if (renderSettings() != before) { // moving the crop box while cropping needs no render
         requestRender();
     }
+    followRawTone();
+}
+
+void Document::setDeveloping(bool on)
+{
+    if (on != m_developing) {
+        m_developing = on;
+        Q_EMIT developingChanged(on);
+    }
+}
+
+void Document::followRawTone()
+{
+    if (!m_info.raw || wantsRawTone(m_settings) == m_rawTone) {
+        return;
+    }
+    m_rawTone = wantsRawTone(m_settings);
+    setDeveloping(true);
+    const quint64 generation = ++m_developGeneration;
+    const std::string path = QFileInfo(m_info.path).absoluteFilePath().toStdString();
+    pfx::LoadOptions options;
+    options.maxLongEdge = m_previewLongEdge;
+    options.rawTone = m_rawTone;
+    auto* watcher = new QFutureWatcher<std::shared_ptr<const pfx::Image>>(this);
+    connect(watcher, &QFutureWatcher<std::shared_ptr<const pfx::Image>>::finished, this,
+            [this, watcher, generation] {
+                const auto image = watcher->result();
+                watcher->deleteLater();
+                if (generation != m_developGeneration || !image) {
+                    return;
+                }
+                setDeveloping(false);
+                m_source = image;
+                m_scheduler->setSource(image);
+                m_originalScheduler->setSource(image);
+                m_beforeMixer = {};
+                if (auto small = pfx::fitLongEdge(*image, 120)) {
+                    m_thumbnailSource = std::make_shared<const pfx::Image>(std::move(small).value());
+                }
+                requestRender();
+                refreshOriginal();
+                if (m_fullOn) { // the sharp picture is developed again too
+                    setFullResolution(false);
+                    setFullResolution(true);
+                }
+            });
+    watcher->setFuture(QtConcurrent::run([path, options]() -> std::shared_ptr<const pfx::Image> {
+        auto loaded = pfx::load(path, options);
+        return loaded ? std::make_shared<const pfx::Image>(std::move(loaded).value().image) : nullptr;
+    }));
 }
 
 void Document::refresh()
@@ -382,8 +505,10 @@ void Document::setFullResolution(bool on)
                 m_fullScheduler->request(renderSettings());
             });
     const std::string path = QFileInfo(m_info.path).absoluteFilePath().toStdString();
-    watcher->setFuture(QtConcurrent::run([path]() -> std::shared_ptr<const pfx::Image> {
-        auto loaded = pfx::load(path);
+    pfx::LoadOptions options;
+    options.rawTone = m_rawTone;
+    watcher->setFuture(QtConcurrent::run([path, options]() -> std::shared_ptr<const pfx::Image> {
+        auto loaded = pfx::load(path, options);
         if (!loaded) {
             return nullptr;
         }
@@ -615,6 +740,7 @@ void Document::replaceSettings(const pfx::Settings& settings, bool render)
         requestRender();
     }
     refreshOriginal();
+    followRawTone();
     Q_EMIT settingsReplaced(m_settings);
 }
 
