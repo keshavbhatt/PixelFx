@@ -1,5 +1,6 @@
 #pragma once
 
+#include "core/compress_job.h"
 #include "core/export_options.h"
 
 #include <QByteArray>
@@ -50,6 +51,14 @@ public:
     /// The folder defaults to Pictures/PixelFx.
     [[nodiscard]] ExportOptions exportOptions() const;
     void setExportOptions(const ExportOptions& options);
+
+    /// Batch's Compress only choices, remembered; Replace the originals never is (it asks each
+    /// batch). The folder defaults to Pictures/PixelFx/Compressed.
+    [[nodiscard]] CompressJob compressJob() const;
+    void setCompressJob(const CompressJob& job);
+    /// Whether Batch opens in Compress only.
+    [[nodiscard]] bool batchCompressOnly() const;
+    void setBatchCompressOnly(bool on);
 
     /// Appearance. The theme applies when PixelFx starts.
     enum class Theme

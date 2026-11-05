@@ -5,6 +5,9 @@
 #include "core/sidecar_store.h"
 #include "services/exporter.h"
 #include "services/qt_image_bridge.h"
+#include "ui/compress_compare.h"
+#include "ui/compress_list.h"
+#include "ui/compress_panel.h"
 #include "ui/elided_label.h"
 #include "ui/export_sheet.h"
 #include "ui/icon_text_button.h"
@@ -12,6 +15,7 @@
 #include "ui/preview_viewer.h"
 #include "ui/sheet.h"
 #include "ui/slider_row.h"
+#include "ui/status_pill.h"
 #include "ui/style.h"
 #include "ui/watermark_sheet.h"
 
@@ -34,6 +38,7 @@
 #include <QListWidget>
 #include <QLocale>
 #include <QMenu>
+#include <QMessageBox>
 #include <QMimeData>
 #include <QPixmap>
 #include <QProgressBar>
@@ -92,51 +97,6 @@ QString formatName(const QString& extension)
     return extension.toUpper();
 }
 
-// A status pill: Saved, Waiting, Not saved, Saving.
-void setPill(QWidget* pill, const QString& kind, const QString& icon, const QString& text)
-{
-    auto* glyph = pill->findChild<QLabel*>(u"pillIcon"_s);
-    auto* label = pill->findChild<QLabel*>(u"pillText"_s);
-    const Tokens& t = tokens();
-    QColor colour = t.muted;
-    if (kind == u"ok"_s) {
-        colour = t.success;
-    } else if (kind == u"bad"_s) {
-        colour = t.danger;
-    } else if (kind == u"accent"_s) {
-        colour = t.accent;
-    }
-    glyph->setVisible(!icon.isEmpty());
-    if (!icon.isEmpty()) {
-        glyph->setPixmap(icons::pixmap(icon, colour, 12, pill->devicePixelRatioF()));
-    }
-    label->setText(text);
-    pill->setProperty("kind", kind);
-    pill->style()->unpolish(pill);
-    pill->style()->polish(pill);
-    label->style()->unpolish(label);
-    label->style()->polish(label);
-    pill->setVisible(!text.isEmpty());
-}
-
-QWidget* makePill(QWidget* parent)
-{
-    auto* pill = new QFrame(parent);
-    pill->setObjectName(u"pill"_s);
-    pill->setFixedHeight(20);
-    auto* glyph = new QLabel(pill);
-    glyph->setObjectName(u"pillIcon"_s);
-    auto* text = new QLabel(pill);
-    text->setObjectName(u"pillText"_s);
-    auto* row = new QHBoxLayout(pill);
-    row->setContentsMargins(8, 2, 8, 2);
-    row->setSpacing(kGapSmall);
-    row->addWidget(glyph);
-    row->addWidget(text);
-    pill->hide();
-    return pill;
-}
-
 } // namespace
 
 void BatchPage::setPhotoTest(bool (*isPhoto)(const QString&))
@@ -144,11 +104,13 @@ void BatchPage::setPhotoTest(bool (*isPhoto)(const QString&))
     isPhotoTest = isPhoto;
 }
 
-BatchPage::BatchPage(core::ExportOptions output, QWidget* parent)
+BatchPage::BatchPage(core::ExportOptions output, core::CompressJob job, bool compressOnly, QWidget* parent)
     : QWidget(parent)
     , m_output(std::move(output))
     , m_thumbnails(new services::Thumbnailer(this))
     , m_previewTimer(new QTimer(this))
+    , m_job(std::move(job))
+    , m_compressOnly(compressOnly)
 {
     setObjectName(u"batchPage"_s);
     setAttribute(Qt::WA_StyledBackground);
@@ -174,6 +136,7 @@ BatchPage::BatchPage(core::ExportOptions output, QWidget* parent)
                 m_grid->item(i)->setIcon(QPixmap::fromImage(t.image));
             }
         }
+        m_compressList->setThumbnail(t.path, t.image);
     });
     connect(m_thumbnails, &services::Thumbnailer::rendered, this, [this](int key, const QImage& image) {
         if (static_cast<quint64>(key / 2) != (m_previewGeneration % 100000) || image.isNull()) {
@@ -198,12 +161,30 @@ BatchPage::BatchPage(core::ExportOptions output, QWidget* parent)
     connect(&m_runner, &services::BatchRunner::photoChanged, this, &BatchPage::refreshRow);
     connect(&m_runner, &services::BatchRunner::progress, this, &BatchPage::refreshStatus);
     connect(&m_runner, &services::BatchRunner::finished, this, &BatchPage::refreshStatus);
+    connectCompress();
     rebuildRows();
     refreshRecipeCard();
-    refreshStatus();
+    setCompressOnly(m_compressOnly);
 }
 
 BatchPage::~BatchPage() = default;
+
+void BatchPage::connectCompress()
+{
+    connect(m_compressPanel, &CompressPanel::jobChanged, this, [this](const core::CompressJob& j) {
+        m_job = j;
+        Q_EMIT compressJobChanged(j);
+    });
+    connect(m_compressPanel, &CompressPanel::compressRequested, this, &BatchPage::compress);
+    connect(m_compressPanel, &CompressPanel::runAgainRequested, this, &BatchPage::compress);
+    connect(m_compressList, &CompressList::selectionChanged, this, &BatchPage::showCompare);
+    connect(m_compressList, &CompressList::removeRequested, this, [this](const QString& file) {
+        if (!m_runner.isRunning()) {
+            m_files.removeAll(file);
+            rebuildRows();
+        }
+    });
+}
 
 // ---------------------------------------------------------------------------------------------
 // The photos
@@ -213,12 +194,13 @@ QWidget* BatchPage::buildListHead(QWidget* parent)
     auto* head = new QWidget(parent);
     head->setObjectName(u"batchHead"_s);
     head->setAttribute(Qt::WA_StyledBackground);
-    auto* title = new QLabel(tr("Photos"), head);
-    title->setObjectName(u"recentTitle"_s);
+    m_listTitle = new QLabel(tr("Photos"), head);
+    m_listTitle->setObjectName(u"recentTitle"_s);
     auto* hint = new QLabel(tr("Drop files or folders here"), head);
     hint->setObjectName(u"muted"_s);
-    // List or grid.
+    // List or grid (Edit and export); the order of the files (Compress only).
     auto* views = new QFrame(head);
+    m_viewBox = views;
     views->setObjectName(u"segmentBox"_s);
     auto* viewRow = new QHBoxLayout(views);
     viewRow->setContentsMargins(0, 0, 0, 0);
@@ -238,6 +220,7 @@ QWidget* BatchPage::buildListHead(QWidget* parent)
         viewRow->addWidget(b);
     }
     connect(m_viewModes, &QButtonGroup::idClicked, this, [this](int id) { m_views->setCurrentIndex(id); });
+    m_sortBox = buildSortBox(head);
     auto* clear = new QPushButton(tr("Clear"), head);
     clear->setObjectName(u"small"_s);
     clear->setToolTip(tr("Take every photo off the list (the files stay where they are)"));
@@ -250,12 +233,34 @@ QWidget* BatchPage::buildListHead(QWidget* parent)
     auto* row = new QHBoxLayout(head);
     row->setContentsMargins(kPanelPadding, 10, kPanelPadding, 10);
     row->setSpacing(kGapControls);
-    row->addWidget(title);
+    row->addWidget(m_listTitle);
     row->addWidget(hint);
     row->addStretch();
     row->addWidget(views);
+    row->addWidget(m_sortBox);
     row->addWidget(clear);
     return head;
+}
+
+QWidget* BatchPage::buildSortBox(QWidget* head)
+{
+    auto* box = new QWidget(head);
+    auto* sortLabel = new QLabel(tr("Sort"), box);
+    sortLabel->setObjectName(u"fieldLabel"_s);
+    auto* sort = new QComboBox(box);
+    sort->setAccessibleName(tr("Sort"));
+    sort->addItem(tr("Biggest saving"), static_cast<int>(CompressList::Sort::BiggestSaving));
+    sort->addItem(tr("Name"), static_cast<int>(CompressList::Sort::Name));
+    sort->addItem(tr("Size"), static_cast<int>(CompressList::Sort::Size));
+    connect(sort, &QComboBox::activated, this, [this, sort] {
+        m_compressList->setSort(static_cast<CompressList::Sort>(sort->currentData().toInt()));
+    });
+    auto* row = new QHBoxLayout(box);
+    row->setContentsMargins(0, 0, 0, 0);
+    row->setSpacing(kGapRelated);
+    row->addWidget(sortLabel);
+    row->addWidget(sort);
+    return box;
 }
 
 QWidget* BatchPage::buildList()
@@ -281,15 +286,23 @@ QWidget* BatchPage::buildList()
     m_grid->setMovement(QListView::Static);
     m_grid->setUniformItemSizes(true);
     m_grid->setSelectionMode(QAbstractItemView::NoSelection);
+    m_compressList = new CompressList(box);
+    auto* compressScroll = new QScrollArea(box);
+    compressScroll->setWidget(m_compressList);
+    compressScroll->setWidgetResizable(true);
+    compressScroll->setFrameShape(QFrame::NoFrame);
     m_views = new QStackedWidget(box);
     m_views->addWidget(scroll);
     m_views->addWidget(m_grid);
+    m_views->addWidget(compressScroll);
+    m_compare = new CompressCompare(box);
     auto* column = new QVBoxLayout(box);
     column->setContentsMargins(0, 0, 0, 0);
     column->setSpacing(0);
     column->addWidget(buildListHead(box));
     column->addWidget(m_views, 1);
     column->addWidget(buildPreview(box));
+    column->addWidget(m_compare);
     column->addWidget(buildStatus(box));
     return box;
 }
@@ -392,6 +405,41 @@ QWidget* BatchPage::buildPanel()
     auto* panel = new QWidget(this);
     makeSidePanel(panel, Qt::LeftEdge);
     panel->setFixedWidth(kPanelWidth);
+    m_panels = new QStackedWidget(panel);
+    m_panels->addWidget(buildEditPanel(m_panels));
+    m_compressPanel = new CompressPanel(m_job, m_panels);
+    m_panels->addWidget(m_compressPanel);
+    auto* column = new QVBoxLayout(panel);
+    column->setContentsMargins(0, 0, 0, 0);
+    column->setSpacing(0);
+    column->addWidget(buildMode(panel));
+    column->addWidget(m_panels, 1);
+    return panel;
+}
+
+QWidget* BatchPage::buildMode(QWidget* parent)
+{
+    auto* box = new QWidget(parent);
+    box->setObjectName(u"batchPanelContent"_s);
+    auto* column = new QVBoxLayout(box);
+    column->setContentsMargins(kPanelPadding, 0, kPanelPadding, 0);
+    column->setSpacing(kGapControls);
+    column->addWidget(sectionHeading(tr("1. What to do"), box));
+    m_modes = new QButtonGroup(this);
+    column->addWidget(segmentBox({tr("Edit and export"), tr("Compress only")}, m_compressOnly ? 1 : 0,
+                                 m_modes, box, SegmentFit::Equal));
+    connect(m_modes, &QButtonGroup::idClicked, this, [this](int id) { setCompressOnly(id == 1); });
+    m_modeNote =
+        new QLabel(tr("Makes files smaller without editing them. Free for any number of photos."), box);
+    m_modeNote->setObjectName(u"itemDetail"_s);
+    m_modeNote->setWordWrap(true);
+    column->addWidget(m_modeNote);
+    return box;
+}
+
+QWidget* BatchPage::buildEditPanel(QWidget* parent)
+{
+    auto* panel = new QWidget(parent);
     auto* content = new QWidget(panel);
     content->setObjectName(u"batchPanelContent"_s);
     auto* sections = new QVBoxLayout(content);
@@ -399,7 +447,7 @@ QWidget* BatchPage::buildPanel()
     sections->setSpacing(kGapRelated);
     sections->addWidget(buildRecipe(content));
     sections->addWidget(buildResize(content));
-    sections->addWidget(sectionHeading(tr("3. Watermark"), content));
+    sections->addWidget(sectionHeading(tr("4. Watermark"), content));
     m_watermark = new WatermarkPicker(m_output.watermark, content);
     connect(m_watermark, &WatermarkPicker::changed, this, &BatchPage::outputEdited);
     sections->addWidget(m_watermark);
@@ -424,7 +472,7 @@ QWidget* BatchPage::buildRecipe(QWidget* parent)
     auto* column = new QVBoxLayout(box);
     column->setContentsMargins(0, 0, 0, 0);
     column->setSpacing(kGapControls);
-    column->addWidget(sectionHeading(tr("1. Recipe"), box));
+    column->addWidget(sectionHeading(tr("2. Recipe"), box));
     auto* sources = new QHBoxLayout;
     sources->setSpacing(0);
     m_sources = new QButtonGroup(this);
@@ -524,7 +572,7 @@ QWidget* BatchPage::buildResize(QWidget* parent)
     auto* column = new QVBoxLayout(box);
     column->setContentsMargins(0, 0, 0, 0);
     column->setSpacing(kGapControls);
-    column->addWidget(sectionHeading(tr("2. Resize"), box));
+    column->addWidget(sectionHeading(tr("3. Resize"), box));
     m_size = buildSizes(box);
     showSize(m_output.sizePreset, m_output.longEdge);
     connect(m_size, &QComboBox::currentIndexChanged, this, &BatchPage::outputEdited);
@@ -543,7 +591,7 @@ QWidget* BatchPage::buildSaveAs(QWidget* parent)
     auto* column = new QVBoxLayout(box);
     column->setContentsMargins(0, 0, 0, 0);
     column->setSpacing(kGapControls);
-    column->addWidget(sectionHeading(tr("4. Save as"), box));
+    column->addWidget(sectionHeading(tr("5. Save as"), box));
     m_format = new QComboBox(box);
     m_format->setAccessibleName(tr("Format"));
     refreshFormats();
@@ -905,10 +953,14 @@ QString BatchPage::summary() const
     for (const QString& file : m_files) {
         bytes += QFileInfo(file).size();
     }
+    const QString size = QLocale().formattedDataSize(bytes, 0, QLocale::DataSizeSIFormat);
+    const auto count = static_cast<int>(m_files.size());
+    if (m_compressOnly) {
+        //: The header in Compress only: "6 files · 108 MB".
+        return m_files.isEmpty() ? tr("No files yet") : tr("%n files · %1", nullptr, count).arg(size);
+    }
     //: The header while Batch is up: "6 photos · 129 MB".
-    return m_files.isEmpty() ? tr("No photos yet")
-                             : tr("%n photos · %1", nullptr, static_cast<int>(m_files.size()))
-                                   .arg(QLocale().formattedDataSize(bytes, 0, QLocale::DataSizeSIFormat));
+    return m_files.isEmpty() ? tr("No photos yet") : tr("%n photos · %1", nullptr, count).arg(size);
 }
 
 void BatchPage::showSize(const QString& sizePreset, int longEdge)
@@ -1063,6 +1115,10 @@ QString BatchPage::loadRecipe(const QString& path)
 
 void BatchPage::process()
 {
+    if (m_compressOnly) {
+        compress();
+        return;
+    }
     if (m_files.isEmpty() || m_runner.isRunning()) {
         return;
     }
@@ -1095,8 +1151,7 @@ QWidget* BatchPage::makeRow(const QString& file)
     thumb->setProperty("path", file);
     thumb->setFixedSize(72, 48);
     thumb->setAlignment(Qt::AlignCenter);
-    QWidget* state = makePill(row);
-    state->setObjectName(u"pill"_s);
+    auto* state = new StatusPill(row);
     auto* remove = new QToolButton(row);
     remove->setObjectName(u"flatIcon"_s);
     remove->setIcon(icons::themed(u"close"_s, tokens().muted));
@@ -1140,6 +1195,9 @@ void BatchPage::rebuildRows()
         item->setToolTip(describe(file));
     }
     m_rows->addStretch();
+    m_compressList->setFiles(m_files);
+    m_compressList->refresh(m_runner);
+    m_compressPanel->setFileCount(static_cast<int>(m_files.size()));
     m_process->setText(m_files.isEmpty()
                            ? tr("Process")
                            : tr("Process %n photos", nullptr, static_cast<int>(m_files.size())));
@@ -1204,7 +1262,7 @@ void BatchPage::schedulePreview()
 
 void BatchPage::renderPreview()
 {
-    m_preview->setVisible(!m_files.isEmpty());
+    m_preview->setVisible(!m_compressOnly && !m_files.isEmpty());
     if (m_files.isEmpty()) {
         m_afterPixmap = QPixmap();
         refreshRecipeCard();
@@ -1251,29 +1309,146 @@ void BatchPage::renderPreview()
     }));
 }
 
+void BatchPage::setCompressOnly(bool on)
+{
+    m_compressOnly = on;
+    m_modes->button(on ? 1 : 0)->setChecked(true);
+    m_modeNote->setVisible(on);
+    m_panels->setCurrentIndex(on ? 1 : 0);
+    m_listTitle->setText(on ? tr("Files") : tr("Photos"));
+    m_viewBox->setVisible(!on);
+    m_sortBox->setVisible(on);
+    m_views->setCurrentIndex(on ? 2 : m_viewModes->checkedId());
+    m_preview->setVisible(!on && !m_files.isEmpty());
+    if (!on) {
+        m_compare->hide();
+        schedulePreview();
+    } else {
+        showCompare(m_compressList->selected());
+    }
+    refreshStatus();
+    Q_EMIT summaryChanged(summary());
+    Q_EMIT compressOnlyChanged(on);
+}
+
+void BatchPage::compress()
+{
+    if (m_files.isEmpty() || m_runner.isRunning()) {
+        return;
+    }
+    const core::CompressJob job = m_compressPanel->job();
+    const auto count = static_cast<int>(m_files.size());
+    if (job.replaceOriginals) {
+        QMessageBox ask(QMessageBox::Warning, tr("Replace the originals"),
+                        tr("Replace %n original files with their smaller versions? This cannot be undone.",
+                           nullptr, count),
+                        QMessageBox::NoButton, this);
+        const QPushButton* replace =
+            ask.addButton(tr("Replace %n files", nullptr, count), QMessageBox::AcceptRole);
+        ask.addButton(QMessageBox::Cancel);
+        ask.setDefaultButton(QMessageBox::Cancel);
+        ask.exec();
+        if (ask.clickedButton() != replace) {
+            return;
+        }
+    }
+    services::BatchRecipe r;
+    r.compress = job;
+    m_compare->hide();
+    m_clock.start();
+    m_runner.start(m_files, r);
+    m_compressList->refresh(m_runner);
+    refreshStatus();
+}
+
+void BatchPage::showCompare(const QString& path)
+{
+    const auto index = static_cast<int>(m_runner.files().indexOf(path));
+    const bool done = m_compressOnly && m_runner.isCompressing() && m_runner.files() == m_files &&
+                      index >= 0 && m_runner.state(index) == services::BatchRunner::State::Saved;
+    m_compare->setVisible(done);
+    if (!done) {
+        return;
+    }
+    const services::CompressResult c = m_runner.compressed(index);
+    const QString target = m_runner.target(index).isEmpty() ? path : m_runner.target(index);
+    const auto size = [](qint64 bytes) {
+        return QLocale().formattedDataSize(bytes, 1, QLocale::DataSizeSIFormat);
+    };
+    const QString beforeText = tr("%1 · %2").arg(QFileInfo(path).fileName(), size(c.before));
+    const qint64 percent = c.before > 0 ? (100 * (c.before - c.after) + (c.before / 2)) / c.before : 0;
+    //: Above the compressed file at 100%: "5.6 MB, saved 38%".
+    const QString afterText = percent > 0 ? tr("%1, saved %2%").arg(size(c.after)).arg(percent)
+                                          : tr("%1, no change").arg(size(c.after));
+    m_compare->setWaiting(beforeText);
+    const quint64 generation = ++m_compareGeneration;
+    using Pair = std::pair<QImage, QImage>;
+    auto* watcher = new QFutureWatcher<Pair>(this);
+    connect(watcher, &QFutureWatcher<Pair>::finished, this,
+            [this, watcher, generation, beforeText, afterText] {
+                const Pair pair = watcher->result();
+                watcher->deleteLater();
+                if (generation == m_compareGeneration) {
+                    m_compare->setPair(pair.first, beforeText, pair.second, afterText);
+                }
+            });
+    watcher->setFuture(QtConcurrent::run([path, target, c]() -> Pair {
+        // The original is gone when it was replaced: its spot was kept during the run.
+        pfx::Region spot = c.spot;
+        QImage before;
+        if (!c.beforeSpot.isEmpty()) {
+            before = QImage::fromData(c.beforeSpot, "PNG");
+        } else {
+            const auto region = pfx::detailRegion(path.toStdString(), services::BatchRunner::kSpotWidth,
+                                                  services::BatchRunner::kSpotHeight);
+            if (!region) {
+                return {};
+            }
+            spot = region.value();
+            if (auto pixels = pfx::loadRegion(path.toStdString(), spot)) {
+                before = services::toQImage(pixels.value());
+            }
+        }
+        QImage after;
+        if (auto pixels = pfx::loadRegion(target.toStdString(), spot)) {
+            after = services::toQImage(pixels.value());
+        }
+        return {before, after};
+    }));
+}
+
 void BatchPage::refreshRow(int index)
 {
+    if (m_compressOnly && m_runner.isCompressing()) {
+        m_compressList->refresh(m_runner);
+        // The before and after appears with the first file done.
+        if (m_compressList->selected().isEmpty() &&
+            m_runner.state(index) == services::BatchRunner::State::Saved) {
+            m_compressList->select(m_runner.files().at(index));
+        }
+    }
     const QLayoutItem* item = m_rows->itemAt(index);
     if (item == nullptr || item->widget() == nullptr || index >= m_runner.total()) {
         return;
     }
-    auto* pill = item->widget()->findChild<QFrame*>(u"pill"_s);
+    auto* pill = item->widget()->findChild<StatusPill*>();
     using S = services::BatchRunner::State;
+    using K = StatusPill::Kind;
     switch (m_runner.state(index)) {
     case S::Waiting:
-        setPill(pill, u"plain"_s, {}, tr("Waiting"));
+        pill->setStatus(K::Plain, tr("Waiting"));
         break;
     case S::Working:
-        setPill(pill, u"accent"_s, {}, tr("Saving"));
+        pill->setStatus(K::Accent, tr("Saving"));
         break;
     case S::Saved:
-        setPill(pill, u"ok"_s, u"check"_s, tr("Saved"));
+        pill->setStatus(K::Ok, tr("Saved"), u"check"_s);
         break;
     case S::Skipped:
-        setPill(pill, u"plain"_s, {}, tr("Skipped"));
+        pill->setStatus(K::Plain, tr("Skipped"));
         break;
     case S::Failed:
-        setPill(pill, u"bad"_s, u"alert"_s, tr("Not saved"));
+        pill->setStatus(K::Bad, tr("Not saved"), u"alert"_s);
         break;
     }
     auto* reason = item->widget()->findChild<QLabel*>(u"batchReason"_s);
@@ -1297,12 +1472,18 @@ void BatchPage::refreshStatus()
     }
     m_statusIcon->clear();
     m_statusDetail->clear();
+    // The status belongs to the mode that ran.
+    const bool ours = m_runner.isCompressing() == m_compressOnly;
     if (running) {
         showRunning(done, total);
+    } else if (total > 0 && m_runner.isCompressing()) {
+        showCompressDone(failed);
     } else if (total > 0) {
         showDone(saved, failed);
     }
-    m_status->setVisible(total > 0);
+    m_status->setVisible(total > 0 && ours);
+    m_compressPanel->setState(running, !running && m_runner.isCompressing() && m_runner.files() == m_files &&
+                                           total > 0);
     m_progress->setVisible(running);
     m_pause->setText(m_runner.isPaused() ? tr("Resume") : tr("Pause"));
     m_pause->setVisible(running);
@@ -1314,9 +1495,13 @@ void BatchPage::refreshStatus()
 
 void BatchPage::showRunning(int done, int total)
 {
-    m_statusText->setText(m_runner.isPaused()
-                              ? tr("Paused after %1 of %2").arg(done).arg(total)
-                              : tr("Saving %1 of %2").arg(std::min(done + 1, total)).arg(total));
+    const int current = std::min(done + 1, total);
+    if (m_runner.isPaused()) {
+        m_statusText->setText(tr("Paused after %1 of %2").arg(done).arg(total));
+    } else {
+        m_statusText->setText(m_runner.isCompressing() ? tr("Compressing %1 of %2").arg(current).arg(total)
+                                                       : tr("Saving %1 of %2").arg(current).arg(total));
+    }
     if (done > 0 && !m_runner.isPaused()) {
         const qint64 left = m_clock.elapsed() / done * (total - done) / 1000;
         m_statusDetail->setText(left < 60 ? tr("about %1 s left").arg(std::max<qint64>(1, left))
@@ -1343,6 +1528,36 @@ void BatchPage::showDone(int saved, int failed)
         m_statusDetail->setText(tr("in %1 s, %2")
                                     .arg(std::max<qint64>(1, m_clock.elapsed() / 1000))
                                     .arg(QLocale().formattedDataSize(bytes, 0, QLocale::DataSizeSIFormat)));
+    }
+}
+
+void BatchPage::showCompressDone(int failed)
+{
+    qint64 before = 0;
+    qint64 after = 0;
+    for (int i = 0; i < m_runner.total(); ++i) {
+        if (m_runner.state(i) == services::BatchRunner::State::Saved) {
+            before += m_runner.compressed(i).before;
+            after += m_runner.compressed(i).after;
+        }
+    }
+    const auto size = [](qint64 bytes) {
+        return QLocale().formattedDataSize(bytes, 0, QLocale::DataSizeSIFormat);
+    };
+    const qint64 percent = before > 0 ? (100 * (before - after) + (before / 2)) / before : 0;
+    m_statusIcon->setPixmap(icons::pixmap(failed > 0 ? u"alert"_s : u"check"_s,
+                                          failed > 0 ? tokens().danger : tokens().success, 16,
+                                          devicePixelRatioF()));
+    //: After Compress only: "Saved 54 MB of 108 MB (50%)".
+    QString text = tr("Saved %1 of %2 (%3%)").arg(size(before - after), size(before)).arg(percent);
+    if (failed > 0) {
+        text = tr("%1, %n not saved", nullptr, failed).arg(text);
+    }
+    m_statusText->setText(text);
+    if (m_clock.isValid()) {
+        //: After Compress only: how many files and how long, "6 files in 9 s".
+        m_statusDetail->setText(tr("%n files in %1 s", nullptr, m_runner.total())
+                                    .arg(std::max<qint64>(1, m_clock.elapsed() / 1000)));
     }
 }
 

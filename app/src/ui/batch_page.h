@@ -1,5 +1,6 @@
 #pragma once
 
+#include "core/compress_job.h"
 #include "core/export_options.h"
 #include "core/looks.h"
 #include "core/presets.h"
@@ -36,21 +37,25 @@ namespace pixelfx::ui {
 class PathLabel;
 class SliderRow;
 
-/// Batch. Left: the photos, as a list
-/// or a grid, added as files or whole folders or dropped, the first one before and after the
-/// recipe, and while running the progress (Pause, Stop), then the summary (Retry failed, Show in
-/// folder). Right: 1. Recipe (a preset or look, or the settings of the photo open in the
-/// editor, then a preset on top, Auto enhance, the edits already made), 2. Resize (Never
-/// enlarge), 3. Watermark, 4. Save as (format and quality, More..., folder, name, beside each
-/// original), and Save as batch recipe and Process at the foot. The window's header shows the
-/// count and size and Add photos and Add folder while the page is up.
+/// Batch, in two modes chosen at the top of the right panel (1. What to do).
+/// Edit and export: on the left the photos, as a list or a grid, added as files or whole folders
+/// or dropped, the first one before and after the recipe, and while running the progress (Pause,
+/// Stop), then the summary (Retry failed, Show in folder); on the right 2. Recipe (a preset or
+/// look, or the settings of the photo open in the editor, then a preset on top, Auto enhance,
+/// the edits already made), 3. Resize (Never enlarge), 4. Watermark, 5. Save as (format and
+/// quality, More..., folder, name, beside each original), and Save as batch recipe and Process.
+/// Compress only (batch-compress.html): the files with their savings (CompressList), a before
+/// and after at 100% (CompressCompare), the totals, and CompressPanel on the right.
+/// The window's header shows the count and size and Add photos and Add folder while the page is
+/// up.
 class BatchPage : public QWidget
 {
     Q_OBJECT
     Q_DISABLE_COPY_MOVE(BatchPage)
 
 public:
-    explicit BatchPage(core::ExportOptions output, QWidget* parent = nullptr);
+    explicit BatchPage(core::ExportOptions output, core::CompressJob job = {}, bool compressOnly = false,
+                       QWidget* parent = nullptr);
     ~BatchPage() override;
 
     /// The presets the recipe can use (the library's list).
@@ -78,6 +83,13 @@ public:
     /// The recipe and output as the page shows them.
     [[nodiscard]] services::BatchRecipe recipe() const;
     void process();
+    /// Compress only: makes every file smaller; replacing the originals asks first.
+    void compress();
+    void setCompressOnly(bool on);
+    [[nodiscard]] bool isCompressOnly() const { return m_compressOnly; }
+    [[nodiscard]] class CompressPanel* compressPanel() const { return m_compressPanel; }
+    [[nodiscard]] class CompressList* compressList() const { return m_compressList; }
+    [[nodiscard]] class CompressCompare* compressCompare() const { return m_compare; }
     /// Writes the page as a batch recipe (.pfxbatch) to `path`; false when it cannot.
     [[nodiscard]] bool saveRecipe(const QString& path) const;
     /// Sets the page from a batch recipe, adding the looks and the watermark it carries to the
@@ -95,6 +107,9 @@ Q_SIGNALS:
     void looksAdded();
     /// The photos changed: the header's "6 photos · 129 MB".
     void summaryChanged(const QString& summary);
+    /// Compress only's choices changed, and the mode (both remembered).
+    void compressJobChanged(const pixelfx::core::CompressJob& job);
+    void compressOnlyChanged(bool on);
 
 protected:
     bool eventFilter(QObject* watched, QEvent* event) override;
@@ -114,9 +129,17 @@ private:
 
     QWidget* buildList();
     QWidget* buildListHead(QWidget* parent);
+    /// "Sort Biggest saving" for Compress only's list.
+    QWidget* buildSortBox(QWidget* head);
+    void connectCompress();
     QWidget* buildPreview(QWidget* parent);
     QWidget* buildStatus(QWidget* parent);
     QWidget* buildPanel();
+    QWidget* buildMode(QWidget* parent);
+    QWidget* buildEditPanel(QWidget* parent);
+    /// The before and after of `path` at 100%, read on a worker.
+    void showCompare(const QString& path);
+    void showCompressDone(int failed);
     QWidget* buildRecipe(QWidget* parent);
     QWidget* buildRecipeCard(QWidget* box);
     QHBoxLayout* buildSecondRow(QWidget* box);
@@ -203,6 +226,18 @@ private:
     QLineEdit* m_name = nullptr;
     QCheckBox* m_beside = nullptr;
     class WatermarkPicker* m_watermark = nullptr;
+    core::CompressJob m_job;
+    bool m_compressOnly = false;
+    QButtonGroup* m_modes = nullptr;
+    QLabel* m_modeNote = nullptr;
+    QStackedWidget* m_panels = nullptr;
+    class CompressPanel* m_compressPanel = nullptr;
+    class CompressList* m_compressList = nullptr;
+    class CompressCompare* m_compare = nullptr;
+    QLabel* m_listTitle = nullptr;
+    QWidget* m_viewBox = nullptr;
+    QWidget* m_sortBox = nullptr;
+    quint64 m_compareGeneration = 0;
 };
 
 } // namespace pixelfx::ui

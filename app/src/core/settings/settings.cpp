@@ -143,6 +143,52 @@ void Settings::setExportOptions(const ExportOptions& options)
     m_settings->setValue(key(keys::kExportIfExists), ifExistsKey(options.ifExists));
 }
 
+CompressJob Settings::compressJob() const
+{
+    CompressJob j;
+    const auto value = [this](const char* name, const QVariant& fallback) {
+        return m_settings->value(key(name), fallback);
+    };
+    j.codec.jpeg = value(keys::kCompressJpeg, u"lossless"_s).toString() == u"quality"_s
+                       ? pfx::JpegCompression::Quality
+                       : pfx::JpegCompression::Lossless;
+    j.codec.jpegQuality = std::clamp(value(keys::kCompressJpegQuality, j.codec.jpegQuality).toInt(), 1, 100);
+    j.codec.png = value(keys::kCompressPng, u"lossless"_s).toString() == u"fewerColours"_s
+                      ? pfx::PngCompression::FewerColours
+                      : pfx::PngCompression::Lossless;
+    j.codec.pngQuality = std::clamp(value(keys::kCompressPngQuality, j.codec.pngQuality).toInt(), 40, 100);
+    j.codec.removeExtras = value(keys::kCompressRemoveExtras, j.codec.removeExtras).toBool();
+    j.folder = value(keys::kCompressFolder, defaultCompressFolder()).toString();
+    j.nameTemplate = value(keys::kCompressNameTemplate, j.nameTemplate).toString();
+    j.keepIfNotSmaller = value(keys::kCompressKeepIfNotSmaller, j.keepIfNotSmaller).toBool();
+    return j;
+}
+
+void Settings::setCompressJob(const CompressJob& job)
+{
+    m_settings->setValue(key(keys::kCompressJpeg),
+                         job.codec.jpeg == pfx::JpegCompression::Quality ? u"quality"_s : u"lossless"_s);
+    m_settings->setValue(key(keys::kCompressJpegQuality), job.codec.jpegQuality);
+    m_settings->setValue(key(keys::kCompressPng), job.codec.png == pfx::PngCompression::FewerColours
+                                                      ? u"fewerColours"_s
+                                                      : u"lossless"_s);
+    m_settings->setValue(key(keys::kCompressPngQuality), job.codec.pngQuality);
+    m_settings->setValue(key(keys::kCompressRemoveExtras), job.codec.removeExtras);
+    m_settings->setValue(key(keys::kCompressFolder), job.folder);
+    m_settings->setValue(key(keys::kCompressNameTemplate), job.nameTemplate);
+    m_settings->setValue(key(keys::kCompressKeepIfNotSmaller), job.keepIfNotSmaller);
+}
+
+bool Settings::batchCompressOnly() const
+{
+    return m_settings->value(key(keys::kBatchCompressOnly), false).toBool();
+}
+
+void Settings::setBatchCompressOnly(bool on)
+{
+    m_settings->setValue(key(keys::kBatchCompressOnly), on);
+}
+
 bool Settings::migrateFromVersion1(const QString& legacyFile)
 {
     if (m_settings->value(key(keys::kLegacyMigrated), false).toBool()) {

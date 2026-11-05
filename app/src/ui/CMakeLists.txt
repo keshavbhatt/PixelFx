@@ -9,6 +9,12 @@ qt_add_library(pixelfx_ui STATIC
     adjust_panel.h
     batch_page.cpp
     batch_page.h
+    compress_compare.cpp
+    compress_compare.h
+    compress_list.cpp
+    compress_list.h
+    compress_panel.cpp
+    compress_panel.h
     busy_ring.cpp
     busy_ring.h
     canvas.cpp
@@ -50,6 +56,8 @@ qt_add_library(pixelfx_ui STATIC
     look_editor.h
     list_row.cpp
     list_row.h
+    status_pill.cpp
+    status_pill.h
     looks_panel.cpp
     looks_panel.h
     main_window.cpp

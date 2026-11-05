@@ -1,11 +1,16 @@
 #pragma once
 
+#include "core/compress_job.h"
 #include "core/export_options.h"
 
 #include <QElapsedTimer>
+#include <QImage>
 #include <QObject>
+#include <QSet>
 #include <QStringList>
 
+#include <optional>
+#include <pfx/compress.h>
 #include <pfx/document.h>
 #include <pfx/image.h>
 #include <pfx/settings.h>
@@ -28,6 +33,24 @@ struct BatchRecipe
     bool besideOriginals = false;
     /// Where remembered edits are (for keepEdits); empty: none.
     QString sidecarFolder;
+    /// Compress only: each file made smaller in its own format, nothing else (the rest of the
+    /// recipe is not used).
+    std::optional<core::CompressJob> compress;
+};
+
+/// What Compress only did with one file.
+struct CompressResult
+{
+    qint64 before = 0;
+    qint64 after = 0; ///< the size saved: the original's when it was kept
+    pfx::CompressMethod method = pfx::CompressMethod::Unchanged;
+    pfx::CompressNote note = pfx::CompressNote::None;
+    int quality = 100;         ///< a palette's, for PNG Fewer colours
+    bool keptOriginal = false; ///< the result was not smaller, so the original's bytes were saved
+    /// When the originals are replaced, the original's most detailed spot at 100% (as PNG), for
+    /// the before and after; otherwise both are read from the files when wanted.
+    QByteArray beforeSpot;
+    pfx::Region spot;
 };
 
 /// A batch recipe file's body as a recipe to run, and back (DOCS/presets.md section 4). Step names
@@ -74,11 +97,23 @@ public:
     {
         return m_targets.at(static_cast<std::size_t>(index));
     }
+    /// Compress only's result for the file at `index`.
+    [[nodiscard]] const CompressResult& compressed(int index) const
+    {
+        return m_compressed.at(static_cast<std::size_t>(index));
+    }
+    [[nodiscard]] const QStringList& files() const { return m_files; }
+    [[nodiscard]] bool isCompressing() const { return m_recipe.compress.has_value(); }
+    /// The size of the spot kept for the before and after.
+    static constexpr int kSpotWidth = 640;
+    static constexpr int kSpotHeight = 240;
     /// The settings `recipe` gives a photo whose own edits are `own` (pure, for tests).
     [[nodiscard]] static pfx::Settings settingsFor(const BatchRecipe& recipe, const pfx::Settings& own,
                                                    const pfx::Image& photo);
 
     static constexpr int kAtOnce = 2; // a 24 MP photo needs about 1 GB while it is processed
+    /// Compress only decodes without the float pipeline, so it runs more files at once.
+    static constexpr int kCompressAtOnce = 4;
 
 Q_SIGNALS:
     void photoChanged(int index);
@@ -88,13 +123,19 @@ Q_SIGNALS:
 
 private:
     void startNext();
+    void startCompress(int index, const core::CompressJob& job);
+    void finishOne(int index);
     QStringList m_files;
     BatchRecipe m_recipe;
     std::vector<State> m_states;
     std::vector<QString> m_reasons;
     std::vector<QString> m_targets;
+    std::vector<CompressResult> m_compressed;
+    // Files the last Compress only run of this list wrote: running it again replaces them.
+    QSet<QString> m_ours;
     std::vector<int> m_queue;
     int m_running = 0;
+    int m_atOnce = kAtOnce;
     bool m_paused = false;
     quint64 m_generation = 0;
     QElapsedTimer m_clock;

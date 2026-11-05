@@ -261,6 +261,7 @@ const QString kControls = uR"(
         QListWidget#batchGrid { background: {{panel}}; border: 0; }
         #batchHead { border-bottom: 1px solid {{border}}; }
         #batchBar { background: {{panel}}; border-top: 1px solid {{border}}; }
+        QLabel#comparePicture { background: {{canvas}}; border-radius: 6px; }
         QFrame#segmentBox { border: 1px solid {{border}}; border-radius: 7px; background: {{input}}; }
         QFrame#segmentBox QPushButton#segment { border: 0; border-right: 1px solid {{border}}; background: transparent; }
         QFrame#segmentBox QPushButton#segment:checked { background: {{accentSoft}}; }

@@ -597,9 +597,14 @@ void MainWindow::buildBatchHeaderButtons()
 void MainWindow::buildBatch()
 {
     BatchPage::setPhotoTest(&MainWindow::isSupported);
-    m_batch = new BatchPage(m_settings.exportOptions(), this);
+    m_batch = new BatchPage(m_settings.exportOptions(), m_settings.compressJob(),
+                            m_settings.batchCompressOnly(), this);
     connect(m_batch, &BatchPage::outputChanged, this,
             [this](const core::ExportOptions& output) { m_settings.setExportOptions(output); });
+    connect(m_batch, &BatchPage::compressJobChanged, this,
+            [this](const core::CompressJob& job) { m_settings.setCompressJob(job); });
+    connect(m_batch, &BatchPage::compressOnlyChanged, this,
+            [this](bool on) { m_settings.setBatchCompressOnly(on); });
     connect(m_batch, &BatchPage::looksAdded, this, &MainWindow::refreshLooks);
     connect(m_batch, &BatchPage::summaryChanged, this, [this](const QString& summary) {
         if (isBatching()) {

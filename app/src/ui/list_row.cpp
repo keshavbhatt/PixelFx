@@ -82,6 +82,13 @@ void ListRow::addLeading(QWidget* widget)
     m_row->insertWidget(m_leading++, widget);
 }
 
+void ListRow::addTrailing(QWidget* widget, Qt::Alignment alignment)
+{
+    widget->setParent(this);
+    const int at = m_action != nullptr ? m_row->indexOf(m_action) : m_row->count();
+    m_row->insertWidget(at, widget, 0, alignment);
+}
+
 void ListRow::setSelected(bool selected)
 {
     if (selected == m_selected) {

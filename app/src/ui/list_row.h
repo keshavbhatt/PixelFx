@@ -27,6 +27,8 @@ public:
     /// Adds the action button at the right end (for example a × that removes the row).
     void setAction(const QString& glyph, const QString& tip);
     void addLeading(QWidget* widget);
+    /// Adds a control after the text, before the action button (a size, a status).
+    void addTrailing(QWidget* widget, Qt::Alignment alignment = Qt::AlignVCenter);
     void setSelected(bool selected);
     [[nodiscard]] bool isSelected() const { return m_selected; }
     [[nodiscard]] QString title() const;

@@ -6,6 +6,8 @@ qt_add_library(pixelfx_core STATIC
     batch_resources.h
     changelog.cpp
     changelog.h
+    compress_job.cpp
+    compress_job.h
     crop_geometry.cpp
     crop_geometry.h
     describe.cpp
