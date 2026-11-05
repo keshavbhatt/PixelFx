@@ -435,8 +435,7 @@ QWidget* LookEditor::buildSteps()
     side->setObjectName(u"sheetSide"_s); // the same panel look as the watermark sheet
     side->setAttribute(Qt::WA_StyledBackground);
     side->setFixedWidth(320);
-    auto* label = new QLabel(tr("Steps, applied top to bottom").toUpper(), side);
-    label->setObjectName(u"section"_s);
+    QLabel* label = sectionHeading(tr("Steps, applied top to bottom"), side, kPanelPadding);
     m_steps = new StepList(side);
     m_steps->setAccessibleName(tr("Steps"));
     connect(m_steps, &StepList::currentChanged, this, &LookEditor::showParams);
@@ -462,8 +461,7 @@ QWidget* LookEditor::buildSteps()
 
     QHBoxLayout* buttons = buildStepButtons(side);
 
-    m_paramsTitle = new QLabel(side);
-    m_paramsTitle->setObjectName(u"section"_s);
+    m_paramsTitle = sectionHeading(QString(), side, kPanelPadding);
     m_params = new QWidget(side);
     m_params->setObjectName(u"panelContent"_s);
     m_paramsLayout = new QVBoxLayout(m_params);
@@ -476,14 +474,12 @@ QWidget* LookEditor::buildSteps()
     scroll->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 
     auto* column = new QVBoxLayout(side);
-    column->setContentsMargins(0, 10, 0, 0);
-    column->setSpacing(kGapSmall);
+    column->setContentsMargins(0, 0, 0, 0);
+    column->setSpacing(0);
     column->addWidget(label);
-    label->setContentsMargins(kPanelPadding, 0, kPanelPadding, 0);
     column->addWidget(m_noSteps);
     column->addWidget(m_stepsScroll);
     column->addLayout(buttons);
-    m_paramsTitle->setContentsMargins(kPanelPadding, 4, kPanelPadding, 0);
     column->addWidget(m_paramsTitle);
     column->addWidget(scroll, 1);
     return side;
@@ -662,11 +658,12 @@ void LookEditor::showParams(int row)
         delete item;
     }
     if (row < 0 || std::cmp_greater_equal(row, m_look.steps.size())) {
-        m_paramsTitle->setText(QString());
+        m_paramsTitle->hide();
         return;
     }
     const pfx::LookStep& step = m_look.steps[static_cast<std::size_t>(row)];
     m_paramsTitle->setText(tr("Step: %1").arg(stepName(QString::fromStdString(step.op))).toUpper());
+    m_paramsTitle->show();
     if (step.op == "lut") {
         pfx::ParamSpec mix;
         mix.key = "mix";

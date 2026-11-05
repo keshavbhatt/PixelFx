@@ -54,13 +54,6 @@ constexpr std::array kOverlays = {
 
 constexpr int kPanelWidth = 316;
 
-QLabel* section(const QString& text, QWidget* parent)
-{
-    QLabel* label = sectionLabel(text, parent);
-    label->setContentsMargins(kPanelPadding, 12, kPanelPadding, 4);
-    return label;
-}
-
 QPushButton* chip(const QString& text, QWidget* parent)
 {
     auto* b = new QPushButton(text, parent);
@@ -123,14 +116,14 @@ CropPanel::CropPanel(QWidget* parent)
     auto* column = new QVBoxLayout(this);
     column->setContentsMargins(0, 0, 0, 0);
     column->setSpacing(0);
-    column->addWidget(section(tr("Aspect ratio"), this));
+    column->addWidget(sectionHeading(tr("Aspect ratio"), this, kPanelPadding));
     column->addWidget(buildRatios());
     column->addWidget(buildOrientation());
-    column->addWidget(section(tr("Straighten and rotate"), this));
+    column->addWidget(sectionHeading(tr("Straighten and rotate"), this, kPanelPadding));
     column->addLayout(buildStraighten());
-    column->addWidget(section(tr("Perspective"), this));
+    column->addWidget(sectionHeading(tr("Perspective"), this, kPanelPadding));
     column->addLayout(buildPerspective());
-    column->addWidget(section(tr("Overlay"), this));
+    column->addWidget(sectionHeading(tr("Overlay"), this, kPanelPadding));
     column->addWidget(buildOverlays());
     column->addStretch();
     column->addWidget(buildFoot());

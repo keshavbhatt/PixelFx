@@ -194,10 +194,7 @@ void PresetsPanel::rebuild()
         }
         if (e.group != group) {
             group = e.group;
-            auto* label = new QLabel(group.toUpper(), m_listBox);
-            label->setObjectName(u"section"_s);
-            label->setContentsMargins(kPanelPadding, 12, kPanelPadding, 4);
-            m_list->addWidget(label);
+            m_list->addWidget(sectionHeading(group, m_listBox, kPanelPadding));
         }
         auto* row = new PresetRow(i, e, m_listBox);
         row->setThumbnail(m_thumbnails[i]);

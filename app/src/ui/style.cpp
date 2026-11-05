@@ -486,6 +486,29 @@ QLabel* sectionLabel(const QString& text, QWidget* parent)
     return label;
 }
 
+namespace {
+constexpr int kAboveSection = 12;
+constexpr int kBelowSection = 4;
+} // namespace
+
+QLabel* sectionHeading(const QString& text, QWidget* parent, int sides)
+{
+    QLabel* label = sectionLabel(text, parent);
+    label->setContentsMargins(sides, kAboveSection, sides, kBelowSection);
+    return label;
+}
+
+QHBoxLayout* sectionHeadingRow(QLabel* label, QWidget* trailing, int sides)
+{
+    auto* row = new QHBoxLayout;
+    row->setContentsMargins(sides, kAboveSection, sides, kBelowSection);
+    row->addWidget(label, 1);
+    if (trailing != nullptr) {
+        row->addWidget(trailing);
+    }
+    return row;
+}
+
 void addMenuHeading(QMenu* menu, const QString& text)
 {
     auto* label = new QLabel(text, menu);

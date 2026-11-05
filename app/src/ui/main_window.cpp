@@ -538,7 +538,7 @@ void MainWindow::buildHeader()
     QWidget* sepHistory = separator();
     QWidget* sepView = separator();
     auto* header = new QHBoxLayout(m_header);
-    header->setContentsMargins(12, 0, 10, 0);
+    header->setContentsMargins(kToolRowPadding, 0, kToolRowPadding, 0);
     header->setSpacing(kGapRelated);
     header->addWidget(new BrandMark(m_header));
     m_wordmark = new QLabel(u"PixelFx"_s, m_header);
@@ -933,7 +933,7 @@ QWidget* MainWindow::buildCanvasPage()
     m_modeHint = new QLabel(m_modeStrip);
     m_modeHint->setObjectName(u"muted"_s);
     auto* row = new QHBoxLayout(m_modeStrip);
-    row->setContentsMargins(10, 0, 10, 0);
+    row->setContentsMargins(kToolRowPadding, 0, kToolRowPadding, 0);
     row->setSpacing(kGapGroups);
     row->addStretch();
     row->addWidget(m_modeDetail);

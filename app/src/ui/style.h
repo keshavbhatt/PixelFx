@@ -28,6 +28,8 @@ namespace pixelfx::ui {
 inline constexpr int kSheetPadding = 20;
 inline constexpr int kPanelPadding = 14;
 inline constexpr int kToolRowPadding = 10;
+/// Rows of a list (spots, steps, photos) sit this far in from the panel's edges.
+inline constexpr int kListInset = 8;
 
 /// The gaps between items, by how closely they belong together (0 is for segments that touch).
 inline constexpr int kGapTight = 2; ///< rows of one list
@@ -91,6 +93,12 @@ QHBoxLayout* sheetTitleRow(QDialog* sheet, const QString& title, const QList<QWi
 QWidget* sheetHeaderBar(QDialog* sheet, QLayout* titleRow);
 /// A section heading of a panel or sheet ("SPOTS (3)", "1. RECIPE"): small, bold, muted capitals.
 QLabel* sectionLabel(const QString& text, QWidget* parent);
+/// A section heading on a line of its own: 12 px above it, 4 px below, `sides` px from the edges
+/// of its container (kPanelPadding in a panel, 0 inside a padded sheet).
+QLabel* sectionHeading(const QString& text, QWidget* parent, int sides = 0);
+/// A section heading with a control at its right end ("SPOTS (3)  Remove all", "MY LOOKS  New
+/// look"), spaced as sectionHeading.
+QHBoxLayout* sectionHeadingRow(QLabel* label, QWidget* trailing, int sides = 0);
 /// A heading inside a menu ("History"): Qt draws a menu section as a bare line under a style
 /// sheet, so the heading is a label of its own.
 void addMenuHeading(QMenu* menu, const QString& text);

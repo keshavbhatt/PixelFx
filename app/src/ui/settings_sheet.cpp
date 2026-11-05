@@ -21,13 +21,6 @@ namespace pixelfx::ui {
 
 namespace {
 
-QLabel* section(const QString& text, QWidget* parent)
-{
-    QLabel* label = sectionLabel(text, parent);
-    label->setContentsMargins(0, 14, 0, 4);
-    return label;
-}
-
 constexpr int kLabelColumn = 160;
 
 /// A segmented control across the column, one segment checked; `chosen(index)` on click.
@@ -95,12 +88,12 @@ QWidget* SettingsSheet::buildGeneral()
     using S = core::Settings;
     auto* page = new QWidget(this);
     auto* form = new QFormLayout(page);
-    form->setContentsMargins(22, 4, 22, 16);
+    form->setContentsMargins(kSheetPadding, 4, kSheetPadding, 16);
     form->setLabelAlignment(Qt::AlignLeft | Qt::AlignVCenter);
     form->setHorizontalSpacing(kGapItems);
     form->setVerticalSpacing(kGapGroups);
 
-    form->addRow(section(tr("Appearance"), page));
+    form->addRow(sectionHeading(tr("Appearance"), page));
     // The theme applies at the next start: said once it is changed.
     auto* themeNote = new QLabel(tr("Takes effect the next time PixelFx starts."), page);
     themeNote->setObjectName(u"faint"_s);
@@ -122,7 +115,7 @@ QWidget* SettingsSheet::buildGeneral()
                               m_settings.setCanvasBackground(static_cast<S::CanvasBackground>(i));
                           }));
 
-    form->addRow(section(tr("Editing"), page));
+    form->addRow(sectionHeading(tr("Editing"), page));
     auto* remember = new QCheckBox(tr("Keep each photo's settings in the app's library"), page);
     remember->setObjectName(u"switch"_s);
     remember->setChecked(m_settings.rememberEdits());
@@ -136,7 +129,7 @@ QWidget* SettingsSheet::buildGeneral()
     connect(onOpen, &QComboBox::activated, this, [this](int i) { m_settings.setOpenAsLeft(i == 0); });
     form->addRow(tr("On open"), onOpen);
 
-    form->addRow(section(tr("Display"), page));
+    form->addRow(sectionHeading(tr("Display"), page));
     auto* clipping = new QCheckBox(tr("Show clipped highlights and shadows (J)"), page);
     clipping->setObjectName(u"switch"_s);
     clipping->setChecked(m_settings.clippingWarnings());

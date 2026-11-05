@@ -64,7 +64,7 @@ Filmstrip::Filmstrip(QWidget* parent)
     m_selectionBar->hide();
 
     auto* layout = new QHBoxLayout(this);
-    layout->setContentsMargins(10, 0, 12, 0);
+    layout->setContentsMargins(kToolRowPadding, 0, kToolRowPadding, 0);
     layout->setSpacing(kGapControls);
     layout->addWidget(m_scroll, 1);
     layout->addWidget(m_info);

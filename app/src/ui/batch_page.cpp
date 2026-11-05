@@ -57,13 +57,6 @@ bool (*isPhotoTest)(const QString&) = nullptr;
 
 constexpr int kPanelWidth = 380;
 
-QLabel* sectionTitle(const QString& text, QWidget* parent)
-{
-    QLabel* label = sectionLabel(text, parent);
-    label->setContentsMargins(0, 12, 0, 4);
-    return label;
-}
-
 QString describe(const QString& path)
 {
     const auto info = pfx::probe(path.toStdString());
@@ -258,7 +251,7 @@ QWidget* BatchPage::buildListHead(QWidget* parent)
         }
     });
     auto* row = new QHBoxLayout(head);
-    row->setContentsMargins(16, 10, 16, 10);
+    row->setContentsMargins(kPanelPadding, 10, kPanelPadding, 10);
     row->setSpacing(kGapControls);
     row->addWidget(title);
     row->addWidget(hint);
@@ -276,7 +269,7 @@ QWidget* BatchPage::buildList()
     m_rowsBox = new QWidget(box);
     m_rowsBox->setObjectName(u"batchRows"_s);
     m_rows = new QVBoxLayout(m_rowsBox);
-    m_rows->setContentsMargins(16, 8, 16, 8);
+    m_rows->setContentsMargins(kPanelPadding, 8, kPanelPadding, 8);
     m_rows->setSpacing(0);
     auto* scroll = new QScrollArea(box);
     scroll->setWidget(m_rowsBox);
@@ -318,7 +311,7 @@ QWidget* BatchPage::buildPreview(QWidget* parent)
     auto* caption = new QLabel(tr("The first photo, before and after the recipe"), m_preview);
     caption->setObjectName(u"muted"_s);
     auto* row = new QHBoxLayout(m_preview);
-    row->setContentsMargins(16, 10, 16, 10);
+    row->setContentsMargins(kPanelPadding, 10, kPanelPadding, 10);
     row->setSpacing(kGapItems);
     row->addWidget(previewLabel);
     row->addWidget(m_before);
@@ -376,7 +369,7 @@ QWidget* BatchPage::buildStatus(QWidget* parent)
         line->addWidget(b);
     }
     auto* column = new QVBoxLayout(m_status);
-    column->setContentsMargins(16, 10, 16, 12);
+    column->setContentsMargins(kPanelPadding, 10, kPanelPadding, 12);
     column->setSpacing(kGapControls);
     column->addLayout(line);
     column->addWidget(m_progress);
@@ -399,7 +392,7 @@ QWidget* BatchPage::buildPanel()
     sections->setSpacing(kGapRelated);
     sections->addWidget(buildRecipe(content));
     sections->addWidget(buildResize(content));
-    sections->addWidget(sectionTitle(tr("3. Watermark"), content));
+    sections->addWidget(sectionHeading(tr("3. Watermark"), content));
     m_watermark = new WatermarkPicker(m_output.watermark, content);
     connect(m_watermark, &WatermarkPicker::changed, this, &BatchPage::outputEdited);
     sections->addWidget(m_watermark);
@@ -424,7 +417,7 @@ QWidget* BatchPage::buildRecipe(QWidget* parent)
     auto* column = new QVBoxLayout(box);
     column->setContentsMargins(0, 0, 0, 0);
     column->setSpacing(kGapControls);
-    column->addWidget(sectionTitle(tr("1. Recipe"), box));
+    column->addWidget(sectionHeading(tr("1. Recipe"), box));
     auto* sources = new QHBoxLayout;
     sources->setSpacing(0);
     m_sources = new QButtonGroup(this);
@@ -524,7 +517,7 @@ QWidget* BatchPage::buildResize(QWidget* parent)
     auto* column = new QVBoxLayout(box);
     column->setContentsMargins(0, 0, 0, 0);
     column->setSpacing(kGapControls);
-    column->addWidget(sectionTitle(tr("2. Resize"), box));
+    column->addWidget(sectionHeading(tr("2. Resize"), box));
     m_size = buildSizes(box);
     showSize(m_output.sizePreset, m_output.longEdge);
     connect(m_size, &QComboBox::currentIndexChanged, this, &BatchPage::outputEdited);
@@ -543,7 +536,7 @@ QWidget* BatchPage::buildSaveAs(QWidget* parent)
     auto* column = new QVBoxLayout(box);
     column->setContentsMargins(0, 0, 0, 0);
     column->setSpacing(kGapControls);
-    column->addWidget(sectionTitle(tr("4. Save as"), box));
+    column->addWidget(sectionHeading(tr("4. Save as"), box));
     m_format = new QComboBox(box);
     m_format->setAccessibleName(tr("Format"));
     refreshFormats();

@@ -317,16 +317,7 @@ bool LooksPanel::matches(const core::LookEntry& e) const
 void LooksPanel::addSection(const QString& title, QWidget* extra, const std::vector<int>& indexes,
                             bool withOriginal)
 {
-    auto* label = new QLabel(title.toUpper(), m_listBox);
-    label->setObjectName(u"section"_s);
-    auto* head = new QHBoxLayout;
-    head->setContentsMargins(kPanelPadding, 10, kPanelPadding, 4);
-    head->addWidget(label);
-    head->addStretch();
-    if (extra != nullptr) {
-        head->addWidget(extra);
-    }
-    m_list->addLayout(head);
+    m_list->addLayout(sectionHeadingRow(sectionLabel(title, m_listBox), extra, kPanelPadding));
     auto* grid = new QGridLayout;
     grid->setContentsMargins(kToolRowPadding, 2, kToolRowPadding, 6);
     grid->setHorizontalSpacing(kGapControls);

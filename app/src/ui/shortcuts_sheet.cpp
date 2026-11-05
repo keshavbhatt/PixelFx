@@ -91,10 +91,7 @@ ShortcutsSheet::ShortcutsSheet(QWidget* parent)
         const Section& section = sections().at(s);
         auto* column = new QVBoxLayout;
         column->setSpacing(kGapSmall);
-        auto* label = new QLabel(tr(section.title).toUpper(), this);
-        label->setObjectName(u"section"_s);
-        label->setContentsMargins(0, 10, 0, 2);
-        column->addWidget(label);
+        column->addWidget(sectionHeading(tr(section.title), this));
         for (const Shortcut& sc : section.rows) {
             auto* row = new QWidget(this);
             row->setObjectName(u"shortcutRow"_s);

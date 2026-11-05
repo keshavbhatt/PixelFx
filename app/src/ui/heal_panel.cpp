@@ -35,13 +35,6 @@ QString percent(double share)
                                               : HealPanel::tr("%1%").arg(p, 0, 'f', 1);
 }
 
-QLabel* heading(const QString& text, QWidget* parent)
-{
-    QLabel* label = sectionLabel(text, parent);
-    label->setContentsMargins(kPanelPadding, 12, kPanelPadding, 4);
-    return label;
-}
-
 } // namespace
 
 HealPanel::HealPanel(HealTool* tool, QWidget* parent)
@@ -59,7 +52,7 @@ HealPanel::HealPanel(HealTool* tool, QWidget* parent)
     auto* column = new QVBoxLayout(this);
     column->setContentsMargins(0, 0, 0, 0);
     column->setSpacing(0);
-    column->addWidget(heading(tr("Heal"), this));
+    column->addWidget(sectionHeading(tr("Heal"), this, kPanelPadding));
     column->addWidget(buildBrush());
     column->addWidget(buildSpots(), 1);
     column->addWidget(footBar(this, buttons.row, kPanelPadding));
@@ -167,14 +160,11 @@ QWidget* HealPanel::buildSpots()
     m_removeAll = new QPushButton(tr("Remove all"), box);
     m_removeAll->setObjectName(u"link"_s);
     connect(m_removeAll, &QPushButton::clicked, m_tool, &HealTool::removeAll);
-    auto* head = new QHBoxLayout;
-    head->setContentsMargins(kPanelPadding, 12, kPanelPadding - 4, 4);
-    head->addWidget(m_count, 1);
-    head->addWidget(m_removeAll);
+    QHBoxLayout* head = sectionHeadingRow(m_count, m_removeAll, kPanelPadding);
     auto* listBox = new QWidget(box);
     listBox->setObjectName(u"panelContent"_s);
     m_list = new QVBoxLayout(listBox);
-    m_list->setContentsMargins(8, 0, 8, 8);
+    m_list->setContentsMargins(kListInset, 0, kListInset, kListInset);
     m_list->setSpacing(kGapTight);
     m_list->addStretch();
     auto* scroll = new QScrollArea(box);
