@@ -45,7 +45,7 @@ namespace pixelfx::ui {
 
 namespace {
 
-constexpr int kVisibleSteps = 5; // rows shown before the list scrolls
+constexpr int kVisibleSteps = 4; // rows shown before the list scrolls
 constexpr int kNewLookStrength = 80;
 
 struct Category
@@ -441,6 +441,8 @@ QWidget* LookEditor::buildSteps()
     side->setFixedWidth(320);
     QLabel* label = sectionHeading(tr("Steps, applied top to bottom"), side, kPanelPadding);
     m_steps = new StepList(side);
+    m_steps->setObjectName(u"panelContent"_s);
+    m_steps->setAttribute(Qt::WA_StyledBackground);
     m_steps->setAccessibleName(tr("Steps"));
     connect(m_steps, &StepList::currentChanged, this, &LookEditor::showParams);
     connect(m_steps, &StepList::moved, this, &LookEditor::moveStep);

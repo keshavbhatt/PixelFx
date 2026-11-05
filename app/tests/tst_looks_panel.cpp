@@ -90,6 +90,9 @@ private Q_SLOTS:
         editor.addStep(u"exposure"_s);
         editor.addStep(u"grain"_s);
         QCOMPARE(editor.stepList()->count(), 2);
+        // An editor sheet can be made larger than it opens, not smaller.
+        QCOMPARE(editor.minimumSize(), QSize(980, 640));
+        QVERIFY(editor.maximumWidth() > 980 && editor.maximumHeight() > 640);
         // Steps added while the sheet is open all show.
         QApplication::processEvents();
         const QWidget* viewport = editor.stepList()->parentWidget();

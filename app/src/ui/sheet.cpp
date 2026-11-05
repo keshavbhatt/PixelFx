@@ -2,7 +2,9 @@
 
 #include "ui/style.h"
 
+#include <QApplication>
 #include <QEvent>
+#include <QGuiApplication>
 #include <QLayout>
 #include <QMouseEvent>
 #include <QPainter>
@@ -85,7 +87,9 @@ void Sheet::setSize(Size size)
         setFixedWidth(820);
         break;
     case Size::Editor:
-        setFixedSize(980, 640);
+        setMinimumSize(980, 640);
+        resize(980, 640);
+        m_resizable = true;
         return;
     }
     fitHeight();
@@ -122,9 +126,69 @@ void Sheet::mousePressEvent(QMouseEvent* event)
     QDialog::mousePressEvent(event);
 }
 
+Qt::Edges Sheet::edgesAt(const QPoint& global) const
+{
+    constexpr int kReach = 6;
+    const QPoint at = mapFromGlobal(global);
+    if (!rect().contains(at)) {
+        return {};
+    }
+    Qt::Edges edges;
+    edges.setFlag(Qt::LeftEdge, at.x() < kReach);
+    edges.setFlag(Qt::RightEdge, at.x() >= width() - kReach);
+    edges.setFlag(Qt::TopEdge, at.y() < kReach);
+    edges.setFlag(Qt::BottomEdge, at.y() >= height() - kReach);
+    return edges;
+}
+
+void Sheet::showResizeCursor(Qt::Edges edges)
+{
+    if (edges == m_cursorEdges) {
+        return;
+    }
+    if (m_cursorEdges != Qt::Edges()) {
+        QGuiApplication::restoreOverrideCursor();
+    }
+    m_cursorEdges = edges;
+    if (edges == Qt::Edges()) {
+        return;
+    }
+    const bool horizontal = edges.testAnyFlags(Qt::LeftEdge | Qt::RightEdge);
+    const bool vertical = edges.testAnyFlags(Qt::TopEdge | Qt::BottomEdge);
+    Qt::CursorShape shape = horizontal ? Qt::SizeHorCursor : Qt::SizeVerCursor;
+    if (horizontal && vertical) {
+        const bool falling =
+            edges == (Qt::TopEdge | Qt::LeftEdge) || edges == (Qt::BottomEdge | Qt::RightEdge);
+        shape = falling ? Qt::SizeFDiagCursor : Qt::SizeBDiagCursor;
+    }
+    QGuiApplication::setOverrideCursor(shape);
+}
+
+bool Sheet::eventFilter(QObject* watched, QEvent* event)
+{
+    // The sheet's edges are covered by its content, so the pointer is watched over all of it.
+    const QEvent::Type type = event->type();
+    if (m_resizable && (type == QEvent::MouseMove || type == QEvent::MouseButtonPress) &&
+        watched->isWidgetType() && static_cast<QWidget*>(watched)->window() == this) {
+        const auto* mouse = static_cast<QMouseEvent*>(event);
+        const Qt::Edges edges = edgesAt(mouse->globalPosition().toPoint());
+        if (type == QEvent::MouseMove && mouse->buttons() == Qt::NoButton) {
+            showResizeCursor(edges);
+        } else if (type == QEvent::MouseButtonPress && mouse->button() == Qt::LeftButton &&
+                   edges != Qt::Edges() && windowHandle() != nullptr &&
+                   windowHandle()->startSystemResize(edges)) {
+            return true;
+        }
+    }
+    return QDialog::eventFilter(watched, event);
+}
+
 void Sheet::showEvent(QShowEvent* event)
 {
     QDialog::showEvent(event);
+    if (m_resizable) {
+        qApp->installEventFilter(this);
+    }
     if (m_scrim == nullptr && parentWidget() != nullptr) {
         m_scrim = new Scrim(parentWidget()->window());
     }
@@ -132,6 +196,10 @@ void Sheet::showEvent(QShowEvent* event)
 
 void Sheet::hideEvent(QHideEvent* event)
 {
+    if (m_resizable) {
+        qApp->removeEventFilter(this);
+        showResizeCursor({});
+    }
     delete m_scrim;
     QDialog::hideEvent(event);
 }
