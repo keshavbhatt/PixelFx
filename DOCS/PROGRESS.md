@@ -27,6 +27,7 @@
 | `preview-viewer.html` | 2026-11-05 (`mocks/reviews/preview-viewer.md`) | approved 2026-11-05 (built with the editor's zoom bar; the counter in the title) |
 | `editor-develop.html` | 2026-11-05 (`mocks/reviews/editor-develop.md`) | approved 2026-11-05 (supersedes the two-wheel grading of `editor-grading.html`) |
 | `editor-presets-catalog.html` | 2026-11-05 (`mocks/reviews/editor-presets-catalog.md`) | approved 2026-11-05 |
+| `editor-mixer-target.html` | 2026-11-05 (`mocks/reviews/editor-mixer-target.md`) | approved 2026-11-05 |
 
 ## Waiting for the owner (2026-11-05)
 
