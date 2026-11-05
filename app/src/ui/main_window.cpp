@@ -1407,6 +1407,7 @@ void MainWindow::savePreset()
         }
     }
     PresetSaveSheet sheet(m_document.settings(), groups, this);
+    sheet.setPhoto(m_document.preview());
     if (sheet.exec() != QDialog::Accepted) {
         return;
     }

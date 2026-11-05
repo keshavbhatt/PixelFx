@@ -6,9 +6,13 @@
 #include <QDialog>
 #include <QFile>
 #include <QFormLayout>
+#include <QImage>
 #include <QLabel>
 #include <QMenu>
+#include <QPainter>
+#include <QPainterPath>
 #include <QPalette>
+#include <QPixmap>
 #include <QProxyStyle>
 #include <QStyleFactory>
 #include <QTemporaryDir>
@@ -226,7 +230,8 @@ const QString kControls = uR"(
         QFrame#segmentBox { border: 1px solid {{border}}; border-radius: 7px; background: {{input}}; }
         QToolButton#segmentIcon { border: 0; border-radius: 6px; padding: 4px 9px; background: transparent; }
         QToolButton#segmentIcon:checked { background: {{accentSoft}}; }
-        QFrame#recipeCard { border: 1px solid {{border}}; border-radius: 10px; background: {{input}}; }
+        QFrame#recipeCard, QFrame#card { border: 1px solid {{border}}; border-radius: 10px; background: {{input}}; }
+        QLabel#heading { font-weight: 600; }
         QFrame#pill { border-radius: 10px; background: {{hover}}; }
         QFrame#pill[kind="accent"] { background: {{accentSoft}}; }
         QLabel#pillText { font-size: 11px; color: {{muted}}; }
@@ -462,6 +467,28 @@ void setLabelColumn(const QFormLayout* form, int width)
             label->setMinimumWidth(width - std::max(0, form->horizontalSpacing()));
         }
     }
+}
+
+QPixmap coverThumbnail(const QImage& image, const QSize& size, int radius, qreal devicePixelRatio)
+{
+    const QSize pixels = size * devicePixelRatio;
+    QPixmap out(pixels);
+    out.fill(Qt::transparent);
+    if (image.isNull()) {
+        return out;
+    }
+    const QImage scaled = image.scaled(pixels, Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation);
+    QPainter painter(&out);
+    painter.setRenderHint(QPainter::Antialiasing);
+    QPainterPath clip;
+    clip.addRoundedRect(QRectF(QPointF(0, 0), QSizeF(pixels)), radius * devicePixelRatio,
+                        radius * devicePixelRatio);
+    painter.setClipPath(clip);
+    painter.drawImage(QPoint((pixels.width() - scaled.width()) / 2, (pixels.height() - scaled.height()) / 2),
+                      scaled);
+    painter.end();
+    out.setDevicePixelRatio(devicePixelRatio);
+    return out;
 }
 
 QWidget* sheetFootBar(QWidget* sheet, QLayout* foot)

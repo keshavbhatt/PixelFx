@@ -83,8 +83,19 @@ const std::vector<GroupSpec>& groupSpecs()
     return specs;
 }
 
-
 } // namespace
+
+QString settingLabel(const QString& key)
+{
+    for (const GroupSpec& g : groupSpecs()) {
+        for (const ControlSpec& c : g.controls) {
+            if (key == QLatin1StringView(c.key)) {
+                return AdjustPanel::tr(c.label);
+            }
+        }
+    }
+    return {};
+}
 
 // ---------------------------------------------------------------------------------------------
 

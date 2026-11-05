@@ -5,6 +5,7 @@
 
 #include <optional>
 #include <pfx/settings.h>
+#include <string>
 #include <vector>
 
 // Presets (FEATURES P1 to P4): saved subsets of
@@ -27,6 +28,8 @@ struct PresetUnit
 [[nodiscard]] QStringList unitsIn(const pfx::Settings& settings);
 /// How many settings of `unitId` differ from their defaults (the "6 changed" of the sheet).
 [[nodiscard]] int changedCount(const pfx::Settings& settings, const QString& unitId);
+/// The settings of `unitId` that differ from their defaults, in `settings` order (not for "look").
+[[nodiscard]] std::vector<std::string> changedKeys(const pfx::Settings& settings, const QString& unitId);
 
 /// A preset of the `units` of `settings`: every value of each unit written out, defaults
 /// included, so applying it sets the whole unit.

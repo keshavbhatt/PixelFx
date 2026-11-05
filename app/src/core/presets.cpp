@@ -125,21 +125,26 @@ int changedCount(const pfx::Settings& settings, const QString& unitId)
     if (unitId == u"look"_s) {
         return settings.text("look.id", "").empty() ? 0 : 1; // a look, or none
     }
+    return static_cast<int>(changedKeys(settings, unitId).size());
+}
+
+std::vector<std::string> changedKeys(const pfx::Settings& settings, const QString& unitId)
+{
+    std::vector<std::string> keys;
     const UnitRule* rule = ruleFor(unitId);
     if (rule == nullptr) {
-        return 0;
+        return keys;
     }
-    int n = 0;
     for (const std::string& key : settings.keys()) {
         if (!matches(*rule, key)) {
             continue;
         }
         const pfx::ParamSpec* spec = pfx::registry().param(key);
         if (spec == nullptr || !isDefault(*spec, *settings.find(key))) {
-            ++n;
+            keys.push_back(key);
         }
     }
-    return n;
+    return keys;
 }
 
 namespace {

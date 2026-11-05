@@ -9,12 +9,12 @@
 
 class QCheckBox;
 class QComboBox;
-class QFormLayout;
 class QHBoxLayout;
+class QImage;
+class QLabel;
 class QLineEdit;
 class QPushButton;
-
-class QLabel;
+class QVBoxLayout;
 
 namespace pixelfx::ui {
 
@@ -38,17 +38,25 @@ public:
     [[nodiscard]] const QString& fileCopy() const { return m_fileCopy; }
 
     void setName(const QString& name);
+    /// The photo as edited, shown beside the name.
+    void setPhoto(const QImage& photo);
     /// Ticks exactly `units` (tests, and the Changed only / All / None links).
     void tick(const QStringList& units);
 
 private:
-    void buildInclude(QFormLayout* form, const pfx::Settings& settings);
+    /// The thumbnail beside the name and group.
+    QHBoxLayout* buildTop(const QStringList& groups);
+    void buildInclude(QVBoxLayout* column, const pfx::Settings& settings);
+    /// A check box per part, in two columns, with what changed in each.
+    QWidget* buildParts(const pfx::Settings& settings);
     [[nodiscard]] QLabel* unitNote(const QString& unit, const pfx::Settings& settings, int changed);
+    [[nodiscard]] static QString changedText(const pfx::Settings& settings, const QString& unit, int changed);
     QHBoxLayout* buildButtons();
     void refreshSave();
     QLineEdit* m_name = nullptr;
     QComboBox* m_group = nullptr;
     QPushButton* m_save = nullptr;
+    QLabel* m_thumbnail = nullptr;
     std::map<QString, QCheckBox*> m_boxes;
     QStringList m_changed;
     QString m_fileCopy;

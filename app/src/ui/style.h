@@ -5,6 +5,9 @@
 
 class QApplication;
 class QDialog;
+class QImage;
+class QPixmap;
+class QSize;
 class QFormLayout;
 class QLabel;
 class QLayout;
@@ -62,6 +65,10 @@ QLabel* sectionLabel(const QString& text, QWidget* parent);
 void addMenuHeading(QMenu* menu, const QString& text);
 /// Gives the labels of `form` one column `width` px wide, the gap to the fields included.
 void setLabelColumn(const QFormLayout* form, int width);
+/// `image` cut to fill `size` (the middle kept) with rounded corners, for a sharp thumbnail on a
+/// screen of `devicePixelRatio`.
+[[nodiscard]] QPixmap coverThumbnail(const QImage& image, const QSize& size, int radius,
+                                     qreal devicePixelRatio);
 /// The footer bar alone, for sheets whose body runs edge to edge (Watermark, the look editor).
 QWidget* sheetFootBar(QWidget* sheet, QLayout* foot);
 

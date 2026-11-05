@@ -138,6 +138,7 @@ bool grabSheet(pixelfx::ui::MainWindow& window, const QString& grab, bool export
     if (presetSheet && window.document().isOpen()) {
         auto* preset = new pixelfx::ui::PresetSaveSheet(window.document().settings(), {}, &window);
         preset->setName(QStringLiteral("Warm evening"));
+        preset->setPhoto(window.document().preview());
         sheet = preset;
     } else if (settingsSheet) {
         sheet = new pixelfx::ui::SettingsSheet(window.settings(), &window);

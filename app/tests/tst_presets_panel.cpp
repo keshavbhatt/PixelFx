@@ -4,6 +4,7 @@
 #include "ui/style.h"
 
 #include <QApplication>
+#include <QLabel>
 #include <QLineEdit>
 #include <QSignalSpy>
 #include <QTest>
@@ -66,6 +67,25 @@ private Q_SLOTS:
         QCOMPARE(sheet.group(), u"My presets"_s);
         sheet.tick({u"wb"_s});
         QCOMPARE(sheet.units(), QStringList{u"wb"_s});
+    }
+
+    void saveSheetNamesOneOrTwoChangedSlidersAndCountsMore()
+    {
+        pfx::Settings s;
+        s.set("detail.clarity", 20.0);
+        s.set("detail.sharpen.amount", 30.0);
+        s.set("light.exposure", 0.5);
+        s.set("light.contrast", 10.0);
+        s.set("light.shadows", 10.0);
+        s.set("curves.rgb", pfx::Curve{{0.0, 0.1}, {1.0, 0.9}});
+        const pixelfx::ui::PresetSaveSheet sheet(s, {});
+        QStringList notes;
+        for (const QLabel* label : sheet.findChildren<QLabel*>(u"faint"_s)) {
+            notes << label->text();
+        }
+        QVERIFY(notes.contains(u"Clarity, Sharpen"_s));
+        QVERIFY(notes.contains(u"3 changed"_s));
+        QVERIFY(!notes.contains(u"1 changed"_s)); // the curve is not a slider: no note
     }
 };
 
