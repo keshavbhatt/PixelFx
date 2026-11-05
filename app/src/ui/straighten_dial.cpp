@@ -1,5 +1,7 @@
 #include "ui/straighten_dial.h"
 
+#include "ui/style.h"
+
 #include <QKeyEvent>
 #include <QMouseEvent>
 #include <QPainter>
@@ -79,8 +81,8 @@ void StraightenDial::paintEvent(QPaintEvent* /*event*/)
     const double at = (m_angle + kRange) / (2 * kRange) * (width() - 1);
     p.setPen(QPen(Qt::white, 2));
     p.drawLine(QPointF(at, top - 2), QPointF(at, top + 12));
-    if (hasFocus()) {
-        p.setPen(QPen(palette().highlight().color(), 1));
+    if (showsFocusRing(this)) {
+        p.setPen(QPen(tokens().accent, 1));
         p.setBrush(Qt::NoBrush);
         p.drawRoundedRect(rect().adjusted(0, 0, -1, -1), 4, 4);
     }

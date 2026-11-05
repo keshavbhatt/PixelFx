@@ -79,6 +79,10 @@ void useLightTheme(bool light);
 
 /// Fusion with a palette and style sheet built from the tokens.
 void applyStyle(QApplication& app);
+/// Whether `widget` should show that it has the focus: only when the focus came from the
+/// keyboard (Tab, a shortcut), not from a click. Style sheet rules match the same with
+/// [focusVisible="true"].
+[[nodiscard]] bool showsFocusRing(const QWidget* widget);
 
 /// Lays out a sheet: the returned layout is the padded body
 /// (title row first), and `foot`, the buttons, sits on a bar with a top border, edge to edge.

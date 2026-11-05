@@ -282,7 +282,7 @@ void RecentCard::paintEvent(QPaintEvent* /*event*/)
         p.drawImage(box, m_image, from);
     }
     p.setClipping(false);
-    if (hasFocus()) {
+    if (showsFocusRing(this)) {
         p.setPen(QPen(tokens().accent, 2));
         p.setBrush(Qt::NoBrush);
         p.drawRoundedRect(box.adjusted(1, 1, -1, -1), 8, 8);

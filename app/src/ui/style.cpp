@@ -6,6 +6,7 @@
 #include <QApplication>
 #include <QDialog>
 #include <QFile>
+#include <QFocusEvent>
 #include <QFormLayout>
 #include <QHBoxLayout>
 #include <QImage>
@@ -53,7 +54,7 @@ const QString kSheet = uR"(
         QPushButton:hover { background: {{hover}}; }
         QPushButton#primary { background: {{accentStrong}}; border-color: {{accentStrong}}; color: white; }
         QPushButton#primary:hover { background: {{accentHover}}; }
-        QPushButton:focus { border-color: {{accent}}; }
+        QPushButton[focusVisible="true"]:focus { border-color: {{accent}}; }
         #welcome { background: {{bg}}; }
         #dropZone { background: {{panel}}; border: 2px dashed {{border}}; border-radius: 10px; }
         #dropZone[dragActive="true"] { border-color: {{accent}}; background: {{accentSoft}}; }
@@ -113,7 +114,7 @@ const QString kSheet = uR"(
         QSlider { min-height: 24px; }
         QSlider::groove:horizontal { height: 3px; border-radius: 1px; background: {{track}}; }
         QSlider::handle:horizontal { width: 13px; height: 13px; margin: -5px 0; border-radius: 6px; background: {{text}}; }
-        QSlider::handle:horizontal:focus { background: {{accent}}; }
+        QSlider[focusVisible="true"]::handle:horizontal:focus { background: {{accent}}; }
         QSlider#temperatureTrack::groove:horizontal { background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #4F86E8, stop:0.5 #DDDDDD, stop:1 #F0B040); }
         QSlider#tintTrack::groove:horizontal { background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #4CB060, stop:0.5 #DDDDDD, stop:1 #D050C0); }
         QSlider#saturationTrack::groove:horizontal { background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #888888, stop:0.2 #E04F4F, stop:0.4 #E0C04F, stop:0.6 #4FE070, stop:0.8 #4F9CE0, stop:1 #B04FE0); }
@@ -127,7 +128,7 @@ const QString kSheet = uR"(
         QPushButton#segment[channel="blue"] { color: {{channelBlue}}; }
         QPushButton::menu-indicator { image: none; width: 0; }
         QLineEdit, QComboBox, QSpinBox { background: {{input}}; border: 1px solid {{border}}; border-radius: 7px; padding: 5px 8px; }
-        QLineEdit:focus, QComboBox:focus, QSpinBox:focus { border-color: {{accent}}; }
+        QLineEdit:focus, QSpinBox:focus, QComboBox[focusVisible="true"]:focus { border-color: {{accent}}; }
         #toast { background: {{elevated}}; border: 1px solid {{border}}; border-radius: 9px; padding: 7px 12px; }
         #sheetSide { background: {{panel}}; border-top: 1px solid {{border}}; border-right: 1px solid {{border}}; }
         #previewArea { background: {{canvas}}; border-top: 1px solid {{border}}; }
@@ -377,6 +378,15 @@ public:
     using QProxyStyle::polish;
 
     // Scroll bars lie over the panels' own padding instead of taking width from the content.
+    void drawPrimitive(PrimitiveElement element, const QStyleOption* option, QPainter* painter,
+                       const QWidget* widget) const override
+    {
+        if (element == PE_FrameFocusRect && widget != nullptr && !showsFocusRing(widget)) {
+            return; // a click focuses without drawing a ring
+        }
+        QProxyStyle::drawPrimitive(element, option, painter, widget);
+    }
+
     int pixelMetric(PixelMetric metric, const QStyleOption* option, const QWidget* widget) const override
     {
         if (metric == PM_ScrollView_ScrollBarOverlap) {
@@ -399,10 +409,50 @@ const Tokens& tokens()
     return g_light ? lightTokens() : darkTokens();
 }
 
+namespace {
+
+// Marks each widget that takes the focus with whether the keyboard gave it ("focusVisible"), as
+// browsers do with :focus-visible: a click focuses without drawing a ring.
+class FocusVisibility : public QObject
+{
+public:
+    using QObject::QObject;
+
+protected:
+    bool eventFilter(QObject* watched, QEvent* event) override
+    {
+        if (event->type() != QEvent::FocusIn || !watched->isWidgetType()) {
+            return false;
+        }
+        const Qt::FocusReason reason = static_cast<QFocusEvent*>(event)->reason();
+        if (reason == Qt::ActiveWindowFocusReason || reason == Qt::PopupFocusReason ||
+            reason == Qt::MenuBarFocusReason) {
+            return false; // the focus comes back as it was
+        }
+        const bool visible = reason == Qt::TabFocusReason || reason == Qt::BacktabFocusReason ||
+                             reason == Qt::ShortcutFocusReason;
+        auto* widget = static_cast<QWidget*>(watched);
+        if (widget->property("focusVisible").toBool() != visible) {
+            widget->setProperty("focusVisible", visible);
+            widget->style()->unpolish(widget);
+            widget->style()->polish(widget);
+        }
+        return false;
+    }
+};
+
+} // namespace
+
+bool showsFocusRing(const QWidget* widget)
+{
+    return widget->hasFocus() && widget->property("focusVisible").toBool();
+}
+
 void applyStyle(QApplication& app)
 {
     const Tokens& t = tokens();
     QApplication::setStyle(new PixelFxStyle); // the application owns it
+    app.installEventFilter(new FocusVisibility(&app));
     QPalette p;
     p.setColor(QPalette::Window, t.bg);
     p.setColor(QPalette::WindowText, t.text);

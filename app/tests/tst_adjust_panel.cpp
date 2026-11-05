@@ -364,6 +364,22 @@ private Q_SLOTS:
         QVERIFY(panel.openGroups().isEmpty());
     }
 
+    void focusShowsOnlyWhenTheKeyboardGaveIt()
+    {
+        AdjustPanel panel;
+        panel.show();
+        QVERIFY(QTest::qWaitForWindowExposed(&panel));
+        panel.activateWindow();
+        QSlider* slider = panel.slider(u"light.contrast"_s)->slider();
+        slider->setFocus(Qt::MouseFocusReason);
+        QTRY_VERIFY(slider->hasFocus());
+        QVERIFY(!pixelfx::ui::showsFocusRing(slider)); // clicked: no ring
+        slider->clearFocus();
+        slider->setFocus(Qt::TabFocusReason);
+        QTRY_VERIFY(slider->hasFocus());
+        QVERIFY(pixelfx::ui::showsFocusRing(slider)); // tabbed to: a ring
+    }
+
     void setSettingsDoesNotEmit()
     {
         AdjustPanel panel;

@@ -136,7 +136,8 @@ void ColorWheel::paintEvent(QPaintEvent* /*event*/)
     p.restore();
     // The rim keeps the edge visible on the light theme.
     p.setBrush(Qt::NoBrush);
-    p.setPen(QPen(hasFocus() ? tokens().accent : tokens().faint, hasFocus() ? 2.0 : 1.0));
+    const bool ring = showsFocusRing(this);
+    p.setPen(QPen(ring ? tokens().accent : tokens().faint, ring ? 2.0 : 1.0));
     p.drawEllipse(disc());
     // The puck: white with a dark outer ring, so one of its edges always shows.
     const QPointF c = puckPosition();

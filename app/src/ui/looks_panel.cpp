@@ -125,7 +125,7 @@ void LookTile::paintEvent(QPaintEvent* /*event*/)
         p.setPen(t.accent);
         p.drawText(r, Qt::AlignCenter, text);
     }
-    if (m_selected || hasFocus()) {
+    if (m_selected || showsFocusRing(this)) {
         p.setPen(QPen(m_selected ? t.accent : t.muted, 2));
         p.setBrush(Qt::NoBrush);
         p.drawRoundedRect(box, 8, 8);

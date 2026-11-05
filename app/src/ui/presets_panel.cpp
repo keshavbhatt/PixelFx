@@ -285,7 +285,7 @@ void PresetRow::paintEvent(QPaintEvent* /*event*/)
     QPainter p(this);
     p.setRenderHint(QPainter::Antialiasing);
     const QRectF box = QRectF(rect()).adjusted(8, 0, -8, 0);
-    if (m_hover || hasFocus()) {
+    if (m_hover || showsFocusRing(this)) {
         p.setPen(Qt::NoPen);
         p.setBrush(tokens().hover);
         p.drawRoundedRect(box, 7, 7);

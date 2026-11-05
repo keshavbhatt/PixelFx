@@ -40,7 +40,7 @@ void ColorSwatch::paintEvent(QPaintEvent* /*event*/)
     QPainter painter(this);
     painter.setRenderHint(QPainter::Antialiasing);
     const QRectF outer = QRectF(rect()).adjusted(kRing / 2, kRing / 2, -kRing / 2, -kRing / 2);
-    if (isChecked() || hasFocus() || underMouse()) {
+    if (isChecked() || showsFocusRing(this) || underMouse()) {
         QColor ring = tokens().text;
         if (!isChecked()) {
             ring.setAlpha(110);
