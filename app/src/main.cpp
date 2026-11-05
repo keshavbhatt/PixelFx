@@ -9,7 +9,8 @@
 //                                      a straightening angle once the photo is open
 //   PIXELFX_DEBUG_SHEET=<name>         with GRAB, grab that sheet instead of the window: export,
 //                                      settings, preset, shortcuts, watermark, look, about,
-//                                      notices, diagnostics, whatsnew
+//                                      notices, diagnostics, whatsnew, paste
+//   PIXELFX_DEBUG_TAB=presets          show the Presets tab of the left panel
 //   PIXELFX_DEBUG_ZOOM=<scale>         zoom to this scale (1 is 100%) once the photo is open; with
 //                                      GRAB, grab once the full-size render is shown
 //   PIXELFX_DEBUG_BATCH=<folder>       open Batch with this folder and process it; with GRAB, grab
@@ -35,6 +36,8 @@
 #include "ui/export_sheet.h"
 #include "ui/heal_tool.h"
 #include "ui/look_editor.h"
+#include "ui/paste_sheet.h"
+#include "ui/presets_panel.h"
 #include "ui/main_window.h"
 #include "ui/preset_save_sheet.h"
 #include "ui/settings_sheet.h"
@@ -122,6 +125,8 @@ bool grabSheet(pixelfx::ui::MainWindow& window, const QString& grab, bool export
         }
         about->showPage(page);
         sheet = about;
+    } else if (qEnvironmentVariable("PIXELFX_DEBUG_SHEET") == u"paste"_s && window.document().isOpen()) {
+        sheet = new pixelfx::ui::PasteSheet(window.document().settings(), 6, &window);
     } else if (qEnvironmentVariable("PIXELFX_DEBUG_SHEET") == u"whatsnew"_s) {
         sheet = new pixelfx::ui::WhatsNewSheet(pixelfx::ui::WhatsNewSheet::bundledChangelog(),
                                                QApplication::applicationVersion(), true, &window);
@@ -245,6 +250,9 @@ void applyDebugHooks(pixelfx::ui::MainWindow& window, QStringList& files)
     }
     applyCropHook(window);
     applyExpandHook(window);
+    if (qEnvironmentVariable("PIXELFX_DEBUG_TAB") == u"presets"_s) {
+        window.presetsPanel()->showTab(1);
+    }
     applyHealHook(window);
     applyGrabHook(window, files);
 }
