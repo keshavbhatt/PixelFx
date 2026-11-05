@@ -2,6 +2,7 @@
 
 #include "ui/icon_text_button.h"
 #include "ui/icons.h"
+#include "ui/menu_style.h"
 
 #include <QApplication>
 #include <QDialog>
@@ -144,10 +145,6 @@ const QString kSheet = uR"(
         QListWidget#lookSteps::item { padding: 6px 8px; border-radius: 7px; margin: 1px 6px; }
         QListWidget#lookSteps::item:selected { background: {{accentSoft}}; color: {{text}}; }
         QListWidget#lookSteps::item:hover:!selected { background: {{hover}}; }
-        QMenu { background: {{elevated}}; border: 1px solid {{border}}; border-radius: 10px; padding: 5px; }
-        QMenu::item { padding: 6px 28px 6px 10px; border-radius: 6px; }
-        QMenu::item:selected { background: {{hover}}; }
-        QMenu::separator { height: 1px; background: {{border}}; margin: 5px 4px; }
         #wheelTitle { color: {{muted}}; font-size: 12px; }
         #wheelValues { color: {{text}}; font-size: 12px; }
         #aboutName { font-size: 18px; font-weight: 700; }
@@ -196,9 +193,6 @@ const QString kControls = uR"(
         QListWidget::item:hover:!selected { background: {{hover}}; }
         QScrollArea { border: 0; background: transparent; }
         QToolTip { background: {{elevated}}; color: {{text}}; border: 1px solid {{border}}; border-radius: 6px; padding: 4px 8px; }
-        QMenu::indicator { width: 14px; height: 14px; left: 6px; }
-        QMenu::indicator:checked { image: url({{glyphs}}/check-muted.svg); }
-        QMenu::item:disabled { color: {{faint}}; }
         QLabel#menuHeading { color: {{muted}}; font-size: 11px; font-weight: 700; padding: 6px 10px 4px; }
         QProgressBar { background: {{track}}; border: 0; border-radius: 2px; max-height: 4px; text-align: center; color: transparent; }
         QProgressBar::chunk { background: {{accentStrong}}; border-radius: 2px; }
@@ -275,7 +269,6 @@ QString glyphFolder(const Tokens& t)
     };
     const QString dir = folder->path();
     write(dir + u"/check.svg"_s, u"<path d=\"M3.5 8.5l3 3 6-7\"/>"_s, Qt::white, 2.2);
-    write(dir + u"/check-muted.svg"_s, u"<path d=\"M3.5 8.5l3 3 6-7\"/>"_s, t.text, 2);
     write(dir + u"/part.svg"_s, u"<path d=\"M4 8h8\"/>"_s, Qt::white, 2.2);
     write(dir + u"/chevron-down.svg"_s, u"<path d=\"M4 6l4 4 4-4\"/>"_s, t.muted, 1.8);
     // Switches.
@@ -370,13 +363,25 @@ public:
         return QProxyStyle::styleHint(hint, option, widget, returnData);
     }
 
-    // Menus have rounded corners, which need a see-through window behind them.
+    // Menus have rounded corners, which need a see-through window behind them, and submenus
+    // are kept clear of their parent when they are shown.
     void polish(QWidget* widget) override
     {
         if (qobject_cast<QMenu*>(widget) != nullptr) {
             widget->setAttribute(Qt::WA_TranslucentBackground);
+            widget->installEventFilter(this);
         }
         QProxyStyle::polish(widget);
+    }
+
+    bool eventFilter(QObject* watched, QEvent* event) override
+    {
+        if (event->type() == QEvent::Show) {
+            if (auto* menu = qobject_cast<QMenu*>(watched)) {
+                menu_style::placeSubmenu(menu);
+            }
+        }
+        return QProxyStyle::eventFilter(watched, event);
     }
     using QProxyStyle::polish;
 
@@ -387,13 +392,39 @@ public:
         if (element == PE_FrameFocusRect && widget != nullptr && !showsFocusRing(widget)) {
             return; // a click focuses without drawing a ring
         }
+        if (menu_style::drawPrimitive(element, option, painter, widget)) {
+            return;
+        }
         QProxyStyle::drawPrimitive(element, option, painter, widget);
+    }
+
+    void drawControl(ControlElement element, const QStyleOption* option, QPainter* painter,
+                     const QWidget* widget) const override
+    {
+        if (element == CE_MenuItem && menu_style::drawItem(option, painter, widget)) {
+            return;
+        }
+        QProxyStyle::drawControl(element, option, painter, widget);
+    }
+
+    QSize sizeFromContents(ContentsType type, const QStyleOption* option, const QSize& contents,
+                           const QWidget* widget) const override
+    {
+        if (type == CT_MenuItem) {
+            if (const std::optional<QSize> size = menu_style::itemSize(option, contents)) {
+                return *size;
+            }
+        }
+        return QProxyStyle::sizeFromContents(type, option, contents, widget);
     }
 
     int pixelMetric(PixelMetric metric, const QStyleOption* option, const QWidget* widget) const override
     {
         if (metric == PM_ScrollView_ScrollBarOverlap) {
             return kScrollBarWidth;
+        }
+        if (const std::optional<int> menu = menu_style::pixelMetric(metric)) {
+            return *menu;
         }
         if (metric == PM_LayoutHorizontalSpacing || metric == PM_LayoutVerticalSpacing) {
             return kGapControls; // a layout without a gap of its own spaces its items as controls

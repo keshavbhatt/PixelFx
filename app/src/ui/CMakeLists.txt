@@ -46,6 +46,8 @@ qt_add_library(pixelfx_ui STATIC
     main_window.cpp
     main_window_heal.cpp
     main_window.h
+    menu_style.cpp
+    menu_style.h
     message_line.cpp
     message_line.h
     panel_slider.cpp

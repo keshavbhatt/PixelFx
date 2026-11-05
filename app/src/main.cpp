@@ -306,7 +306,7 @@ void applyDebugHooks(pixelfx::ui::MainWindow& window, QStringList& files)
         QObject::connect(&window.document(), &pixelfx::services::Document::opened, &window,
                          [&window, compare] {
                              window.setCompare(true);
-                             window.canvas()->setSideBySide(compare == u"side"_s);
+                             window.namedAction(u"sideBySide"_s)->setChecked(compare == u"side"_s);
                          });
     }
     applyCropHook(window);

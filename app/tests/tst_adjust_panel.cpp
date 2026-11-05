@@ -4,9 +4,12 @@
 #include "ui/style.h"
 
 #include <QApplication>
+#include <QGuiApplication>
 #include <QLabel>
 #include <QLineEdit>
+#include <QMenu>
 #include <QPushButton>
+#include <QScreen>
 #include <QSignalSpy>
 #include <QSlider>
 #include <QTest>
@@ -378,6 +381,34 @@ private Q_SLOTS:
         slider->setFocus(Qt::TabFocusReason);
         QTRY_VERIFY(slider->hasFocus());
         QVERIFY(pixelfx::ui::showsFocusRing(slider)); // tabbed to: a ring
+    }
+
+    void aSubmenuOpensBesideItsParent()
+    {
+        QMenu parent;
+        parent.addAction(u"Open"_s);
+        QMenu* sub = parent.addMenu(u"View"_s);
+        sub->addAction(u"Fit"_s);
+        for (const QPoint at :
+             {QPoint(40, 40), QPoint(QGuiApplication::primaryScreen()->geometry().right() - 60, 40)}) {
+            parent.popup(at);
+            QVERIFY(QTest::qWaitForWindowExposed(&parent));
+            parent.setActiveAction(sub->menuAction());
+            QTRY_VERIFY(sub->isVisible());
+            const QRect p = parent.geometry();
+            const QRect s = sub->geometry();
+            QVERIFY2(s.left() > p.right() || s.right() < p.left(),
+                     qPrintable(u"the submenu %1,%2 %3x%4 covers its parent %5,%6 %7x%8"_s.arg(s.x())
+                                    .arg(s.y())
+                                    .arg(s.width())
+                                    .arg(s.height())
+                                    .arg(p.x())
+                                    .arg(p.y())
+                                    .arg(p.width())
+                                    .arg(p.height())));
+            sub->hide();
+            parent.hide();
+        }
     }
 
     void setSettingsDoesNotEmit()

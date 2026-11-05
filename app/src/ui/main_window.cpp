@@ -786,11 +786,16 @@ void MainWindow::setupEditActions()
     auto* compare = new QAction(tr("Before and after"), this);
     compare->setObjectName(u"compare"_s);
     compare->setShortcut(QKeySequence(Qt::Key_Backslash));
-    connect(compare, &QAction::triggered, this, [this] {
+    compare->setCheckable(true);
+    // The menu item and the header button are one switch.
+    connect(compare, &QAction::triggered, this, [this, compare](bool on) {
         if (m_document.isOpen() && !isCropping()) {
-            m_compare->toggle();
+            m_compare->setChecked(on);
+        } else {
+            compare->setChecked(m_compare->isChecked());
         }
     });
+    connect(m_compare, &QToolButton::toggled, compare, &QAction::setChecked);
     addActions({undo, redo, resetAll, history, compare});
 }
 

@@ -56,6 +56,7 @@ public:
     [[nodiscard]] Canvas* canvas() const { return m_canvas; }
     [[nodiscard]] AdjustPanel* adjustPanel() const { return m_adjust; }
     [[nodiscard]] CropPanel* cropPanel() const { return m_cropPanel; }
+    [[nodiscard]] QAction* namedAction(const QString& name) const;
     [[nodiscard]] PresetsPanel* presetsPanel() const { return m_presets; }
     /// Re-reads the preset library and redraws the preset pictures.
     void refreshPresets();
@@ -135,7 +136,6 @@ private:
     void fillMenu(class QMenu* menu, const Entries& entries) const;
     void buildRecentMenu(class QMenu* recent);
     void setupPanelActions();
-    [[nodiscard]] QAction* namedAction(const QString& name) const;
     void setupEditActions();
     void setupCropActions();
     /// Actions that live only in the main menu (turn, flip, copy to clipboard ...).
