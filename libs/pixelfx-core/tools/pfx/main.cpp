@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
-// pfx: the libpixelfx command line tool. Lists the operations, describes images, and applies
-// presets and recipes to files.
+// pfx: the libpixelfx command line tool. Lists the operations, describes images, applies
+// presets and recipes to files, and turns Lightroom presets into PixelFx ones.
 #include "pfx/auto.h"
 #include "pfx/document.h"
 #include "pfx/io.h"
@@ -8,6 +8,7 @@
 #include "pfx/lut.h"
 #include "pfx/pipeline.h"
 #include "pfx/registry.h"
+#include "pfx/xmp_import.h"
 
 #include <charconv>
 #include <cstdio>
@@ -27,6 +28,8 @@ constexpr const char* kUsage = R"(Usage:
   pfx ops                                   list operations and their parameters
   pfx info FILE...                          describe images
   pfx apply [options] FILE...               apply settings and save copies
+  pfx import XMP OUT [NAME [GROUP]]         a Lightroom or Camera Raw preset as a .pfxpreset;
+                                            what PixelFx has no equivalent for is listed
 
 Options for apply:
   --preset FILE      apply a .pfxpreset or .pfx recipe (repeatable, later ones win)
@@ -292,6 +295,31 @@ int apply(int argc, char* const* argv)
     return status;
 }
 
+int importXmp(const std::vector<std::string>& args)
+{
+    if (args.size() < 2 || args.size() > 4) {
+        return fail("import needs a preset to read and a file to write");
+    }
+    auto imported = pfx::importXmpPresetFile(args[0]);
+    if (!imported) {
+        return fail(imported.error().message);
+    }
+    pfx::Document& doc = imported.value().document;
+    if (args.size() > 2) {
+        doc.name = args[2];
+    }
+    if (args.size() > 3) {
+        doc.group = args[3];
+    }
+    if (const pfx::Status saved = pfx::saveDocument(doc, args[1]); !saved) {
+        return fail(saved.error().message);
+    }
+    for (const std::string& key : imported.value().skipped) {
+        std::cout << "skipped " << key << "\n";
+    }
+    return 0;
+}
+
 } // namespace
 
 int run(int argc, char* const* argv)
@@ -314,6 +342,9 @@ int run(int argc, char* const* argv)
     }
     if (command == "apply") {
         return apply(argc, argv);
+    }
+    if (command == "import") {
+        return importXmp({argv + 2, argv + argc});
     }
     if (command == "--version") {
         std::cout << "pfx " << pfx::versionString() << "\n";
