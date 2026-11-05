@@ -72,6 +72,35 @@ Decisions the work stopped at; everything else went ahead within the approved mo
 
 ## Sessions (newest first)
 
+### 2026-11-06 (Batch: Compress only)
+
+- The approved `batch-compress.html`, built (FEATURES M10, M11, part of M12). libpixelfx gained
+  `pfx/compress.h` and `pfx compress`: lossless JPEG through libjpeg-turbo's coefficient API,
+  our own PNG writer (smallest colour type and bit depth, filters, palettes, every chunk kept in
+  its place), our own palette quantiser with pngquant's quality scale (owner's choice over
+  quantizr, which needs Rust in every build), our own GIF writer, TIFF and lossless WebP stored
+  again without loss, location and previews removed from Exif, XMP, Photoshop and WebP chunks.
+  ADR-010; THIRD_PARTY gained libjpeg-turbo and zlib (already in every runtime).
+- Batch has "1. What to do" at the top: Edit and export (sections now 2 to 5) or Compress only
+  (`CompressPanel`, `CompressList`, `CompressCompare`; `StatusPill` now shared by both lists).
+  The runner compresses up to 4 files at once, replaces what the last run of the same list
+  wrote, and keeps the original's most detailed spot when the originals are replaced. The mode
+  and the choices are remembered, Replace the originals is not.
+- Changed while building, recorded in the mock and `reviews/batch-compress.md`: the "Others"
+  line now says only what is done (no AVIF encoder; a lossy WebP is never encoded again), the
+  row's ⋯ became ×, a JPEG quality slider for Target quality.
+- On copies of the e2e photos: JPEGs 6 to 14% smaller without loss in about 0.1 s each, a 3.7 MB
+  PNG photo 1.9 MB lossless or 1.0 MB with fewer colours (quality 96).
+- Owner's DNG from Samsung Expert RAW (Galaxy S22 Ultra) did not open: it is DNG 1.7, linear
+  (already demosaiced) and JPEG XL compressed, which LibRaw reads only with Adobe's DNG SDK. The
+  message is now plain words. For FEATURES O3: decode the JPEG XL tiles with libjxl (already a
+  dependency), then black and white levels, AsShotNeutral, ColorMatrix1, BaselineExposure (+3
+  in that file) and its ProfileGainTableMap (Samsung's local tone map). The file also holds a
+  full-size JPEG preview.
+- Checks: 145 library tests (new: every lossless method decodes to identical pixels), 36 app
+  suites (new: `tst_batch_compress`, Compress only in `tst_batch`), the linters; the real app
+  headless on six mixed files matches the mock.
+
 ### 2026-11-05 (a slow preview)
 
 - The approved slow preview of `editor-zoom-loading.html`: the Preview tag and the line come

@@ -28,6 +28,11 @@ A new editor, a new image engine, and a new look.
   own looks, the size and the watermark inside it, so it works on another computer too.
   Batch can also take the settings of the photo open in the editor, name files after the
   recipe with {preset}, enlarge small photos when you ask, and show the photos as a grid.
+- Compress only, in Batch: make a pile of JPEG, PNG, GIF, TIFF and WebP files smaller without
+  editing them. JPEGs lose nothing by default, PNGs can drop to 256 colours above a quality you
+  set, and the location and embedded previews can go while camera details and copyright stay.
+  Each file shows its size before and after and what it saved, any file can be checked at 100%
+  next to its original, and Run again tries other settings on the same files.
 - Watermarks on export and in Batch: your name, the year or the camera, or a logo; placed in a
   corner or anywhere you drag it, or repeated across the photo for proofs. The colour can follow
   the photo, light on dark areas and dark on light ones, and the size follows the photo, so a

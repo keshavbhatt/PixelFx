@@ -251,3 +251,33 @@ each preset's settings (`core::describeSettings`), so no text of the source is c
 each preset is the source's intent on PixelFx's engine, not a pixel match with Lightroom
 (FEATURES P8); presets that read poorly are dropped from the table after review on real photos.
 
+## ADR-010: compressing files in-process, with our own palette quantiser (2026-11-06)
+
+**Context.** Batch's Compress only (FEATURES M10, PLAN D24) replaces PixelBatch, which ran
+jpegoptim, pngquant and gifsicle through a shell. ADR-002 rules out external tools. FEATURES M10
+named quantizr (MIT, Rust) through libvips for palettes and cgif for GIF, but quantizr needs a
+Rust toolchain in every build (dev, snap, Flatpak, Windows, macOS), and libvips's GIF writer needs
+a quantiser as well. The owner chose our own quantiser in libpixelfx (2026-11-06).
+
+**Decision.**
+- **Lossless JPEG** through libjpeg-turbo's coefficient API (`jpeg_read_coefficients`,
+  `jpeg_write_coefficients`), as jpegtran does: the DCT coefficients are copied, Huffman tables
+  optimised, baseline or progressive kept, whichever is smaller. libpixelfx links libjpeg-turbo
+  directly (it was already there behind libvips, ADR-003).
+- **Our own encoders** for what libvips cannot do without a quantiser: a PNG writer on zlib
+  (colour type and bit depth reduction, the five filters, palettes, the original's chunks in their
+  required places) and a GIF89a writer with LZW, storing only the changed rectangle of each frame
+  when that is exact. libpixelfx links zlib directly.
+- **Our own palette quantiser** (`pfx::quantize`): colours binned, split by median cut on the
+  largest error, refined by k-means, mapped with damped Floyd-Steinberg diffusion, scored on
+  pngquant's 0 to 100 quality scale so a quality floor means what its users expect.
+- TIFF and lossless WebP are encoded again by libvips, without loss; lossy WebP, AVIF, HEIC,
+  JPEG XL and RAW files are not encoded again (that would lower their quality, or there is no
+  encoder); WebP metadata is cleaned in its RIFF chunks without touching the image.
+- No zopfli, quantizr, libimagequant or cgif.
+
+**Consequences.** No new third-party code in any build: libjpeg-turbo and zlib are in every
+runtime and vcpkg. The quantiser, the PNG writer and the GIF writer are ours to maintain; the
+library tests decode every lossless result and compare it pixel for pixel. zopfli can be added
+later as an option for slightly smaller PNGs, with a row here and in THIRD_PARTY.
+

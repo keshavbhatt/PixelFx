@@ -34,3 +34,26 @@ bar length.
 - The "Free for any number of photos" line sits where the user chooses the mode. That is
   product text, not licensing text, but it is checked against the release-text rule before
   shipping.
+
+## Changed while building (2026-11-06)
+
+- **Others.** "WebP, AVIF, GIF and TIFF re-encoded only when smaller" promised what cannot be
+  kept: there is no AVIF encoder in the build, and encoding a lossy WebP again loses quality. The
+  line now says "WebP, GIF and TIFF made smaller without loss when they can be"; a file left as
+  it is gets its reason on its row ("A lossy WebP stays as it is", "HEIC is kept as it is").
+- **Location and previews.** The check box's text no longer carries its own parenthesis; "Camera
+  details and copyright stay" is a muted line under it, so the box's name stays short.
+- **Rows.** The ⋯ button became the × that leaves a file out, as on the Edit and export list:
+  there was nothing else for its menu to hold.
+- **The mode switch** ("1. What to do") is at the top of Edit and export too, whose sections are
+  now 2. Recipe to 5. Save as; the mode is remembered.
+- **JPEG Target quality** shows a JPEG quality slider under it, as Fewer colours shows PNG
+  quality. A JPEG is encoded again only when that is smaller than its lossless result.
+- **Run again with these settings** replaces the files the last run of the same list wrote,
+  instead of numbering them.
+- **The before and after** shows the most detailed spot of the photo, found on a small copy;
+  when the originals are replaced, that spot of the original is kept during the run so the
+  before still shows.
+- Lossless JPEG drops MPF previews always: they live after the image and cannot survive a
+  transcode. Text and numbers measured as in the mock: the same tokens and pills.
+
