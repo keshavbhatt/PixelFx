@@ -1,6 +1,7 @@
 #include "ui/main_window.h"
 
 #include "core/crop_geometry.h"
+#include "core/links.h"
 #include "core/looks.h"
 #include "core/settings/settings.h"
 #include "core/settings_clipboard.h"
@@ -358,8 +359,8 @@ void MainWindow::setupMenuActions()
         QDir().mkpath(m_library.folder());
         QDesktopServices::openUrl(QUrl::fromLocalFile(m_library.folder()));
     });
-    add(u"reportBug"_s, tr("Report a bug"),
-        [] { QDesktopServices::openUrl(QUrl(u"https://github.com/keshavbhatt/PixelFx/issues"_s)); });
+    add(u"onlineGuide"_s, tr("Online guide"), [] { QDesktopServices::openUrl(QUrl(core::kGuideUrl)); });
+    add(u"reportBug"_s, tr("Report a bug"), [] { QDesktopServices::openUrl(QUrl(core::kIssuesUrl)); });
 }
 
 void MainWindow::editGeometry(const std::function<void(pfx::Settings&)>& change, const QString& label)
@@ -2197,6 +2198,7 @@ constexpr std::array kFileEntries{kSeparator,
                                   MenuEntry{"settings", "settings"},
                                   MenuEntry{"shortcuts", "keyboard"},
                                   MenuEntry{"whatsNew", "sparkles"},
+                                  MenuEntry{"onlineGuide", "external"},
                                   MenuEntry{"reportBug", "bug"},
                                   MenuEntry{"about", "info"},
                                   kSeparator,

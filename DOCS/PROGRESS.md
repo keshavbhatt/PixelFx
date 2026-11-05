@@ -53,13 +53,12 @@ Decisions the work stopped at; everything else went ahead within the approved mo
 7. Zoom has no FEATURES row; add one (it is built).
 8. Small departures from approved mocks, until their parts exist: no Favorites chip; the look
     editor previews on This photo and a colour ramp (no Portrait or Landscape test photos are
-    shipped); the main menu leaves out Save edit with the file and Online guide (item 10);
+    shipped); the main menu leaves out Save edit with the file;
     Copy to clipboard has no shortcut (the mock's
     Ctrl+Shift+C is Copy settings).
 9. Still to plan: monitor profile, GPU preview, sidecars next to the photo, the batch-end
     notification (needs Qt D-Bus on Linux, a dependency decision).
-10. Online guide: the main menu and About leave it out until there is a guide to point at.
-    Where should it go (a page on ktechpit.com, the GitHub wiki, the README)?
+10. Online guide: done 2026-11-06, the GitHub wiki (main menu and About).
 11. Small choices made with the approved About, What's new and grading mocks, easy to change:
     What's new does not open on a first install (nothing is new yet), only after an update from
     an earlier version, PixelFx 1 included; Diagnostics leaves out "memory for previews" (there

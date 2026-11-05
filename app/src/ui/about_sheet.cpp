@@ -1,5 +1,7 @@
 #include "ui/about_sheet.h"
 
+#include "core/links.h"
+
 #include "core/about.h"
 #include "core/changelog.h"
 #include "core/log_sink.h"
@@ -27,9 +29,6 @@ using namespace Qt::StringLiterals;
 namespace pixelfx::ui {
 
 namespace {
-
-const auto kSourceUrl = u"https://github.com/keshavbhatt/PixelFx"_s;
-const auto kIssuesUrl = u"https://github.com/keshavbhatt/PixelFx/issues"_s;
 
 constexpr int kNoticesHeight = 400;
 
@@ -132,14 +131,17 @@ QWidget* AboutSheet::buildAboutPage()
 
     auto* whatsNew = smallButton(tr("What's new"), page);
     connect(whatsNew, &QPushButton::clicked, this, &AboutSheet::whatsNewRequested);
+    auto* guide = smallButton(tr("Online guide"), page);
+    connect(guide, &QPushButton::clicked, this, [] { QDesktopServices::openUrl(QUrl(core::kGuideUrl)); });
     auto* source = smallButton(tr("Source code"), page);
-    connect(source, &QPushButton::clicked, this, [] { QDesktopServices::openUrl(QUrl(kSourceUrl)); });
+    connect(source, &QPushButton::clicked, this, [] { QDesktopServices::openUrl(QUrl(core::kSourceUrl)); });
     auto* bug = smallButton(tr("Report a bug"), page);
     bug->setToolTip(tr("Opens the issue tracker. Diagnostics has text to paste into the report."));
-    connect(bug, &QPushButton::clicked, this, [] { QDesktopServices::openUrl(QUrl(kIssuesUrl)); });
+    connect(bug, &QPushButton::clicked, this, [] { QDesktopServices::openUrl(QUrl(core::kIssuesUrl)); });
     auto* links = new QHBoxLayout;
     links->setSpacing(kGapRelated);
     links->addWidget(whatsNew);
+    links->addWidget(guide);
     links->addWidget(source);
     links->addWidget(bug);
     links->addStretch();

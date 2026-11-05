@@ -18,6 +18,7 @@ qt_add_library(pixelfx_core STATIC
     histogram.h
     history.cpp
     history.h
+    links.h
     log_sink.cpp
     log_sink.h
     logging.cpp
