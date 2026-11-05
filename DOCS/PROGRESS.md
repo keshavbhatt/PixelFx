@@ -69,6 +69,9 @@ Decisions the work stopped at; everything else went ahead within the approved mo
     the sky" in the mock needs scene recognition); Reset takes off the spots made since Heal
     opened and Done keeps them (each spot is also its own history step, and undo works in
     Heal); Reveal dust explains itself in its tooltip rather than a first-time line.
+13. `editor-lens-profile.html` (2026-11-06): the Optics row for lens profiles, with its review
+    (`mocks/reviews/editor-lens-profile.md`); the library side is built (ADR-013). Approve the
+    row, and say whether the two EmulsionPresets lens tools join the catalog.
 
 ## Sessions (newest first)
 
