@@ -57,8 +57,36 @@ Decisions the work stopped at; everything else went ahead within the approved mo
     the sky" in the mock needs scene recognition); Reset takes off the spots made since Heal
     opened and Done keeps them (each spot is also its own history step, and undo works in
     Heal); Reveal dust explains itself in its tooltip rather than a first-time line.
+13. Sheets are native dialogs (they work on Wayland and have the system's close button); the
+    mocks draw them inside the window over a dimmed backdrop. Their insides now follow the mocks
+    (title row with a close button, body, footer bar). Keep native dialogs, or move every sheet
+    into the window as drawn?
 
 ## Sessions (newest first)
+
+### 2026-11-05 (UI against the mocks)
+
+- The owner found the Batch page far from `batch.html` and raw Fusion controls everywhere.
+  Every screen was grabbed and set beside its mock; the gaps were shared, so they were fixed
+  at the root: the style sheet now draws every standard control as `mock.css` does
+  (checkboxes, radio buttons, switches, combo boxes and their lists, spin boxes, scroll bars,
+  tooltips, progress bars, disabled states), from glyphs made in the theme's colours at start;
+  every sheet has the mocks' title row with a close button and a footer bar
+  (`sheetLayout`, `sheetFootBar`, `sheetCloseButton`); switches where the mocks have them
+  (Settings, Watermark, Heal); the rail has the settings gear and the header its separators.
+- Batch rebuilt from `batch.html`, `batch-running.html` and `batch-done.html`: the header
+  shows "Batch, 6 photos · 129 MB" with Add photos and Add folder; the list has its title row,
+  a list or grid view and Clear; status pills (Saved, Saving, Waiting, Not saved); the preview
+  and the running or done bar with time left or taken and the size written; the recipe as a
+  card with Change (presets and looks) or Settings from a photo, Then add preset, Never
+  enlarge, "JPEG, quality 90" with More... (quality, bit depth, metadata, if it exists), the
+  folder as ~/..., the name with the new {preset} token, Save as batch recipe and Process at
+  the foot. Open batch recipe moved to the main menu (and a .pfxbatch can be dropped on the
+  page). Fixed on the way: the recipe box showed blank (its separator was selected).
+- Still different from the mocks, next: Export (AVIF and More in the formats, Sharpen for,
+  Color space, the size estimate, quality labels above the slider), Save as preset (the
+  photo's thumbnail, the Include card in two columns with counts), the look editor's step
+  rows (handle, icon, menu), Settings' other pages, the presets panel rows.
 
 ### 2026-11-05 (spot heal)
 

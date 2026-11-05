@@ -55,7 +55,8 @@ struct BatchBody
     std::vector<EmbeddedLook> looks; // version 2
     bool autoFirst = false;
     bool keepExistingEdits = true;
-    int longEdge = 0;            // 0: original size; never enlarges
+    int longEdge = 0;            // 0: original size
+    bool noEnlarge = true;       // a long edge never makes a smaller photo larger
     std::string sizePreset;      // version 2: a named size of the app's (an id), wins over longEdge
     bool fitInside = false;      // with sizePreset: fit inside with a border instead of cropping
     std::string watermark;       // version 2: the watermark as JSON text (the app's format), or empty

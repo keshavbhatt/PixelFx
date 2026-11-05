@@ -21,6 +21,8 @@ struct ExportOptions
     int quality = 90;
     int bitsPerSample = 8;
     int longEdge = 0; ///< 0: original size (when no size preset is chosen)
+    /// A long edge never makes a smaller photo larger (Batch's "Never enlarge"; Export always).
+    bool noEnlarge = true;
     /// A size preset (export-sizes.html) by id, empty for none; it decides the size.
     QString sizePreset;
     /// When the preset's shape differs from the photo: fit inside with a border, or crop to fill.
@@ -31,6 +33,8 @@ struct ExportOptions
     QString watermark;
     QString folder;
     QString nameTemplate = QStringLiteral("{name}-edit");
+    /// What {preset} in the name becomes: the batch's recipe ("golden-hour"); not remembered.
+    QString recipeName;
     IfExists ifExists = IfExists::AddNumber;
 
     bool operator==(const ExportOptions&) const = default;
@@ -55,7 +59,8 @@ struct SizePreset
 [[nodiscard]] QSize exactSize(const SizePreset& preset, const QSize& photo);
 
 /// The file name for `source` under `options`, before the if-exists policy: tokens {name}
-/// (the source's base name), {date} (yyyy-MM-dd), {w} and {h} (output size). Characters that
+/// (the source's base name), {date} (yyyy-MM-dd), {w} and {h} (output size), {preset} (the
+/// recipe's name, "edit" when there is none). Characters that
 /// cannot be in a file name become "-"; an empty result falls back to {name}.
 [[nodiscard]] QString exportFileName(const QString& source, const ExportOptions& options,
                                      const QSize& outputSize, const QDate& date);

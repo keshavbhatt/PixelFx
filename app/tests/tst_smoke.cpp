@@ -296,14 +296,7 @@ private Q_SLOTS:
         QVERIFY(window.batchPage()->loadRecipe(recipe).isEmpty());
         QVERIFY(!window.batchPage()->loadRecipe(dir.filePath(u"s.ini"_s)).isEmpty());
         // A look is a choice of the recipe ("Preset or look", batch.html), at its own strength.
-        auto* first = window.batchPage()->findChildren<QComboBox*>().front();
-        for (auto* combo : window.batchPage()->findChildren<QComboBox*>()) {
-            if (combo->accessibleName() == u"Preset or look"_s) {
-                first = combo;
-            }
-        }
-        first->setCurrentIndex(first->findData(u"look:builtin:noir"_s));
-        QVERIFY(first->currentIndex() > 0);
+        window.batchPage()->chooseRecipe(u"look:builtin:noir"_s);
         const auto withLook = window.batchPage()->recipe();
         QCOMPARE(withLook.presets.size(), std::size_t{1});
         QCOMPARE(withLook.presets.front().text("look.id", ""), std::string("builtin:noir"));

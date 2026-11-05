@@ -10,6 +10,8 @@
 #include <QFutureWatcher>
 #include <QtConcurrent/QtConcurrentRun>
 
+#include <algorithm>
+#include <cmath>
 #include <pfx/composite.h>
 #include <pfx/io.h>
 #include <pfx/pipeline.h>
@@ -65,6 +67,16 @@ std::string resize(pfx::Image& image, const core::ExportOptions& options)
             return resized.error().message;
         }
         image = std::move(resized).value();
+    } else if (longEdge > image.longEdge() && !options.noEnlarge) {
+        // Enlarging to the long edge: the same shape, so filling the frame crops nothing.
+        const double scale = static_cast<double>(longEdge) / image.longEdge();
+        auto enlarged =
+            pfx::fillSize(image, std::max(1, static_cast<int>(std::lround(image.width() * scale))),
+                          std::max(1, static_cast<int>(std::lround(image.height() * scale))));
+        if (!enlarged) {
+            return enlarged.error().message;
+        }
+        image = std::move(enlarged).value();
     }
     return {};
 }

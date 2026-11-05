@@ -413,6 +413,7 @@ bool readBatchField(const std::string& name, const Json& value, BatchBody& batch
     if (name == "resize" && value.is_object()) {
         const std::string mode = stringField(value, "mode");
         batch.longEdge = mode == "longEdge" ? std::max(0, intField(value, "value", 0)) : 0;
+        batch.noEnlarge = boolField(value, "noEnlarge", true);
         batch.sizePreset = mode == "preset" ? stringField(value, "preset") : std::string();
         batch.fitInside = mode == "preset" && boolField(value, "fitInside", false);
         return true;
@@ -469,9 +470,10 @@ Json batchToJson(const BatchBody& batch, Json body)
         body["resize"] =
             Json{{"mode", "preset"}, {"preset", batch.sizePreset}, {"fitInside", batch.fitInside}};
     } else {
-        body["resize"] = batch.longEdge > 0
-                             ? Json{{"mode", "longEdge"}, {"value", batch.longEdge}, {"noEnlarge", true}}
-                             : Json{{"mode", "none"}};
+        body["resize"] =
+            batch.longEdge > 0
+                ? Json{{"mode", "longEdge"}, {"value", batch.longEdge}, {"noEnlarge", batch.noEnlarge}}
+                : Json{{"mode", "none"}};
     }
     body["output"] = {{"format", batch.format},
                       {"quality", batch.quality},

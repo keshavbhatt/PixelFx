@@ -231,6 +231,11 @@ private:
     QLabel* m_docName = nullptr;
     QLabel* m_docMeta = nullptr;
     QWidget* m_header = nullptr;
+    /// What the header shows while editing, hidden while Batch is up, and Batch's own buttons.
+    QList<QWidget*> m_editHeader;
+    QList<QWidget*> m_batchHeader;
+    /// The header as Batch shows it (mock batch.html), or as the editor does.
+    void showBatchHeader(bool on);
 };
 
 } // namespace pixelfx::ui

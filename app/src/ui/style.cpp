@@ -72,9 +72,6 @@ const QString kSheet = uR"(
         QToolButton#stripAdd { border: 1.5px dashed {{faint}}; border-radius: 6px; background: transparent; }
         QToolButton#stripAdd:hover { background: {{hover}}; }
         #accentText { color: {{accent}}; font-size: 12px; }
-        #batchPage { background: {{bg}}; }
-        #batchRow { background: {{panel}}; border-radius: 7px; }
-        #batchState { color: {{muted}}; font-size: 12px; }
         #batchReason { color: {{danger}}; font-size: 12px; }
         #kbd { font-size: 11px; color: {{text}}; background: {{panel}}; border: 1px solid {{border}}; border-bottom-width: 2px; border-radius: 5px; padding: 1px 6px; }
         #zoomBar { background: {{elevated}}; border: 1px solid {{border}}; border-radius: 10px; }
@@ -193,6 +190,23 @@ const QString kControls = uR"(
         QCheckBox#switch::indicator:disabled { image: url({{glyphs}}/switch-off.svg); }
         QToolButton#sheetClose { border: 0; border-radius: 7px; padding: 6px; background: transparent; }
         QToolButton#sheetClose:hover { background: {{hover}}; }
+        #headerSep { background: {{border}}; }
+        #batchPage, #batchList, #batchRows, #batchPanelContent { background: {{panel}}; }
+        QListWidget#batchGrid { background: {{panel}}; border: 0; }
+        #batchHead { border-bottom: 1px solid {{border}}; }
+        #batchBar { background: {{panel}}; border-top: 1px solid {{border}}; }
+        QFrame#segmentBox { border: 1px solid {{border}}; border-radius: 7px; background: {{input}}; }
+        QToolButton#segmentIcon { border: 0; border-radius: 6px; padding: 4px 9px; background: transparent; }
+        QToolButton#segmentIcon:checked { background: {{accentSoft}}; }
+        QFrame#recipeCard { border: 1px solid {{border}}; border-radius: 10px; background: {{input}}; }
+        QFrame#pill { border-radius: 10px; background: {{hover}}; }
+        QFrame#pill[kind="accent"] { background: {{accentSoft}}; }
+        QLabel#pillText { font-size: 11px; color: {{muted}}; }
+        QFrame#pill[kind="ok"] QLabel#pillText { color: {{success}}; }
+        QFrame#pill[kind="bad"] QLabel#pillText { color: {{danger}}; }
+        QFrame#pill[kind="accent"] QLabel#pillText { color: {{accent}}; }
+        QLineEdit#monoField { font-family: monospace; font-size: 12px; }
+        #batchReason { color: {{danger}}; font-size: 12px; }
     )"_s;
 
 // The glyphs the control rules use, written once per start in the theme's colours.
@@ -262,6 +276,7 @@ QString sheet(const Tokens& t)
     put(u"faint"_s, t.faint);
     put(u"link"_s, t.link);
     put(u"danger"_s, t.danger);
+    put(u"success"_s, t.success);
     put(u"canvas"_s, t.canvas);
     return s;
 }
@@ -273,7 +288,7 @@ const Tokens& darkTokens()
     static const Tokens t{hex("#6EA8FE"), hex("#2F6FE0"), hex("#3B7CF0"), hex("#1D2A40"), hex("#161616"),
                           hex("#0F0F0F"), hex("#1C1C1C"), hex("#1E1E1E"), hex("#282828"), hex("#2C2C2C"),
                           hex("#141414"), hex("#303030"), hex("#696969"), hex("#ECECEC"), hex("#A8A8A8"),
-                          hex("#8E8E8E"), hex("#FF6B6B"), hex("#8AB8FF")};
+                          hex("#8E8E8E"), hex("#FF6B6B"), hex("#8AB8FF"), hex("#5CCB84")};
     return t;
 }
 
@@ -282,7 +297,7 @@ const Tokens& lightTokens()
     static const Tokens t{hex("#2560CC"), hex("#2560CC"), hex("#1F52B0"), hex("#E3ECFC"), hex("#EDEDED"),
                           hex("#D6D6D6"), hex("#FAFAFA"), hex("#F5F5F5"), hex("#FFFFFF"), hex("#E6E6E6"),
                           hex("#FFFFFF"), hex("#D4D4D4"), hex("#8E8E8E"), hex("#1A1A1A"), hex("#555555"),
-                          hex("#676767"), hex("#C01C28"), hex("#2560CC")};
+                          hex("#676767"), hex("#C01C28"), hex("#2560CC"), hex("#1B7F38")};
     return t;
 }
 

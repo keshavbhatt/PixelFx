@@ -26,6 +26,8 @@ A new editor, a new image engine, and a new look.
   it was saved, and why not when it was not. Save the page as a batch recipe to run it again, here
   or from the command line: `pixelfx --batch recipe.pfxbatch photos...`. A recipe carries your
   own looks, the size and the watermark inside it, so it works on another computer too.
+  Batch can also take the settings of the photo open in the editor, name files after the
+  recipe with {preset}, enlarge small photos when you ask, and show the photos as a grid.
 - Watermarks on export and in Batch: your name, the year or the camera, or a logo; placed in a
   corner or anywhere you drag it, or repeated across the photo for proofs. The colour can follow
   the photo, light on dark areas and dark on light ones, and the size follows the photo, so a

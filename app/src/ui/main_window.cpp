@@ -418,6 +418,22 @@ void MainWindow::buildHeader()
     m_menuButton = headerButton(m_header, u"menu"_s, tr("Main menu (F10)"));
     m_menuButton->setPopupMode(QToolButton::InstantPopup);
 
+    // Thin separators between the groups (mock .header .sep).
+    const auto separator = [this] {
+        auto* line = new QFrame(m_header);
+        line->setObjectName(u"headerSep"_s);
+        line->setFixedSize(1, 24);
+        return line;
+    };
+    QWidget* sepHistory = separator();
+    QWidget* sepView = separator();
+    // Batch's own: Add photos and Add folder (mock batch.html).
+    auto* addPhotos = new QPushButton(icons::themed(u"plus"_s, tokens().text), tr("Add photos"), m_header);
+    auto* addFolder = new QPushButton(icons::themed(u"folder"_s, tokens().text), tr("Add folder"), m_header);
+    addFolder->setToolTip(tr("Every photo in a folder, subfolders included"));
+    connect(addPhotos, &QPushButton::clicked, this, [this] { m_batch->chooseFiles(); });
+    connect(addFolder, &QPushButton::clicked, this, [this] { m_batch->chooseFolder(); });
+    m_batchHeader = {addPhotos, addFolder};
     auto* header = new QHBoxLayout(m_header);
     header->setContentsMargins(12, 0, 10, 0);
     header->setSpacing(6);
@@ -430,12 +446,18 @@ void MainWindow::buildHeader()
     header->addWidget(m_undo);
     header->addWidget(m_redo);
     header->addWidget(m_history);
-    header->addSpacing(8);
+    header->addWidget(sepHistory);
     header->addWidget(m_compare);
     header->addWidget(m_original);
-    header->addSpacing(8);
+    header->addWidget(sepView);
     header->addWidget(m_export);
+    header->addWidget(addPhotos);
+    header->addWidget(addFolder);
     header->addWidget(m_menuButton);
+    m_editHeader = {open, m_undo, m_redo, m_history, sepHistory, m_compare, m_original, sepView, m_export};
+    for (QWidget* w : std::as_const(m_batchHeader)) {
+        w->hide();
+    }
 }
 
 void MainWindow::buildBatch()
@@ -445,6 +467,11 @@ void MainWindow::buildBatch()
     connect(m_batch, &BatchPage::outputChanged, this,
             [this](const core::ExportOptions& output) { m_settings.setExportOptions(output); });
     connect(m_batch, &BatchPage::looksAdded, this, &MainWindow::refreshLooks);
+    connect(m_batch, &BatchPage::summaryChanged, this, [this](const QString& summary) {
+        if (isBatching()) {
+            m_docMeta->setText(summary);
+        }
+    });
     // The window title shows a running batch, so it can be followed from the task bar.
     connect(&m_batch->runner(), &services::BatchRunner::progress, this,
             [this](int done, int total) { setWindowTitle(tr("Batch %1 of %2").arg(done).arg(total)); });
@@ -685,6 +712,19 @@ void MainWindow::setupCropActions()
     batch->setShortcut(QKeySequence(Qt::Key_B));
     connect(batch, &QAction::triggered, this, &MainWindow::enterBatch);
     addAction(batch);
+    auto* openRecipe = new QAction(tr("Open batch recipe..."), this);
+    openRecipe->setObjectName(u"openBatchRecipe"_s);
+    connect(openRecipe, &QAction::triggered, this, [this] {
+        const QString file = QFileDialog::getOpenFileName(this, tr("Open batch recipe"), QString(),
+                                                          tr("Batch recipes (*.pfxbatch)"));
+        if (!file.isEmpty()) {
+            enterBatch();
+            if (const QString error = m_batch->loadRecipe(file); !error.isEmpty()) {
+                showToast(error);
+            }
+        }
+    });
+    addAction(openRecipe);
     addAction(edit);
     auto* crop = new QAction(tr("Crop"), this);
     crop->setObjectName(u"crop"_s);
@@ -754,6 +794,16 @@ void MainWindow::buildRail()
     column->addWidget(m_healMode);
     column->addWidget(m_batchMode);
     column->addStretch();
+    // Settings at the foot of the rail (mock: the gear), as Ctrl+, and the main menu.
+    auto* gear = new QToolButton(m_rail);
+    gear->setObjectName(u"railButton"_s);
+    gear->setIcon(icons::themed(u"settings"_s, tokens().muted));
+    gear->setIconSize(QSize(20, 20));
+    gear->setFixedSize(44, 40);
+    gear->setToolTip(tr("Settings (Ctrl+,)"));
+    gear->setAccessibleName(tr("Settings"));
+    connect(gear, &QToolButton::clicked, this, &MainWindow::openSettings);
+    column->addWidget(gear, 0, Qt::AlignHCenter);
 }
 
 QWidget* MainWindow::buildCanvasPage()
@@ -1310,10 +1360,38 @@ void MainWindow::enterBatch()
     if (m_batch->files().isEmpty() && m_strip->files().size() > 1) {
         m_batch->addPaths(m_strip->files()); // the photos open in the editor, as a start
     }
+    // Settings from a photo: the one open in the editor.
+    m_batch->setPhotoSettings(m_document.isOpen() ? QFileInfo(m_document.info().path).fileName() : QString(),
+                              m_document.settings());
     m_stack->setCurrentWidget(m_batch);
     m_presets->hide();
     m_panels->hide();
+    showBatchHeader(true);
     m_batchMode->setChecked(true);
+}
+
+void MainWindow::showBatchHeader(bool on)
+{
+    for (QWidget* w : std::as_const(m_editHeader)) {
+        w->setVisible(!on);
+    }
+    for (QWidget* w : std::as_const(m_batchHeader)) {
+        w->setVisible(on);
+    }
+    if (on) {
+        m_docName->setText(tr("Batch"));
+        m_docMeta->setText(m_batch->summary());
+        setWindowTitle(tr("Batch"));
+    } else if (m_document.isOpen()) {
+        const QString name = QFileInfo(m_document.info().path).fileName();
+        m_docName->setText(name);
+        m_docMeta->setText(describe(m_document.info()));
+        setWindowTitle(name);
+    } else {
+        m_docName->clear();
+        m_docMeta->clear();
+        setWindowTitle(QString());
+    }
 }
 
 void MainWindow::leaveBatch()
@@ -1324,6 +1402,7 @@ void MainWindow::leaveBatch()
     m_stack->setCurrentWidget(m_document.isOpen() ? m_canvasPage : static_cast<QWidget*>(m_welcome));
     m_presets->setVisible(m_document.isOpen());
     m_panels->setVisible(m_document.isOpen());
+    showBatchHeader(false);
     m_editMode->setChecked(true);
 }
 
@@ -1718,10 +1797,12 @@ void MainWindow::buildMainMenu()
     QMenu* photo = menu->addMenu(tr("Photo"));
     photo->addAction(namedAction(u"auto"_s));
     photo->addAction(namedAction(u"crop"_s));
+    photo->addAction(namedAction(u"heal"_s));
     photo->addSeparator();
     photo->addActions({namedAction(u"edit"_s), namedAction(u"batch"_s)});
     menu->addSeparator();
     menu->addAction(namedAction(u"export"_s));
+    menu->addAction(namedAction(u"openBatchRecipe"_s));
     menu->addSeparator();
     connect(menu->addAction(tr("Import presets...")), &QAction::triggered, this, &MainWindow::importPresets);
     connect(menu->addAction(tr("Show presets folder")), &QAction::triggered, this, [this] {
