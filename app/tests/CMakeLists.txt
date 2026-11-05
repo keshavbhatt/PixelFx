@@ -58,3 +58,8 @@ target_compile_definitions(tst_instance PRIVATE
     PIXELFX_BINARY="$<TARGET_FILE:pixelfx>"
     PIXELFX_TEST_PHOTO="${PROJECT_SOURCE_DIR}/libs/pixelfx-core/tests/golden/exposure.png")
 add_dependencies(tst_instance pixelfx)
+# End to end on real photos: run with PIXELFX_E2E_PHOTOS=<folder>; skipped without it.
+pixelfx_add_test(tst_e2e             tst_e2e.cpp             pixelfx_ui GUI)
+target_compile_definitions(tst_e2e PRIVATE PIXELFX_BINARY="$<TARGET_FILE:pixelfx>")
+add_dependencies(tst_e2e pixelfx)
+set_tests_properties(tst_e2e PROPERTIES TIMEOUT 1200)
