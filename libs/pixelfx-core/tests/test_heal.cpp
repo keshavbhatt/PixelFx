@@ -6,8 +6,8 @@
 
 #include <cmath>
 #include <cstdint>
-#include <utility>
 #include <doctest/doctest.h>
+#include <utility>
 
 namespace {
 
