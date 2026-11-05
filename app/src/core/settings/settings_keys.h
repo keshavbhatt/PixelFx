@@ -44,6 +44,7 @@ inline constexpr auto kOpenAdjustGroups = "editing/openAdjustGroups";
 inline constexpr auto kOpenAdjustMore = "editing/openAdjustMore";
 inline constexpr auto kOneGroupAtATime = "editing/oneGroupAtATime";
 inline constexpr auto kFavoritePresets = "presets/favorites";
+inline constexpr auto kFavoriteLooks = "looks/favorites";
 inline constexpr auto kRecentPresets = "presets/recent";
 inline constexpr auto kClosedPresetCategories = "presets/closedCategories";
 inline constexpr auto kClippingWarnings = "display/clippingWarnings";

@@ -1181,6 +1181,9 @@ void MainWindow::connectPresets()
     m_presets->setClosedCategories(m_settings.closedPresetCategories());
     connect(m_presets, &PresetsPanel::favoritesChanged, this,
             [this](const QStringList& ids) { m_settings.setFavoritePresets(ids); });
+    m_presets->looksPanel()->setFavorites(m_settings.favoriteLooks());
+    connect(m_presets->looksPanel(), &LooksPanel::favoritesChanged, this,
+            [this](const QStringList& ids) { m_settings.setFavoriteLooks(ids); });
     connect(m_presets, &PresetsPanel::closedCategoriesChanged, this,
             [this](const QStringList& names) { m_settings.setClosedPresetCategories(names); });
     m_endPreview = new QAction(tr("End the preview"), this);

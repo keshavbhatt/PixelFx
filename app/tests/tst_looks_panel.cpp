@@ -69,6 +69,38 @@ private Q_SLOTS:
         QCOMPARE(chosen.size(), 2);
     }
 
+    void favoritesAreStarredAndListed()
+    {
+        LooksPanel panel;
+        panel.resize(272, 700);
+        panel.setEntries(pixelfx::core::builtInLooks());
+        QSignalSpy changed(&panel, &LooksPanel::favoritesChanged);
+        QTest::mouseClick(chip(panel, u"Favorites"_s), Qt::LeftButton);
+        QCOMPARE(panel.visibleTiles().size(), std::size_t{0});
+        const QList<QLabel*> labels = panel.findChildren<QLabel*>();
+        QVERIFY(std::ranges::any_of(
+            labels, [](const QLabel* l) { return l->text().startsWith(u"No favourites yet"_s); }));
+        QTest::mouseClick(chip(panel, u"All"_s), Qt::LeftButton);
+        panel.show();
+        QVERIFY(QTest::qWaitForWindowExposed(&panel));
+        pixelfx::ui::PhotoTile* vivid = nullptr;
+        for (pixelfx::ui::PhotoTile* t : panel.visibleTiles()) {
+            if (t->id() == u"builtin:vivid"_s) {
+                vivid = t;
+            }
+        }
+        QVERIFY(vivid);
+        vivid->setFocus();
+        QTest::keyClick(vivid, Qt::Key_F); // F stars it
+        QCOMPARE(changed.size(), 1);
+        QCOMPARE(panel.favorites(), QStringList{u"builtin:vivid"_s});
+        QTest::mouseClick(chip(panel, u"Favorites"_s), Qt::LeftButton);
+        QCOMPARE(panel.visibleTiles().size(), std::size_t{1});
+        QCOMPARE(panel.visibleTiles().front()->id(), u"builtin:vivid"_s);
+        panel.setFavorites({}); // remembered favourites replace the list
+        QCOMPARE(panel.visibleTiles().size(), std::size_t{0});
+    }
+
     void aSingleLookOfMyOwnIsAsWideAsTheOthers()
     {
         auto entries = pixelfx::core::builtInLooks();

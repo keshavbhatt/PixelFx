@@ -22,7 +22,7 @@ public:
     {
         None,
         Mine,     // the user's own look
-        Favorite, // a preset in Favorites
+        Favorite, // a preset or a look in Favorites
     };
 
     PhotoTile(QString id, QString name, Badge badge, QWidget* parent = nullptr);

@@ -102,6 +102,9 @@ public:
     /// Preset ids (PresetEntry::id) in Favorites, and the last ones applied, newest first.
     [[nodiscard]] QStringList favoritePresets() const;
     void setFavoritePresets(const QStringList& ids);
+    /// Look ids (LookEntry::id) in Favorites.
+    [[nodiscard]] QStringList favoriteLooks() const;
+    void setFavoriteLooks(const QStringList& ids);
     [[nodiscard]] QStringList recentPresets() const;
     /// Puts `id` first in Recent, which keeps the last 12.
     void notePresetUsed(const QString& id);

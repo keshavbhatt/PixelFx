@@ -39,12 +39,14 @@ struct Chip
     const char* label;
     const char* category; // "" all, "mine" the user's
 };
-constexpr std::array<Chip, 5> kChips = {{
+constexpr std::size_t kFavoritesChip = 5;
+constexpr std::array<Chip, 6> kChips = {{
     {QT_TRANSLATE_NOOP("LooksPanel", "All"), ""},
     {QT_TRANSLATE_NOOP("LooksPanel", "Mine"), "mine"},
     {QT_TRANSLATE_NOOP("LooksPanel", "Color"), "color"},
     {QT_TRANSLATE_NOOP("LooksPanel", "Film"), "film"},
     {QT_TRANSLATE_NOOP("LooksPanel", "B&&W"), "bw"}, // && shows one ampersand on a button
+    {QT_TRANSLATE_NOOP("LooksPanel", "Favorites"), "favorites"},
 }};
 
 } // namespace
@@ -233,7 +235,11 @@ bool LooksPanel::matches(const core::LookEntry& e) const
 {
     const QString category =
         QLatin1StringView(kChips.at(static_cast<std::size_t>(std::max(0, m_chips->checkedId()))).category);
-    if (category == u"mine"_s ? !e.isMine() : (!category.isEmpty() && e.category != category)) {
+    if (category == u"favorites"_s) {
+        if (!m_favorites.contains(e.id)) {
+            return false;
+        }
+    } else if (category == u"mine"_s ? !e.isMine() : (!category.isEmpty() && e.category != category)) {
         return false;
     }
     const QString needle = m_search->text().trimmed();
@@ -264,23 +270,18 @@ void LooksPanel::addSection(const QString& title, QWidget* extra, const std::vec
     }
     for (const int i : indexes) {
         const core::LookEntry& e = m_entries[static_cast<std::size_t>(i)];
-        auto* tile = new PhotoTile(e.id, e.name, e.isMine() ? PhotoTile::Badge::Mine : PhotoTile::Badge::None,
-                                   m_listBox);
+        // The star says Favorites; the section already says whose look it is.
+        const PhotoTile::Badge badge = m_favorites.contains(e.id) ? PhotoTile::Badge::Favorite
+                                       : e.isMine()               ? PhotoTile::Badge::Mine
+                                                                  : PhotoTile::Badge::None;
+        auto* tile = new PhotoTile(e.id, e.name, badge, m_listBox);
         tile->setImage(m_thumbnails[static_cast<std::size_t>(i)]);
         if (e.isMine()) {
             tile->setToolTip(tr("%1. Right-click to edit, export or delete.").arg(e.name));
-            connect(tile, &PhotoTile::menuRequested, this, [this, id = e.id](const QPoint& where) {
-                QMenu menu(this);
-                connect(menu.addAction(tr("Edit look...")), &QAction::triggered, this,
-                        [this, id] { Q_EMIT editLookRequested(id); });
-                connect(menu.addAction(tr("Export look...")), &QAction::triggered, this,
-                        [this, id] { Q_EMIT exportLookRequested(id); });
-                menu.addSeparator();
-                connect(menu.addAction(tr("Delete")), &QAction::triggered, this,
-                        [this, id] { Q_EMIT deleteLookRequested(id); });
-                menu.exec(where);
-            });
         }
+        connect(tile, &PhotoTile::menuRequested, this,
+                [this, e](const QPoint& where) { showMenu(e, where); });
+        connect(tile, &PhotoTile::favoriteRequested, this, [this, id = e.id] { toggleFavorite(id); });
         place(tile);
     }
     m_list->addLayout(tileGrid(tiles, m_listBox));
@@ -326,7 +327,51 @@ void LooksPanel::rebuild()
     if (!builtIn.empty() || all) {
         addSection(tr("Built in"), nullptr, builtIn, all);
     }
+    if (m_chips->checkedId() == static_cast<int>(kFavoritesChip) && mine.empty() && builtIn.empty() &&
+        m_search->text().trimmed().isEmpty()) {
+        auto* empty = new QLabel(tr("No favourites yet. Press F on a look, or use its menu, to add it here."),
+                                 m_listBox);
+        empty->setObjectName(u"muted"_s);
+        empty->setWordWrap(true);
+        empty->setContentsMargins(kPanelPadding, 12, kPanelPadding, 0);
+        m_list->addWidget(empty);
+    }
     m_list->addStretch();
+}
+
+void LooksPanel::setFavorites(const QStringList& ids)
+{
+    m_favorites = ids;
+    rebuild();
+}
+
+void LooksPanel::toggleFavorite(const QString& id)
+{
+    if (m_favorites.contains(id)) {
+        m_favorites.removeAll(id);
+    } else {
+        m_favorites.append(id);
+    }
+    Q_EMIT favoritesChanged(m_favorites);
+    rebuild(); // the star, and the Favorites chip's list
+}
+
+void LooksPanel::showMenu(const core::LookEntry& e, const QPoint& where)
+{
+    QMenu menu(this);
+    const bool favorite = m_favorites.contains(e.id);
+    QAction* star = menu.addAction(icons::themed(u"star"_s, tokens().text),
+                                   favorite ? tr("Remove from Favorites") : tr("Add to Favorites"), this,
+                                   [this, id = e.id] { toggleFavorite(id); });
+    star->setShortcut(QKeySequence(Qt::Key_F));
+    if (e.isMine()) {
+        menu.addSeparator();
+        menu.addAction(tr("Edit look..."), this, [this, id = e.id] { Q_EMIT editLookRequested(id); });
+        menu.addAction(tr("Export look..."), this, [this, id = e.id] { Q_EMIT exportLookRequested(id); });
+        menu.addSeparator();
+        menu.addAction(tr("Delete"), this, [this, id = e.id] { Q_EMIT deleteLookRequested(id); });
+    }
+    menu.exec(where);
 }
 
 } // namespace pixelfx::ui

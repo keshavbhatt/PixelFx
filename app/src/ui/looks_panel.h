@@ -43,6 +43,9 @@ public:
     [[nodiscard]] bool isPreviewing() const;
     /// Ends the preview and any wait for one.
     void endPreview();
+    /// Look ids in Favorites (starred, and listed by the Favorites chip).
+    void setFavorites(const QStringList& ids);
+    [[nodiscard]] const QStringList& favorites() const { return m_favorites; }
 
 Q_SIGNALS:
     /// A tile was chosen: its id (empty for Original) and the look's own strength.
@@ -58,12 +61,16 @@ Q_SIGNALS:
     void editLookRequested(const QString& id);
     void exportLookRequested(const QString& id);
     void deleteLookRequested(const QString& id);
+    /// F on a tile or its menu added or removed a look: the whole list, to remember.
+    void favoritesChanged(const QStringList& ids);
 
 private:
     void rebuild();
     QWidget* buildStrength();
     void addSection(const QString& title, QWidget* extra, const std::vector<int>& indexes, bool withOriginal);
     [[nodiscard]] bool matches(const core::LookEntry& e) const;
+    void toggleFavorite(const QString& id);
+    void showMenu(const core::LookEntry& e, const QPoint& where);
 
     std::vector<core::LookEntry> m_entries;
     std::vector<QImage> m_thumbnails;
@@ -77,6 +84,7 @@ private:
     QLabel* m_appliedName = nullptr;
     class HoverPreview* m_hover = nullptr;
     std::vector<QString> m_tileIds; // the look of each tile on show, by HoverPreview index
+    QStringList m_favorites;
     /// The look's own strength, the one a click applies.
     [[nodiscard]] int defaultStrength(const QString& id) const;
 };

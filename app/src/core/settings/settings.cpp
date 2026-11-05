@@ -382,6 +382,16 @@ void Settings::setFavoritePresets(const QStringList& ids)
     m_settings->setValue(key(keys::kFavoritePresets), ids);
 }
 
+QStringList Settings::favoriteLooks() const
+{
+    return m_settings->value(key(keys::kFavoriteLooks)).toStringList();
+}
+
+void Settings::setFavoriteLooks(const QStringList& ids)
+{
+    m_settings->setValue(key(keys::kFavoriteLooks), ids);
+}
+
 QStringList Settings::recentPresets() const
 {
     return m_settings->value(key(keys::kRecentPresets)).toStringList();

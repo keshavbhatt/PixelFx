@@ -50,7 +50,7 @@ Decisions the work stopped at; everything else went ahead within the approved mo
 6. Batch writes beside each original into a folder named "PixelFx": keep the name?
    (The catalog's names and Tools: decided 2026-11-05, see below.)
 7. Zoom has a FEATURES row now (E17b, 2026-11-06).
-8. Small departures from approved mocks, until their parts exist: no Favorites chip; the look
+8. Small departures from approved mocks, until their parts exist: the look
     editor previews on This photo and a colour ramp (no Portrait or Landscape test photos are
     shipped); the main menu leaves out Save edit with the file;
     Copy to clipboard has no shortcut (the mock's
@@ -74,6 +74,16 @@ Decisions the work stopped at; everything else went ahead within the approved mo
     row, and say whether the two EmulsionPresets lens tools join the catalog.
 
 ## Sessions (newest first)
+
+### 2026-11-06 (Favorites for looks)
+
+- The Favorites chip of `editor.html`'s Looks tab, built as the preset catalog's: F on a tile or
+  its menu (Add to Favorites, Remove from Favorites) stars a look, built-in or the user's, the
+  chip lists the starred ones or says how to add one, and they are remembered
+  (`looks/favorites`). The star takes the place of the Mine badge on a starred look of the
+  user's; its section already says whose it is. The menu now opens on built-in looks too.
+- Checks: 38 app suites (`tst_looks_panel`: F stars, the chip lists, the empty note), the
+  linters; the panel grabbed headless with two looks starred.
 
 ### 2026-11-06 (creative steps for looks, FEATURES E9)
 
