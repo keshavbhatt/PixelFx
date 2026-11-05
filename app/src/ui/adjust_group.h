@@ -57,6 +57,14 @@ public:
     /// Shows or hides the changed dot and the reset button.
     void setChanged(bool changed);
 
+Q_SIGNALS:
+    /// The group opened or closed.
+    void expandedChanged(bool open);
+    /// Right-click or the Menu key on the heading, at `globalPos`.
+    void headingMenuRequested(const QPoint& globalPos);
+    /// Alt+click on the heading: open this group only.
+    void soloRequested();
+
 private:
     void updateChevron();
     void makeMore();

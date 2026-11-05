@@ -4,12 +4,14 @@
 #include "ui/style.h"
 
 #include <QContextMenuEvent>
+#include <QFocusEvent>
 #include <QGridLayout>
 #include <QKeyEvent>
 #include <QMouseEvent>
 #include <QPainter>
 #include <QPainterPath>
 
+#include <algorithm>
 #include <utility>
 
 using namespace Qt::StringLiterals;
@@ -65,6 +67,12 @@ void PhotoTile::setTwoLineName(bool on)
     update();
 }
 
+void PhotoTile::setWaiting(double progress)
+{
+    m_waiting = progress;
+    update();
+}
+
 void PhotoTile::setDescription(const QString& description)
 {
     m_description = description;
@@ -99,6 +107,13 @@ void PhotoTile::paintEvent(QPaintEvent* /*event*/)
                             imageRect.width() * m_image.width() / scaled.width(),
                             imageRect.height() * m_image.height() / scaled.height());
         p.drawImage(imageRect, m_image, source);
+    }
+    if (m_waiting >= 0.0) {
+        // The accent on a dark track: the track keeps the bar visible over any picture.
+        const QRectF track(imageRect.left(), imageRect.bottom() - 3, imageRect.width(), 3);
+        p.fillRect(track, QColor(0, 0, 0, 140));
+        p.fillRect(QRectF(track.topLeft(), QSizeF(track.width() * std::clamp(m_waiting, 0.0, 1.0), 3)),
+                   t.accent);
     }
     p.restore();
     QFont small = font();
@@ -192,6 +207,21 @@ void PhotoTile::enterEvent(QEnterEvent* /*event*/)
 
 void PhotoTile::leaveEvent(QEvent* /*event*/)
 {
+    Q_EMIT hovered(false);
+}
+
+void PhotoTile::focusInEvent(QFocusEvent* event)
+{
+    QWidget::focusInEvent(event);
+    if (event->reason() == Qt::TabFocusReason || event->reason() == Qt::BacktabFocusReason ||
+        event->reason() == Qt::ShortcutFocusReason || event->reason() == Qt::OtherFocusReason) {
+        Q_EMIT hovered(true); // the keyboard previews as the pointer does
+    }
+}
+
+void PhotoTile::focusOutEvent(QFocusEvent* event)
+{
+    QWidget::focusOutEvent(event);
     Q_EMIT hovered(false);
 }
 

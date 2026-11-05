@@ -4,6 +4,7 @@
 #include "ui/icons.h"
 #include "ui/style.h"
 
+#include <QContextMenuEvent>
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QMouseEvent>
@@ -20,13 +21,16 @@ namespace pixelfx::ui {
 
 namespace {
 
-// The header row: a click anywhere on it, not only on the name, opens or closes the group.
+// The header row: a click anywhere on it, not only on the name, opens or closes the group;
+// Alt+click asks for this group alone; right-click asks for the heading's menu.
 class HeaderRow : public QWidget
 {
 public:
-    HeaderRow(QWidget* parent, std::function<void()> onClick)
+    HeaderRow(QWidget* parent, std::function<void(Qt::KeyboardModifiers)> onClick,
+              std::function<void(const QPoint&)> onMenu)
         : QWidget(parent)
         , m_onClick(std::move(onClick))
+        , m_onMenu(std::move(onMenu))
     {
         setCursor(Qt::PointingHandCursor);
     }
@@ -35,12 +39,14 @@ protected:
     void mouseReleaseEvent(QMouseEvent* event) override
     {
         if (event->button() == Qt::LeftButton && rect().contains(event->position().toPoint())) {
-            m_onClick();
+            m_onClick(event->modifiers());
         }
     }
+    void contextMenuEvent(QContextMenuEvent* event) override { m_onMenu(event->globalPos()); }
 
 private:
-    std::function<void()> m_onClick;
+    std::function<void(Qt::KeyboardModifiers)> m_onClick;
+    std::function<void(const QPoint&)> m_onMenu;
 };
 
 } // namespace
@@ -58,7 +64,12 @@ AdjustGroup::AdjustGroup(QString id, const QString& name, const QString& glyph, 
 {
     setObjectName(u"adjustGroup"_s);
     setAttribute(Qt::WA_StyledBackground);
-    auto* header = new HeaderRow(this, [this] { m_toggle->toggle(); });
+    auto* header = new HeaderRow(
+        this,
+        [this](Qt::KeyboardModifiers modifiers) {
+            modifiers.testFlag(Qt::AltModifier) ? Q_EMIT soloRequested() : m_toggle->toggle();
+        },
+        [this](const QPoint& where) { Q_EMIT headingMenuRequested(where); });
     m_toggle->setParent(header);
     m_chevron->setParent(header);
     m_dot->setParent(header);
@@ -93,7 +104,12 @@ AdjustGroup::AdjustGroup(QString id, const QString& name, const QString& glyph, 
     connect(m_toggle, &QToolButton::toggled, this, [this](bool open) {
         m_body->setVisible(open);
         updateChevron();
+        Q_EMIT expandedChanged(open);
     });
+    // The Menu key on the focused heading opens its menu too.
+    m_toggle->setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(m_toggle, &QToolButton::customContextMenuRequested, this,
+            [this](const QPoint& at) { Q_EMIT headingMenuRequested(m_toggle->mapToGlobal(at)); });
     updateChevron();
     setChanged(false);
 }

@@ -17,14 +17,17 @@
 #include <QEvent>
 #include <QHBoxLayout>
 #include <QLabel>
+#include <QMenu>
 #include <QMouseEvent>
 #include <QPushButton>
 #include <QScrollArea>
+#include <QSignalBlocker>
 #include <QSlider>
 #include <QStyle>
 #include <QToolButton>
 #include <QVBoxLayout>
 
+#include <algorithm>
 #include <array>
 #include <cmath>
 #include <functional>
@@ -405,6 +408,12 @@ QHBoxLayout* AdjustPanel::buildTopRow()
     top->addWidget(copy);
     top->addWidget(m_paste);
     top->addWidget(resetAll);
+    m_collapseAll = new IconTextButton(icons::themed(u"chevrons-down-up"_s, tokens().text), QString(), this);
+    m_collapseAll->setObjectName(u"small"_s);
+    m_collapseAll->setToolTip(tr("Collapse all groups"));
+    m_collapseAll->setAccessibleName(tr("Collapse all groups"));
+    connect(m_collapseAll, &QPushButton::clicked, this, &AdjustPanel::collapseAll);
+    top->addWidget(m_collapseAll);
     return top;
 }
 
@@ -448,6 +457,7 @@ AdjustPanel::AdjustPanel(QWidget* parent)
     column->addWidget(scroll, 1);
     setFixedWidth(316);
     refreshGroups();
+    refreshCollapseAll();
 }
 
 AdjustPanel::~AdjustPanel() = default;
@@ -651,6 +661,68 @@ AdjustGroup* AdjustPanel::group(const QString& id) const
     return nullptr;
 }
 
+void AdjustPanel::collapseAll()
+{
+    for (AdjustGroup* g : m_groups) {
+        g->setExpanded(false);
+    }
+}
+
+void AdjustPanel::expandAll()
+{
+    const bool solo = m_solo;
+    m_solo = false; // Expand all means all, whatever the mode
+    for (AdjustGroup* g : m_groups) {
+        g->setExpanded(true);
+    }
+    m_solo = solo;
+}
+
+void AdjustPanel::openOnly(AdjustGroup* group)
+{
+    for (AdjustGroup* g : m_groups) {
+        if (g != group) {
+            const QSignalBlocker block(g); // closing them is not a reason to close more
+            g->setExpanded(false);
+        }
+    }
+    group->setExpanded(true);
+    refreshCollapseAll();
+}
+
+void AdjustPanel::setOneGroupAtATime(bool on)
+{
+    m_solo = on;
+}
+
+void AdjustPanel::refreshCollapseAll()
+{
+    m_collapseAll->setEnabled(
+        std::ranges::any_of(m_groups, [](const AdjustGroup* g) { return g->isExpanded(); }));
+}
+
+void AdjustPanel::showHeadingMenu(AdjustGroup* group, const QPoint& where)
+{
+    QMenu menu(this);
+    menu.addAction(icons::themed(u"chevrons-down-up"_s, tokens().text), tr("Collapse all"), this,
+                   &AdjustPanel::collapseAll);
+    menu.addAction(tr("Expand all"), this, &AdjustPanel::expandAll);
+    menu.addSeparator();
+    QAction* solo = menu.addAction(tr("One group open at a time"));
+    solo->setCheckable(true);
+    solo->setChecked(m_solo);
+    connect(solo, &QAction::toggled, this, [this](bool on) {
+        setOneGroupAtATime(on);
+        Q_EMIT oneGroupAtATimeChanged(on);
+    });
+    menu.addSeparator();
+    // Text after a tab is the menu's right-hand hint, as a shortcut would be.
+    //: A group heading's menu: open this group and close the others, "Open only Color".
+    menu.addAction(buttonText(tr("Open only %1").arg(group->name())) + u'\t' + tr("Alt+click"), this,
+                   [this, group] { openOnly(group); });
+    menu.exec(where);
+}
+
 QStringList AdjustPanel::openMore() const
 {
     QStringList ids;
@@ -701,6 +773,15 @@ void AdjustPanel::setOpenGroups(const QStringList& ids)
 void AdjustPanel::addGroup(AdjustGroup* group, QVBoxLayout* groups)
 {
     connect(group->resetButton(), &QToolButton::clicked, this, [this, group] { resetGroup(group); });
+    connect(group, &AdjustGroup::expandedChanged, this, [this, group](bool open) {
+        if (open && m_solo) {
+            openOnly(group);
+        }
+        refreshCollapseAll();
+    });
+    connect(group, &AdjustGroup::soloRequested, this, [this, group] { openOnly(group); });
+    connect(group, &AdjustGroup::headingMenuRequested, this,
+            [this, group](const QPoint& where) { showHeadingMenu(group, where); });
     groups->addWidget(group);
     m_groups.push_back(group);
 }

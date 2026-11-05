@@ -40,6 +40,8 @@ public:
     /// Lets the name take two lines, for names whose end tells similar ones apart
     /// ("Portrait 400, pushed twice"); one line by default.
     void setTwoLineName(bool on);
+    /// The bar along the bottom of the picture while a preview waits: 0 to 1, or below 0 for none.
+    void setWaiting(double progress);
 
     static constexpr int kImageHeight = 77;
     static constexpr int kHeight = kImageHeight + 24;
@@ -48,7 +50,7 @@ public:
 Q_SIGNALS:
     void clicked();
     void menuRequested(const QPoint& globalPos);
-    /// The pointer came onto the tile (true) or left it.
+    /// The pointer came onto the tile, or the keyboard focus did (true), or left it.
     void hovered(bool inside);
     /// F on a focused tile.
     void favoriteRequested();
@@ -60,6 +62,8 @@ protected:
     void keyPressEvent(QKeyEvent* event) override;
     void enterEvent(QEnterEvent* event) override;
     void leaveEvent(QEvent* event) override;
+    void focusInEvent(QFocusEvent* event) override;
+    void focusOutEvent(QFocusEvent* event) override;
 
 private:
     void paintBadge(QPainter& p, const QRectF& box) const;
@@ -71,6 +75,7 @@ private:
     Badge m_badge = Badge::None;
     bool m_selected = false;
     bool m_twoLines = false;
+    double m_waiting = -1.0;
     QImage m_image;
 };
 

@@ -26,6 +26,7 @@ inline constexpr auto kRememberEdits = "editing/rememberEdits";
 inline constexpr auto kOpenAsLeft = "editing/openAsLeft";
 inline constexpr auto kOpenAdjustGroups = "editing/openAdjustGroups";
 inline constexpr auto kOpenAdjustMore = "editing/openAdjustMore";
+inline constexpr auto kOneGroupAtATime = "editing/oneGroupAtATime";
 inline constexpr auto kFavoritePresets = "presets/favorites";
 inline constexpr auto kRecentPresets = "presets/recent";
 inline constexpr auto kClosedPresetCategories = "presets/closedCategories";

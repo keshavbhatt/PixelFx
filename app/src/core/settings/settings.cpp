@@ -259,6 +259,16 @@ void Settings::setOpenAdjustMore(const QStringList& ids)
     m_settings->setValue(key(keys::kOpenAdjustMore), ids);
 }
 
+bool Settings::oneGroupAtATime() const
+{
+    return m_settings->value(key(keys::kOneGroupAtATime), false).toBool();
+}
+
+void Settings::setOneGroupAtATime(bool on)
+{
+    m_settings->setValue(key(keys::kOneGroupAtATime), on);
+}
+
 QStringList Settings::favoritePresets() const
 {
     return m_settings->value(key(keys::kFavoritePresets)).toStringList();

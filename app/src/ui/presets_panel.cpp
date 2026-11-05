@@ -16,6 +16,7 @@
 #include <QPushButton>
 #include <QScrollArea>
 #include <QStackedWidget>
+#include <QTimer>
 #include <QToolButton>
 #include <QVBoxLayout>
 
@@ -55,8 +56,19 @@ PresetsPanel::PresetsPanel(QWidget* parent)
     , m_looks(new LooksPanel(this))
     , m_pages(new QStackedWidget(this))
     , m_tabs(new QButtonGroup(this))
+    , m_waitTick(new QTimer(this))
+    , m_endTimer(new QTimer(this))
 {
     makeSidePanel(this, Qt::RightEdge);
+    m_waitTick->setInterval(16);
+    connect(m_waitTick, &QTimer::timeout, this, &PresetsPanel::tickWait);
+    // Leaving a tile ends its preview a moment later: moving to the next one keeps it smooth.
+    m_endTimer->setSingleShot(true);
+    m_endTimer->setInterval(kPreviewNext);
+    connect(m_endTimer, &QTimer::timeout, this, [this] {
+        m_previewing = false;
+        Q_EMIT previewRequested(nullptr);
+    });
     setFixedWidth(kPanelWidth);
 
     QHBoxLayout* tabs = buildTabs();
@@ -147,10 +159,17 @@ QHBoxLayout* PresetsPanel::buildHead()
     import->setToolTip(tr("Import presets: PixelFx, Lightroom and Camera Raw presets, .cube LUTs"));
     import->setAccessibleName(tr("Import presets"));
     connect(import, &QToolButton::clicked, this, &PresetsPanel::importRequested);
+    m_closeAll = new QToolButton(this);
+    m_closeAll->setObjectName(u"iconButton"_s);
+    m_closeAll->setIcon(icons::themed(u"chevrons-down-up"_s, tokens().text));
+    m_closeAll->setToolTip(tr("Close all categories"));
+    m_closeAll->setAccessibleName(tr("Close all categories"));
+    connect(m_closeAll, &QToolButton::clicked, this, &PresetsPanel::closeAllCategories);
     auto* head = new QHBoxLayout;
     head->setContentsMargins(kToolRowPadding, 10, kToolRowPadding, 6);
     head->setSpacing(kGapRelated);
     head->addWidget(m_search, 1);
+    head->addWidget(m_closeAll);
     head->addWidget(import);
     return head;
 }
@@ -326,6 +345,24 @@ void PresetsPanel::setClosedCategories(const QStringList& names)
     rebuild();
 }
 
+void PresetsPanel::closeAllCategories()
+{
+    for (const core::PresetEntry& e : m_entries) {
+        if (!m_closed.contains(e.group)) {
+            m_closed << e.group;
+        }
+    }
+    Q_EMIT closedCategoriesChanged(m_closed);
+    rebuild();
+}
+
+void PresetsPanel::openAllCategories()
+{
+    m_closed.clear();
+    Q_EMIT closedCategoriesChanged(m_closed);
+    rebuild();
+}
+
 void PresetsPanel::showCategory(const QString& name)
 {
     m_category = name;
@@ -399,6 +436,7 @@ void PresetsPanel::clearList()
 
 void PresetsPanel::rebuild()
 {
+    endPreview(); // its tile goes with the list
     clearList();
     const bool inCategory = !m_category.isEmpty();
     const bool searching = !m_search->text().trimmed().isEmpty();
@@ -418,6 +456,11 @@ void PresetsPanel::rebuild()
         addEmptyNote(filter, searching);
     }
     m_list->addStretch();
+    // Close all has something to do while a heading of the list is open.
+    const bool browsing = !inCategory && !searching && (filter == All || filter == Mine);
+    m_closeAll->setEnabled(browsing && std::ranges::any_of(m_entries, [this](const core::PresetEntry& e) {
+                               return !m_closed.contains(e.group);
+                           }));
     Q_EMIT thumbnailsWanted();
 }
 
@@ -497,6 +540,14 @@ void PresetsPanel::addSection(const QString& title, const std::vector<std::size_
         heading->setFont(font);
         heading->setAccessibleName(title);
         heading->setToolTip(open ? tr("Close %1").arg(title) : tr("Open %1").arg(title));
+        heading->setContextMenuPolicy(Qt::CustomContextMenu);
+        connect(heading, &QPushButton::customContextMenuRequested, this, [this, heading](const QPoint& at) {
+            QMenu menu(this);
+            menu.addAction(icons::themed(u"chevrons-down-up"_s, tokens().text), tr("Close all"), this,
+                           &PresetsPanel::closeAllCategories);
+            menu.addAction(tr("Open all"), this, &PresetsPanel::openAllCategories);
+            menu.exec(heading->mapToGlobal(at));
+        });
         connect(heading, &QPushButton::clicked, this, [this, title, open] {
             open ? m_closed.append(title) : static_cast<void>(m_closed.removeAll(title));
             Q_EMIT closedCategoriesChanged(m_closed);
@@ -535,13 +586,69 @@ PhotoTile* PresetsPanel::makeTile(std::size_t index)
     tile->setDescription(e.description.isEmpty() ? core::presetSummary(e.settings) : e.description);
     tile->setImage(m_thumbnails[index]);
     tile->setSelected(!m_appliedId.isEmpty() && e.id == m_appliedId);
-    connect(tile, &PhotoTile::clicked, this, [this, index] { Q_EMIT applyRequested(m_entries[index]); });
+    connect(tile, &PhotoTile::clicked, this, [this, index] {
+        endPreview();
+        Q_EMIT applyRequested(m_entries[index]);
+    });
     connect(tile, &PhotoTile::hovered, this,
-            [this, index](bool inside) { Q_EMIT previewRequested(inside ? &m_entries[index] : nullptr); });
+            [this, tile, index](bool inside) { hoverTile(tile, index, inside); });
     connect(tile, &PhotoTile::favoriteRequested, this, [this, index] { toggleFavorite(index); });
     connect(tile, &PhotoTile::menuRequested, this,
             [this, index](const QPoint& where) { showMenu(index, where); });
     return tile;
+}
+
+void PresetsPanel::hoverTile(PhotoTile* tile, std::size_t index, bool inside)
+{
+    if (m_waitTile != nullptr) {
+        m_waitTile->setWaiting(-1.0);
+    }
+    m_waitTick->stop();
+    if (!inside) {
+        m_waitTile = nullptr;
+        if (m_previewing) {
+            m_endTimer->start();
+        }
+        return;
+    }
+    m_endTimer->stop();
+    m_waitTile = tile;
+    m_waitIndex = index;
+    m_waitDelay = m_previewing ? kPreviewNext : kPreviewWait;
+    m_waitClock.start();
+    tile->setWaiting(0.0);
+    m_waitTick->start();
+}
+
+void PresetsPanel::tickWait()
+{
+    if (m_waitTile == nullptr) {
+        m_waitTick->stop();
+        return;
+    }
+    const double progress = static_cast<double>(m_waitClock.elapsed()) / m_waitDelay;
+    if (progress < 1.0) {
+        m_waitTile->setWaiting(progress);
+        return;
+    }
+    m_waitTick->stop();
+    m_waitTile->setWaiting(-1.0);
+    m_previewing = true;
+    Q_EMIT previewRequested(&m_entries[m_waitIndex]);
+}
+
+void PresetsPanel::endPreview()
+{
+    m_waitTick->stop();
+    m_endTimer->stop();
+    if (m_waitTile != nullptr) {
+        m_waitTile->setWaiting(-1.0);
+    }
+    m_waitTile = nullptr;
+    if (m_previewing) {
+        m_previewing = false;
+        Q_EMIT previewRequested(nullptr);
+    }
 }
 
 void PresetsPanel::toggleFavorite(std::size_t index)

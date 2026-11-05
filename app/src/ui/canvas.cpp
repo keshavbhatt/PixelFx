@@ -807,6 +807,12 @@ void Canvas::paintPhoto(QPainter& painter)
     } else if (m_compare && !m_original.isNull()) {
         paintCompare(painter, target);
     }
+    if (!m_previewName.isEmpty() && !m_cropping) {
+        drawTag(painter, target, tr("Preview"), false);
+        //: The line at the top while a preset's preview shows, "Preview of Portrait 400".
+        paintCanvasBanner(painter, width(), tr("Preview of %1").arg(m_previewName),
+                          tr("click the tile to apply"));
+    }
     if (m_tool != nullptr) {
         painter.save();
         painter.setClipRect(rect());
@@ -834,6 +840,36 @@ void Canvas::paintSideBySide(QPainter& painter)
         painter.drawImage(target, *images[i]);
         drawTag(painter, target, names[i], false);
     }
+}
+
+void Canvas::setPreviewName(const QString& name)
+{
+    if (name != m_previewName) {
+        m_previewName = name;
+        update();
+    }
+}
+
+void paintCanvasBanner(QPainter& painter, double canvasWidth, const QString& text, const QString& note)
+{
+    const Tokens& t = tokens();
+    painter.save();
+    painter.setRenderHint(QPainter::Antialiasing);
+    QFont small = painter.font();
+    small.setPixelSize(12);
+    const QFontMetricsF fm(small);
+    const double gap = note.isEmpty() ? 0.0 : 12.0;
+    const double width = fm.horizontalAdvance(text) + fm.horizontalAdvance(note) + gap + 24;
+    const QRectF banner((canvasWidth - width) / 2.0, 12, width, 30);
+    painter.setPen(QPen(t.border, 1.0));
+    painter.setBrush(t.elevated);
+    painter.drawRoundedRect(banner, 8, 8);
+    painter.setFont(small);
+    painter.setPen(t.text);
+    painter.drawText(banner.adjusted(12, 0, 0, 0), Qt::AlignLeft | Qt::AlignVCenter, text);
+    painter.setPen(t.muted);
+    painter.drawText(banner.adjusted(0, 0, -12, 0), Qt::AlignRight | Qt::AlignVCenter, note);
+    painter.restore();
 }
 
 void Canvas::drawTag(QPainter& painter, const QRect& photo, const QString& text, bool right) const

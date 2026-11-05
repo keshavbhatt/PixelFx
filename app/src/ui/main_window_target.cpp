@@ -3,6 +3,7 @@
 #include "ui/canvas.h"
 #include "ui/color_target_tool.h"
 #include "ui/main_window.h"
+#include "ui/presets_panel.h"
 
 #include <QAction>
 
@@ -63,7 +64,8 @@ void MainWindow::startColorTarget()
         stopColorTarget();
         return;
     }
-    m_canvas->cancelPick(); // one picker at a time: not the white balance one too
+    m_presets->endPreview(); // Escape is the picker's now
+    m_canvas->cancelPick();  // one picker at a time: not the white balance one too
     m_adjust->setPicking(false);
     m_adjust->setTargeting(true);
     m_colorTarget->setBanner(m_adjust->targetBanner());

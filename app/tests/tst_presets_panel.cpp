@@ -12,6 +12,7 @@
 #include <QSignalSpy>
 #include <QSlider>
 #include <QTest>
+#include <QToolButton>
 
 using namespace Qt::StringLiterals;
 using pixelfx::core::PresetEntry;
@@ -118,6 +119,45 @@ private Q_SLOTS:
             }
         }
         QVERIFY(count != nullptr);
+    }
+
+    void aPreviewWaitsOnTheTileThenFollowsQuickly()
+    {
+        PresetsPanel panel;
+        panel.setEntries(catalog());
+        QSignalSpy preview(&panel, &PresetsPanel::previewRequested);
+        pixelfx::ui::PhotoTile* first = panel.tiles().at(1);
+        pixelfx::ui::PhotoTile* second = panel.tiles().at(2);
+        Q_EMIT first->hovered(true);
+        QTest::qWait(PresetsPanel::kPreviewWait / 2);
+        QCOMPARE(preview.count(), 0); // not yet: passing over a tile changes nothing
+        QTRY_COMPARE_WITH_TIMEOUT(preview.count(), 1, 1000);
+        QVERIFY(preview.last().first().value<const PresetEntry*>() != nullptr);
+        QVERIFY(panel.isPreviewing());
+        // The next tile follows after the short wait, with no gap back to the photo.
+        Q_EMIT first->hovered(false);
+        Q_EMIT second->hovered(true);
+        QTRY_COMPARE_WITH_TIMEOUT(preview.count(), 2, PresetsPanel::kPreviewWait);
+        QCOMPARE(preview.last().first().value<const PresetEntry*>()->name, second->name());
+        // Leaving the tiles ends it.
+        Q_EMIT second->hovered(false);
+        QTRY_COMPARE_WITH_TIMEOUT(preview.count(), 3, 1000);
+        QVERIFY(preview.last().first().value<const PresetEntry*>() == nullptr);
+        QVERIFY(!panel.isPreviewing());
+    }
+
+    void closeAllClosesEveryCategoryAndOpenAllOpensThem()
+    {
+        PresetsPanel panel;
+        panel.setEntries(catalog());
+        auto* closeAll = panel.findChild<QToolButton*>();
+        QVERIFY(closeAll != nullptr);
+        QSignalSpy closed(&panel, &PresetsPanel::closedCategoriesChanged);
+        panel.closeAllCategories();
+        QCOMPARE(closed.count(), 1);
+        QCOMPARE(panel.tiles().size(), 0u);
+        panel.openAllCategories();
+        QCOMPARE(panel.tiles().size(), 7u);
     }
 
     void favoritesMineAndRecentFilter()

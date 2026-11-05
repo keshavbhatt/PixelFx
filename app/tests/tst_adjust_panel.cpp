@@ -623,6 +623,27 @@ private Q_SLOTS:
         QCOMPARE(*tool.marker(), QPointF(0.25, 0.5)); // the marker stays on the colour picked
     }
 
+    void collapseAllAndOneGroupAtATime()
+    {
+        AdjustPanel panel;
+        QVERIFY(panel.group(u"Light"_s)->isExpanded());
+        panel.collapseAll();
+        QVERIFY(panel.openGroups().isEmpty());
+        panel.expandAll();
+        QCOMPARE(panel.openGroups().size(), 10);
+        panel.openOnly(panel.group(u"Detail"_s));
+        QCOMPARE(panel.openGroups(), QStringList{u"Detail"_s});
+        // One group at a time: opening one closes the others.
+        panel.setOneGroupAtATime(true);
+        panel.group(u"Curves"_s)->setExpanded(true);
+        QCOMPARE(panel.openGroups(), QStringList{u"Curves"_s});
+        panel.expandAll(); // still everything, whatever the mode
+        QCOMPARE(panel.openGroups().size(), 10);
+        // Alt+click on a heading asks for that group alone.
+        Q_EMIT panel.group(u"Color"_s)->soloRequested();
+        QCOMPARE(panel.openGroups(), QStringList{u"Color"_s});
+    }
+
     void setSettingsDoesNotEmit()
     {
         AdjustPanel panel;

@@ -100,6 +100,14 @@ public:
     [[nodiscard]] QStringList openGroups() const;
     /// Opens the groups in `ids` and closes the others.
     void setOpenGroups(const QStringList& ids);
+    /// Closes every group (the Collapse all button, a heading's menu).
+    void collapseAll();
+    void expandAll();
+    /// Opens `group` and closes the others (Alt+click on a heading).
+    void openOnly(AdjustGroup* group);
+    /// One group open at a time: opening one closes the others (Lightroom's solo mode).
+    void setOneGroupAtATime(bool on);
+    [[nodiscard]] bool oneGroupAtATime() const { return m_solo; }
     /// The ids of the groups whose "More" is open, for the next session.
     [[nodiscard]] QStringList openMore() const;
     void setOpenMore(const QStringList& ids);
@@ -127,6 +135,8 @@ Q_SIGNALS:
     void targetToggled(bool on);
     /// The mixer's mode or black and white changed: what a drag does changed.
     void targetModeChanged();
+    /// One group open at a time was switched, from a heading's menu.
+    void oneGroupAtATimeChanged(bool on);
 
 private:
     struct Bound
@@ -151,6 +161,8 @@ private:
     AdjustSlider* addSlider(AdjustGroup* group, const QString& key, const QString& label, bool more = false,
                             double display = 1.0);
     void addGroup(AdjustGroup* group, QVBoxLayout* groups);
+    void showHeadingMenu(AdjustGroup* group, const QPoint& where);
+    void refreshCollapseAll();
     /// Shows the settings in the controls that are not sliders (curve, wheels).
     void refreshControls();
     void buildMixerGroup(QWidget* content, QVBoxLayout* groups);
@@ -178,6 +190,8 @@ private:
     pfx::Settings m_settings;
     HistogramView* m_histogram = nullptr;
     QPushButton* m_paste = nullptr;
+    QPushButton* m_collapseAll = nullptr;
+    bool m_solo = false;
     QComboBox* m_wbMode = nullptr;
     QToolButton* m_picker = nullptr;
     bool m_wbAuto = false;

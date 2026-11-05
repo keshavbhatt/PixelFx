@@ -124,17 +124,8 @@ void ColorTargetTool::paint(QPainter& p, const QRectF& photo)
     small.setPixelSize(12);
     const QFontMetricsF fm(small);
     if (!m_banner.isEmpty()) {
-        // The line at the top, as the mock's toast: what a drag does, and how to stop.
-        const QString stop = tr("Escape stops");
-        const double width = fm.horizontalAdvance(m_banner) + fm.horizontalAdvance(stop) + 36;
-        const double canvasWidth = p.device()->width() / p.device()->devicePixelRatioF();
-        const QRectF banner((canvasWidth - width) / 2.0, 12, width, 30);
-        drawCard(p, banner);
-        p.setFont(small);
-        p.setPen(t.text);
-        p.drawText(banner.adjusted(12, 0, 0, 0), Qt::AlignLeft | Qt::AlignVCenter, m_banner);
-        p.setPen(t.muted);
-        p.drawText(banner.adjusted(0, 0, -12, 0), Qt::AlignRight | Qt::AlignVCenter, stop);
+        paintCanvasBanner(p, p.device()->width() / p.device()->devicePixelRatioF(), m_banner,
+                          tr("Escape stops"));
     }
     if (m_marker) {
         const QPointF c(photo.left() + (m_marker->x() * photo.width()),

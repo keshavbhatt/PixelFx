@@ -28,6 +28,8 @@
 | `editor-develop.html` | 2026-11-05 (`mocks/reviews/editor-develop.md`) | approved 2026-11-05 (supersedes the two-wheel grading of `editor-grading.html`) |
 | `editor-presets-catalog.html` | 2026-11-05 (`mocks/reviews/editor-presets-catalog.md`) | approved 2026-11-05 |
 | `editor-mixer-target.html` | 2026-11-05 (`mocks/reviews/editor-mixer-target.md`) | approved 2026-11-05 |
+| `editor-collapse-all.html` | 2026-11-05 (`mocks/reviews/editor-collapse-all.md`) | approved 2026-11-05 |
+| `editor-presets-catalog.html`, hover preview | 2026-11-05 (same review, "Hover preview, reworked") | approved 2026-11-05 |
 
 ## Waiting for the owner (2026-11-05)
 
@@ -66,6 +68,21 @@ Decisions the work stopped at; everything else went ahead within the approved mo
     Heal); Reveal dust explains itself in its tooltip rather than a first-time line.
 
 ## Sessions (newest first)
+
+### 2026-11-05 (hover preview, Collapse all)
+
+- Owner's findings: opening a category in full showed a count of 0 and no pictures past the
+  first six (new tiles of a shown panel count as hidden until the next event loop pass, so the
+  panel now keeps its own list of the tiles it built); a preset previewed the instant the pointer
+  touched it; the notices list's highlights overlapped (rows were laid out before the style sheet
+  padded them; every item view now lays its rows out again once styled).
+- The approved hover preview: 0.35 s resting on a tile, 0.15 s once a preview shows, a bar
+  filling along the bottom of the tile's picture meanwhile; a Preview tag on the photo and the
+  line "Preview of ..." at the top (`paintCanvasBanner`, shared with the colour picker's line);
+  Escape, a click, or leaving the tiles ends it; keyboard focus previews as hovering does.
+- The approved Collapse all: a button at the end of the adjust panel's top row and in the
+  Presets search row; a heading's menu with Collapse all, Expand all, One group open at a time
+  (remembered) and Open only <group>; Alt+click on a heading opens only that group.
 
 ### 2026-11-05 (a colour picked on the photo)
 

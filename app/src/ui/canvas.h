@@ -33,6 +33,10 @@ public:
     virtual void leave() {}
 };
 
+/// The line centred at the top of the canvas, on a card: what the canvas shows or what a drag
+/// does ("Preview of Portrait 400"), with a muted note after it ("click the tile to apply").
+void paintCanvasBanner(QPainter& painter, double canvasWidth, const QString& text, const QString& note);
+
 /// The photo, fitted to the widget on the canvas colour (DESIGN section 2). Shows a status line
 /// while opening and the reason when opening failed. In crop mode it draws the crop box over
 /// the whole photo and reports where the box is dragged.
@@ -60,6 +64,10 @@ public:
     [[nodiscard]] double split() const { return m_split; }
     void setSplit(double split);
     void setStatus(const QString& text);
+    /// The photo shows a preset's preview, not the edit: a Preview tag and a line naming it.
+    /// An empty name ends it.
+    void setPreviewName(const QString& name);
+    [[nodiscard]] const QString& previewName() const { return m_previewName; }
     void setError(const QString& text);
     [[nodiscard]] const QImage& image() const { return m_image; }
     /// Where the photo is drawn, in widget coordinates.
@@ -146,6 +154,7 @@ private:
     class StraightenDial* m_dial = nullptr;
     bool m_levelLine = false;
     bool m_picking = false;
+    QString m_previewName;
     QColor m_background;
     bool m_clipping = false;
     QImage m_clipOverlay;

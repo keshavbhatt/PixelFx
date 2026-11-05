@@ -2,7 +2,9 @@
 
 #include "core/presets.h"
 
+#include <QElapsedTimer>
 #include <QImage>
+#include <QPointer>
 #include <QWidget>
 
 #include <vector>
@@ -13,6 +15,8 @@ class QLabel;
 class QLineEdit;
 class QPushButton;
 class QStackedWidget;
+class QTimer;
+class QToolButton;
 class QVBoxLayout;
 
 namespace pixelfx::ui {
@@ -55,6 +59,9 @@ public:
     /// Categories closed by the user (their names), restored at start.
     void setClosedCategories(const QStringList& names);
     [[nodiscard]] const QStringList& closedCategories() const { return m_closed; }
+    /// Closes every category and group of the list, or opens them all.
+    void closeAllCategories();
+    void openAllCategories();
     /// The whole of one category (its name), or every category again with an empty name.
     void showCategory(const QString& name);
     [[nodiscard]] const QString& shownCategory() const { return m_category; }
@@ -63,6 +70,14 @@ public:
     /// The preset just applied and its Amount; an empty name hides the Amount.
     void setApplied(const QString& id, const QString& name, double amount);
     [[nodiscard]] SliderRow* amountRow() const { return m_amount; }
+    /// A preset's preview shows on the photo (after the wait on a tile).
+    [[nodiscard]] bool isPreviewing() const { return m_previewing; }
+    /// Ends the preview and any wait for one (Escape, a click elsewhere).
+    void endPreview();
+
+    /// How long the pointer rests on a tile before its preview, and once one shows.
+    static constexpr int kPreviewWait = 350;
+    static constexpr int kPreviewNext = 150;
 
     /// The Looks tab's panel.
     [[nodiscard]] LooksPanel* looksPanel() const { return m_looks; }
@@ -72,7 +87,7 @@ public:
 
 Q_SIGNALS:
     void applyRequested(const pixelfx::core::PresetEntry& entry);
-    /// Hovering a tile (null `entry`: the pointer left the tiles).
+    /// After resting on a tile, its preview; null when the preview ends.
     void previewRequested(const pixelfx::core::PresetEntry* entry);
     /// Other tiles came into view: make the pictures shownIndexes() lacks.
     void thumbnailsWanted();
@@ -108,6 +123,8 @@ private:
     [[nodiscard]] bool matches(const core::PresetEntry& e) const;
     [[nodiscard]] std::vector<std::size_t> indexesOf(const QStringList& ids) const;
     void toggleFavorite(std::size_t index);
+    void hoverTile(PhotoTile* tile, std::size_t index, bool inside);
+    void tickWait();
     void showMenu(std::size_t index, const QPoint& where);
 
     std::vector<core::PresetEntry> m_entries;
@@ -121,6 +138,7 @@ private:
     QString m_category;
     QString m_appliedId;
     QLineEdit* m_search = nullptr;
+    QToolButton* m_closeAll = nullptr;
     QLabel* m_target = nullptr;
     QButtonGroup* m_chips = nullptr;
     QWidget* m_chipRow = nullptr;
@@ -135,6 +153,14 @@ private:
     QStackedWidget* m_pages = nullptr;
     QButtonGroup* m_tabs = nullptr;
     int m_targetCount = 1;
+    // The hover preview: the tile waited on, how long it has waited, and whether one shows.
+    QPointer<PhotoTile> m_waitTile;
+    std::size_t m_waitIndex = 0;
+    int m_waitDelay = kPreviewWait;
+    QElapsedTimer m_waitClock;
+    QTimer* m_waitTick = nullptr;
+    QTimer* m_endTimer = nullptr;
+    bool m_previewing = false;
 };
 
 } // namespace pixelfx::ui

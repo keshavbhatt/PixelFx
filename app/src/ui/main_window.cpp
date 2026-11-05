@@ -166,6 +166,9 @@ MainWindow::MainWindow(core::Settings& settings, QWidget* parent)
         m_adjust->setOpenGroups(*open);
     }
     m_adjust->setOpenMore(m_settings.openAdjustMore());
+    m_adjust->setOneGroupAtATime(m_settings.oneGroupAtATime());
+    connect(m_adjust, &AdjustPanel::oneGroupAtATimeChanged, this,
+            [this](bool on) { m_settings.setOneGroupAtATime(on); });
 
     applyGeneralSettings();
     connectPresets();
@@ -1136,13 +1139,21 @@ void MainWindow::connectPresets()
             [this](const QStringList& ids) { m_settings.setFavoritePresets(ids); });
     connect(m_presets, &PresetsPanel::closedCategoriesChanged, this,
             [this](const QStringList& names) { m_settings.setClosedPresetCategories(names); });
-    connect(m_presets, &PresetsPanel::previewRequested, this, [this](const core::PresetEntry* entry) {
-        if (entry == nullptr || entry->autoEnhance || !m_document.isOpen() || isInTool()) {
-            m_document.setHoverSettings(std::nullopt);
-            return;
-        }
-        m_document.setHoverSettings(core::applyPreset(m_document.settings(), entry->settings));
-    });
+    auto* endPreview = new QAction(tr("End the preview"), this);
+    endPreview->setShortcut(QKeySequence(Qt::Key_Escape));
+    endPreview->setEnabled(false); // only while a preview shows: Crop and Heal have their own Escape
+    connect(endPreview, &QAction::triggered, m_presets, &PresetsPanel::endPreview);
+    addAction(endPreview);
+    connect(m_presets, &PresetsPanel::previewRequested, this,
+            [this, endPreview](const core::PresetEntry* entry) {
+                const bool show = entry != nullptr && !entry->autoEnhance && m_document.isOpen() &&
+                                  !isInTool() && !isColorTargeting();
+                endPreview->setEnabled(show);
+                m_canvas->setPreviewName(show ? entry->name : QString());
+                m_document.setHoverSettings(
+                    show ? std::optional(core::applyPreset(m_document.settings(), entry->settings))
+                         : std::nullopt);
+            });
     connect(m_presets, &PresetsPanel::saveRequested, this, &MainWindow::savePreset);
     connectPresetActions();
     refreshPresets();
@@ -1616,6 +1627,7 @@ bool MainWindow::isCropping() const
 
 void MainWindow::enterBatch()
 {
+    m_presets->endPreview();
     stopColorTarget();
     leaveTools();
     m_batch->setPresets(m_library.entries());
@@ -1679,6 +1691,7 @@ bool MainWindow::isBatching() const
 
 void MainWindow::enterCrop()
 {
+    m_presets->endPreview();
     stopColorTarget();
     leaveBatch();
     leaveHeal();

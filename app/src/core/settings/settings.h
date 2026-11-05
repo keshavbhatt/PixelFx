@@ -80,6 +80,9 @@ public:
     /// The adjust groups whose "More" was open (empty: none, the first time too).
     [[nodiscard]] QStringList openAdjustMore() const;
     void setOpenAdjustMore(const QStringList& ids);
+    /// Opening an adjust group closes the others.
+    [[nodiscard]] bool oneGroupAtATime() const;
+    void setOneGroupAtATime(bool on);
     /// Preset ids (PresetEntry::id) in Favorites, and the last ones applied, newest first.
     [[nodiscard]] QStringList favoritePresets() const;
     void setFavoritePresets(const QStringList& ids);

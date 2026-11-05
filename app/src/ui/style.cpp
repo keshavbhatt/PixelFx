@@ -4,6 +4,7 @@
 #include "ui/icons.h"
 #include "ui/menu_style.h"
 
+#include <QAbstractItemView>
 #include <QApplication>
 #include <QButtonGroup>
 #include <QDialog>
@@ -182,7 +183,8 @@ const QString kSheet = uR"(
         QFrame#divider { background: {{border}}; border: 0; }
         QTextBrowser#whatsNewText { background: {{panel}}; border: 0; }
         QListWidget#noticeList { background: {{input}}; border: 1px solid {{border}}; border-radius: 8px; padding: 4px; }
-        QListWidget#noticeList::item { padding: 4px 6px; border-radius: 6px; }
+        QListWidget#noticeList::item { padding: 5px 8px; margin: 1px 0; border-radius: 6px; }
+        QListWidget#noticeList::item:hover:!selected { background: {{hover}}; }
         QListWidget#noticeList::item:selected { background: {{accentSoft}}; color: {{text}}; }
         QPlainTextEdit#noticeText, QPlainTextEdit#diagnostics { background: {{input}}; border: 1px solid {{border}}; border-radius: 8px; padding: 6px; font-family: monospace; font-size: 12px; }
     )"_s;
@@ -397,7 +399,10 @@ public:
     }
 
     // Menus have rounded corners, which need a see-through window behind them, and submenus
-    // are kept clear of their parent when they are shown.
+    // are kept clear of their parent when they are shown. Item views lay their rows out again
+    // once styled: a list filled before it was shown placed its rows at the unstyled height, so
+    // the padded highlights would overlap. The style sheet applies its item rules after this
+    // polish returns, hence the queued call.
     void polish(QWidget* widget) override
     {
         if (qobject_cast<QMenu*>(widget) != nullptr) {
@@ -405,6 +410,9 @@ public:
             widget->installEventFilter(this);
         }
         QProxyStyle::polish(widget);
+        if (auto* view = qobject_cast<QAbstractItemView*>(widget)) {
+            QMetaObject::invokeMethod(view, &QAbstractItemView::doItemsLayout, Qt::QueuedConnection);
+        }
     }
 
     bool eventFilter(QObject* watched, QEvent* event) override

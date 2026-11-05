@@ -10,6 +10,7 @@
 #include <QClipboard>
 #include <QComboBox>
 #include <QLabel>
+#include <QListWidget>
 #include <QStandardPaths>
 #include <QTemporaryDir>
 #include <QTest>
@@ -48,6 +49,20 @@ private Q_SLOTS:
         QStandardPaths::setTestModeEnabled(true);
         QApplication::setApplicationVersion(QString::fromLatin1(PIXELFX_VERSION)); // as Application does
         pixelfx::ui::applyStyle(*qApp);
+    }
+
+    void noticeRowsAreSpacedSoTheirHighlightsDoNotTouch()
+    {
+        AboutSheet sheet;
+        auto* list = sheet.findChild<QListWidget*>(u"noticeList"_s);
+        QVERIFY(list != nullptr);
+        sheet.show();
+        QVERIFY(QTest::qWaitForWindowExposed(&sheet));
+        QCoreApplication::processEvents();
+        const QRect first = list->visualItemRect(list->item(0));
+        const QRect second = list->visualItemRect(list->item(1));
+        QVERIFY(first.height() >= list->fontMetrics().height() + 10);
+        QVERIFY(second.top() > first.bottom()); // a row each; the margin keeps the highlights apart
     }
 
     void whatsNewShowsTheFirstFewThenEverything()

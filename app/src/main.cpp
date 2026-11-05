@@ -24,6 +24,8 @@
 //                                      point (fractions of the photo); "-" enters only
 //   PIXELFX_DEBUG_TARGET=<x,y[,steps]> pick a colour on the photo for the Color mixer at x,y
 //                                      (fractions) and, with steps, drag that far up
+//   PIXELFX_DEBUG_HOVER=<preset>[;<preset>] preview the first preset as after resting on its tile;
+//                                      the second's tile shows the wait half done
 //   PIXELFX_DEBUG_GRAB=<file.png>      grab the window once the photo is shown (or after 2 s
 //                                      with nothing to show) and quit
 #include "app/application.h"
@@ -44,6 +46,7 @@
 #include "ui/look_editor.h"
 #include "ui/main_window.h"
 #include "ui/paste_sheet.h"
+#include "ui/photo_tile.h"
 #include "ui/preset_save_sheet.h"
 #include "ui/presets_panel.h"
 #include "ui/preview_viewer.h"
@@ -113,6 +116,28 @@ void applyTargetHook(pixelfx::ui::MainWindow& window)
             window.colorTargetTool()->dragAt(at, target[2].toDouble());
         }
         window.colorTargetTool()->hoverAt(at);
+    });
+}
+
+void applyHoverHook(pixelfx::ui::MainWindow& window)
+{
+    const QStringList names = qEnvironmentVariable("PIXELFX_DEBUG_HOVER").split(u';', Qt::SkipEmptyParts);
+    if (names.isEmpty()) {
+        return;
+    }
+    QObject::connect(&window.document(), &pixelfx::services::Document::opened, &window, [&window, names] {
+        pixelfx::ui::PresetsPanel* panel = window.presetsPanel();
+        panel->showTab(1);
+        for (const pixelfx::core::PresetEntry& e : panel->entries()) {
+            if (e.name == names.front()) {
+                Q_EMIT panel->previewRequested(&e);
+            }
+        }
+        for (pixelfx::ui::PhotoTile* tile : panel->tiles()) {
+            if (names.size() > 1 && tile->name() == names[1]) {
+                tile->setWaiting(0.5);
+            }
+        }
     });
 }
 
@@ -348,6 +373,7 @@ void applyDebugHooks(pixelfx::ui::MainWindow& window, QStringList& files)
     }
     applyHealHook(window);
     applyTargetHook(window);
+    applyHoverHook(window);
     applyGrabHook(window, files);
 }
 
