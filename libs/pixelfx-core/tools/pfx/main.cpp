@@ -7,14 +7,17 @@
 #include "pfx/document.h"
 #include "pfx/io.h"
 #include "pfx/log.h"
+#include "pfx/look.h"
 #include "pfx/lut.h"
 #include "pfx/pipeline.h"
 #include "pfx/registry.h"
 #include "pfx/xmp_import.h"
 
+#include <algorithm>
 #include <charconv>
 #include <cstdio>
 #include <filesystem>
+#include <fstream>
 #include <functional>
 #include <iostream>
 #include <locale>
@@ -33,6 +36,8 @@ constexpr const char* kUsage = R"(Usage:
   pfx import XMP OUT [NAME [GROUP]]         a Lightroom or Camera Raw preset as a .pfxpreset;
                                             what PixelFx has no equivalent for is listed
   pfx compress [options] FILE OUT           the file made smaller in its own format
+  pfx bake LOOK OUT [SIZE]                  a .pfxlook's colour steps as a .cube LUT for other
+                                            apps (SIZE points per edge, default 33)
 
 Options for compress:
   --jpeg-quality N   encode JPEGs again at N (default: lossless only)
@@ -49,6 +54,7 @@ Options for apply:
   --bits 8|16        bits per channel for PNG and TIFF (default 8)
   --long-edge N      downscale so the long edge is at most N pixels
   --lut FILE[:MIX]   apply a .cube LUT after the settings, MIX 0 to 100 (default 100)
+  --look FILE[:N]    apply a .pfxlook at strength N, 0 to 100 (default: the look's own)
 )";
 
 int fail(std::string_view message)
@@ -125,6 +131,8 @@ struct ApplyArgs
     bool autoFirst = false;
     std::optional<pfx::Lut> lut;
     int lutMix = 100;
+    std::optional<pfx::Look> look;
+    int lookStrength = -1; // the look's own
     std::vector<std::string> files;
 };
 
@@ -173,6 +181,23 @@ std::optional<std::string> wholeNumber(const std::string& option, const std::str
     return std::nullopt;
 }
 
+// A look document's look; an error for any other kind of document.
+pfx::Result<pfx::Look> readLook(const std::string& file)
+{
+    pfx::ParseReport report;
+    auto doc = pfx::loadDocument(file, &report);
+    if (!doc) {
+        return doc.error();
+    }
+    for (const auto& w : report.warnings) {
+        std::cerr << file << ": " << w << "\n";
+    }
+    if (doc.value().kind != pfx::DocumentKind::Look) {
+        return pfx::Error{pfx::ErrorCode::InvalidArgument, "not a look (.pfxlook)"};
+    }
+    return std::move(doc).value().look;
+}
+
 using OptionHandler = std::function<std::optional<std::string>(const std::string&, ApplyArgs&)>;
 
 const std::map<std::string, OptionHandler>& optionHandlers()
@@ -210,6 +235,22 @@ const std::map<std::string, OptionHandler>& optionHandlers()
                  return file + ": " + lut.error().message;
              }
              a.lut = std::move(lut).value();
+             return std::nullopt;
+         }},
+        {"--look",
+         [](const std::string& v, ApplyArgs& a) -> std::optional<std::string> {
+             std::string file = v;
+             if (const auto colon = v.rfind(':'); colon != std::string::npos && colon > 1) {
+                 file = v.substr(0, colon);
+                 if (auto error = wholeNumber("--look strength", v.substr(colon + 1), a.lookStrength)) {
+                     return error;
+                 }
+             }
+             auto look = readLook(file);
+             if (!look) {
+                 return file + ": " + look.error().message;
+             }
+             a.look = std::move(look).value();
              return std::nullopt;
          }},
     };
@@ -285,6 +326,11 @@ int apply(int argc, char* const* argv)
         const pfx::LensFacts lens = pfx::lensFacts(pfx::readExif(loaded.value().metadata.exif));
         pfx::RenderOptions options;
         options.lens = &lens;
+        if (args.look) {
+            options.look = &*args.look;
+            const int strength = args.lookStrength >= 0 ? args.lookStrength : args.look->defaultStrength;
+            options.lookStrength = static_cast<float>(std::clamp(strength, 0, 100)) / 100.0F;
+        }
         auto rendered = pfx::render(std::move(loaded.value().image), settings, options);
         if (!rendered) {
             std::cerr << file << ": " << rendered.error().message << "\n";
@@ -304,6 +350,32 @@ int apply(int argc, char* const* argv)
         std::cout << file << " -> " << target.string() << "\n";
     }
     return status;
+}
+
+int bake(const std::vector<std::string>& args)
+{
+    if (args.size() < 2 || args.size() > 3) {
+        return fail("bake needs a look to read and a .cube file to write");
+    }
+    auto look = readLook(args[0]);
+    if (!look) {
+        return fail(args[0] + ": " + look.error().message);
+    }
+    int size = 33;
+    if (args.size() == 3 && (!parseInt(args[2], size) || size < 2 || size > 65)) {
+        return fail("the size is a whole number from 2 to 65");
+    }
+    const pfx::BakedLook baked = pfx::bakeLook(look.value(), size);
+    std::ofstream out(args[1], std::ios::binary);
+    out << pfx::cubeText(baked.lut);
+    if (!out) {
+        return fail("could not write " + args[1]);
+    }
+    for (const std::string& step : baked.leftOut) {
+        std::cerr << "left out (not a colour step): " << step << "\n";
+    }
+    std::cout << args[0] << " -> " << args[1] << "\n";
+    return 0;
 }
 
 int importXmp(const std::vector<std::string>& args)
@@ -411,6 +483,9 @@ int run(int argc, char* const* argv)
     }
     if (command == "compress") {
         return compressFile({argv + 2, argv + argc});
+    }
+    if (command == "bake") {
+        return bake({argv + 2, argv + argc});
     }
     if (command == "--version") {
         std::cout << "pfx " << pfx::versionString() << "\n";

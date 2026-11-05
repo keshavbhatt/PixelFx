@@ -75,6 +75,14 @@ Decisions the work stopped at; everything else went ahead within the approved mo
 
 ## Sessions (newest first)
 
+### 2026-11-06 (`pfx`: looks and baking)
+
+- `pfx apply --look FILE[:STRENGTH]` applies a `.pfxlook` at its own strength or the one given;
+  `pfx bake LOOK OUT [SIZE]` writes a look's colour steps as a `.cube` and names the steps left
+  out (FEATURES C7). Tried by hand on a scratch look (sepia, vignette, blur): applied at 80 and
+  30, baked at 17 points, a non-look file and a bad size refused in plain words. Batch recipes
+  stay with the app's `pixelfx --batch`: their watermark is drawn with Qt.
+
 ### 2026-11-06 (Favorites for looks)
 
 - The Favorites chip of `editor.html`'s Looks tab, built as the preset catalog's: F on a tile or
