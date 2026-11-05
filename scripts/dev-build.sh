@@ -57,10 +57,14 @@ export PKG_CONFIG_LIBDIR="$PIXELFX_DEPS/lib/pkgconfig:$overlay/pkgconfig"
 export PKG_CONFIG_SYSTEM_INCLUDE_PATH="$SDK/usr/include"
 link_path="$PIXELFX_DEPS/lib:$overlay/lib:$SDK_LIB:$PIXELFX_RT/usr/lib/x86_64-linux-gnu:$PIXELFX_CORE24_BASE"
 
+# The SDK keeps its CMake packages under lib/x86_64-linux-gnu, which CMake searches only on a
+# Debian-style host; elsewhere Qt's tool packages (moc, rcc, uic) would come from the host's Qt.
+# "$SDK_LIB/cmake" finds them in the SDK, and -U drops any found on the host before.
 read -r -a EXTRA_ARGS <<< "${PIXELFX_CMAKE_ARGS:-}"
 "$CMAKE" -S "$DIR" -B "$BUILD" -G Ninja \
+    -U 'Qt6*Tools_DIR' \
     -DCMAKE_BUILD_TYPE="${PIXELFX_BUILD_TYPE:-RelWithDebInfo}" \
-    -DCMAKE_PREFIX_PATH="$SDK/usr" \
+    -DCMAKE_PREFIX_PATH="$SDK_LIB/cmake;$SDK/usr" \
     -DQt6_DIR="$SDK_LIB/cmake/Qt6" \
     -DCMAKE_CXX_FLAGS="-idirafter $SDK/usr/include" \
     -DCMAKE_EXE_LINKER_FLAGS="-Wl,-rpath-link,$link_path -Wl,--allow-shlib-undefined" \
