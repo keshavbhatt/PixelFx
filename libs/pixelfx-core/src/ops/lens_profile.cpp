@@ -11,6 +11,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <map>
 #include <memory>
 #include <mutex>
 
@@ -32,73 +33,104 @@ LensFacts lensFacts(const ExifSummary& exif)
 namespace pfx {
 namespace {
 
-// The lens database, read once on first use (and again after the folder changes).
-struct Database
-{
-    std::mutex mutex;
-    std::filesystem::path folder;
-    std::unique_ptr<lfDatabase> db;
-    bool tried = false;
-};
-
-Database& database()
-{
-    static Database d;
-    return d;
-}
-
-const lfDatabase* loadedDatabase()
-{
-    Database& d = database();
-    const std::scoped_lock lock(d.mutex);
-    if (!d.tried) {
-        d.tried = true;
-        auto db = std::make_unique<lfDatabase>();
-        const bool read =
-            d.folder.empty() ? db->Load() == LF_NO_ERROR : db->LoadDirectory(d.folder.string().c_str());
-        if (read) {
-            d.db = std::move(db);
-        } else {
-            detail::log(LogLevel::Warning, "The lens database could not be read; lens profiles are off");
-        }
-    }
-    return d.db.get();
-}
-
 struct Match
 {
     const lfCamera* camera = nullptr;
     const lfLens* lens = nullptr;
+    std::string name; // the lens profile's model name
 };
 
-// The camera and the best-matching lens for `facts`. A photo without a lens name matches only
-// when the camera has a single lens (a fixed-lens camera).
-std::optional<Match> findLens(const lfDatabase& db, const LensFacts& facts)
+// The lens database and what has been looked up in it. Lensfun switches the process's number
+// locale while it searches and keeps unguarded counters, so searches run one at a time, and each
+// camera and lens is looked up once (a photo's renders then cost no search). The matches point
+// into the database: a render holds it (shared) for as long as it uses them.
+class LensDatabase
 {
-    if (facts.cameraModel.empty()) {
-        return std::nullopt;
+public:
+    explicit LensDatabase(const std::filesystem::path& folder)
+    {
+        m_read = folder.empty() ? m_db.Load() == LF_NO_ERROR : m_db.LoadDirectory(folder.string().c_str());
     }
-    Match m;
-    const lfCamera** cameras = db.FindCamerasExt(facts.cameraMake.c_str(), facts.cameraModel.c_str());
-    if (cameras != nullptr) {
-        m.camera = cameras[0];
-        lf_free(static_cast<void*>(cameras));
-    }
-    if (m.camera == nullptr) {
-        return std::nullopt;
-    }
-    const lfLens** lenses =
-        db.FindLenses(m.camera, nullptr, facts.lens.empty() ? nullptr : facts.lens.c_str());
-    if (lenses != nullptr) {
-        if (!facts.lens.empty() || (lenses[0] != nullptr && lenses[1] == nullptr)) {
-            m.lens = lenses[0];
+    [[nodiscard]] bool read() const { return m_read; }
+
+    // The camera and the best-matching lens for `facts`. A photo without a lens name matches
+    // only when the camera has a single lens (a fixed-lens camera).
+    std::optional<Match> find(const LensFacts& facts)
+    {
+        if (facts.cameraModel.empty()) {
+            return std::nullopt;
         }
-        lf_free(static_cast<void*>(lenses));
+        const std::scoped_lock lock(m_mutex);
+        const std::string key = facts.cameraMake + '\n' + facts.cameraModel + '\n' + facts.lens;
+        if (const auto it = m_found.find(key); it != m_found.end()) {
+            return it->second;
+        }
+        return m_found[key] = search(facts);
     }
-    if (m.lens == nullptr) {
-        return std::nullopt;
+
+private:
+    [[nodiscard]] std::optional<Match> search(const LensFacts& facts) const
+    {
+        Match m;
+        const lfCamera** cameras = m_db.FindCamerasExt(facts.cameraMake.c_str(), facts.cameraModel.c_str());
+        if (cameras != nullptr) {
+            m.camera = cameras[0];
+            lf_free(static_cast<void*>(cameras));
+        }
+        if (m.camera == nullptr) {
+            return std::nullopt;
+        }
+        const lfLens** lenses =
+            m_db.FindLenses(m.camera, nullptr, facts.lens.empty() ? nullptr : facts.lens.c_str());
+        if (lenses != nullptr) {
+            if (!facts.lens.empty() || (lenses[0] != nullptr && lenses[1] == nullptr)) {
+                m.lens = lenses[0];
+            }
+            lf_free(static_cast<void*>(lenses));
+        }
+        if (m.lens == nullptr) {
+            return std::nullopt;
+        }
+        const char* model = lf_mlstr_get(m.lens->Model);
+        m.name = model != nullptr ? model : "";
+        return m;
     }
-    return m;
+
+    lfDatabase m_db;
+    bool m_read = false;
+    std::mutex m_mutex;
+    std::map<std::string, std::optional<Match>> m_found;
+};
+
+// The database in use, read on first use and again after the folder changes.
+struct Holder
+{
+    std::mutex mutex;
+    std::filesystem::path folder;
+    std::shared_ptr<LensDatabase> db;
+    bool tried = false;
+};
+
+Holder& holder()
+{
+    static Holder h;
+    return h;
+}
+
+std::shared_ptr<LensDatabase> loadedDatabase()
+{
+    Holder& h = holder();
+    const std::scoped_lock lock(h.mutex);
+    if (!h.tried) {
+        h.tried = true;
+        auto db = std::make_shared<LensDatabase>(h.folder);
+        if (db->read()) {
+            h.db = std::move(db);
+        } else {
+            detail::log(LogLevel::Warning, "The lens database could not be read; lens profiles are off");
+        }
+    }
+    return h.db;
 }
 
 // Channel `c` of `image` at (x, y), bilinear, edges clamped.
@@ -175,22 +207,18 @@ bool lensProfilesAvailable()
 
 void setLensDatabaseFolder(const std::filesystem::path& folder)
 {
-    Database& d = database();
-    const std::scoped_lock lock(d.mutex);
-    d.folder = folder;
-    d.db.reset();
-    d.tried = false;
+    Holder& h = holder();
+    const std::scoped_lock lock(h.mutex);
+    h.folder = folder;
+    h.db.reset(); // renders still using the old one keep it until they finish
+    h.tried = false;
 }
 
 std::string lensProfileName(const LensFacts& facts)
 {
-    const lfDatabase* db = loadedDatabase();
-    const auto match = db != nullptr ? findLens(*db, facts) : std::nullopt;
-    if (!match) {
-        return {};
-    }
-    const char* model = lf_mlstr_get(match->lens->Model);
-    return model != nullptr ? model : "";
+    const auto db = loadedDatabase();
+    const auto match = db != nullptr ? db->find(facts) : std::nullopt;
+    return match ? match->name : std::string();
 }
 
 namespace detail {
@@ -204,8 +232,8 @@ bool lensProfileActive(const Settings& s)
 
 void lensProfileApply(Image& image, const Settings& s, const OpContext& ctx)
 {
-    const lfDatabase* db = ctx.lens != nullptr ? loadedDatabase() : nullptr;
-    const auto match = db != nullptr ? findLens(*db, *ctx.lens) : std::nullopt;
+    const auto db = ctx.lens != nullptr ? loadedDatabase() : nullptr; // held while its lens is used
+    const auto match = db != nullptr ? db->find(*ctx.lens) : std::nullopt;
     if (!match) {
         return;
     }
@@ -230,6 +258,8 @@ void lensProfileApply(Image& image, const Settings& s, const OpContext& ctx)
     if (distortion > 0.0) {
         flags |= kGeometry;
     }
+    // The photo is upright: a profile's small offset of the lens centre (rare) is taken along the
+    // upright axes, not the sensor's, for a photo shot turned.
     lfModifier modifier(lens, match->camera->CropFactor, image.width(), image.height());
     // A scale of 0: lensfun's own, the smallest that leaves no empty corners.
     const auto done = static_cast<unsigned>(modifier.Initialize(

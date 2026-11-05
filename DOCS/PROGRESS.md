@@ -75,6 +75,20 @@ Decisions the work stopped at; everything else went ahead within the approved mo
 
 ## Sessions (newest first)
 
+### 2026-11-06 (a review of the day's code)
+
+- A second reading of everything since the RAW work found, and this fixes: Lensfun searches ran
+  from several render threads at once while Lensfun switches the process's number locale (now
+  one at a time, each camera and lens looked up once per database); a database swapped by
+  `setLensDatabaseFolder` could be freed under a running render (now shared); a DNG's
+  BaselineExposureOffset now goes only with the Camera rendering, whose tone it balances; a
+  colour-space test compared two freshly made sRGB profiles byte for byte, which differ when the
+  clock ticks between them (found by running the suite in parallel; it now compares names).
+- Left, and written in ADR-013: a lens-centre offset on a photo shot turned. The owner's DNG
+  has four GainMap opcodes, all 1.0: the phone already corrected its shading, so applying
+  opcodes would change nothing there.
+- Also: the look editor shows sizes as a share of the long edge ("0.50%").
+
 ### 2026-11-06 (`pfx`: looks and baking)
 
 - `pfx apply --look FILE[:STRENGTH]` applies a `.pfxlook` at its own strength or the one given;

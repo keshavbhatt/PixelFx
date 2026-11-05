@@ -509,7 +509,8 @@ TEST_CASE("Display P3 and Adobe RGB are embedded and keep colours sRGB clips")
     REQUIRE(pfx::save(adobe.image, dir.path() / "none.png", original).ok());
     const auto none = pfx::load(dir.path() / "none.png");
     REQUIRE(none.ok());
-    CHECK(none.value().profile == srgb.profile);
+    CHECK(profileDescription(none.value().profile) ==
+          profileDescription(srgb.profile)); // bytes carry the time
 }
 
 TEST_CASE("encode gives the bytes save writes")

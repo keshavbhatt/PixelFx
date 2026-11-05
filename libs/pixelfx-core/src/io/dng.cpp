@@ -802,9 +802,11 @@ Result<LoadedImage> loadLinearDng(const std::vector<std::uint8_t>& file, const L
         return Error{ErrorCode::DecodeFailed, error};
     }
     const CameraColour colour = cameraColour(*dng);
-    // The camera's exposure for its default rendering, and the profile's change to it.
+    // The camera's exposure for its default rendering; the profile's change to it goes with the
+    // profile's own tone (the Camera rendering), which it balances.
     const auto baseline = tiff.reals(dng->tags, kBaselineExposure);
-    const auto offset = tiff.reals(dng->tags, kBaselineExposureOffset);
+    const auto offset =
+        options.rawTone ? tiff.reals(dng->tags, kBaselineExposureOffset) : std::vector<double>{};
     const double exposure =
         (baseline.empty() ? 0.0 : baseline.front()) + (offset.empty() ? 0.0 : offset.front());
     Image image =

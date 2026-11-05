@@ -361,4 +361,7 @@ a phone's DNG describes its own lens in opcodes (WarpRectilinear, FixVignetteRad
 ADR-012 leaves to later. Packages carry the library and about 4 MB of database: dev builds
 build Lensfun 0.3.4 in `scripts/build-deps.sh`; the snap part, the Flatpak module and the
 Windows and macOS builds add it when they are written (M7). The manual lens sliders of
-Lightroom (`LensManualDistortionAmount`, vignetting by hand) are not part of this.
+Lightroom (`LensManualDistortionAmount`, vignetting by hand) are not part of this. Lensfun switches the
+process's number locale while it searches, so searches run one at a time and each camera and
+lens is looked up once. The pixels are upright when corrected: a profile's offset of the lens
+centre (rare) is applied along the upright axes, slightly off for a photo shot turned.
