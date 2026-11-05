@@ -21,39 +21,64 @@
 | `heal.html`, `watermark.html`, `export-sizes.html` | 2026-11-04 (`mocks/reviews/`) | approved 2026-11-04 |
 | every other mock in `mocks/index.html` | written review still owed | approved 2026-11-04 |
 | `batch-compress.html` | 2026-11-04 (`mocks/reviews/batch-compress.md`) | approved 2026-11-04 |
-| `editor-grading.html` | 2026-11-05 (`mocks/reviews/editor-grading.md`) | waiting |
-| `about.html`, `whats-new.html` | 2026-11-05 (`mocks/reviews/about-whats-new.md`) | waiting |
+| `editor-grading.html` | 2026-11-05 (`mocks/reviews/editor-grading.md`) | approved 2026-11-05 (as drawn: two wheels, a group of its own) |
+| `about.html`, `whats-new.html` | 2026-11-05 (`mocks/reviews/about-whats-new.md`) | approved 2026-11-05 |
 
 ## Waiting for the owner (2026-11-05)
 
 Decisions the work stopped at; everything else went ahead within the approved mocks.
 
-1. New mocks `mocks/about.html` and `mocks/whats-new.html` (S8, S11; the main menu's missing
-   About and What's new). Approve or change them; nothing is coded from them yet.
-2. `mocks/editor-grading.html`: approve the colour grading panel (a midtones wheel, and whether
-   grading is a group of its own). Grading works in the library and in looks; the panel waits.
-3. Batch format version 2 (`.pfxbatch`): carry the watermark, size presets and user looks
+1. Batch format version 2 (`.pfxbatch`): carry the watermark, size presets and user looks
    embedded. Today a saved batch recipe keeps neither the watermark nor a size preset, and refers
    to a user's look by id only.
-4. Built-in looks (13) and presets (4): the values are drafts by eye; tune or replace them.
-5. Kelvin white balance presets (Daylight, Cloudy, Shade, Tungsten in the mock) are left out:
+2. Built-in looks (13) and presets (4): the values are drafts by eye; tune or replace them.
+3. Kelvin white balance presets (Daylight, Cloudy, Shade, Tungsten in the mock) are left out:
    the engine's white balance is relative; keep them out or add absolute Kelvin.
-6. The theme applies at the next start (icons are tinted when made). Accept, or ask for a live
+4. The theme applies at the next start (icons are tinted when made). Accept, or ask for a live
    switch.
-7. macOS CI skips one curve-editor test (a crash only on the runner, clean under ASan locally).
-8. Spot heal needs a `spots` key in recipes (presets.md, a version bump of recipes).
-9. Real Lightroom `.xmp` exports should be tried on the importer (only hand-made ones so far).
-10. Batch writes beside each original into a folder named "PixelFx": keep the name?
-11. Zoom has no FEATURES row; add one (it is built).
-12. Small departures from approved mocks, until their parts exist: no Favorites chip; the look
+5. macOS CI skips one curve-editor test (a crash only on the runner, clean under ASan locally).
+6. Spot heal needs a `spots` key in recipes (presets.md, a version bump of recipes).
+7. Real Lightroom `.xmp` exports should be tried on the importer (only hand-made ones so far).
+8. Batch writes beside each original into a folder named "PixelFx": keep the name?
+9. Zoom has no FEATURES row; add one (it is built).
+10. Small departures from approved mocks, until their parts exist: no Favorites chip; the look
     editor previews on This photo and a colour ramp (no Portrait or Landscape test photos are
-    shipped); the main menu leaves out Save edit with the file, What's new, Online guide and
-    About (no mocks for the last three); Copy to clipboard has no shortcut (the mock's
+    shipped); the main menu leaves out Save edit with the file and Online guide (item 12);
+    Copy to clipboard has no shortcut (the mock's
     Ctrl+Shift+C is Copy settings).
-13. Still to plan: monitor profile, GPU preview, sidecars next to the photo, the batch-end
+11. Still to plan: monitor profile, GPU preview, sidecars next to the photo, the batch-end
     notification (needs Qt D-Bus on Linux, a dependency decision).
+12. Online guide: the main menu and About leave it out until there is a guide to point at.
+    Where should it go (a page on ktechpit.com, the GitHub wiki, the README)?
+13. Small choices made with the approved About, What's new and grading mocks, easy to change:
+    What's new does not open on a first install (nothing is new yet), only after an update from
+    an earlier version, PixelFx 1 included; Diagnostics leaves out "memory for previews" (there
+    is no such limit yet); the Color grading group starts closed, like the Color mixer; the
+    open-source notices list what PixelFx ships (THIRD_PARTY.md), not the licensing module.
 
 ## Sessions (newest first)
+
+### 2026-11-05 (mocks approved: grading, About, What's new)
+
+- The owner approved `editor-grading.html`, `about.html` and `whats-new.html`.
+- Color grading (E8) in the adjust panel, after the Color mixer: `ColorWheel` for the shadows
+  and the highlights (angle the hue clockwise from red at the top, distance the amount, the
+  values written under each wheel with the amount in the accent when set), the rim and the
+  two-edged puck of the review, keys (Left and Right the hue, Up and Down the amount, Shift for
+  10, Backspace resets; a held key is one history step), screen-reader text, Balance, the group
+  dot and reset. `PIXELFX_DEBUG_EXPAND` opens a group for grabs.
+- About (S11): the version and build, What's new, Source code and Report a bug, the credit
+  line; Open-source notices with every shipped component and its licence text, copied verbatim
+  from each project into `app/src/resources/notices` and built in (a test keeps the list in
+  step with THIRD_PARTY.md); Diagnostics with versions (libpixelfx gained `engineVersions`),
+  the system, the formats this build reads and writes, threads, Copy and Open the log folder
+  (a test checks it holds no home folder, user name or licensing words).
+- What's new (S8): the running version's section of the bundled changelog, the first five
+  items and then "The full list of changes", a Version list once there are two releases, and
+  "Show this after each update". It opens once after an update (500 ms after the window, never
+  with `--batch`), and from the main menu and About. The changelog's lead is now two short
+  paragraphs and its first five items are the mock's highlights.
+- 31 app suites and 105 library tests pass; clang-tidy clean on the sources.
 
 ### 2026-11-05 (M3, part 1)
 

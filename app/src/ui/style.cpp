@@ -115,6 +115,16 @@ const QString kSheet = uR"(
         QMenu::item { padding: 6px 28px 6px 10px; border-radius: 6px; }
         QMenu::item:selected { background: {{hover}}; }
         QMenu::separator { height: 1px; background: {{border}}; margin: 5px 4px; }
+        #wheelTitle { color: {{muted}}; font-size: 12px; }
+        #wheelValues { color: {{text}}; font-size: 12px; }
+        #aboutName { font-size: 18px; font-weight: 700; }
+        #credit { color: {{muted}}; font-size: 12px; }
+        QFrame#divider { background: {{border}}; border: 0; }
+        QTextBrowser#whatsNewText { background: {{panel}}; border: 0; }
+        QListWidget#noticeList { background: {{input}}; border: 1px solid {{border}}; border-radius: 8px; padding: 4px; }
+        QListWidget#noticeList::item { padding: 4px 6px; border-radius: 6px; }
+        QListWidget#noticeList::item:selected { background: {{accentSoft}}; color: {{text}}; }
+        QPlainTextEdit#noticeText, QPlainTextEdit#diagnostics { background: {{input}}; border: 1px solid {{border}}; border-radius: 8px; padding: 6px; font-family: monospace; font-size: 12px; }
     )"_s;
 
 QString sheet(const Tokens& t)

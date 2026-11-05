@@ -76,6 +76,12 @@ public:
     /// Display: clipped highlights and shadows shown on the photo (J).
     [[nodiscard]] bool clippingWarnings() const;
     void setClippingWarnings(bool on);
+    /// What's new opens at the first start of a new version unless this is off.
+    [[nodiscard]] bool showWhatsNew() const;
+    void setShowWhatsNew(bool on);
+    /// The version What's new was last shown for (or recorded on a first install).
+    [[nodiscard]] QString whatsNewSeen() const;
+    void setWhatsNewSeen(const QString& version);
 
     /// Carries the last image folder over from PixelFx 1's settings file, once. Returns true
     /// when something was migrated.

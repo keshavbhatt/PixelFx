@@ -1,5 +1,7 @@
 # ui: widgets. Tokens come from DOCS/DESIGN.md section 1; screens follow the approved mocks.
 qt_add_library(pixelfx_ui STATIC
+    about_sheet.cpp
+    about_sheet.h
     adjust_panel.cpp
     adjust_panel.h
     batch_page.cpp
@@ -9,6 +11,8 @@ qt_add_library(pixelfx_ui STATIC
     crop_overlay.h
     crop_panel.cpp
     crop_panel.h
+    color_wheel.cpp
+    color_wheel.h
     curve_editor.cpp
     curve_editor.h
     export_sheet.cpp
@@ -42,6 +46,8 @@ qt_add_library(pixelfx_ui STATIC
     watermark_sheet.cpp
     watermark_sheet.h
     welcome_page.cpp
+    whats_new_sheet.cpp
+    whats_new_sheet.h
     welcome_page.h
 )
 pixelfx_set_warnings(pixelfx_ui)

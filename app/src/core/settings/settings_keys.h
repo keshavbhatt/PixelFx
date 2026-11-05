@@ -25,6 +25,8 @@ inline constexpr auto kCanvasBackground = "appearance/canvasBackground";
 inline constexpr auto kRememberEdits = "editing/rememberEdits";
 inline constexpr auto kOpenAsLeft = "editing/openAsLeft";
 inline constexpr auto kClippingWarnings = "display/clippingWarnings";
+inline constexpr auto kShowWhatsNew = "whatsNew/show";
+inline constexpr auto kWhatsNewSeen = "whatsNew/seenVersion";
 
 // PixelFx 1 (org.keshavnrj.ubuntu/pixelFx.conf): the only key worth carrying over.
 inline constexpr auto kLegacyLastFolder = "last_image_dir_path";

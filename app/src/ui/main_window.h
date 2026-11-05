@@ -83,6 +83,13 @@ public:
     void pasteSettings();
     /// The Settings sheet (Ctrl+,).
     void openSettings();
+    /// What's new for the running version (main menu, About).
+    void showWhatsNew();
+    /// About PixelFx (main menu).
+    void showAbout();
+    /// At start: What's new once for a new version, unless turned off; a first install (no
+    /// earlier version, PixelFx 1 included) only records the version. True when it was shown.
+    bool showWhatsNewIfUpdated();
     /// Opens the picture on the clipboard, if there is one (Ctrl+V).
     void pasteImage();
     /// Tab: hides or shows the side panels and the filmstrip (menu.html, "Hide panels").

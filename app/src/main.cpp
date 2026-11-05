@@ -7,11 +7,15 @@
 //   PIXELFX_DEBUG_COMPARE=1            turn on before and after once the photo is open
 //   PIXELFX_DEBUG_CROP=<ratio>[,<deg>] enter Crop mode with a ratio chip ("Free", "3:2") and
 //                                      a straightening angle once the photo is open
-//   PIXELFX_DEBUG_SHEET=export|settings|preset|shortcuts|watermark|look with GRAB: grab that sheet instead of
-//   the window PIXELFX_DEBUG_ZOOM=<scale>         zoom to this scale (1 is 100%) once the photo is open; with
+//   PIXELFX_DEBUG_SHEET=<name>         with GRAB, grab that sheet instead of the window: export,
+//                                      settings, preset, shortcuts, watermark, look, about,
+//                                      notices, diagnostics, whatsnew
+//   PIXELFX_DEBUG_ZOOM=<scale>         zoom to this scale (1 is 100%) once the photo is open; with
 //                                      GRAB, grab once the full-size render is shown
 //   PIXELFX_DEBUG_BATCH=<folder>       open Batch with this folder and process it; with GRAB, grab
 //                                      when the batch is done
+//   PIXELFX_DEBUG_EXPAND=<group>       open this adjustment group ("Color grading") and close the
+//                                      others
 //   PIXELFX_DEBUG_GRAB=<file.png>      grab the window once the photo is shown (or after 2 s
 //                                      with nothing to show) and quit
 #include "app/application.h"
@@ -20,6 +24,7 @@
 #include "core/settings/settings.h"
 #include "core/sidecar_store.h"
 #include "services/batch_runner.h"
+#include "ui/about_sheet.h"
 #include "ui/batch_page.h"
 #include "ui/canvas.h"
 #include "ui/crop_panel.h"
@@ -31,6 +36,7 @@
 #include "ui/shortcuts_sheet.h"
 #include "ui/style.h"
 #include "ui/watermark_sheet.h"
+#include "ui/whats_new_sheet.h"
 
 #include <QDialog>
 #include <QFileInfo>
@@ -38,6 +44,7 @@
 #include <QStyleHints>
 #include <QTextStream>
 #include <QTimer>
+#include <QToolButton>
 
 #include <pfx/document.h>
 
@@ -58,6 +65,17 @@ void applyCropHook(pixelfx::ui::MainWindow& window)
     }
 }
 
+void applyExpandHook(const pixelfx::ui::MainWindow& window)
+{
+    const QString name = qEnvironmentVariable("PIXELFX_DEBUG_EXPAND");
+    if (name.isEmpty()) {
+        return;
+    }
+    for (auto* toggle : window.findChildren<QToolButton*>(u"groupToggle"_s)) {
+        toggle->setChecked(toggle->text() == name);
+    }
+}
+
 // A sheet instead of the window (PIXELFX_DEBUG_SHEET); false when none is asked for.
 bool grabSheet(pixelfx::ui::MainWindow& window, const QString& grab, bool exportSheet, bool settingsSheet,
                bool presetSheet)
@@ -71,6 +89,20 @@ bool grabSheet(pixelfx::ui::MainWindow& window, const QString& grab, bool export
         sheet = new pixelfx::ui::SettingsSheet(window.settings(), &window);
     } else if (qEnvironmentVariable("PIXELFX_DEBUG_SHEET") == u"shortcuts"_s) {
         sheet = new pixelfx::ui::ShortcutsSheet(&window);
+    } else if (const QString name = qEnvironmentVariable("PIXELFX_DEBUG_SHEET");
+               name == u"about"_s || name == u"diagnostics"_s || name == u"notices"_s) {
+        auto* about = new pixelfx::ui::AboutSheet(&window);
+        auto page = pixelfx::ui::AboutSheet::DiagnosticsPage;
+        if (name == u"about"_s) {
+            page = pixelfx::ui::AboutSheet::AboutPage;
+        } else if (name == u"notices"_s) {
+            page = pixelfx::ui::AboutSheet::NoticesPage;
+        }
+        about->showPage(page);
+        sheet = about;
+    } else if (qEnvironmentVariable("PIXELFX_DEBUG_SHEET") == u"whatsnew"_s) {
+        sheet = new pixelfx::ui::WhatsNewSheet(pixelfx::ui::WhatsNewSheet::bundledChangelog(),
+                                               QApplication::applicationVersion(), true, &window);
     } else if (qEnvironmentVariable("PIXELFX_DEBUG_SHEET") == u"watermark"_s && window.document().isOpen()) {
         // A sample text watermark, unsaved, in the scratch profile's folder.
         auto* mark =
@@ -190,6 +222,7 @@ void applyDebugHooks(pixelfx::ui::MainWindow& window, QStringList& files)
                          [&window] { window.setCompare(true); });
     }
     applyCropHook(window);
+    applyExpandHook(window);
     applyGrabHook(window, files);
 }
 
@@ -284,6 +317,10 @@ int main(int argc, char** argv)
     window.show();
     if (!files.isEmpty()) {
         window.openFiles(files);
+    }
+    if (!qEnvironmentVariableIsSet("PIXELFX_DEBUG_GRAB")) {
+        // Once the window has painted, never during --batch (that returned above).
+        QTimer::singleShot(500, &window, [&window] { window.showWhatsNewIfUpdated(); });
     }
     return QApplication::exec();
 }

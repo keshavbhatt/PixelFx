@@ -4,6 +4,7 @@
 
 #include <QWidget>
 
+#include <array>
 #include <pfx/settings.h>
 #include <vector>
 
@@ -20,6 +21,7 @@ namespace pixelfx::ui {
 
 class AdjustGroup;
 class AdjustSlider;
+class ColorWheel;
 class CurveEditor;
 class HistogramView;
 
@@ -47,6 +49,8 @@ public:
     void showMixer(int mode, int band);
     /// The colour mixer slider on show.
     [[nodiscard]] AdjustSlider* mixerSlider() const;
+    /// The colour grading wheel of `zone` (0 shadows, 1 highlights).
+    [[nodiscard]] ColorWheel* gradingWheel(int zone) const;
     void setHistogram(const core::Histogram& histogram);
     /// The exposure line under the histogram, and the camera and lens as its tooltip.
     void setPhotoDetails(const QString& exposure, const QString& cameraAndLens);
@@ -77,6 +81,11 @@ private:
     void refreshGroups();
     void buildCurvesGroup(QWidget* content, QVBoxLayout* groups);
     void buildMixerGroup(QWidget* content, QVBoxLayout* groups);
+    void buildGradingGroup(QWidget* content, QVBoxLayout* groups);
+    QWidget* buildWheel(int zone, QWidget* parent);
+    void wheelEdited(int zone, double hue, double amount, bool finished);
+    void refreshWheels();
+    [[nodiscard]] bool gradingWheelsChanged() const;
     QHBoxLayout* buildTopRow();
     QWidget* buildWhiteBalanceRow(QWidget* parent);
     void refreshWhiteBalance();
@@ -98,6 +107,9 @@ private:
     std::vector<AdjustSlider*> m_mixerSliders;
     QButtonGroup* m_mixerModes = nullptr;
     QButtonGroup* m_mixerBands = nullptr;
+    AdjustGroup* m_gradingGroup = nullptr;
+    std::array<ColorWheel*, 2> m_wheels{};
+    std::array<QLabel*, 2> m_wheelValues{};
 };
 
 /// One labelled slider for one numeric setting. Values are in the registry's units.

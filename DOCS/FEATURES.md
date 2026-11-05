@@ -30,10 +30,10 @@ look; a **batch recipe** is a preset plus resize and save options.
 | S5 | Drag and drop of files and folders anywhere in the window; paste an image from the clipboard | none | KEEP | wip: dropping files and pasting an image (Ctrl+V, kept as PNG in the cache) done; folders with the filmstrip and Batch |
 | S6 | Native notifications through the portal or freedesktop (batch finished) | none | KEEP | todo |
 | S7 | Crash handler, log file, diagnostics copy, Report a bug sheet | none | KEEP | wip: log file done (`LogSink`); the rest M6 |
-| S8 | What's new once per version from the bundled changelog, Version picker, link in About; Online guide | none | KEEP | todo |
+| S8 | What's new once per version from the bundled changelog, Version picker, link in About; Online guide | none | KEEP | done: What's new (once after an update, menu, About); Online guide waits for a URL |
 | S9 | Keyboard shortcuts sheet (F1, Ctrl+/); every action shows its shortcut in its tooltip | 3 shortcuts | KEEP | wip: the shortcuts sheet from `shortcuts.html` (F1, Ctrl+/, searchable); tooltips name their shortcut where set |
 | S10 | Theme: System, Dark (default), Light; neutral grey chrome | dark only | KEEP | done: System, Dark, Light in Settings, applied at start |
-| S11 | About with version, links, open-source notices, diagnostics | wrong source link | KEEP | todo |
+| S11 | About with version, links, open-source notices, diagnostics | wrong source link | KEEP | done: version, What's new, source, bug report, notices with licence texts, diagnostics |
 | S12 | Full screen (F11) and a distraction-free view (Tab hides the panels) | none | KEEP | done: F11, Tab while the photo has the focus, both in the View menu |
 | S13 | Translations | none | LATER | |
 | S14 | Native macOS menu bar; header menu elsewhere | none | KEEP (macOS with M7) | todo |
@@ -65,7 +65,7 @@ preview and export use resolution-independent parameters so they match (v1 defec
 | E5 | Levels (black, mid, white point per channel) | none | LATER | |
 | E6 | Detail: Clarity (local contrast), Sharpen (amount, radius, masking), Noise reduction (luminance, colour), Dehaze | Sharpen, Blur, Mean, Median | KEEP | done: clarity, sharpen, noise reduction and dehaze in the library and the Detail group |
 | E7 | Effects: Vignette (amount, midpoint, roundness), Grain (amount, size), Fade | none | KEEP | done: library (vignette amount, midpoint, roundness; grain amount, size; fade) and the Effects group with the three sliders of `editor.html` |
-| E8 | Split toning / color grading (shadows, midtones, highlights wheels) | Colorize | KEEP (as a step in looks and a Color group sub-panel) | todo |
+| E8 | Split toning / color grading (shadows, midtones, highlights wheels) | Colorize | KEEP (as a step in looks and a Color group sub-panel) | done: shadows and highlights wheels and balance in a Color grading group (approved mock: no midtones), and as a look step |
 | E9 | Creative operations from v1: Sepia, Threshold, Colorize, Pixelate, Blur, Invert, Grayscale, Emboss, Edge, Sobel | some in UI, some only in Go | KEEP as look steps, not sliders | todo |
 | E10 | Auto: one click sets Light and Color from the image statistics | none | KEEP | done (`pfx::autoAdjust`; the Auto button and Ctrl+Shift+A; `pfx apply --auto`) |
 | E11 | Live preview while dragging (no apply on release), 60 fps target on the preview size | apply on release, one process per apply | KEEP | wip: live while dragging, newest request first (`RenderScheduler`); speed work (tiles, SIMD) in M3 |

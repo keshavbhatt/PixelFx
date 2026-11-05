@@ -235,4 +235,24 @@ void Settings::setClippingWarnings(bool on)
     }
 }
 
+bool Settings::showWhatsNew() const
+{
+    return m_settings->value(key(keys::kShowWhatsNew), true).toBool();
+}
+
+void Settings::setShowWhatsNew(bool on)
+{
+    m_settings->setValue(key(keys::kShowWhatsNew), on);
+}
+
+QString Settings::whatsNewSeen() const
+{
+    return m_settings->value(key(keys::kWhatsNewSeen)).toString();
+}
+
+void Settings::setWhatsNewSeen(const QString& version)
+{
+    m_settings->setValue(key(keys::kWhatsNewSeen), version);
+}
+
 } // namespace pixelfx::core

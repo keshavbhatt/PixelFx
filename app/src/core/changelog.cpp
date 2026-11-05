@@ -57,4 +57,50 @@ QString changelogSection(const QString& markdown, const QString& version)
     return body.join(u'\n');
 }
 
+ChangelogNotes changelogNotes(const QString& section)
+{
+    ChangelogNotes notes;
+    QString paragraph;
+    const auto endParagraph = [&] {
+        if (!paragraph.isEmpty()) {
+            notes.lead.append(paragraph);
+            paragraph.clear();
+        }
+    };
+    bool inItem = false; // the last line was part of a list item
+    for (QString line : section.split(u'\n')) {
+        if (line.endsWith(u'\r')) {
+            line.chop(1);
+        }
+        const QString trimmed = line.trimmed();
+        if (line.startsWith(u"### "_s)) {
+            endParagraph();
+            notes.groups.append({line.mid(4).trimmed(), {}});
+            inItem = false;
+        } else if (trimmed.isEmpty()) {
+            endParagraph();
+            inItem = false;
+        } else if ((line.startsWith(u"- "_s) || line.startsWith(u"* "_s)) && !notes.groups.isEmpty()) {
+            notes.groups.last().items.append(line.mid(2).trimmed());
+            inItem = true;
+        } else if (inItem) {
+            notes.groups.last().items.last() += u' ' + trimmed; // a wrapped item
+        } else if (notes.groups.isEmpty()) {
+            paragraph += (paragraph.isEmpty() ? QString() : u" "_s) + trimmed;
+        }
+    }
+    endParagraph();
+    return notes;
+}
+
+QString changelogInlineHtml(const QString& text)
+{
+    static const QRegularExpression kBold(u"\\*\\*(.+?)\\*\\*"_s);
+    static const QRegularExpression kCode(u"`([^`]+)`"_s);
+    QString html = text.toHtmlEscaped();
+    html.replace(kBold, u"<b>\\1</b>"_s);
+    html.replace(kCode, u"<code>\\1</code>"_s);
+    return html;
+}
+
 } // namespace pixelfx::core

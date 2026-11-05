@@ -42,6 +42,23 @@ private Q_SLOTS:
         QVERIFY(changelogSection(QString(), u"10.0.0"_s).isEmpty());
     }
 
+    void notesSplitTheLeadAndTheGroups()
+    {
+        const ChangelogNotes notes = changelogNotes(
+            u"Rebuilt.\nFrom scratch.\n\nSecond.\n\n### Added\n\n- **A**: one\n  wrapped\n- B\n\n### Fixed\n- C"_s);
+        QCOMPARE(notes.lead, (QStringList{u"Rebuilt. From scratch."_s, u"Second."_s}));
+        QCOMPARE(notes.groups.size(), 2);
+        QCOMPARE(notes.groups.at(0).title, u"Added"_s);
+        QCOMPARE(notes.groups.at(0).items, (QStringList{u"**A**: one wrapped"_s, u"B"_s}));
+        QCOMPARE(notes.groups.at(1).items, (QStringList{u"C"_s}));
+    }
+
+    void inlineMarksBecomeTagsAndTheRestIsEscaped()
+    {
+        QCOMPARE(changelogInlineHtml(u"**Batch** <b> `pixelfx --batch` & more"_s),
+                 u"<b>Batch</b> &lt;b&gt; <code>pixelfx --batch</code> &amp; more"_s);
+    }
+
     void realChangelogHasNotesForThisVersion()
     {
         QFile file(QString::fromLatin1(PIXELFX_CHANGELOG_PATH));

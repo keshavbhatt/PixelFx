@@ -1,4 +1,5 @@
 #include "ui/adjust_panel.h"
+#include "ui/color_wheel.h"
 #include "ui/curve_editor.h"
 #include "ui/style.h"
 
@@ -6,6 +7,9 @@
 #include <QSignalSpy>
 #include <QSlider>
 #include <QTest>
+#include <QToolButton>
+
+#include <cmath>
 
 using namespace Qt::StringLiterals;
 using pixelfx::ui::AdjustPanel;
@@ -132,6 +136,81 @@ private Q_SLOTS:
         s.set("mixer.luminance.blue", 40.0);
         panel.setSettings(s);
         QCOMPARE(panel.slider(u"mixer.luminance.blue"_s)->value(), 40.0);
+    }
+
+    void gradingWheelPicksHueByAngleAndAmountByDistance()
+    {
+        AdjustPanel panel;
+        panel.resize(316, 900);
+        auto* wheel = panel.gradingWheel(0);
+        QVERIFY(wheel != nullptr);
+        QSignalSpy finished(&panel, &AdjustPanel::editFinished);
+        const QPointF centre = QRectF(wheel->rect()).center();
+        const double radius = (pixelfx::ui::ColorWheel::kDiameter - 2) / 2.0;
+        // Half way out, straight down: cyan (180 degrees), amount 50.
+        const QPoint down = (centre + QPointF(0, radius / 2.0)).toPoint();
+        QTest::mousePress(wheel, Qt::LeftButton, {}, down);
+        QTest::mouseRelease(wheel, Qt::LeftButton, {}, down);
+        QCOMPARE(panel.settings().number("grading.shadows.hue", -1), 180.0);
+        QVERIFY(std::abs(panel.settings().number("grading.shadows.amount", -1) - 50.0) <= 1.0);
+        QCOMPARE(finished.count(), 1);
+        QVERIFY(finished.first().first().toString().startsWith(u"Shadows colour 180°"_s));
+        // Right of the centre is yellow-green (90 degrees); past the rim stays at 100.
+        const auto [hue, amount] = wheel->colorAt(centre + QPointF(radius * 2.0, 0));
+        QCOMPARE(hue, 90.0);
+        QCOMPARE(amount, 100.0);
+        // The puck is drawn where the value says.
+        wheel->setColor(90.0, 100.0);
+        QVERIFY(std::abs(wheel->puckPosition().x() - (centre.x() + radius)) < 0.5);
+    }
+
+    void gradingWheelKeysNudgeAndResetAndHeldKeysAreOneStep()
+    {
+        AdjustPanel panel;
+        auto* wheel = panel.gradingWheel(1);
+        QSignalSpy finished(&panel, &AdjustPanel::editFinished);
+        QTest::keyClick(wheel, Qt::Key_Up, Qt::ShiftModifier); // amount 10
+        QTest::keyClick(wheel, Qt::Key_Left);                  // hue 359
+        QCOMPARE(panel.settings().number("grading.highlights.amount", 0), 10.0);
+        QCOMPARE(panel.settings().number("grading.highlights.hue", 0), 359.0);
+        QCOMPARE(finished.count(), 2); // one per press and release
+        QTest::keyPress(wheel, Qt::Key_Right);
+        QTest::keyEvent(QTest::Press, wheel, Qt::Key_Right, Qt::NoModifier, 1); // a repeat is just more
+        QCOMPARE(finished.count(), 2);
+        QTest::keyRelease(wheel, Qt::Key_Right);
+        QCOMPARE(finished.count(), 3);
+        QCOMPARE(panel.settings().number("grading.highlights.hue", 0), 1.0); // wrapped past 360
+        QVERIFY(wheel->accessibleDescription().contains(u"amount 10"_s));
+        QTest::keyClick(wheel, Qt::Key_Backspace);
+        QVERIFY(!panel.settings().contains("grading.highlights.amount"));
+        QVERIFY(!panel.settings().contains("grading.highlights.hue"));
+    }
+
+    void gradingGroupShowsAndResetsSettings()
+    {
+        AdjustPanel panel;
+        pfx::Settings s;
+        s.set("grading.shadows.hue", 200.0);
+        s.set("grading.shadows.amount", 20.0);
+        s.set("grading.balance", 10.0);
+        QSignalSpy changed(&panel, &AdjustPanel::settingsChanged);
+        panel.setSettings(s);
+        QCOMPARE(changed.count(), 0);
+        QCOMPARE(panel.gradingWheel(0)->hue(), 200.0);
+        QCOMPARE(panel.gradingWheel(0)->amount(), 20.0);
+        QCOMPARE(panel.slider(u"grading.balance"_s)->value(), 10.0);
+        QToolButton* reset = nullptr;
+        for (auto* b : panel.findChildren<QToolButton*>(u"groupReset"_s)) {
+            if (b->accessibleName() == u"Reset Color grading"_s) {
+                reset = b;
+            }
+        }
+        QVERIFY(reset != nullptr);
+        reset->click();
+        QVERIFY(!panel.settings().contains("grading.shadows.hue"));
+        QVERIFY(!panel.settings().contains("grading.shadows.amount"));
+        QVERIFY(!panel.settings().contains("grading.balance"));
+        QCOMPARE(panel.gradingWheel(0)->amount(), 0.0);
     }
 
     void setSettingsDoesNotEmit()

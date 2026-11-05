@@ -4,6 +4,7 @@
 #include "core/looks.h"
 #include "core/settings/settings.h"
 #include "core/settings_clipboard.h"
+#include "ui/about_sheet.h"
 #include "ui/adjust_panel.h"
 #include "ui/batch_page.h"
 #include "ui/canvas.h"
@@ -21,6 +22,7 @@
 #include "ui/straighten_dial.h"
 #include "ui/style.h"
 #include "ui/welcome_page.h"
+#include "ui/whats_new_sheet.h"
 
 #include <QAction>
 #include <QApplication>
@@ -562,6 +564,14 @@ void MainWindow::setupActions()
         ShortcutsSheet sheet(this);
         sheet.exec();
     });
+    auto* whatsNew = new QAction(tr("What's new"), this);
+    whatsNew->setObjectName(u"whatsNew"_s);
+    connect(whatsNew, &QAction::triggered, this, &MainWindow::showWhatsNew);
+    auto* about = new QAction(tr("About PixelFx"), this);
+    about->setObjectName(u"about"_s);
+    about->setMenuRole(QAction::AboutRole);
+    connect(about, &QAction::triggered, this, &MainWindow::showAbout);
+    addActions({whatsNew, about});
     auto* openFolder = new QAction(tr("Open folder"), this);
     openFolder->setObjectName(u"openFolder"_s);
     openFolder->setShortcut(QKeySequence(u"Ctrl+Shift+O"_s));
@@ -1718,13 +1728,50 @@ void MainWindow::buildMainMenu()
     menu->addSeparator();
     menu->addAction(namedAction(u"settings"_s));
     menu->addAction(namedAction(u"shortcuts"_s));
+    menu->addAction(namedAction(u"whatsNew"_s));
     connect(menu->addAction(tr("Report a bug")), &QAction::triggered, this,
             [] { QDesktopServices::openUrl(QUrl(u"https://github.com/keshavbhatt/PixelFx/issues"_s)); });
+    menu->addAction(namedAction(u"about"_s));
     menu->addSeparator();
     QAction* quit = namedAction(u"quit"_s);
     quit->setIcon(icons::themed(u"quit"_s, tokens().muted));
     menu->addAction(quit);
     m_menuButton->setMenu(menu);
+}
+
+void MainWindow::showWhatsNew()
+{
+    WhatsNewSheet sheet(WhatsNewSheet::bundledChangelog(), QApplication::applicationVersion(),
+                        m_settings.showWhatsNew(), this);
+    sheet.exec();
+    m_settings.setShowWhatsNew(sheet.showAfterUpdates());
+    m_settings.setWhatsNewSeen(QApplication::applicationVersion());
+}
+
+void MainWindow::showAbout()
+{
+    AboutSheet sheet(this);
+    connect(&sheet, &AboutSheet::whatsNewRequested, this, [this, &sheet] {
+        sheet.accept();
+        QTimer::singleShot(0, this, &MainWindow::showWhatsNew);
+    });
+    sheet.exec();
+}
+
+bool MainWindow::showWhatsNewIfUpdated()
+{
+    const QString version = QApplication::applicationVersion();
+    const QString seen = m_settings.whatsNewSeen();
+    if (seen == version) {
+        return false;
+    }
+    m_settings.setWhatsNewSeen(version);
+    const bool upgraded = !seen.isEmpty() || QFile::exists(core::Settings::legacyFilePath());
+    if (!upgraded || !m_settings.showWhatsNew()) {
+        return false;
+    }
+    showWhatsNew();
+    return true;
 }
 
 void MainWindow::keyPressEvent(QKeyEvent* event)

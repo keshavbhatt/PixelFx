@@ -2,6 +2,7 @@
 
 #include <QList>
 #include <QString>
+#include <QStringList>
 
 namespace pixelfx::core {
 
@@ -23,5 +24,24 @@ struct ChangelogRelease
 /// link-reference lines (`[1.0.0]: https://…`) are dropped. Empty when the
 /// version has no section. Pure, tested.
 [[nodiscard]] QString changelogSection(const QString& markdown, const QString& version);
+
+/// One `### ` group of a changelog section and its list items, each joined onto one line.
+struct ChangelogGroup
+{
+    QString title; ///< "Added", "Changed", "Fixed"
+    QStringList items;
+};
+
+/// A changelog section split for the What's new sheet: the paragraphs before the first `### `
+/// heading, then each group. Markdown inline marks stay in the text. Pure, tested.
+struct ChangelogNotes
+{
+    QStringList lead;
+    QList<ChangelogGroup> groups;
+};
+[[nodiscard]] ChangelogNotes changelogNotes(const QString& section);
+
+/// `text` as HTML: escaped, with `**bold**` and `` `code` `` turned into tags. Pure, tested.
+[[nodiscard]] QString changelogInlineHtml(const QString& text);
 
 } // namespace pixelfx::core

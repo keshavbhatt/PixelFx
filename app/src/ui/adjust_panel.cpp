@@ -1,5 +1,6 @@
 #include "ui/adjust_panel.h"
 
+#include "ui/color_wheel.h"
 #include "ui/curve_editor.h"
 #include "ui/histogram_view.h"
 #include "ui/icons.h"
@@ -372,7 +373,9 @@ AdjustPanel::AdjustPanel(QWidget* parent)
         groups->addWidget(group);
         m_groups.push_back(group);
         if (std::string_view(g.name) == "Color") {
-            buildMixerGroup(content, groups); // mock order: Light, Color, Color mixer, Curves, Detail
+            // Mock order: Light, Color, Color mixer, Color grading, Curves, Detail.
+            buildMixerGroup(content, groups);
+            buildGradingGroup(content, groups);
             buildCurvesGroup(content, groups);
         }
     }
@@ -588,6 +591,147 @@ void AdjustPanel::buildMixerGroup(QWidget* content, QVBoxLayout* groups)
     showMixerSlider();
 }
 
+namespace {
+
+struct GradingZone
+{
+    const char* key;   // grading.<key>.hue and grading.<key>.amount
+    const char* label; // above the wheel
+    const char* name;  // what screen readers and the history hear
+};
+
+constexpr std::array<GradingZone, 2> kGradingZones = {{
+    {"shadows", QT_TRANSLATE_NOOP("AdjustPanel", "Shadows"),
+     QT_TRANSLATE_NOOP("AdjustPanel", "Shadows colour")},
+    {"highlights", QT_TRANSLATE_NOOP("AdjustPanel", "Highlights"),
+     QT_TRANSLATE_NOOP("AdjustPanel", "Highlights colour")},
+}};
+
+std::string gradingKey(int zone, const char* part)
+{
+    return std::string("grading.") + kGradingZones.at(static_cast<std::size_t>(zone)).key + "." + part;
+}
+
+} // namespace
+
+void AdjustPanel::buildGradingGroup(QWidget* content, QVBoxLayout* groups)
+{
+    m_gradingGroup = new AdjustGroup(tr("Color grading"), u"blend"_s, content);
+    m_gradingGroup->setExpanded(false); // like the mixer: closed until needed
+    auto* wheels = new QWidget(m_gradingGroup);
+    auto* row = new QHBoxLayout(wheels);
+    row->setContentsMargins(0, 6, 0, 4);
+    row->setSpacing(8);
+    for (int zone = 0; zone < 2; ++zone) {
+        row->addWidget(buildWheel(zone, wheels), 1);
+    }
+    m_gradingGroup->addContent(wheels);
+    auto* balance = new AdjustSlider(u"grading.balance"_s, tr("Balance"), m_gradingGroup);
+    balance->setToolTip(tr("Where shadows end and highlights begin: to the right gives the highlight "
+                           "colour more of the photo."));
+    m_gradingGroup->addSlider(balance);
+    m_sliders.push_back(balance);
+    connect(balance, &AdjustSlider::moved, this,
+            [this, balance](double v) { setValue(balance->key(), v, false); });
+    connect(balance, &AdjustSlider::released, this,
+            [this, balance](double v) { setValue(balance->key(), v, true); });
+    connect(m_gradingGroup->resetButton(), &QToolButton::clicked, this,
+            [this] { resetGroup(m_gradingGroup); });
+    groups->addWidget(m_gradingGroup);
+    m_groups.push_back(m_gradingGroup);
+    refreshWheels();
+}
+
+QWidget* AdjustPanel::buildWheel(int zone, QWidget* parent)
+{
+    const GradingZone& z = kGradingZones.at(static_cast<std::size_t>(zone));
+    auto* box = new QWidget(parent);
+    auto* column = new QVBoxLayout(box);
+    column->setContentsMargins(0, 0, 0, 0);
+    column->setSpacing(6);
+    auto* title = new QLabel(tr(z.label), box);
+    title->setObjectName(u"wheelTitle"_s);
+    title->setAlignment(Qt::AlignCenter);
+    auto* wheel = new ColorWheel(tr(z.name), box);
+    wheel->setObjectName(u"gradingWheel"_s);
+    auto* values = new QLabel(box);
+    values->setObjectName(u"wheelValues"_s);
+    values->setAlignment(Qt::AlignCenter);
+    values->setTextFormat(Qt::RichText);
+    column->addWidget(title);
+    column->addWidget(wheel, 0, Qt::AlignHCenter);
+    column->addWidget(values);
+    const auto i = static_cast<std::size_t>(zone);
+    m_wheels.at(i) = wheel;
+    m_wheelValues.at(i) = values;
+    connect(wheel, &ColorWheel::moved, this,
+            [this, zone](double hue, double amount) { wheelEdited(zone, hue, amount, false); });
+    connect(wheel, &ColorWheel::released, this,
+            [this, zone](double hue, double amount) { wheelEdited(zone, hue, amount, true); });
+    return box;
+}
+
+ColorWheel* AdjustPanel::gradingWheel(int zone) const
+{
+    return m_wheels.at(static_cast<std::size_t>(zone));
+}
+
+void AdjustPanel::wheelEdited(int zone, double hue, double amount, bool finished)
+{
+    const std::string hueKey = gradingKey(zone, "hue");
+    const std::string amountKey = gradingKey(zone, "amount");
+    // Defaults are not stored (a preset then leaves them alone); the hue is kept with no amount
+    // so the wheel remembers where it was.
+    if (hue == 0.0) {
+        m_settings.erase(hueKey);
+    } else {
+        m_settings.set(hueKey, hue);
+    }
+    if (amount == 0.0) {
+        m_settings.erase(amountKey);
+    } else {
+        m_settings.set(amountKey, amount);
+    }
+    refreshWheels();
+    refreshGroups();
+    Q_EMIT settingsChanged(m_settings);
+    if (finished) {
+        const QString name = tr(kGradingZones.at(static_cast<std::size_t>(zone)).name);
+        //: A history step: a colour grading wheel and its new hue and amount, "Shadows colour 200°, 20".
+        Q_EMIT editFinished(amount == 0.0 && hue == 0.0
+                                ? tr("Reset %1").arg(name)
+                                : tr("%1 %2°, %3").arg(name).arg(qRound(hue)).arg(qRound(amount)));
+    }
+}
+
+void AdjustPanel::refreshWheels()
+{
+    for (int zone = 0; zone < 2; ++zone) {
+        const auto i = static_cast<std::size_t>(zone);
+        const double hue = m_settings.number(gradingKey(zone, "hue"), 0.0);
+        const double amount = m_settings.number(gradingKey(zone, "amount"), 0.0);
+        m_wheels.at(i)->setColor(hue, amount);
+        const QString amountText =
+            amount != 0.0
+                ? u"<span style=\"color:%1\">%2</span>"_s.arg(tokens().accent.name()).arg(qRound(amount))
+                : QString::number(qRound(amount));
+        //: Under a colour grading wheel: "Hue 200° · Amount 20".
+        m_wheelValues.at(i)->setText(
+            tr("<span style=\"color:%1\">Hue</span> %2° · <span style=\"color:%1\">Amount</span> %3")
+                .arg(tokens().muted.name())
+                .arg(qRound(m_wheels.at(i)->hue()))
+                .arg(amountText));
+    }
+}
+
+bool AdjustPanel::gradingWheelsChanged() const
+{
+    return std::ranges::any_of(std::array{0, 1}, [this](int zone) {
+        return m_settings.contains(gradingKey(zone, "hue")) ||
+               m_settings.contains(gradingKey(zone, "amount"));
+    });
+}
+
 void AdjustPanel::showMixerSlider()
 {
     const std::size_t shown = (static_cast<std::size_t>(m_mixerModes->checkedId()) * mixerBands().size()) +
@@ -713,6 +857,7 @@ void AdjustPanel::setSettings(const pfx::Settings& settings)
         s->setValue(settings.number(s->key().toStdString(), s->defaultValue()));
     }
     m_curve->setCurve(settings.curve(m_curveKey.toStdString()));
+    refreshWheels();
     refreshGroups();
     refreshWhiteBalance();
 }
@@ -744,6 +889,13 @@ void AdjustPanel::resetGroup(AdjustGroup* group)
         m_settings.erase(s->key().toStdString());
         s->setValue(s->defaultValue());
     }
+    if (group == m_gradingGroup) {
+        for (int zone = 0; zone < 2; ++zone) {
+            m_settings.erase(gradingKey(zone, "hue"));
+            m_settings.erase(gradingKey(zone, "amount"));
+        }
+        refreshWheels();
+    }
     refreshGroups();
     Q_EMIT settingsChanged(m_settings);
     Q_EMIT editFinished(tr("Reset %1").arg(group->name()));
@@ -756,6 +908,7 @@ void AdjustPanel::resetAll()
         s->setValue(s->defaultValue());
     }
     m_curve->setCurve({});
+    refreshWheels();
     refreshGroups();
     Q_EMIT settingsChanged(m_settings);
     Q_EMIT editFinished(tr("Reset all"));
@@ -765,7 +918,9 @@ void AdjustPanel::refreshGroups()
 {
     for (AdjustGroup* group : m_groups) {
         const auto& sliders = group->sliders();
-        group->setChanged(std::ranges::any_of(sliders, [](const AdjustSlider* s) { return s->isChanged(); }));
+        group->setChanged(
+            std::ranges::any_of(sliders, [](const AdjustSlider* s) { return s->isChanged(); }) ||
+            (group == m_gradingGroup && gradingWheelsChanged()));
     }
     if (m_curvesGroup != nullptr) {
         m_curvesGroup->setChanged(std::ranges::any_of(

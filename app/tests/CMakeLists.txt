@@ -29,6 +29,9 @@ pixelfx_add_test(tst_changelog       tst_changelog.cpp       pixelfx_core)
 target_compile_definitions(tst_changelog PRIVATE
     PIXELFX_CHANGELOG_PATH="${PROJECT_SOURCE_DIR}/CHANGELOG.md"
     PIXELFX_VERSION="${PROJECT_VERSION}")
+pixelfx_add_test(tst_about           tst_about.cpp           pixelfx_core GUI)
+target_compile_definitions(tst_about PRIVATE
+    PIXELFX_THIRD_PARTY_PATH="${PROJECT_SOURCE_DIR}/THIRD_PARTY.md")
 # services
 pixelfx_add_test(tst_qt_image_bridge tst_qt_image_bridge.cpp pixelfx_services)
 pixelfx_add_test(tst_exporter        tst_exporter.cpp        pixelfx_services GUI)
@@ -45,6 +48,8 @@ pixelfx_add_test(tst_settings_sheet  tst_settings_sheet.cpp  pixelfx_ui GUI)
 pixelfx_add_test(tst_presets_panel   tst_presets_panel.cpp   pixelfx_ui GUI)
 pixelfx_add_test(tst_looks_panel     tst_looks_panel.cpp     pixelfx_ui GUI)
 pixelfx_add_test(tst_filmstrip      tst_filmstrip.cpp       pixelfx_ui GUI)
+pixelfx_add_test(tst_about_sheet     tst_about_sheet.cpp     pixelfx_ui GUI)
+target_compile_definitions(tst_about_sheet PRIVATE PIXELFX_VERSION="${PROJECT_VERSION}")
 pixelfx_add_test(tst_smoke           tst_smoke.cpp           pixelfx_ui GUI)
 pixelfx_add_test(tst_instance        tst_instance.cpp        pixelfx_core GUI)
 target_compile_definitions(tst_instance PRIVATE

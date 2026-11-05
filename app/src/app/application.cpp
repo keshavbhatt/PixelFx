@@ -22,6 +22,7 @@ Application::Application(int& argc, char** argv)
     setApplicationName(QString::fromLatin1(version::kApplicationName));
     setApplicationDisplayName(QString::fromLatin1(version::kDisplayName));
     setApplicationVersion(QString::fromLatin1(version::kVersion));
+    setProperty("revision", QString::fromLatin1(version::kGitRevision)); // for About and Diagnostics
     setOrganizationName(QString::fromLatin1(version::kOrganizationName));
     setOrganizationDomain(QString::fromLatin1(version::kOrganizationDomain));
     setDesktopFileName(QString::fromLatin1(version::kDesktopId));
