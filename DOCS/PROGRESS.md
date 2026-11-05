@@ -49,7 +49,7 @@ Decisions the work stopped at; everything else went ahead within the approved mo
    2026-11-05; a second, real-world set is still wanted for the 95% target of FEATURES P8).
 6. Batch writes beside each original into a folder named "PixelFx": keep the name?
    (The catalog's names and Tools: decided 2026-11-05, see below.)
-7. Zoom has no FEATURES row; add one (it is built).
+7. Zoom has a FEATURES row now (E17b, 2026-11-06).
 8. Small departures from approved mocks, until their parts exist: no Favorites chip; the look
     editor previews on This photo and a colour ramp (no Portrait or Landscape test photos are
     shipped); the main menu leaves out Save edit with the file;
