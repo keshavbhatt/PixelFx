@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>PixelFx mock: Large preview</title><link rel="stylesheet" href="mock.css"><script src="mock.js"></script><style>
+.viewer { flex: 1; min-height: 0; display: flex; flex-direction: column; background: var(--canvas, #0f0f0f); }
+.viewer .vbar { height: 50px; flex: none; display: flex; align-items: center; gap: 8px; padding: 0 10px 0 16px; background: var(--bar); border-bottom: 1px solid var(--border); }
+.viewer .vtitle { display: flex; flex-direction: column; line-height: 1.25; min-width: 0; }
+.viewer .vtitle b { font-weight: 600; }
+.viewer .vtitle span { font-size: 12px; color: var(--muted); }
+.viewer .vstage { position: relative; flex: 1; min-height: 0; }
+.viewer .vphoto { position: absolute; inset: 20px 72px 52px; display: grid; place-items: center; }
+.viewer .vframe { position: relative; height: 100%; max-width: 100%; aspect-ratio: 3 / 2; }
+.viewer .vframe img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.viewer .nav { position: absolute; top: 50%; width: 40px; height: 40px; margin-top: -20px; border-radius: 50%; display: grid; place-items: center; background: color-mix(in srgb, var(--elevated) 92%, transparent); border: 1px solid var(--border); color: var(--text); }
+.viewer .count { position: absolute; bottom: 14px; left: 50%; transform: translateX(-50%); padding: 4px 10px; border-radius: 8px; font-size: 12px; color: var(--muted); background: color-mix(in srgb, var(--elevated) 92%, transparent); border: 1px solid var(--border); }
+.viewer .tag { position: absolute; top: 10px; padding: 3px 8px; font-size: 11px; border-radius: 6px; background: rgba(0,0,0,.55); color: #fff; }
+</style></head>
+<body>
+<div class="window">
+  <div class="titlebar"><div class="lights"><i></i><i></i><i></i></div><div class="title">Batch - PixelFx</div><div class="wc"><span>&#x2212;</span><span>&#x25A1;</span><span>&#x2715;</span></div></div>
+  <div class="viewer">
+    <div class="vbar">
+      <div class="vtitle"><b>DSC_0413.jpg</b><span>Batch preview &middot; Golden hour, then Product white &middot; 6000 x 4000</span></div>
+      <span class="grow"></span>
+      <div class="seg" title="Before and after"><span title="The photo as it is (hold Space)">Before</span><span title="Split, drag the line (\)"><svg class="ic s"><use href="#i-compare"/></svg>Split</span><span class="on" title="The photo with the recipe">After</span></div>
+      <span class="sep" style="width:1px;height:22px;background:var(--border);margin:0 6px"></span>
+      <button class="btn sm flat" title="Fit to the window (Ctrl+0)">Fit</button><button class="btn sm flat" title="100% (Ctrl+1)">1:1</button>
+      <button class="btn flat icon" title="Full screen (F11)"><svg class="ic"><use href="#i-maximize"/></svg></button>
+      <button class="btn flat icon" title="Close (Escape)"><svg class="ic"><use href="#i-x"/></svg></button>
+    </div>
+    <div class="vstage">
+      <div class="vphoto"><div class="vframe"><img src="sample-2.svg" data-look="golden" alt=""><span class="tag" style="left:10px">After</span></div></div>
+      <span class="nav" style="left:16px" title="Previous photo (Left)"><svg class="ic"><use href="#i-left"/></svg></span>
+      <span class="nav" style="right:16px" title="Next photo (Right)"><svg class="ic"><use href="#i-right"/></svg></span>
+      <span class="count">2 of 6</span>
+    </div>
+  </div>
+<span class="pin" style="left:380px;top:44px">1</span><span class="pin" style="left:calc(100% - 420px);top:44px">2</span><span class="pin" style="left:28px;top:calc(50% + 14px)">3</span><span class="pin" style="left:calc(50% + 40px);top:calc(100% - 46px)">4</span>
+</div>
+<ol class="notes"><li><b>One large preview</b> for the look editor and Batch, filling the window (F11 for the whole screen); Escape or the close button goes back. The title says what is shown: in Batch the photo, "Batch preview", the recipe and the size; from the look editor the look's name on the editor's photo or the ramp.</li><li><b>Before, Split, After</b>, as the editor's before and after: Space held shows Before, \ turns the split on and off, the split's line can be dragged. Fit and 1:1 as the editor; at 1:1 the photo is dragged to look around. The preview is the full photo, not the thumbnail.</li><li><b>Batch:</b> Left and Right (or these buttons) go through every photo of the batch with the recipe applied, so it can be checked on all of them before processing. The look editor shows one photo and has no arrows.</li><li><b>Where it opens:</b> in the look editor, a button in the preview's corner ("Larger preview") or a double-click on the preview; in Batch, a click on either preview picture or the "View larger" link beside them. It shows the settings as they are now; closing it changes nothing.</li></ol>
+</body></html>
