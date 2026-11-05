@@ -48,8 +48,8 @@ WhatsNewSheet::WhatsNewSheet(const QString& markdown, const QString& version, bo
     m_text->setOpenExternalLinks(true);
     m_text->setFrameShape(QFrame::NoFrame);
     m_text->document()->setIndentWidth(18);
-    m_more->setText(u"<a href=\"#all\" style=\"color:%1\">%2</a>"_s.arg(tokens().accent.name(),
-                                                                        tr("The full list of changes")));
+    m_more->setText(u"<a href=\"#all\" style=\"color:%1; text-decoration:none; font-size:12px\">%2</a>"_s.arg(
+        tokens().link.name(), tr("The full list of changes")));
     m_more->setObjectName(u"credit"_s);
     connect(m_more, &QLabel::linkActivated, this, &WhatsNewSheet::showAll);
 
@@ -131,7 +131,8 @@ void WhatsNewSheet::render()
             if (!m_all && shown >= kHighlights) {
                 break;
             }
-            html += u"<li style=\"margin-bottom:4px\">%1</li>"_s.arg(core::changelogInlineHtml(item));
+            const QString text = m_all ? item : core::changelogFirstSentence(item);
+            html += u"<li style=\"margin-bottom:4px\">%1</li>"_s.arg(core::changelogInlineHtml(text));
             ++shown;
         }
         html += u"</ul>"_s;

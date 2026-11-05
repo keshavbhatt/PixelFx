@@ -93,6 +93,19 @@ ChangelogNotes changelogNotes(const QString& section)
     return notes;
 }
 
+QString changelogFirstSentence(const QString& item)
+{
+    bool code = false; // a full stop inside `code` ends nothing
+    for (qsizetype i = 0; i + 2 < item.size(); ++i) {
+        if (item.at(i) == u'`') {
+            code = !code;
+        } else if (!code && item.at(i) == u'.' && item.at(i + 1) == u' ' && item.at(i + 2).isUpper()) {
+            return item.left(i + 1);
+        }
+    }
+    return item;
+}
+
 QString changelogInlineHtml(const QString& text)
 {
     static const QRegularExpression kBold(u"\\*\\*(.+?)\\*\\*"_s);

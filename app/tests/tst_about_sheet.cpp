@@ -99,9 +99,14 @@ private Q_SLOTS:
         }
         sheet.showPage(AboutSheet::DiagnosticsPage);
         QVERIFY(sheet.diagnostics().startsWith(u"PixelFx "_s));
-        const QSize size = sheet.size();
+        // Each page is as tall as it needs, at one width; the notices get the most room.
+        const QSize diagnostics = sheet.size();
         sheet.showPage(AboutSheet::AboutPage);
-        QCOMPARE(sheet.size(), size);
+        QCOMPARE(sheet.width(), diagnostics.width());
+        const int about = sheet.height();
+        sheet.showPage(AboutSheet::NoticesPage);
+        QVERIFY(sheet.height() > about);
+        QVERIFY(sheet.height() > diagnostics.height());
     }
 
     void whatsNewOpensOnceAfterAnUpdate()

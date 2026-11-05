@@ -41,6 +41,10 @@ struct ChangelogNotes
 };
 [[nodiscard]] ChangelogNotes changelogNotes(const QString& section);
 
+/// The first sentence of an item, for a short highlight: up to the first full stop that ends a
+/// sentence (". " before a capital letter), or the whole item. Pure, tested.
+[[nodiscard]] QString changelogFirstSentence(const QString& item);
+
 /// `text` as HTML: escaped, with `**bold**` and `` `code` `` turned into tags. Pure, tested.
 [[nodiscard]] QString changelogInlineHtml(const QString& text);
 

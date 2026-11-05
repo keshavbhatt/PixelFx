@@ -31,13 +31,23 @@ namespace {
 const auto kSourceUrl = u"https://github.com/keshavbhatt/PixelFx"_s;
 const auto kIssuesUrl = u"https://github.com/keshavbhatt/PixelFx/issues"_s;
 
+constexpr int kWidth = 520;
+constexpr int kNoticesHeight = 400;
+
+// "5 November 2026", in the language of the app.
+QString longDate(const QDate& date)
+{
+    return QLocale().toString(date, u"d MMMM yyyy"_s);
+}
+
 QString revision()
 {
     const QString r = qApp->property("revision").toString();
     return r == u"unknown"_s ? QString() : r;
 }
 
-// "Released 5 November 2026" from the bundled changelog, or "Development build (66cb50c)".
+// "Released 5 November 2026" from the bundled changelog, or "Development build, 5 November 2026"
+// with the date of the revision it was built from.
 QString buildLine()
 {
     QFile file(u":/CHANGELOG.md"_s);
@@ -45,12 +55,13 @@ QString buildLine()
         for (const core::ChangelogRelease& r : core::changelogReleases(QString::fromUtf8(file.readAll()))) {
             const QDate date = QDate::fromString(r.date, Qt::ISODate);
             if (r.version == QApplication::applicationVersion() && date.isValid()) {
-                return AboutSheet::tr("Released %1").arg(QLocale().toString(date, QLocale::LongFormat));
+                return AboutSheet::tr("Released %1").arg(longDate(date));
             }
         }
     }
-    return revision().isEmpty() ? AboutSheet::tr("Development build")
-                                : AboutSheet::tr("Development build (%1)").arg(revision());
+    const QDate built = QDate::fromString(qApp->property("revisionDate").toString(), Qt::ISODate);
+    return built.isValid() ? AboutSheet::tr("Development build, %1").arg(longDate(built))
+                           : AboutSheet::tr("Development build");
 }
 
 QPushButton* smallButton(const QString& text, QWidget* parent)
@@ -100,7 +111,7 @@ AboutSheet::AboutSheet(QWidget* parent)
     layout->addLayout(titleRow);
     layout->addLayout(tabRow);
     layout->addWidget(m_pages, 1);
-    setFixedSize(520, 480); // the same on every tab
+    setFixedWidth(kWidth);
     showPage(AboutPage);
 }
 
@@ -119,6 +130,7 @@ QWidget* AboutSheet::buildAboutPage()
     auto* build = new QLabel(buildLine(), page);
     build->setObjectName(u"faint"_s);
     build->setTextInteractionFlags(Qt::TextSelectableByMouse);
+    build->setToolTip(revision());
     auto* text = new QVBoxLayout;
     text->setSpacing(2);
     text->addWidget(name);
@@ -204,6 +216,14 @@ QWidget* AboutSheet::buildDiagnosticsPage()
     m_diagnostics->setAccessibleName(tr("Diagnostics"));
     m_diagnostics->setPlainText(
         core::diagnosticsText(core::collectDiagnostics(QApplication::applicationVersion(), revision())));
+    m_diagnostics->setLineWrapMode(QPlainTextEdit::NoWrap);
+    m_diagnostics->ensurePolished();
+    // Tall enough for every line, so nothing scrolls.
+    const int lines = m_diagnostics->document()->blockCount();
+    const QMargins margins = m_diagnostics->contentsMargins();
+    m_diagnostics->setFixedHeight((lines * m_diagnostics->fontMetrics().lineSpacing()) +
+                                  static_cast<int>(2 * m_diagnostics->document()->documentMargin()) +
+                                  margins.top() + margins.bottom() + (2 * m_diagnostics->frameWidth()));
     auto* copy = smallButton(tr("Copy"), page);
     connect(copy, &QPushButton::clicked, this, [this] { QApplication::clipboard()->setText(diagnostics()); });
     auto* logs = smallButton(tr("Open the log folder"), page);
@@ -229,6 +249,10 @@ void AboutSheet::showPage(Page page)
 {
     m_tabs->button(page)->setChecked(true);
     m_pages->setCurrentIndex(page);
+    // Each page as tall as it needs; the notices get room to read a licence.
+    m_pages->setFixedHeight(page == NoticesPage ? kNoticesHeight
+                                                : m_pages->currentWidget()->sizeHint().height());
+    adjustSize();
 }
 
 AboutSheet::Page AboutSheet::page() const

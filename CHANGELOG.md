@@ -5,7 +5,7 @@ the section of the running version.
 
 ## [2.0.0] - unreleased
 
-PixelFx 2 is rebuilt from scratch.
+PixelFx 2 is rebuilt from scratch
 
 A new editor, a new image engine, and a new look.
 

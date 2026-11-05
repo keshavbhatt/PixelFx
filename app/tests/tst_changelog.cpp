@@ -59,6 +59,16 @@ private Q_SLOTS:
                  u"<b>Batch</b> &lt;b&gt; <code>pixelfx --batch</code> &amp; more"_s);
     }
 
+    void aHighlightIsTheFirstSentence()
+    {
+        QCOMPARE(changelogFirstSentence(u"Crop (C): crop freely. The crop stays editable."_s),
+                 u"Crop (C): crop freely."_s);
+        QCOMPARE(changelogFirstSentence(u"Bring .cube LUTs or HaldCLUT pictures"_s),
+                 u"Bring .cube LUTs or HaldCLUT pictures"_s);
+        QCOMPARE(changelogFirstSentence(u"Run `pixelfx --batch a. B` here. Then more."_s),
+                 u"Run `pixelfx --batch a. B` here."_s);
+    }
+
     void realChangelogHasNotesForThisVersion()
     {
         QFile file(QString::fromLatin1(PIXELFX_CHANGELOG_PATH));

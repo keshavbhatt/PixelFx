@@ -5,6 +5,7 @@ namespace pixelfx::app::version {
 
 inline constexpr auto kVersion = "@PIXELFX_VERSION@";
 inline constexpr auto kGitRevision = "@PIXELFX_GIT_REVISION@";
+inline constexpr auto kGitDate = "@PIXELFX_GIT_DATE@"; // the revision's date, ISO; empty when unknown
 inline constexpr auto kApplicationName = "pixelfx";
 inline constexpr auto kDisplayName = "PixelFx";
 // ADR-002: settings/data paths derive from these; desktop id is kDesktopId.
