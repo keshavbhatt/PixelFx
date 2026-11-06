@@ -140,7 +140,7 @@ QWidget* CompressPanel::buildSave(QWidget* parent)
     m_folderRow = new QWidget(box);
     m_folder = new PathLabel({}, m_folderRow);
     m_folder->setObjectName(u"mono"_s);
-    auto* change = new QPushButton(tr("Change"), m_folderRow);
+    auto* change = new QPushButton(tr("Change..."), m_folderRow);
     change->setObjectName(u"small"_s);
     connect(change, &QPushButton::clicked, this, [this] {
         const QString folder = QFileDialog::getExistingDirectory(this, tr("Save to"), m_job.folder);

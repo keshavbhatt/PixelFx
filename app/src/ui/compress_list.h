@@ -43,10 +43,17 @@ public:
     void setSort(Sort sort);
     [[nodiscard]] const QString& selected() const { return m_selected; }
     void select(const QString& path);
+    /// The first saved file in the order shown, empty when none is.
+    [[nodiscard]] QString topSaved(const services::BatchRunner& runner) const;
+    /// Whether the selection was made by a click or the arrow keys (not chosen for the user).
+    [[nodiscard]] bool pickedByUser() const { return m_pickedByUser; }
     /// What was done to a file, in plain words ("JPEG, lossless").
     [[nodiscard]] static QString describe(const services::CompressResult& result, const QString& path);
     /// Why a file was left as it is.
     [[nodiscard]] static QString unchangedReason(pfx::CompressNote note, const QString& path);
+
+    /// Whether a row's × takes it off the list (not while a batch runs).
+    void setRemovable(bool removable);
 
 Q_SIGNALS:
     void selectionChanged(const QString& path);
@@ -75,6 +82,8 @@ private:
 
     QStringList m_files;
     std::vector<Row> m_rows;
+    bool m_removable = true;
+    bool m_pickedByUser = false;
     QVBoxLayout* m_column = nullptr;
     QString m_selected;
     Sort m_sort = Sort::BiggestSaving;

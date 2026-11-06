@@ -58,6 +58,45 @@ private Q_SLOTS:
         QCOMPARE(page.summary(), u"No photos yet"_s);
     }
 
+    void savingOverTheOriginalsIsSaidAndTheListHoldsStillWhileARunGoes()
+    {
+        QTemporaryDir dir;
+        QStringList files;
+        for (int i = 0; i < 3; ++i) {
+            pfx::Image img(40, 30);
+            img.fill(0.3F, 0.3F, 0.3F);
+            files << dir.filePath(u"own%1.jpg"_s.arg(i));
+            QVERIFY(pfx::save(img, files.last().toStdString()).ok());
+        }
+        // Their own folder, their own name and format, and Overwrite: the originals would go.
+        pixelfx::core::ExportOptions out;
+        out.folder = dir.path();
+        out.nameTemplate = u"{name}"_s;
+        out.extension = u"jpg"_s;
+        out.ifExists = pixelfx::core::ExportOptions::IfExists::Overwrite;
+        BatchPage page(out, {}, false);
+        page.resize(1200, 800);
+        page.show();
+        QVERIFY(QTest::qWaitForWindowExposed(&page));
+        page.addPaths(files);
+        QVERIFY(page.nameField()->showsOverwrites());
+        // While a batch runs nothing is added and nothing is taken off.
+        out.folder = dir.filePath(u"out"_s);
+        BatchPage safe(out, {}, false);
+        safe.addPaths(files);
+        QVERIFY(!safe.nameField()->showsOverwrites());
+        safe.runner().setAtOnce(1);
+        QSignalSpy running(&safe, &BatchPage::runningChanged);
+        safe.process();
+        QCOMPARE(running.count(), 1);
+        QVERIFY(running.first().first().toBool());
+        safe.addPaths({files.first()});
+        QCOMPARE(safe.summary().left(1), u"3"_s); // still the three
+        QSignalSpy finished(&safe.runner(), &pixelfx::services::BatchRunner::finished);
+        QVERIFY(finished.wait(20000));
+        QTRY_COMPARE(running.count(), 2);
+    }
+
     void theNameShowsTheFirstNamesAndSaysWhenTheyClash()
     {
         QTemporaryDir dir;

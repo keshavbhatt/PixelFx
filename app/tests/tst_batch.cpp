@@ -5,6 +5,7 @@
 #include <QDir>
 #include <QFile>
 #include <QFileInfo>
+#include <QSet>
 #include <QSignalSpy>
 #include <QTemporaryDir>
 #include <QTest>
@@ -162,6 +163,61 @@ private Q_SLOTS:
         const auto probe = pfx::probe(runner.target(0).toStdString());
         QVERIFY(probe.ok());
         QCOMPARE(std::max(probe.value().width, probe.value().height), 20); // resized
+    }
+
+    void everyRowWaitsAtTheStartAndStopLeavesTheRestToProcess()
+    {
+        QTemporaryDir dir;
+        QStringList files;
+        for (int i = 0; i < 4; ++i) {
+            pfx::Image img(40, 30);
+            img.fill(0.2F, 0.3F, 0.4F);
+            files << dir.filePath(u"w%1.png"_s.arg(i));
+            QVERIFY(pfx::save(img, files.last().toStdString()).ok());
+        }
+        BatchRecipe r;
+        r.output.folder = dir.filePath(u"out"_s);
+        r.output.extension = u"jpg"_s;
+        BatchRunner runner;
+        runner.setAtOnce(1);
+        QSignalSpy changed(&runner, &BatchRunner::photoChanged);
+        QSignalSpy finished(&runner, &BatchRunner::finished);
+        runner.start(files, r);
+        // Every row hears at once that it waits (a second run leaves nothing of the first).
+        QSet<int> told;
+        for (const QList<QVariant>& c : changed) {
+            told.insert(c.first().toInt());
+        }
+        QCOMPARE(told.size(), 4);
+        runner.stop(); // the one under way finishes; the rest are not reached
+        QVERIFY(finished.wait(20000));
+        QCOMPARE(runner.saved(), 1);
+        QCOMPARE(runner.waiting(), 3);
+        finished.clear();
+        runner.processRest();
+        QVERIFY(finished.wait(20000));
+        QCOMPARE(runner.saved(), 4);
+        QCOMPARE(runner.waiting(), 0);
+    }
+
+    void compressSaysAFileIsNoPhoto()
+    {
+        QTemporaryDir dir;
+        const QString broken = dir.filePath(u"damaged.jpg"_s);
+        QFile f(broken);
+        QVERIFY(f.open(QIODevice::WriteOnly));
+        f.write("abcdef");
+        f.close();
+        BatchRecipe r;
+        pixelfx::core::CompressJob job;
+        job.folder = dir.filePath(u"small"_s);
+        r.compress = job;
+        BatchRunner runner;
+        QSignalSpy finished(&runner, &BatchRunner::finished);
+        runner.start({broken}, r);
+        QVERIFY(finished.wait(20000));
+        QCOMPARE(runner.state(0), BatchRunner::State::Failed); // not "no change"
+        QVERIFY(!runner.reason(0).isEmpty());
     }
 };
 

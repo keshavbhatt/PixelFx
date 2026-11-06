@@ -1,9 +1,8 @@
 #include "ui/about_sheet.h"
 
-#include "core/links.h"
-
 #include "core/about.h"
 #include "core/changelog.h"
+#include "core/links.h"
 #include "core/log_sink.h"
 #include "ui/style.h"
 

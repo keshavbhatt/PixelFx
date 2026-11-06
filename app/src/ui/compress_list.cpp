@@ -14,6 +14,7 @@
 #include <QLocale>
 #include <QPixmap>
 #include <QProgressBar>
+#include <QToolButton>
 #include <QVBoxLayout>
 
 #include <algorithm>
@@ -120,6 +121,7 @@ void CompressList::setFiles(const QStringList& files)
     m_files = files;
     if (!files.contains(m_selected)) {
         m_selected.clear();
+        m_pickedByUser = false;
     }
     build();
 }
@@ -164,8 +166,12 @@ void CompressList::build()
         r.pill = r.file.pill;
         r.row->setSelected(file == m_selected);
         r.row->installEventFilter(this);
-        connect(r.row, &ListRow::clicked, this, [this, file] { select(file); });
+        connect(r.row, &ListRow::clicked, this, [this, file] {
+            m_pickedByUser = true;
+            select(file);
+        });
         connect(r.row, &ListRow::actionClicked, this, [this, file] { Q_EMIT removeRequested(file); });
+        r.row->actionButton()->setEnabled(m_removable);
         m_rows.push_back(r);
     }
     order();
@@ -183,7 +189,15 @@ void CompressList::order()
     }
     switch (m_sort) {
     case Sort::BiggestSaving:
-        std::ranges::stable_sort(sorted, [](const Row* a, const Row* b) { return a->saved > b->saved; });
+        // By the share saved, as the rows say it ("Saved 33%").
+        std::ranges::stable_sort(sorted, [](const Row* a, const Row* b) {
+            const auto share = [](const Row* r) {
+                return r->before > 0 && r->saved >= 0
+                           ? static_cast<double>(r->saved) / static_cast<double>(r->before)
+                           : -1.0;
+            };
+            return share(a) > share(b);
+        });
         break;
     case Sort::Size:
         std::ranges::stable_sort(sorted, [](const Row* a, const Row* b) { return a->before > b->before; });
@@ -305,11 +319,37 @@ bool CompressList::eventFilter(QObject* watched, QEvent* event)
         for (const Row& r : m_rows) {
             if (r.row == item->widget()) {
                 r.row->setFocus(Qt::TabFocusReason);
+                m_pickedByUser = true;
                 select(r.path);
             }
         }
     }
     return true;
+}
+
+QString CompressList::topSaved(const services::BatchRunner& runner) const
+{
+    if (!runner.isCompressing() || runner.files() != m_files) {
+        return {};
+    }
+    for (int at = 0; at < m_column->count(); ++at) {
+        const QWidget* shown = m_column->itemAt(at)->widget();
+        for (std::size_t i = 0; i < m_rows.size(); ++i) {
+            if (m_rows[i].row == shown && static_cast<int>(i) < runner.total() &&
+                runner.state(static_cast<int>(i)) == services::BatchRunner::State::Saved) {
+                return m_rows[i].path;
+            }
+        }
+    }
+    return {};
+}
+
+void CompressList::setRemovable(bool removable)
+{
+    m_removable = removable;
+    for (const Row& r : m_rows) {
+        r.row->actionButton()->setEnabled(removable);
+    }
 }
 
 } // namespace pixelfx::ui

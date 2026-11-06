@@ -98,6 +98,7 @@ const QString kSheet = uR"(
         #itemTitle { font-weight: 500; }
         #itemDetail { color: {{muted}}; font-size: 11px; }
         QLabel#itemDetail[error="true"] { color: {{danger}}; }
+        QLabel#recentTitle[error="true"] { color: {{danger}}; }
         QToolButton#stripAdd { border: 1.5px dashed {{faint}}; border-radius: 6px; background: transparent; }
         QToolButton#stripAdd:hover { background: {{hover}}; }
         #accentText { color: {{accent}}; font-size: 12px; }

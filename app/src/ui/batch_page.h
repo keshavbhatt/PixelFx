@@ -79,6 +79,8 @@ public:
     /// The recipe's first choice: "" (none), "look:<id>", "preset:<name>", or "recipe" (an
     /// opened batch recipe's own steps). Settings from a photo is its own source (fromPhoto).
     void chooseRecipe(const QString& choice);
+    /// Convert and resize only (the welcome page's quick job): no look or preset, nothing on top.
+    void chooseConvertOnly();
     /// The preset added on top (by name), or none when empty.
     void chooseSecond(const QString& presetName);
     void setFromPhoto(bool on);
@@ -114,6 +116,9 @@ Q_SIGNALS:
     /// Compress only's choices changed, and the mode (both remembered).
     void compressJobChanged(const pixelfx::core::CompressJob& job);
     void compressOnlyChanged(bool on);
+    /// A batch started or ended: while one runs, the list cannot change (the header's Add
+    /// buttons follow).
+    void runningChanged(bool running);
 
 protected:
     bool eventFilter(QObject* watched, QEvent* event) override;
@@ -150,6 +155,8 @@ private:
     static QFormLayout* saveOptionsForm(QDialog* sheet, const core::ExportOptions& output,
                                         SaveOptionsControls& c);
     [[nodiscard]] std::pair<QString, QString> recipeCardText() const;
+    /// The card for no look or preset first: Convert and resize only, or what is on top.
+    [[nodiscard]] std::pair<QString, QString> convertCardText() const;
     void addFirstChoice(services::BatchRecipe& r) const;
     [[nodiscard]] static pfx::Settings photoPreset(const pfx::Settings& settings);
     void showRunning(int done, int total);
@@ -175,6 +182,11 @@ private:
     void outputEdited();
     /// The name previews follow the list and the options.
     void refreshNames();
+    /// The photos the recipe would save over their originals (If it exists: Overwrite, the
+    /// names their own, in their own folder).
+    [[nodiscard]] QStringList overwrittenOriginals() const;
+    /// Asks before saving over originals; whether to go ahead.
+    [[nodiscard]] bool confirmOverwrites();
     [[nodiscard]] QString recipeTitle() const;
 
     QStringList m_files;
@@ -214,8 +226,18 @@ private:
     QPushButton* m_pause = nullptr;
     QPushButton* m_stop = nullptr;
     QPushButton* m_retry = nullptr;
+    QPushButton* m_rest = nullptr; ///< "Process the rest" after Stop
     QPushButton* m_showFolder = nullptr;
     QPushButton* m_process = nullptr;
+    QPushButton* m_clear = nullptr;
+    bool m_wasRunning = false;
+    /// Locks what would change the list or the mode while a batch runs, and what has nothing to
+    /// act on while the list is empty.
+    void refreshLocks();
+    /// The status line says what went wrong (a recipe not saved or not read), in danger colour,
+    /// with nothing of the last run beside it.
+    void showStatusError(const QString& text);
+    void setStatusError(bool error);
     QButtonGroup* m_sources = nullptr;
     QLabel* m_cardThumb = nullptr;
     QLabel* m_cardName = nullptr;

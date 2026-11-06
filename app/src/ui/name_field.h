@@ -43,6 +43,10 @@ public:
     /// The names on show, as "source → name" rows.
     [[nodiscard]] QStringList shownNames() const;
     [[nodiscard]] bool showsClash() const;
+    /// `count` photos would be saved over their originals (If it exists: Overwrite): a line says
+    /// so; 0 hides it.
+    void setOverwrites(int count);
+    [[nodiscard]] bool showsOverwrites() const;
 
 Q_SIGNALS:
     /// The template was edited (the field left, or a token inserted).
@@ -50,6 +54,8 @@ Q_SIGNALS:
 
 private:
     void showTokenMenu();
+    /// An alert icon and `text` in warning colour, laid in `line`; returns the text.
+    static QLabel* warningLine(QWidget* line, const QString& text);
     [[nodiscard]] core::NameFacts factsOf(int index);
     [[nodiscard]] static QString meaningOf(const QString& token);
 
@@ -58,6 +64,8 @@ private:
     QGridLayout* m_rows;
     QLabel* m_more;
     QWidget* m_clash;
+    QWidget* m_overwrites;
+    QLabel* m_overwritesText = nullptr;
     QStringList m_tokens;
     QStringList m_files;
     Namer m_namer;

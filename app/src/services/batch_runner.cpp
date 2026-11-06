@@ -17,6 +17,7 @@
 #include <algorithm>
 #include <array>
 #include <pfx/auto.h>
+#include <pfx/io.h>
 
 using namespace Qt::StringLiterals;
 
@@ -71,6 +72,11 @@ CompressOutcome compressOne(const QString& source, const core::CompressJob& job,
     QFile in(source);
     if (!in.open(QIODevice::ReadOnly)) {
         o.error = BatchRunner::tr("The file could not be read.");
+        return o;
+    }
+    // A file that is no photo is said so, as Edit and export does, not passed on unchanged.
+    if (const auto info = pfx::probe(source.toStdString()); !info) {
+        o.error = QString::fromStdString(info.error().message);
         return o;
     }
     const QByteArray raw = in.readAll();
@@ -250,6 +256,9 @@ void BatchRunner::start(const QStringList& files, const BatchRecipe& recipe)
     m_paused = false;
     m_running = 0;
     m_clock.start();
+    for (int i = 0; i < files.size(); ++i) {
+        Q_EMIT photoChanged(i); // every row waits, nothing left of an earlier run
+    }
     for (int i = 0; i < m_atOnce; ++i) {
         startNext();
     }
@@ -263,6 +272,20 @@ void BatchRunner::retryFailed()
             m_reasons[i].clear();
             m_queue.push_back(static_cast<int>(i));
             Q_EMIT photoChanged(static_cast<int>(i));
+        }
+    }
+    m_paused = false;
+    m_clock.start();
+    for (int i = 0; i < m_atOnce; ++i) {
+        startNext();
+    }
+}
+
+void BatchRunner::processRest()
+{
+    for (std::size_t i = 0; i < m_states.size(); ++i) {
+        if (m_states[i] == State::Waiting) {
+            m_queue.push_back(static_cast<int>(i));
         }
     }
     m_paused = false;
@@ -297,6 +320,11 @@ int BatchRunner::saved() const
 int BatchRunner::failed() const
 {
     return static_cast<int>(std::ranges::count(m_states, State::Failed));
+}
+
+int BatchRunner::waiting() const
+{
+    return static_cast<int>(std::ranges::count(m_states, State::Waiting));
 }
 
 void BatchRunner::startNext()

@@ -82,6 +82,8 @@ public:
     void start(const QStringList& files, const BatchRecipe& recipe);
     /// Runs the failed photos of the last batch again.
     void retryFailed();
+    /// Runs the photos a stopped batch did not reach.
+    void processRest();
     void setPaused(bool paused);
     /// Photos worked on at once from the next run: 0 for automatic (kAtOnce, or up to
     /// kCompressAtOnce for Compress only), at most kMaxAtOnce.
@@ -92,6 +94,8 @@ public:
     [[nodiscard]] int total() const { return static_cast<int>(m_states.size()); }
     [[nodiscard]] int saved() const;
     [[nodiscard]] int failed() const;
+    /// Photos not reached: still queued, or left when the batch was stopped.
+    [[nodiscard]] int waiting() const;
     [[nodiscard]] State state(int index) const { return m_states.at(static_cast<std::size_t>(index)); }
     [[nodiscard]] const QString& reason(int index) const
     {

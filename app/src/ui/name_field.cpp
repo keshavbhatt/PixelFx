@@ -38,6 +38,7 @@ NameField::NameField(QWidget* parent)
     , m_rows(new QGridLayout)
     , m_more(new QLabel(this))
     , m_clash(new QWidget(this))
+    , m_overwrites(new QWidget(this))
     , m_tokens(core::nameTokens())
 {
     m_field->setObjectName(u"monoField"_s);
@@ -71,17 +72,9 @@ NameField::NameField(QWidget* parent)
     }
     m_more->setObjectName(u"faintSmall"_s);
 
-    auto* clashIcon = new QLabel(m_clash);
-    icons::setGlyph(clashIcon, u"alert"_s, tokens().warning, 14);
-    auto* clashText =
-        new QLabel(tr("Every photo gets this name, so numbers are added. Add {n} to choose where."), m_clash);
-    clashText->setObjectName(u"warningText"_s);
-    clashText->setWordWrap(true);
-    auto* clashRow = new QHBoxLayout(m_clash);
-    clashRow->setContentsMargins(0, 2, 0, 0);
-    clashRow->setSpacing(6);
-    clashRow->addWidget(clashIcon, 0, Qt::AlignTop);
-    clashRow->addWidget(clashText, 1);
+    warningLine(m_clash, tr("Every photo gets this name, so numbers are added. Add {n} to choose where."));
+    m_overwritesText = warningLine(m_overwrites, QString());
+    m_overwrites->hide();
 
     auto* column = new QVBoxLayout(this);
     column->setContentsMargins(0, 0, 0, 0);
@@ -90,7 +83,36 @@ NameField::NameField(QWidget* parent)
     column->addLayout(m_rows);
     column->addWidget(m_more);
     column->addWidget(m_clash);
+    column->addWidget(m_overwrites);
     refresh();
+}
+
+QLabel* NameField::warningLine(QWidget* line, const QString& text)
+{
+    auto* icon = new QLabel(line);
+    icons::setGlyph(icon, u"alert"_s, tokens().warning, 14);
+    auto* label = new QLabel(text, line);
+    label->setObjectName(u"warningText"_s);
+    label->setWordWrap(true);
+    auto* row = new QHBoxLayout(line);
+    row->setContentsMargins(0, 2, 0, 0);
+    row->setSpacing(6);
+    row->addWidget(icon, 0, Qt::AlignTop);
+    row->addWidget(label, 1);
+    return label;
+}
+
+void NameField::setOverwrites(int count)
+{
+    //: Under the name preview when If it exists is Overwrite and names are the originals' own.
+    m_overwritesText->setText(
+        tr("%n photos would be saved over their originals: Overwrite replaces them.", nullptr, count));
+    m_overwrites->setVisible(count > 0);
+}
+
+bool NameField::showsOverwrites() const
+{
+    return !m_overwrites->isHidden();
 }
 
 NameField::~NameField() = default;

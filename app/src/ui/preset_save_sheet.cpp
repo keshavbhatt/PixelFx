@@ -17,7 +17,6 @@
 #include <QPushButton>
 #include <QVBoxLayout>
 
-
 using namespace Qt::StringLiterals;
 
 namespace pixelfx::ui {

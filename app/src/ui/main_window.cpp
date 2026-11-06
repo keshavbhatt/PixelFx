@@ -629,11 +629,25 @@ void MainWindow::buildBatch()
             m_docMeta->setText(summary);
         }
     });
-    // The window title shows a running batch, so it can be followed from the task bar.
-    connect(&m_batch->runner(), &services::BatchRunner::progress, this,
-            [this](int done, int total) { setWindowTitle(tr("Batch %1 of %2").arg(done).arg(total)); });
+    // While a batch runs its list holds still: no photos are added from the header.
+    connect(m_batch, &BatchPage::runningChanged, this, [this](bool running) {
+        for (QWidget* w : std::as_const(m_batchHeader)) {
+            w->setEnabled(!running);
+        }
+    });
+    // The window title shows a running batch as the page does, so it can be followed from the
+    // task bar.
+    connect(&m_batch->runner(), &services::BatchRunner::progress, this, [this](int done, int total) {
+        const int current = std::min(done + 1, total);
+        setWindowTitle(m_batch->runner().isCompressing() ? tr("Compressing %1 of %2").arg(current).arg(total)
+                                                         : tr("Saving %1 of %2").arg(current).arg(total));
+    });
     connect(&m_batch->runner(), &services::BatchRunner::finished, this, [this](int saved, int failed) {
-        setWindowTitle(m_document.isOpen() ? QFileInfo(m_document.info().path).fileName() : QString());
+        if (isBatching()) {
+            setWindowTitle(tr("Batch"));
+        } else {
+            setWindowTitle(m_document.isOpen() ? QFileInfo(m_document.info().path).fileName() : QString());
+        }
         const QString summary =
             failed > 0 ? tr("%1 saved, %2 not saved").arg(saved).arg(failed) : tr("%n saved", nullptr, saved);
         if (!isBatching()) {
@@ -662,7 +676,7 @@ void MainWindow::buildWelcome()
     connect(m_welcome, &WelcomePage::convertRequested, this, [this] {
         enterBatch();
         m_batch->setCompressOnly(false);
-        m_batch->chooseRecipe({});
+        m_batch->chooseConvertOnly();
     });
     connect(m_welcome, &WelcomePage::compressRequested, this, [this] {
         enterBatch();

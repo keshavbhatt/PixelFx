@@ -225,6 +225,7 @@ QWidget* BatchPage::buildListHead(QWidget* parent)
     connect(m_viewModes, &QButtonGroup::idClicked, this, [this](int id) { m_views->setCurrentIndex(id); });
     m_sortBox = buildSortBox(head);
     auto* clear = new QPushButton(tr("Clear"), head);
+    m_clear = clear;
     clear->setObjectName(u"small"_s);
     clear->setToolTip(tr("Take every photo off the list (the files stay where they are)"));
     connect(clear, &QPushButton::clicked, this, [this] {
@@ -360,6 +361,8 @@ QWidget* BatchPage::buildStatus(QWidget* parent)
     m_pause = new IconTextButton(icons::themed(u"pause"_s, tokens().text), tr("Pause"), m_status);
     m_stop = new QPushButton(tr("Stop"), m_status);
     m_retry = new QPushButton(tr("Retry failed"), m_status);
+    m_rest = new QPushButton(tr("Process the rest"), m_status);
+    m_rest->setToolTip(tr("Go on with the photos the stopped batch did not reach"));
     m_showFolder =
         new IconTextButton(icons::themed(u"folder"_s, tokens().text), tr("Show in folder"), m_status);
     connect(m_pause, &QPushButton::clicked, this, [this] {
@@ -370,6 +373,11 @@ QWidget* BatchPage::buildStatus(QWidget* parent)
     connect(m_retry, &QPushButton::clicked, this, [this] {
         m_clock.start();
         m_runner.retryFailed();
+    });
+    connect(m_rest, &QPushButton::clicked, this, [this] {
+        m_clock.start();
+        m_runner.processRest();
+        refreshStatus();
     });
     connect(m_showFolder, &QPushButton::clicked, this, [this] {
         for (int i = 0; i < m_runner.total(); ++i) {
@@ -387,7 +395,7 @@ QWidget* BatchPage::buildStatus(QWidget* parent)
     line->addWidget(m_statusText);
     line->addWidget(m_statusDetail);
     line->addStretch();
-    for (QPushButton* b : {m_pause, m_stop, m_retry, m_showFolder}) {
+    for (QPushButton* b : {m_pause, m_stop, m_rest, m_retry, m_showFolder}) {
         b->setObjectName(u"small"_s);
         line->addWidget(b);
     }
@@ -493,6 +501,7 @@ QWidget* BatchPage::buildRecipe(QWidget* parent)
     column->addWidget(buildRecipeCard(box));
     column->addLayout(buildSecondRow(box));
     m_auto = new QCheckBox(tr("Auto enhance each photo first"), box);
+    connect(m_auto, &QCheckBox::toggled, this, &BatchPage::refreshRecipeCard);
     m_keepEdits = new QCheckBox(tr("Keep edits already made in PixelFx"), box);
     m_keepEdits->setToolTip(tr("Start from each photo's remembered edits instead of the original"));
     column->addWidget(m_auto);
@@ -509,8 +518,9 @@ QWidget* BatchPage::buildRecipeCard(QWidget* box)
     m_cardThumb->setObjectName(u"cardThumb"_s);
     m_cardName = new ElidedLabel(card);
     m_cardName->setObjectName(u"itemTitle"_s);
-    m_cardDetail = new ElidedLabel(card);
+    m_cardDetail = new QLabel(card);
     m_cardDetail->setObjectName(u"itemDetail"_s);
+    m_cardDetail->setWordWrap(true); // two lines at the panel's width
     m_cardChange = new QPushButton(tr("Change"), card);
     m_cardChange->setObjectName(u"small"_s);
     connect(m_cardChange, &QPushButton::clicked, this, [this] { showRecipeMenu(m_cardChange, false); });
@@ -620,7 +630,7 @@ QWidget* BatchPage::buildSaveAs(QWidget* parent)
     m_folder = new PathLabel({}, box);
     m_folder->setObjectName(u"mono"_s);
     m_folder->setPath(m_output.folder);
-    auto* change = new QPushButton(tr("Change"), box);
+    auto* change = new QPushButton(tr("Change..."), box);
     change->setObjectName(u"small"_s);
     connect(change, &QPushButton::clicked, this, [this] {
         const QString folder = QFileDialog::getExistingDirectory(this, tr("Save to"), m_output.folder);
@@ -642,7 +652,11 @@ QWidget* BatchPage::buildSaveAs(QWidget* parent)
     });
     m_beside = new QCheckBox(tr("Next to each original, in a subfolder"), box);
     m_beside->setToolTip(tr("A folder named PixelFx beside each photo, instead of the folder above"));
-    connect(m_beside, &QCheckBox::toggled, m_folder, &QWidget::setDisabled);
+    connect(m_beside, &QCheckBox::toggled, this, [this, change](bool beside) {
+        m_folder->setDisabled(beside);
+        change->setDisabled(beside); // the folder above is not used
+        outputEdited();
+    });
     column->addLayout(formatRow);
     column->addLayout(folderRow);
     column->addWidget(m_name);
@@ -660,8 +674,7 @@ QWidget* BatchPage::buildFoot(QWidget* parent)
         const QString file = QFileDialog::getSaveFileName(
             this, tr("Save as batch recipe"), tr("Batch.pfxbatch"), tr("Batch recipes (*.pfxbatch)"));
         if (!file.isEmpty() && !saveRecipe(file)) {
-            m_statusText->setText(tr("The recipe could not be saved there."));
-            m_status->show();
+            showStatusError(tr("The recipe could not be saved there."));
         }
     });
     const FootButtons buttons = footButtons(parent, tr("Process"), {save});
@@ -689,7 +702,7 @@ QFormLayout* BatchPage::saveOptionsForm(QDialog* sheet, const core::ExportOption
 {
     c.quality = qualitySlider(output.quality, sheet);
     c.quality->setEnabled(lossy(output.extension));
-    c.deep = new QCheckBox(tr("16 bits per channel"), sheet);
+    c.deep = new QCheckBox(tr("16 bits per channel (larger file, more room for later edits)"), sheet);
     c.deep->setChecked(output.bitsPerSample == 16);
     c.deep->setEnabled(!lossy(output.extension));
     c.camera = new QCheckBox(tr("Keep camera details and copyright"), sheet);
@@ -698,8 +711,8 @@ QFormLayout* BatchPage::saveOptionsForm(QDialog* sheet, const core::ExportOption
     c.location->setChecked(output.keepLocation);
     c.exists = new QComboBox(sheet);
     c.exists->addItem(tr("Add a number"), static_cast<int>(core::ExportOptions::IfExists::AddNumber));
-    c.exists->addItem(tr("Replace it"), static_cast<int>(core::ExportOptions::IfExists::Overwrite));
-    c.exists->addItem(tr("Skip the photo"), static_cast<int>(core::ExportOptions::IfExists::Skip));
+    c.exists->addItem(tr("Overwrite"), static_cast<int>(core::ExportOptions::IfExists::Overwrite));
+    c.exists->addItem(tr("Skip"), static_cast<int>(core::ExportOptions::IfExists::Skip));
     c.exists->setCurrentIndex(std::max(0, c.exists->findData(static_cast<int>(output.ifExists))));
     auto* form = new QFormLayout;
     form->setLabelAlignment(Qt::AlignLeft | Qt::AlignVCenter);
@@ -761,6 +774,7 @@ void BatchPage::refreshNames()
         }
         return core::exportFileName(source, o, core::outputSize(o, *size), today, facts);
     });
+    m_name->setOverwrites(static_cast<int>(overwrittenOriginals().size()));
     m_compressPanel->setFiles(m_files);
 }
 
@@ -796,6 +810,13 @@ void BatchPage::chooseRecipe(const QString& choice)
     m_sources->button(0)->setChecked(true);
     refreshRecipeCard();
     schedulePreview();
+}
+
+void BatchPage::chooseConvertOnly()
+{
+    m_auto->setChecked(false);
+    chooseSecond({});
+    chooseRecipe({});
 }
 
 void BatchPage::chooseSecond(const QString& presetName)
@@ -873,6 +894,25 @@ QString BatchPage::recipeTitle() const
     return {};
 }
 
+std::pair<QString, QString> BatchPage::convertCardText() const
+{
+    // Nothing first: what is on top, if anything, is said, so the card never says no edits while
+    // there are some.
+    QStringList extras;
+    if (m_auto != nullptr && m_auto->isChecked()) {
+        extras << tr("Auto enhance");
+    }
+    if (m_secondOn != nullptr && m_secondOn->isChecked() && !m_second.isEmpty()) {
+        extras << m_second;
+    }
+    if (extras.isEmpty()) {
+        return {tr("Convert and resize only"), tr("No edits: each photo is resized and saved as below")};
+    }
+    //: The recipe card when only Auto enhance or a second preset is on: "Only Auto enhance and Warm, ...".
+    return {tr("No look or preset"),
+            tr("Only %1, then resized and saved as below").arg(extras.join(tr(" and ")))};
+}
+
 std::pair<QString, QString> BatchPage::recipeCardText() const
 {
     QString name;
@@ -901,8 +941,7 @@ std::pair<QString, QString> BatchPage::recipeCardText() const
         name = m_loadedName;
         detail = tr("From a batch recipe, %n steps", nullptr, static_cast<int>(m_loadedStack.size()));
     } else {
-        name = tr("Convert and resize only");
-        detail = tr("No edits: each photo is resized and saved as below");
+        std::tie(name, detail) = convertCardText();
     }
     return {name, detail};
 }
@@ -918,7 +957,8 @@ void BatchPage::refreshRecipeCard()
                                                     Qt::KeepAspectRatioByExpanding,
                                                     Qt::SmoothTransformation));
     } else {
-        icons::setGlyph(m_cardThumb, u"sliders"_s, tokens().faint, 20);
+        const bool convert = !m_fromPhoto && m_first.isEmpty();
+        icons::setGlyph(m_cardThumb, convert ? u"file-image"_s : u"sliders"_s, tokens().faint, 20);
         m_cardThumb->setAlignment(Qt::AlignCenter);
     }
     m_secondName->setText(m_second);
@@ -933,13 +973,15 @@ void BatchPage::refreshRecipeCard()
 
 void BatchPage::addPaths(const QStringList& paths)
 {
+    if (m_runner.isRunning()) {
+        return; // the list holds still while it is processed
+    }
     for (const QString& path : paths) {
         const QFileInfo info(path);
         if (info.suffix().toLower() == u"pfxbatch"_s) {
             const QString error = loadRecipe(info.absoluteFilePath()); // a dropped batch recipe
             if (!error.isEmpty()) {
-                m_statusText->setText(error);
-                m_status->show();
+                showStatusError(error);
             }
             continue;
         }
@@ -1152,11 +1194,56 @@ void BatchPage::process()
     if (m_files.isEmpty() || m_runner.isRunning()) {
         return;
     }
+    if (!confirmOverwrites()) {
+        return;
+    }
     const services::BatchRecipe r = recipe();
     Q_EMIT outputChanged(r.output);
     m_clock.start();
     m_runner.start(m_files, r);
     refreshStatus();
+}
+
+QStringList BatchPage::overwrittenOriginals() const
+{
+    const services::BatchRecipe r = recipe();
+    if (m_compressOnly || r.besideOriginals ||
+        r.output.ifExists != core::ExportOptions::IfExists::Overwrite) {
+        return {};
+    }
+    // Names as the runner makes them; only {name} and {n} can give back the source's own.
+    QStringList out;
+    const QDate today = QDate::currentDate();
+    const auto count = static_cast<int>(m_files.size());
+    for (int i = 0; i < count; ++i) {
+        core::NameFacts facts;
+        facts.number = i + 1;
+        facts.count = count;
+        const QString& source = m_files.at(i);
+        const QString name = core::exportFileName(source, r.output, QSize(), today, facts);
+        if (QFileInfo(QDir(r.output.folder).filePath(name)) == QFileInfo(source)) {
+            out << source;
+        }
+    }
+    return out;
+}
+
+bool BatchPage::confirmOverwrites()
+{
+    const auto count = static_cast<int>(overwrittenOriginals().size());
+    if (count == 0) {
+        return true;
+    }
+    QMessageBox ask(
+        QMessageBox::Warning, tr("Overwrite the originals"),
+        tr("%n photos would be saved over their originals. This cannot be undone.", nullptr, count),
+        QMessageBox::NoButton, this);
+    const QPushButton* overwrite =
+        ask.addButton(tr("Overwrite %n photos", nullptr, count), QMessageBox::AcceptRole);
+    ask.addButton(QMessageBox::Cancel);
+    ask.setDefaultButton(QMessageBox::Cancel);
+    ask.exec();
+    return ask.clickedButton() == overwrite;
 }
 
 QWidget* BatchPage::makeRow(const QString& file)
@@ -1203,6 +1290,7 @@ void BatchPage::rebuildRows()
                            ? tr("Process")
                            : tr("Process %n photos", nullptr, static_cast<int>(m_files.size())));
     m_process->setEnabled(!m_files.isEmpty() && !m_runner.isRunning());
+    refreshLocks();
     m_watermark->setBatchPhotos(m_files.mid(0, 50)); // the sheet's "Preview on: Batch photos"
     Q_EMIT summaryChanged(summary());
     schedulePreview();
@@ -1475,6 +1563,7 @@ void BatchPage::refreshStatus()
     }
     m_statusIcon->clear();
     m_statusDetail->clear();
+    setStatusError(false);
     // The status belongs to the mode that ran.
     const bool ours = m_runner.isCompressing() == m_compressOnly;
     if (running) {
@@ -1489,11 +1578,60 @@ void BatchPage::refreshStatus()
                                            total > 0);
     m_progress->setVisible(running);
     m_pause->setText(m_runner.isPaused() ? tr("Resume") : tr("Pause"));
+    m_pause->setIcon(icons::themed(m_runner.isPaused() ? u"play"_s : u"pause"_s, tokens().text));
+    m_rest->setVisible(!running && m_runner.waiting() > 0 && m_runner.files() == m_files);
+    // Once a run ends, the before and after is of the top saved file, unless one was picked.
+    if (!running && m_compressOnly && !m_compressList->pickedByUser()) {
+        if (const QString top = m_compressList->topSaved(m_runner); !top.isEmpty()) {
+            m_compressList->select(top);
+        }
+    }
     m_pause->setVisible(running);
     m_stop->setVisible(running);
     m_retry->setVisible(!running && failed > 0);
     m_showFolder->setVisible(!running && saved > 0);
     m_process->setEnabled(!running && !m_files.isEmpty());
+    refreshLocks();
+    if (running != m_wasRunning) {
+        m_wasRunning = running;
+        Q_EMIT runningChanged(running);
+    }
+}
+
+void BatchPage::setStatusError(bool error)
+{
+    if (m_statusText->property("error").toBool() != error) {
+        m_statusText->setProperty("error", error);
+        m_statusText->style()->unpolish(m_statusText);
+        m_statusText->style()->polish(m_statusText);
+    }
+}
+
+void BatchPage::showStatusError(const QString& text)
+{
+    icons::setGlyph(m_statusIcon, u"alert"_s, tokens().danger, 16);
+    m_statusText->setText(text);
+    setStatusError(true);
+    m_statusDetail->clear();
+    for (QWidget* w :
+         std::initializer_list<QWidget*>{m_pause, m_stop, m_rest, m_retry, m_showFolder, m_progress}) {
+        w->hide(); // nothing of the last run belongs to this line
+    }
+    m_status->show();
+}
+
+void BatchPage::refreshLocks()
+{
+    const bool idle = !m_runner.isRunning();
+    m_clear->setEnabled(idle && !m_files.isEmpty());
+    m_viewBox->setEnabled(!m_files.isEmpty());
+    for (QAbstractButton* mode : m_modes->buttons()) {
+        mode->setEnabled(idle);
+    }
+    for (const FileRow& f : m_fileRows) {
+        f.row->actionButton()->setEnabled(idle);
+    }
+    m_compressList->setRemovable(idle);
 }
 
 void BatchPage::showRunning(int done, int total)
@@ -1519,8 +1657,14 @@ void BatchPage::showDone(int saved, int failed)
     const int total = m_runner.total();
     icons::setGlyph(m_statusIcon, failed > 0 ? u"alert"_s : u"check"_s,
                     failed > 0 ? tokens().danger : tokens().success, 16);
-    m_statusText->setText(failed > 0 ? tr("%1 saved, %2 not saved").arg(saved).arg(failed)
-                                     : tr("%n saved", nullptr, saved));
+    QString text =
+        failed > 0 ? tr("%1 saved, %2 not saved").arg(saved).arg(failed) : tr("%n saved", nullptr, saved);
+    if (m_runner.waiting() > 0) {
+        //: After Stop: "Stopped: 3 of 30 saved".
+        text = failed > 0 ? tr("Stopped: %1 of %2 saved, %3 not saved").arg(saved).arg(total).arg(failed)
+                          : tr("Stopped: %1 of %2 saved").arg(saved).arg(total);
+    }
+    m_statusText->setText(text);
     qint64 bytes = 0;
     for (int i = 0; i < total; ++i) {
         bytes += m_runner.target(i).isEmpty() ? 0 : QFileInfo(m_runner.target(i)).size();
@@ -1548,6 +1692,14 @@ void BatchPage::showCompressDone(int failed)
                     failed > 0 ? tokens().danger : tokens().success, 16);
     //: After Compress only: "Saved 54 MB of 108 MB (50%)".
     QString text = tr("Saved %1 of %2 (%3%)").arg(size(before - after), size(before)).arg(percent);
+    if (m_runner.waiting() > 0) {
+        //: After Stop in Compress only: "Stopped after 3 of 30: saved 4 MB of 9 MB (44%)".
+        text = tr("Stopped after %1 of %2: saved %3 of %4 (%5%)")
+                   .arg(m_runner.total() - m_runner.waiting())
+                   .arg(m_runner.total())
+                   .arg(size(before - after), size(before))
+                   .arg(percent);
+    }
     if (failed > 0) {
         text = tr("%1, %n not saved", nullptr, failed).arg(text);
     }
@@ -1561,7 +1713,7 @@ void BatchPage::showCompressDone(int failed)
 
 void BatchPage::dragEnterEvent(QDragEnterEvent* event)
 {
-    if (event->mimeData()->hasUrls()) {
+    if (event->mimeData()->hasUrls() && !m_runner.isRunning()) {
         event->acceptProposedAction();
     }
 }
