@@ -135,8 +135,7 @@ ExportSheet::ExportSheet(const QString& source, const QSize& photoSize, const co
     setLabelColumn(form, kLabelColumn);
     QVBoxLayout* column = sheetLayout(this, foot);
     column->setSpacing(kGapGroups);
-    column->addLayout(heading);
-    column->addLayout(form);
+    addScrollingContent(column, heading, form, this);
     updateForFormat();
     setSize(Size::Regular);
 

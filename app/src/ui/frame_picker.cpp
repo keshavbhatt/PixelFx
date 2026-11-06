@@ -70,10 +70,15 @@ QSize FramePicker::sizeHint() const
     return {kWidth, heightForWidth(kWidth)};
 }
 
+QSize FramePicker::minimumSizeHint() const
+{
+    return sizeHint();
+}
+
 QRectF FramePicker::photoRect() const
 {
     // The photo's shape, as large as the picker allows, in the middle.
-    const QSizeF area(width(), heightForWidth(width()));
+    const QSizeF area(width(), std::min(height(), heightForWidth(width())));
     const QSizeF shape = m_photo.isNull() ? area : QSizeF(m_photo.size()).scaled(area, Qt::KeepAspectRatio);
     return {(area.width() - shape.width()) / 2, (area.height() - shape.height()) / 2, shape.width(),
             shape.height()};
@@ -183,22 +188,40 @@ void FramePicker::mouseReleaseEvent(QMouseEvent* /*event*/)
     }
 }
 
+Qt::Orientation FramePicker::freeDirection() const
+{
+    // Without a picture yet the picker shows a 3:2 shape (heightForWidth).
+    const QSizeF shape = m_photo.isNull() ? QSizeF(3, 2) : QSizeF(m_photo.size());
+    const double frameRatio =
+        m_frame.isEmpty() ? 1.0 : static_cast<double>(m_frame.width()) / m_frame.height();
+    return frameRatio < shape.width() / shape.height() ? Qt::Horizontal : Qt::Vertical;
+}
+
 void FramePicker::keyPressEvent(QKeyEvent* event)
 {
-    const QSizeF free = spare();
-    const QPointF step(free.width() * kStep, free.height() * kStep);
+    // A step is a share of the free range, whatever the picker's size.
+    const bool across = freeDirection() == Qt::Horizontal;
+    const QPointF at = m_anchor;
     switch (event->key()) {
     case Qt::Key_Left:
-        moveBy(QPointF(-step.x(), 0));
+        if (across) {
+            setAnchor({at.x() - kStep, at.y()});
+        }
         return;
     case Qt::Key_Right:
-        moveBy(QPointF(step.x(), 0));
+        if (across) {
+            setAnchor({at.x() + kStep, at.y()});
+        }
         return;
     case Qt::Key_Up:
-        moveBy(QPointF(0, -step.y()));
+        if (!across) {
+            setAnchor({at.x(), at.y() - kStep});
+        }
         return;
     case Qt::Key_Down:
-        moveBy(QPointF(0, step.y()));
+        if (!across) {
+            setAnchor({at.x(), at.y() + kStep});
+        }
         return;
     case Qt::Key_Home:
         setAnchor({0.5, 0.5});

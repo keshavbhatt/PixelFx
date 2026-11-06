@@ -73,6 +73,22 @@ Decisions the work stopped at; everything else went ahead within the approved mo
 
 ## Sessions (newest first)
 
+### 2026-11-06 (sheets that fit the window)
+
+- Fixed (owner's report): Export on a photo whose shape differs from the size squeezed the
+  framing card, its picture drawn over Crop to fill and Fit inside. Sheets sized themselves to
+  their content once, when built, so a card shown later was squeezed, and Export with the card
+  is taller than many windows. Every sheet except the editor sheets now follows its content's
+  height as it changes, no taller than the window under it (and the screen), and stays centred.
+  Export's form scrolls in a short window while its title and buttons stay, the scroll bar in
+  the sheet's right padding (`SheetScroll`, `addScrollingContent`). The frame picture keeps its
+  height and draws inside it; its arrow keys no longer depend on its size.
+- The same squeeze showed in Save as preset (its rows overlapping); it now gets its height.
+  Its "Black & white" part read "Black _white" ("&" taken as a shortcut mark): fixed.
+- Checks: 38 app suites (the sheet growing with the card and shrinking back, the picture at
+  full height, the part's name), the linters; grabs of Export on a portrait photo at three
+  window sizes and of the other sheets, unchanged but Save as preset.
+
 ### 2026-11-06 (Use lens profile in Optics)
 
 - The approved `editor-lens-profile.html`: Use lens profile at the top of Optics with the

@@ -65,7 +65,7 @@ PartChecklist::PartChecklist(const pfx::Settings& settings, const QStringList& p
                 label = unit.label;
             }
         }
-        auto* box = new QCheckBox(label, this);
+        auto* box = new QCheckBox(buttonText(label), this);
         auto* line = new QHBoxLayout;
         line->setSpacing(kGapRelated);
         line->addWidget(box);

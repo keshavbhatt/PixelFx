@@ -7,6 +7,7 @@
 #include "ui/style.h"
 
 #include <QApplication>
+#include <QCheckBox>
 #include <QLabel>
 #include <QLineEdit>
 #include <QPushButton>
@@ -243,6 +244,12 @@ private Q_SLOTS:
         QVERIFY(notes.contains(u"Clarity, Sharpen"_s));
         QVERIFY(notes.contains(u"3 changed"_s));
         QVERIFY(!notes.contains(u"1 changed"_s)); // the curve is not a slider: no note
+        // "&" is shown, not taken as a shortcut mark.
+        QStringList boxes;
+        for (const QCheckBox* box : sheet.findChildren<QCheckBox*>()) {
+            boxes << box->text();
+        }
+        QVERIFY(boxes.contains(u"Black && white"_s));
     }
 };
 

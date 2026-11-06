@@ -9,6 +9,9 @@
 #include <QMouseEvent>
 #include <QPainter>
 #include <QPainterPath>
+#include <QScreen>
+#include <QScrollBar>
+#include <QVBoxLayout>
 #include <QWindow>
 
 #include <algorithm>
@@ -92,20 +95,52 @@ void Sheet::setSize(Size size)
         m_resizable = true;
         return;
     }
+    m_followsContent = true;
     fitHeight();
+}
+
+int Sheet::heightLimit() const
+{
+    constexpr int kMargin = 24; // the window shows above and below the sheet
+    const QWidget* under = parentWidget() != nullptr ? parentWidget()->window() : nullptr;
+    const QScreen* display = under != nullptr ? under->screen() : screen();
+    int limit = display != nullptr ? display->availableGeometry().height() : QWIDGETSIZE_MAX;
+    if (under != nullptr) {
+        limit = std::min(limit, under->height());
+    }
+    return std::max(0, limit - (2 * kMargin));
 }
 
 void Sheet::fitHeight()
 {
     // Measured at the sheet's own width: text that wraps is as tall as it is at this width.
     QLayout* content = layout();
-    if (content == nullptr) {
+    if (content == nullptr || m_fitting) {
         return;
     }
+    m_fitting = true;
     content->activate();
-    const int height = content->hasHeightForWidth() ? content->totalHeightForWidth(width())
-                                                    : content->totalSizeHint().height();
-    resize(width(), std::max(height, content->totalMinimumSize().height()));
+    const int natural = content->hasHeightForWidth() ? content->totalHeightForWidth(width())
+                                                     : content->totalSizeHint().height();
+    const int height = std::max(std::min(natural, heightLimit()), content->totalMinimumSize().height());
+    if (height != this->height()) {
+        resize(width(), height);
+        // An open sheet stays in the middle of its window as it grows or shrinks.
+        if (isVisible() && parentWidget() != nullptr) {
+            const QRect under = parentWidget()->window()->geometry();
+            move(x(), under.top() + ((under.height() - height) / 2));
+        }
+    }
+    m_fitting = false;
+}
+
+bool Sheet::event(QEvent* event)
+{
+    const bool handled = QDialog::event(event);
+    if (event->type() == QEvent::LayoutRequest && m_followsContent) {
+        fitHeight(); // a row shown or hidden, text that changed
+    }
+    return handled;
 }
 
 void Sheet::paintEvent(QPaintEvent* /*event*/)
@@ -202,6 +237,72 @@ void Sheet::hideEvent(QHideEvent* event)
     }
     delete m_scrim;
     QDialog::hideEvent(event);
+}
+
+SheetScroll::SheetScroll(QWidget* content, int edge, QWidget* parent)
+    : QScrollArea(parent)
+{
+    setObjectName(QStringLiteral("sheetScroll"));
+    setFrameShape(QFrame::NoFrame);
+    setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    setWidgetResizable(true);
+    setWidget(content);
+    viewport()->setAutoFillBackground(false); // the sheet's own panel shows through
+    content->setAutoFillBackground(false);
+    content->installEventFilter(this);
+    const auto keepEdge = [this, content, edge](int max) {
+        if (QLayout* layout = content->layout()) {
+            const int bar = max > 0 ? verticalScrollBar()->sizeHint().width() : 0;
+            const QMargins m = layout->contentsMargins();
+            layout->setContentsMargins(m.left(), m.top(), std::max(0, edge - bar), m.bottom());
+        }
+    };
+    keepEdge(0);
+    connect(verticalScrollBar(), &QScrollBar::rangeChanged, this,
+            [keepEdge](int /*min*/, int max) { keepEdge(max); });
+}
+
+SheetScroll::~SheetScroll() = default;
+
+int SheetScroll::heightForWidth(int width) const
+{
+    const QWidget* content = widget();
+    if (content == nullptr) {
+        return 0;
+    }
+    return content->hasHeightForWidth() ? content->heightForWidth(width) : content->sizeHint().height();
+}
+
+QSize SheetScroll::sizeHint() const
+{
+    const int width = widget() != nullptr ? widget()->sizeHint().width() : 0;
+    return {width, heightForWidth(this->width() > 0 ? this->width() : width)};
+}
+
+QSize SheetScroll::minimumSizeHint() const
+{
+    constexpr int kLeast = 120; // a few rows, when the window is very short
+    return {0, std::min(kLeast, sizeHint().height())};
+}
+
+bool SheetScroll::eventFilter(QObject* watched, QEvent* event)
+{
+    if (watched == widget() && event->type() == QEvent::LayoutRequest) {
+        updateGeometry(); // the content changed: the sheet fits it again
+    }
+    return QScrollArea::eventFilter(watched, event);
+}
+
+void addScrollingContent(QVBoxLayout* column, QLayout* heading, QLayout* content, QWidget* sheet)
+{
+    const QMargins padding = column->contentsMargins();
+    column->setContentsMargins(padding.left(), padding.top(), 0, padding.bottom());
+    heading->setContentsMargins(0, 0, padding.right(), 0);
+    column->addLayout(heading);
+    auto* body = new QWidget(sheet);
+    body->setLayout(content);
+    content->setContentsMargins(0, 0, 0, 0);
+    column->addWidget(new SheetScroll(body, padding.right(), sheet), 1);
 }
 
 } // namespace pixelfx::ui

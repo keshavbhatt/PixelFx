@@ -102,6 +102,31 @@ private Q_SLOTS:
         QVERIFY(!same.framePicker()->isVisibleTo(&same));
     }
 
+    void theSheetFollowsTheFramingCardAndNeverSqueezesIt()
+    {
+        // Opened on the photo's own shape, then a size of another: the card shows and the sheet
+        // grows for it, scrolling when the screen is too short, the picture at its full height.
+        ExportSheet sheet(u"/p/photo.jpg"_s, QSize(3000, 4000), ExportOptions());
+        QImage photo(150, 200, QImage::Format_RGB32);
+        photo.fill(Qt::gray);
+        sheet.setPreview(photo);
+        sheet.show();
+        QVERIFY(QTest::qWaitForWindowExposed(&sheet));
+        auto* picker = sheet.framePicker();
+        QVERIFY(!picker->isVisible());
+        const int before = sheet.height();
+        QComboBox* list = sheet.sizeList();
+        list->setCurrentIndex(list->findText(u"Instagram portrait · 1080 x 1350 · 4:5"_s));
+        QTRY_VERIFY(picker->isVisible());
+        QTRY_VERIFY(sheet.height() > before);
+        QVERIFY(sheet.height() <= sheet.heightLimit());
+        QTRY_COMPARE(picker->height(), picker->sizeHint().height());
+        // Back to the photo's shape: the card goes and the sheet shrinks to its content again.
+        list->setCurrentIndex(1); // Original
+        QTRY_VERIFY(!picker->isVisible());
+        QTRY_COMPARE(sheet.height(), before);
+    }
+
     void watermarkRowListsTheSavedOnes()
     {
         QTemporaryDir dir;

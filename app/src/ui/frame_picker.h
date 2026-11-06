@@ -30,6 +30,8 @@ public:
     [[nodiscard]] bool hasHeightForWidth() const override { return true; }
     [[nodiscard]] int heightForWidth(int width) const override;
     [[nodiscard]] QSize sizeHint() const override;
+    /// As tall as the sizeHint: the picture is never squeezed under its buttons.
+    [[nodiscard]] QSize minimumSizeHint() const override;
 
 Q_SIGNALS:
     void anchorChanged(QPointF anchor);
@@ -45,6 +47,9 @@ private:
     [[nodiscard]] QRectF photoRect() const;
     /// The spare length of the photo outside the frame, in widget pixels, per axis.
     [[nodiscard]] QSizeF spare() const;
+    /// The way the frame can move: across a photo wider than the frame, or up and down one
+    /// taller. From the shapes alone, so it holds before the picker is laid out.
+    [[nodiscard]] Qt::Orientation freeDirection() const;
     void moveBy(QPointF pixels);
 
     QImage m_photo;
