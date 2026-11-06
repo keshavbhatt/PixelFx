@@ -58,14 +58,19 @@ NameField::NameField(QWidget* parent)
     m_rows->setContentsMargins(0, 2, 0, 0);
     m_rows->setHorizontalSpacing(6);
     m_rows->setVerticalSpacing(4);
+    // The new name at the right, whole when it fits; when a name is long the source gives way
+    // first, both cut in the middle so their ends stay.
     m_rows->setColumnStretch(0, 1);
     for (int i = 0; i < kShown; ++i) {
         auto* source = new ElidedLabel(this);
         source->setObjectName(u"monoMuted"_s);
+        source->setElideMode(Qt::ElideMiddle);
         auto* arrow = new QLabel(u"→"_s, this);
         arrow->setObjectName(u"faint"_s);
-        auto* name = new QLabel(this);
+        auto* name = new ElidedLabel(this);
         name->setObjectName(u"mono"_s);
+        name->setElideMode(Qt::ElideMiddle);
+        name->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred); // its width, if there is room
         m_rows->addWidget(source, i, 0);
         m_rows->addWidget(arrow, i, 1);
         m_rows->addWidget(name, i, 2);
@@ -179,6 +184,8 @@ void NameField::refresh()
         taken.insert(made.toLower());
         source->setText(file);
         name->setText(made);
+        source->setToolTip(file); // whole, when cut short
+        name->setToolTip(made);
         //: A name preview row read by screen readers: "IMG_0412.HEIC becomes trip-001.jpg".
         source->setAccessibleName(tr("%1 becomes %2").arg(file, made));
     }

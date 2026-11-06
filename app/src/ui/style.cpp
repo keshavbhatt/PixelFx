@@ -7,6 +7,7 @@
 #include <QAbstractItemView>
 #include <QApplication>
 #include <QButtonGroup>
+#include <QComboBox>
 #include <QDialog>
 #include <QFile>
 #include <QFocusEvent>
@@ -742,6 +743,13 @@ QFrame* segmentBox(const QStringList& names, int checked, QButtonGroup* group, Q
         row->addStretch();
     }
     return box;
+}
+
+void fitToPanel(QComboBox* list)
+{
+    constexpr int kShortest = 12; // characters shown at the least
+    list->setSizeAdjustPolicy(QComboBox::AdjustToMinimumContentsLengthWithIcon);
+    list->setMinimumContentsLength(kShortest);
 }
 
 QFrame* smallSegments(QFrame* box)

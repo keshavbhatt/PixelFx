@@ -664,6 +664,7 @@ QHBoxLayout* BatchPage::buildSecondRow(QWidget* box)
 QComboBox* BatchPage::buildSizes(QWidget* parent)
 {
     auto* sizes = new QComboBox(parent);
+    fitToPanel(sizes);
     sizes->setAccessibleName(tr("Resize"));
     sizelist::install(sizes);
     sizelist::addHeading(sizes, tr("Keep"));
@@ -707,6 +708,7 @@ QWidget* BatchPage::buildSaveAs(QWidget* parent)
     auto* box = new QWidget(parent);
     QVBoxLayout* column = sectionColumn(tr("5. Save as"), box);
     m_format = new QComboBox(box);
+    fitToPanel(m_format);
     m_format->setAccessibleName(tr("Format"));
     refreshFormats();
     connect(m_format, &QComboBox::activated, this, [this] {

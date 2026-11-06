@@ -13,6 +13,7 @@
 #include <QLabel>
 #include <QLineEdit>
 #include <QPushButton>
+#include <QScrollArea>
 #include <QSignalSpy>
 #include <QTemporaryDir>
 #include <QTest>
@@ -145,6 +146,38 @@ private Q_SLOTS:
                 resized || (t.startsWith(u"No edits: each photo is resized to "_s) && t.contains(u"2048"_s));
         }
         QVERIFY(resized);
+    }
+
+    void thePanelFitsItsWidthAtTheDesktopsTextSize()
+    {
+        // At 13 px, a desktop's text (KDE's 10 pt), nothing in the right panel may be wider than
+        // the panel, or its right side is cut off. A list's longest choice did that.
+        const QFont before = QApplication::font();
+        QFont desktop = before;
+        desktop.setPixelSize(13);
+        QApplication::setFont(desktop);
+        QTemporaryDir dir;
+        pfx::Image img(40, 30);
+        img.fill(0.3F, 0.3F, 0.3F);
+        const QString photo = dir.filePath(u"a-photo-with-a-long-name-from-a-camera-0412.png"_s);
+        QVERIFY(pfx::save(img, photo.toStdString()).ok());
+        for (const bool compressOnly : {false, true}) {
+            BatchPage page({}, {}, compressOnly);
+            page.resize(1440, 860);
+            page.addPaths({photo});
+            page.show();
+            QVERIFY(QTest::qWaitForWindowExposed(&page));
+            for (const QScrollArea* area : page.findChildren<QScrollArea*>()) {
+                const QWidget* content = area->widget();
+                if (content != nullptr && content->objectName() == u"batchPanelContent"_s &&
+                    area->isVisible()) {
+                    QVERIFY2(content->minimumSizeHint().width() <= area->viewport()->width(),
+                             qPrintable(u"%1 px of content in %2 px"_s.arg(content->minimumSizeHint().width())
+                                            .arg(area->viewport()->width())));
+                }
+            }
+        }
+        QApplication::setFont(before);
     }
 
     void theNameShowsTheFirstNamesAndSaysWhenTheyClash()

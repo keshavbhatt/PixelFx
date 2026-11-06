@@ -683,6 +683,7 @@ WatermarkPicker::WatermarkPicker(const QString& current, QWidget* parent)
     , m_folder(core::WatermarkLibrary::defaultFolder())
     , m_remembered(current)
 {
+    fitToPanel(m_box); // a long watermark name never widens the panel
     m_box->setAccessibleName(tr("Watermark"));
     m_edit->setObjectName(u"small"_s);
     refresh(current);
