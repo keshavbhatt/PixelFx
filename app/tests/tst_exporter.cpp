@@ -1,6 +1,7 @@
 #include "core/watermark.h"
 #include "services/exporter.h"
 
+#include <QDir>
 #include <QFile>
 #include <QFileInfo>
 #include <QImage>
@@ -9,6 +10,7 @@
 #include <QTest>
 
 #include <cmath>
+#include <memory>
 #include <pfx/io.h>
 
 using namespace Qt::StringLiterals;
@@ -44,6 +46,34 @@ private Q_SLOTS:
         QVERIFY(written.ok());
         QCOMPARE(written.value().image.width(), 300);
         QVERIFY(written.value().image.pixel(10, 10)[0] > 0.3F); // 0.1 * 4
+    }
+
+    void severalPhotosOfOneNameAreAllKeptEvenWithOverwrite()
+    {
+        // The photos of one export of several share their names so far: two photo.png from two
+        // folders become photo-edit.png and photo-edit (2).png, never one over the other.
+        QTemporaryDir dir;
+        QStringList sources;
+        for (const QString& folder : {u"a"_s, u"b"_s}) {
+            QDir().mkpath(dir.filePath(folder));
+            pfx::Image img(40, 30);
+            img.fill(folder == u"a"_s ? 0.2F : 0.8F, 0.3F, 0.4F);
+            sources << dir.filePath(folder + u"/photo.png"_s);
+            QVERIFY(pfx::save(img, sources.last().toStdString()).ok());
+        }
+        ExportOptions o;
+        o.folder = dir.filePath(u"out"_s);
+        o.extension = u"png"_s;
+        o.ifExists = ExportOptions::IfExists::Overwrite;
+        Exporter exporter;
+        QSignalSpy done(&exporter, &Exporter::finished);
+        const auto claims = std::make_shared<pixelfx::core::NameClaims>();
+        for (const QString& source : sources) {
+            exporter.start(source, {}, o, claims);
+            QVERIFY(done.wait(15000));
+        }
+        QCOMPARE(QDir(o.folder).entryList(QDir::Files).size(), 2);
+        QVERIFY(done.at(0).first().toString() != done.at(1).first().toString());
     }
 
     void aPreviewOfTheExportIsPreparedSmall()

@@ -7,6 +7,7 @@
 #include <QString>
 
 #include <functional>
+#include <memory>
 #include <pfx/image.h>
 #include <pfx/io.h>
 #include <pfx/settings.h>
@@ -64,7 +65,10 @@ public:
     explicit Exporter(QObject* parent = nullptr);
     ~Exporter() override;
 
-    void start(const QString& source, const pfx::Settings& settings, const core::ExportOptions& options);
+    /// Exports on a worker. `claims` is shared by the photos of one export of several, so two of
+    /// one name never write one file.
+    void start(const QString& source, const pfx::Settings& settings, const core::ExportOptions& options,
+               std::shared_ptr<core::NameClaims> claims = {});
     /// The same pixels as an export, onto `copied` instead of a file (Copy to clipboard).
     void startCopy(const QString& source, const pfx::Settings& settings, const core::ExportOptions& options);
     [[nodiscard]] bool isBusy() const { return m_busy; }

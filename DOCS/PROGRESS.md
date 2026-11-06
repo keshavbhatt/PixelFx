@@ -113,6 +113,8 @@ Decisions the work stopped at; everything else went ahead within the approved mo
   choosing at once). A run now keeps the names its photos took (`core::NameClaims`, shared by
   its workers): a name another photo of the run has gets a number, whatever If it exists says
   of the files from before. Compress only the same. Tested with sixteen photos, four at once.
+  Exporting a selection of the filmstrip the same: with Overwrite, a second photo.jpg from
+  another folder replaced the first.
 - Every unnamed button was looked for: only the magnifier in the search fields had no name for
   a screen reader; one helper adds it, named "Search". Choose the recipe lacked that magnifier,
   which its mock shows, and was 980 px wide, the mock 900 (a sheet size of its own now).

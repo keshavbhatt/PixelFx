@@ -249,6 +249,7 @@ private:
         pfx::Settings settings;
     };
     QList<ExportJob> m_exportQueue;
+    std::shared_ptr<core::NameClaims> m_exportClaims; ///< the names the queue's photos took
     core::ExportOptions m_exportOptions;
     int m_exportTotal = 0;
     int m_exportSaved = 0;

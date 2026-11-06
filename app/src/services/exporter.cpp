@@ -262,7 +262,8 @@ void Exporter::startCopy(const QString& source, const pfx::Settings& settings,
     }));
 }
 
-void Exporter::start(const QString& source, const pfx::Settings& settings, const core::ExportOptions& options)
+void Exporter::start(const QString& source, const pfx::Settings& settings, const core::ExportOptions& options,
+                     std::shared_ptr<core::NameClaims> claims)
 {
     m_busy = true;
     auto* watcher = new QFutureWatcher<ExportOutcome>(this);
@@ -280,8 +281,9 @@ void Exporter::start(const QString& source, const pfx::Settings& settings, const
             Q_EMIT finished(o.target);
         }
     });
-    watcher->setFuture(QtConcurrent::run([source, settings, options] {
-        return exportFile(source, [&settings](const pfx::Image&) { return settings; }, options);
+    watcher->setFuture(QtConcurrent::run([source, settings, options, claims = std::move(claims)] {
+        return exportFile(
+            source, [&settings](const pfx::Image&) { return settings; }, options, {}, claims.get());
     }));
 }
 

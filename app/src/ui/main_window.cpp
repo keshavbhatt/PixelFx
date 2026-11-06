@@ -311,6 +311,7 @@ void MainWindow::exportPhoto()
     m_exportOptions = sheet.options();
     m_settings.setExportOptions(m_exportOptions);
     m_exportQueue = jobs;
+    m_exportClaims = std::make_shared<core::NameClaims>();
     m_exportTotal = static_cast<int>(jobs.size());
     m_exportSaved = 0;
     exportNext();
@@ -393,7 +394,7 @@ void MainWindow::exportNext()
     const int number = m_exportTotal - static_cast<int>(m_exportQueue.size());
     showToast(m_exportTotal > 1 ? tr("Exporting %1 of %2").arg(number).arg(m_exportTotal)
                                 : tr("Exporting %1").arg(QFileInfo(job.path).fileName()));
-    m_exporter.start(job.path, job.settings, m_exportOptions);
+    m_exporter.start(job.path, job.settings, m_exportOptions, m_exportClaims);
 }
 
 void MainWindow::showToast(const QString& text)
