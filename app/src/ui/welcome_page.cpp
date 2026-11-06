@@ -42,10 +42,11 @@ WelcomePage::WelcomePage(QWidget* parent)
 
     auto* outer = new QVBoxLayout(this);
     outer->setContentsMargins(32, 32, 32, 32);
-    outer->addStretch(2);
+    // The card and Recent together in the middle (welcome.html).
+    outer->addStretch(1);
     outer->addWidget(m_dropZone, 0, Qt::AlignHCenter);
     outer->addWidget(m_recent, 0, Qt::AlignHCenter);
-    outer->addStretch(3);
+    outer->addStretch(1);
 }
 
 void WelcomePage::buildDropZone()
@@ -56,7 +57,7 @@ void WelcomePage::buildDropZone()
     auto* glyph = new QLabel(m_dropZone);
     icons::setGlyph(glyph, u"images"_s, tokens().muted, 48);
     glyph->setAlignment(Qt::AlignCenter);
-    glyph->setFixedHeight(62);
+    glyph->setFixedHeight(56);
     glyph->setAlignment(Qt::AlignHCenter | Qt::AlignTop);
     auto* title = new QLabel(tr("Drop photos here"), m_dropZone);
     title->setObjectName(u"welcomeTitle"_s);
@@ -146,7 +147,7 @@ void WelcomePage::buildRecent()
     m_cards->setSpacing(kGapGroups);
     m_cards->addStretch();
     auto* recentColumn = new QVBoxLayout(m_recent);
-    recentColumn->setContentsMargins(0, 24, 0, 0);
+    recentColumn->setContentsMargins(0, 12, 0, 0);
     recentColumn->setSpacing(kGapItems);
     recentColumn->addLayout(heading);
     recentColumn->addLayout(m_cards);
