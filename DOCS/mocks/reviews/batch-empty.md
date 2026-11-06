@@ -24,7 +24,7 @@ it there. Signature: the welcome page's drop zone, the same shape and words, in 
   (7.0:1, 6.8:1); the recipe hint 12 px `--faint` (5.1:1, 5.2:1).
 - Add photos is the primary button, Add folder secondary, both 32 px tall, 10 px apart: the
   header's two buttons, the same words and glyphs.
-- Greyed out: the list or grid switch, Clear and Process (disabled controls are exempt from
+- Greyed out: Clear and Process (disabled controls are exempt from
   the contrast minimum; each also says why in its tooltip).
 
 ## Accessibility

@@ -27,13 +27,11 @@ class QFormLayout;
 class QHBoxLayout;
 class QLabel;
 class QLineEdit;
-class QListWidget;
 class QProgressBar;
 class QPushButton;
 class QSlider;
 class QStackedWidget;
 class QTimer;
-class QToolButton;
 class QVBoxLayout;
 
 namespace pixelfx::ui {
@@ -42,7 +40,7 @@ class PathLabel;
 class SliderRow;
 
 /// Batch, in two modes chosen at the top of the right panel (1. What to do).
-/// Edit and export: on the left the photos, as a list or a grid, added as files or whole folders
+/// Edit and export: on the left the photos, as a list, added as files or whole folders
 /// or dropped, the first one before and after the recipe, and while running the progress (Pause,
 /// Stop), then the summary (Retry failed, Show in folder); on the right 2. Recipe (a preset or
 /// look, or the settings of the photo open in the editor, then a preset on top, Auto enhance,
@@ -154,7 +152,7 @@ private:
     QWidget* buildPreview(QWidget* parent);
     /// The empty list: a drop zone with Add photos and Add folder.
     QWidget* buildEmpty(QWidget* parent);
-    /// The list, the grid, Compress only's list, or the drop zone when there are no photos.
+    /// The list, Compress only's list, or the drop zone when there are no photos.
     void refreshView();
     void setDragActive(bool active);
     QWidget* buildStatus(QWidget* parent);
@@ -238,8 +236,6 @@ private:
     QVBoxLayout* m_rows = nullptr;
     QWidget* m_rowsBox = nullptr;
     std::vector<FileRow> m_fileRows; ///< the list's rows, in the order of m_files
-    QListWidget* m_grid = nullptr;
-    QButtonGroup* m_viewModes = nullptr;
     QWidget* m_status = nullptr;
     QLabel* m_statusIcon = nullptr;
     QLabel* m_statusText = nullptr;
@@ -288,7 +284,6 @@ private:
     class CompressList* m_compressList = nullptr;
     class CompressCompare* m_compare = nullptr;
     QLabel* m_listTitle = nullptr;
-    QWidget* m_viewBox = nullptr;
     QWidget* m_sortBox = nullptr;
     quint64 m_compareGeneration = 0;
 };

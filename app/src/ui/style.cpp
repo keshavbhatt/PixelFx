@@ -281,7 +281,6 @@ const QString kControls = uR"(
         #headerSep { background: {{border}}; }
         #wordmark { font-weight: 700; font-size: 14px; }
         #batchPage, #batchList, #batchRows, #batchPanelContent { background: {{panel}}; }
-        QListWidget#batchGrid { background: {{panel}}; border: 0; }
         #batchHead { border-bottom: 1px solid {{border}}; }
         QLabel#cardName { font-weight: 600; }
         QWidget#batchPanelContent QCheckBox, QWidget#batchPanelContent QLabel#itemTitle { font-size: 12px; }
@@ -299,9 +298,6 @@ const QString kControls = uR"(
         QFrame#segmentBox QPushButton#segment[edge="first"] { border-top-left-radius: 6px; border-bottom-left-radius: 6px; }
         QLabel#fieldLabel { color: {{muted}}; }
         QLabel#fieldLabel:disabled { color: {{faint}}; }
-        QToolButton#segmentIcon { border: 1px solid transparent; border-radius: 6px; padding: 3px 8px; background: transparent; }
-        QToolButton#segmentIcon:checked { background: {{accentSoft}}; }
-        QToolButton#segmentIcon[focusVisible="true"]:focus { border-color: {{accent}}; }
         QFrame#card { border: 1px solid {{border}}; border-radius: 10px; background: {{input}}; }
         QLabel#heading { font-weight: 600; }
         QFrame#pill { border-radius: 10px; background: {{hover}}; }

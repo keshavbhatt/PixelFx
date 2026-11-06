@@ -42,7 +42,6 @@
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QLineEdit>
-#include <QListWidget>
 #include <QLocale>
 #include <QMenu>
 #include <QMessageBox>
@@ -138,12 +137,6 @@ BatchPage::BatchPage(core::ExportOptions output, core::CompressJob job, bool com
                 setFileThumb(fileRow, t.image);
             }
         }
-
-        for (int i = 0; i < m_grid->count(); ++i) {
-            if (m_grid->item(i)->data(Qt::UserRole).toString() == t.path) {
-                m_grid->item(i)->setIcon(QPixmap::fromImage(t.image));
-            }
-        }
         m_compressList->setThumbnail(t.path, t.image);
     });
     connect(m_thumbnails, &services::Thumbnailer::rendered, this, [this](int key, const QImage& image) {
@@ -205,28 +198,7 @@ QWidget* BatchPage::buildListHead(QWidget* parent)
     m_listTitle->setObjectName(u"recentTitle"_s);
     auto* hint = new QLabel(tr("Drop photos or folders here"), head);
     hint->setObjectName(u"muted"_s);
-    // List or grid (Edit and export); the order of the files (Compress only).
-    auto* views = new QFrame(head);
-    m_viewBox = views;
-    views->setObjectName(u"segmentBox"_s);
-    auto* viewRow = new QHBoxLayout(views);
-    viewRow->setContentsMargins(0, 0, 0, 0);
-    viewRow->setSpacing(0);
-    m_viewModes = new QButtonGroup(this);
-    const QStringList glyphs = {u"list"_s, u"layout-grid"_s};
-    const QStringList names = {tr("List"), tr("Grid")};
-    for (int i = 0; i < 2; ++i) {
-        auto* b = new QToolButton(views);
-        b->setObjectName(u"segmentIcon"_s);
-        b->setCheckable(true);
-        b->setChecked(i == 0);
-        b->setIcon(icons::themed(glyphs.at(i), tokens().muted));
-        b->setToolTip(names.at(i));
-        b->setAccessibleName(names.at(i));
-        m_viewModes->addButton(b, i);
-        viewRow->addWidget(b);
-    }
-    connect(m_viewModes, &QButtonGroup::idClicked, this, &BatchPage::refreshView);
+    // The order of the files (Compress only).
     m_sortBox = buildSortBox(head);
     auto* clear = new QPushButton(tr("Clear"), head);
     m_clear = clear;
@@ -244,7 +216,6 @@ QWidget* BatchPage::buildListHead(QWidget* parent)
     row->addWidget(m_listTitle);
     row->addWidget(hint);
     row->addStretch();
-    row->addWidget(views);
     row->addWidget(m_sortBox);
     row->addWidget(clear);
     return head;
@@ -287,15 +258,6 @@ QWidget* BatchPage::buildList()
     scroll->setWidgetResizable(true);
     scroll->setFrameShape(QFrame::NoFrame);
     keepScrollBarInPadding(scroll, m_rows, 8);
-    m_grid = new QListWidget(box);
-    m_grid->setObjectName(u"batchGrid"_s);
-    m_grid->setViewMode(QListView::IconMode);
-    m_grid->setIconSize(QSize(150, 100));
-    m_grid->setGridSize(QSize(172, 140));
-    m_grid->setResizeMode(QListView::Adjust);
-    m_grid->setMovement(QListView::Static);
-    m_grid->setUniformItemSizes(true);
-    m_grid->setSelectionMode(QAbstractItemView::NoSelection);
     m_compressList = new CompressList(box);
     auto* compressScroll = new QScrollArea(box);
     compressScroll->setWidget(m_compressList);
@@ -304,7 +266,6 @@ QWidget* BatchPage::buildList()
     keepScrollBarInPadding(compressScroll, m_compressList->layout(), 8);
     m_views = new QStackedWidget(box);
     m_views->addWidget(scroll);
-    m_views->addWidget(m_grid);
     m_views->addWidget(compressScroll);
     m_views->addWidget(buildEmpty(box));
     m_compare = new CompressCompare(box);
@@ -378,8 +339,9 @@ QWidget* BatchPage::buildEmpty(QWidget* parent)
 
 void BatchPage::refreshView()
 {
-    constexpr int kCompressPage = 2;
-    constexpr int kEmptyPage = 3;
+    constexpr int kListPage = 0;
+    constexpr int kCompressPage = 1;
+    constexpr int kEmptyPage = 2;
     if (m_files.isEmpty()) {
         // What to drop, in the mode's own words.
         icons::setGlyph(m_emptyGlyph, m_compressOnly ? u"download"_s : u"images"_s, tokens().muted, 44);
@@ -393,7 +355,7 @@ void BatchPage::refreshView()
         m_views->setCurrentIndex(kEmptyPage);
         return;
     }
-    m_views->setCurrentIndex(m_compressOnly ? kCompressPage : m_viewModes->checkedId());
+    m_views->setCurrentIndex(m_compressOnly ? kCompressPage : kListPage);
 }
 
 void BatchPage::setDragActive(bool active)
@@ -1400,13 +1362,9 @@ void BatchPage::rebuildRows()
         delete item;
     }
     m_fileRows.clear();
-    m_grid->clear();
     refreshView();
     for (const QString& file : m_files) {
         m_rows->addWidget(makeRow(file));
-        auto* item = new QListWidgetItem(QFileInfo(file).fileName(), m_grid);
-        item->setData(Qt::UserRole, file);
-        item->setToolTip(describe(file));
     }
     m_rows->addStretch();
     m_compressList->setFiles(m_files);
@@ -1539,7 +1497,6 @@ void BatchPage::setCompressOnly(bool on)
     m_modeNote->setVisible(on);
     m_panels->setCurrentIndex(on ? 1 : 0);
     m_listTitle->setText(tr("Photos"));
-    m_viewBox->setVisible(!on);
     m_sortBox->setVisible(on);
     refreshView();
     m_preview->setVisible(!on && !m_files.isEmpty());
@@ -1677,11 +1634,6 @@ void BatchPage::refreshRow(int index)
     const bool explain = m_runner.state(index) == S::Failed || m_runner.state(index) == S::Skipped;
     row.row->setSubtitle(explain ? m_runner.reason(index) : describe(m_files.at(index)));
     row.row->setSubtitleError(explain);
-    // The grid says the same: a photo not saved is marked and its tooltip says why.
-    if (QListWidgetItem* item = m_grid->item(index)) {
-        item->setForeground(m_runner.state(index) == S::Failed ? QBrush(tokens().danger) : QBrush());
-        item->setToolTip(explain ? m_runner.reason(index) : describe(m_files.at(index)));
-    }
 }
 
 void BatchPage::refreshStatus()
@@ -1777,7 +1729,6 @@ void BatchPage::refreshLocks()
 {
     const bool idle = !m_runner.isRunning();
     m_clear->setEnabled(idle && !m_files.isEmpty());
-    m_viewBox->setEnabled(!m_files.isEmpty());
     for (QAbstractButton* mode : m_modes->buttons()) {
         mode->setEnabled(idle);
     }

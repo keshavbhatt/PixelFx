@@ -38,6 +38,7 @@
 | `editor-lens-profile.html` | 2026-11-06 (`mocks/reviews/editor-lens-profile.md`) | approved 2026-11-06 (the two EmulsionPresets lens tools join the catalog) |
 | `close-photo.html` | 2026-11-06 (`mocks/reviews/close-photo.md`) | approved 2026-11-06 (with Remember edits off, closing an edited photo asks first) |
 | `batch-empty.html`, `batch-recipe-picker.html` | 2026-11-06 (`mocks/reviews/batch-empty.md`, `batch-recipe-picker.md`) | approved 2026-11-06 |
+| `batch.html` and its states, without the list or grid switch | 2026-11-06 (the owner's call) | approved 2026-11-06 (the grid showed less than the list: no size, no status, no reason a photo was not saved) |
 
 ## Waiting for the owner (2026-11-05)
 
@@ -74,6 +75,14 @@ Decisions the work stopped at; everything else went ahead within the approved mo
     Heal); Reveal dust explains itself in its tooltip rather than a first-time line.
 
 ## Sessions (newest first)
+
+### 2026-11-06 (Batch without the grid)
+
+- The owner dropped Batch's list or grid switch: the grid showed only names and pictures, none
+  of the list's size, status or reason a photo was not saved, and it only appeared in Edit and
+  export. Batch shows the list; the five Batch mocks lose the switch.
+- About cuts its icon around the part the icon draws: the lens's side at the bottom was cut off
+  when the same margin was taken from every edge.
 
 ### 2026-11-06 (testing every feature, the owner away)
 
