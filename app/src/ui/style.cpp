@@ -208,7 +208,7 @@ const QString kSheet = uR"(
 // start, because style sheets take images only from files.
 const QString kControls = uR"(
         QCheckBox, QRadioButton { spacing: 8px; }
-        QCheckBox::indicator { width: 14px; height: 14px; border-radius: 4px; border: 1.5px solid {{faint}}; background: transparent; }
+        QCheckBox::indicator { width: 13px; height: 13px; border-radius: 4px; border: 1.5px solid {{faint}}; background: transparent; }
         QCheckBox::indicator:hover { border-color: {{muted}}; }
         QCheckBox::indicator:checked { background: {{accentStrong}}; border-color: {{accentStrong}}; image: url({{glyphs}}/check.svg); }
         QCheckBox::indicator:indeterminate { background: {{accentStrong}}; border-color: {{accentStrong}}; image: url({{glyphs}}/part.svg); }
@@ -277,6 +277,7 @@ const QString kControls = uR"(
         #batchPage, #batchList, #batchRows, #batchPanelContent { background: {{panel}}; }
         QListWidget#batchGrid { background: {{panel}}; border: 0; }
         #batchHead { border-bottom: 1px solid {{border}}; }
+        QLabel#cardName { font-weight: 600; }
         #batchBar { background: {{panel}}; border-top: 1px solid {{border}}; }
         QLabel#comparePicture { background: {{canvas}}; border-radius: 6px; }
         QLabel#batchThumb { background: {{input}}; border-radius: 4px; }
@@ -882,14 +883,19 @@ FootButtons footButtons(QWidget* parent, const QString& primary, const QList<QWi
     return {row, cancel, button};
 }
 
-QWidget* footBar(QWidget* parent, QLayout* foot, int padding)
+QWidget* footBar(QWidget* parent, QLayout* foot, int padding, int vertical)
 {
     auto* bar = new QWidget(parent);
     bar->setObjectName(QStringLiteral("footBar"));
     bar->setAttribute(Qt::WA_StyledBackground);
-    foot->setContentsMargins(padding, 12, padding, 12);
+    foot->setContentsMargins(padding, vertical, padding, vertical);
     bar->setLayout(foot);
     return bar;
+}
+
+QWidget* panelFootBar(QWidget* parent, QLayout* foot)
+{
+    return footBar(parent, foot, kPanelPadding, 10);
 }
 
 } // namespace pixelfx::ui

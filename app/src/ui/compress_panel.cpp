@@ -174,7 +174,7 @@ QWidget* CompressPanel::buildFoot(QWidget* parent)
     m_compress = buttons.primary;
     m_compress->setIcon(icons::themed(u"play"_s, Qt::white));
     connect(m_compress, &QPushButton::clicked, this, &CompressPanel::compressRequested);
-    return footBar(parent, buttons.row, kPanelPadding);
+    return panelFootBar(parent, buttons.row);
 }
 
 void CompressPanel::setJob(const core::CompressJob& job)

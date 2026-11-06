@@ -166,6 +166,9 @@ FootButtons footButtons(QWidget* parent, const QString& primary, const QList<QWi
                         bool withCancel = false);
 /// A footer on a bar with a top border, edge to edge: under a sheet whose body runs edge to edge
 /// (Watermark, the look editor) or a side panel (Heal, Crop, Batch).
-QWidget* footBar(QWidget* parent, QLayout* foot, int padding = kSheetPadding);
+QWidget* footBar(QWidget* parent, QLayout* foot, int padding = kSheetPadding, int vertical = 12);
+/// A side panel's foot: 10 px above and below its buttons (sheets have 12), the panel's padding at
+/// the sides.
+QWidget* panelFootBar(QWidget* parent, QLayout* foot);
 
 } // namespace pixelfx::ui

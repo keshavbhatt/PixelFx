@@ -273,7 +273,7 @@ QWidget* CropPanel::buildFoot()
     buttons.primary->setToolTip(tr("Apply the crop (Enter)"));
     connect(buttons.cancel, &QPushButton::clicked, this, [this] { Q_EMIT finished(false); });
     connect(buttons.primary, &QPushButton::clicked, this, [this] { Q_EMIT finished(true); });
-    return footBar(this, buttons.row, kPanelPadding);
+    return panelFootBar(this, buttons.row);
 }
 
 CropPanel::~CropPanel() = default;

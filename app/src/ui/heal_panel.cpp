@@ -55,7 +55,7 @@ HealPanel::HealPanel(HealTool* tool, QWidget* parent)
     column->addWidget(sectionHeading(tr("Heal"), this, kPanelPadding));
     column->addWidget(buildBrush());
     column->addWidget(buildSpots(), 1);
-    column->addWidget(footBar(this, buttons.row, kPanelPadding));
+    column->addWidget(panelFootBar(this, buttons.row));
     connect(m_tool, &HealTool::spotsChanged, this, [this](const pfx::Spots& /*spots*/, bool finished) {
         if (finished) {
             refresh();

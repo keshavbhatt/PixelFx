@@ -149,9 +149,8 @@ BatchPage::BatchPage(core::ExportOptions output, core::CompressJob job, bool com
             return; // a picture for an older recipe
         }
         QLabel* target = key % 2 == 0 ? m_before : m_after;
-        QPixmap pixmap = QPixmap::fromImage(image.scaled(target->size() * devicePixelRatioF(),
-                                                         Qt::KeepAspectRatio, Qt::SmoothTransformation));
-        pixmap.setDevicePixelRatio(devicePixelRatioF());
+        // Rounded as the list's pictures are (batch.html).
+        QPixmap pixmap = roundedPixmap(image, target->size(), devicePixelRatioF(), 4.0);
         target->setPixmap(pixmap);
         if (target == m_after) {
             m_watermark->setPreview(image); // the watermark sheet previews on the batch's own photo
@@ -586,14 +585,26 @@ QWidget* BatchPage::buildRecipe(QWidget* parent)
     column->addWidget(segmentBox({tr("Preset or look"), tr("Settings from a photo")}, 0, m_sources, box,
                                  SegmentFit::Equal));
     connect(m_sources, &QButtonGroup::idClicked, this, [this](int id) { setFromPhoto(id == 1); });
-    column->addWidget(buildRecipeCard(box));
-    column->addLayout(buildSecondRow(box));
     m_auto = new QCheckBox(tr("Auto enhance each photo first"), box);
     connect(m_auto, &QCheckBox::toggled, this, &BatchPage::refreshRecipeCard);
     m_keepEdits = new QCheckBox(tr("Keep edits already made in PixelFx"), box);
     m_keepEdits->setToolTip(tr("Start from each photo's remembered edits instead of the original"));
-    column->addWidget(m_auto);
-    column->addWidget(m_keepEdits);
+    // The card and, close under it, its three options 25 px apart (batch.html).
+    constexpr int kOptionRow = 25;
+    auto* options = new QVBoxLayout;
+    options->setSpacing(0);
+    auto* second = new QWidget(box);
+    second->setLayout(buildSecondRow(box));
+    second->layout()->setContentsMargins(0, 0, 0, 0);
+    for (QWidget* row : {second, static_cast<QWidget*>(m_auto), static_cast<QWidget*>(m_keepEdits)}) {
+        row->setFixedHeight(kOptionRow);
+        options->addWidget(row);
+    }
+    auto* recipe = new QVBoxLayout;
+    recipe->setSpacing(kGapSmall);
+    recipe->addWidget(buildRecipeCard(box));
+    recipe->addLayout(options);
+    column->addLayout(recipe);
     return box;
 }
 
@@ -605,7 +616,7 @@ QWidget* BatchPage::buildRecipeCard(QWidget* box)
     m_cardThumb->setFixedSize(54, 36);
     m_cardThumb->setObjectName(u"cardThumb"_s);
     m_cardName = new ElidedLabel(card);
-    m_cardName->setObjectName(u"itemTitle"_s);
+    m_cardName->setObjectName(u"cardName"_s);
     m_cardDetail = new QLabel(card);
     m_cardDetail->setObjectName(u"itemDetail"_s);
     m_cardDetail->setWordWrap(true); // two lines at the panel's width
@@ -764,7 +775,7 @@ QWidget* BatchPage::buildFoot(QWidget* parent)
     m_process = buttons.primary;
     m_process->setIcon(icons::themed(u"play"_s, Qt::white));
     connect(m_process, &QPushButton::clicked, this, &BatchPage::process);
-    return footBar(parent, buttons.row, kPanelPadding);
+    return panelFootBar(parent, buttons.row);
 }
 
 void BatchPage::refreshFormats()
