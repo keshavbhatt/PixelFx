@@ -94,6 +94,9 @@ const QString kSheet = uR"(
         QListWidget#settingsPages { background: {{bar}}; border: 0; border-right: 1px solid {{border}}; padding-top: 8px; outline: 0; }
         QListWidget#settingsPages::item { padding: 8px 12px; margin: 0 8px; border-radius: 7px; font-weight: 600; }
         QListWidget#settingsPages::item:selected { background: {{accentSoft}}; color: {{accent}}; }
+        QListWidget#pickerGroups { background: {{bar}}; border: 0; border-right: 1px solid {{border}}; padding: 6px 0; outline: 0; }
+        QListWidget#pickerGroups::item { padding: 0 12px; margin: 0 8px; border-radius: 7px; }
+        QListWidget#pickerGroups::item:selected { background: {{accentSoft}}; color: {{accent}}; font-weight: 600; }
         QPushButton#panelTab { padding: 7px 10px 9px; border: 0; border-bottom: 2px solid transparent; border-radius: 0; background: transparent; color: {{muted}}; font-weight: 500; }
         QPushButton#panelTab:checked { border-bottom-color: {{accent}}; color: {{text}}; }
         QPushButton#panelTab:hover { color: {{text}}; }

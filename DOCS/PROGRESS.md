@@ -75,6 +75,27 @@ Decisions the work stopped at; everything else went ahead within the approved mo
 
 ## Sessions (newest first)
 
+### 2026-11-06 (the empty Batch page and Choose the recipe)
+
+- The approved `batch-empty.html`: with no photos the list is a drop zone, Add photos and Add
+  folder, in each mode's words ("Drop photos or folders to compress"), lit with "Drop to add
+  them" while photos are dragged over the page; Clear, the list or grid switch and Process wait
+  for photos.
+- The approved `batch-recipe-picker.html`: Choose the recipe (`RecipePicker`) in place of the
+  menu of every preset. Groups on the left (No look or preset, an opened recipe's own steps,
+  All looks and Mine, Favorites, Recent, the user's groups, then the catalog's categories, with
+  counts), a search through looks and presets by name and description, tiles of the batch's
+  first photo with each, five to a row as the editor's (`tileGrid` takes a column count), the
+  footer saying what the selected one does and its button naming it; double-click or Enter
+  uses a tile. Then add preset opens the same sheet with presets only ("Add a preset on top").
+  The group and the search are kept while the app runs.
+- Plurals: the overwrite question's two counts had no singular; filled, and `tst_plurals` now
+  fails when a count in the code has none.
+- Debug: `PIXELFX_DEBUG_BATCH_STATE=picker` and `ontop` grab the page with the sheet open.
+- Checks: 40 app suites (the drop zone in both modes, the picker's groups, search, choice and
+  buttons, every count's singular), the library tests, the linters; grabs of the empty page in
+  both modes and at 1024 by 640, and of both pickers.
+
 ### 2026-11-06 (the Batch audit)
 
 - An audit of Batch against its mocks (a separate read-only pass) found 34 issues; the owner

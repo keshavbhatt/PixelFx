@@ -611,7 +611,7 @@ QWidget* BatchPage::buildRecipeCard(QWidget* box)
     m_cardDetail->setWordWrap(true); // two lines at the panel's width
     m_cardChange = new QPushButton(tr("Change"), card);
     m_cardChange->setObjectName(u"small"_s);
-    connect(m_cardChange, &QPushButton::clicked, this, [this] { showRecipeMenu(m_cardChange, false); });
+    connect(m_cardChange, &QPushButton::clicked, this, [this] { showRecipePicker(false); });
     auto* text = new QVBoxLayout;
     text->setSpacing(0);
     text->addWidget(m_cardName);
@@ -633,10 +633,10 @@ QHBoxLayout* BatchPage::buildSecondRow(QWidget* box)
     m_secondName->setObjectName(u"itemTitle"_s);
     m_secondChange = new QPushButton(tr("Change"), box);
     m_secondChange->setObjectName(u"link"_s);
-    connect(m_secondChange, &QPushButton::clicked, this, [this] { showRecipeMenu(m_secondChange, true); });
+    connect(m_secondChange, &QPushButton::clicked, this, [this] { showRecipePicker(true); });
     connect(m_secondOn, &QCheckBox::toggled, this, [this](bool on) {
         if (on && m_second.isEmpty()) {
-            showRecipeMenu(m_secondChange, true);
+            showRecipePicker(true);
         }
         refreshRecipeCard();
     });
@@ -933,42 +933,42 @@ void BatchPage::setFromPhoto(bool on)
     schedulePreview();
 }
 
-void BatchPage::showRecipeMenu(QWidget* anchor, bool second)
+void BatchPage::showRecipePicker(bool second)
 {
-    QMenu menu(this);
-    const auto add = [&menu](const QString& text, const std::function<void()>& run) {
-        connect(menu.addAction(text), &QAction::triggered, &menu, run);
-    };
-    if (second) {
-        add(tr("None"), [this] { chooseSecond({}); });
-    } else {
-        add(tr("Convert and resize only"), [this] { chooseRecipe({}); });
-        if (!m_loadedStack.empty()) {
-            add(tr("From the opened recipe: %1").arg(m_loadedName), [this] { chooseRecipe(u"recipe"_s); });
+    const std::unique_ptr<RecipePicker> picker(newRecipePicker(second));
+    if (picker->exec() == QDialog::Accepted) {
+        if (second) {
+            chooseSecond(picker->choice().mid(QStringLiteral("preset:").size()));
+        } else {
+            chooseRecipe(picker->choice());
         }
     }
-    menu.addSeparator();
-    addMenuHeading(&menu, tr("Presets"));
-    for (const core::PresetEntry& p : m_presets) {
-        if (second && p.autoEnhance) {
-            continue; // Auto enhance has its own check box
-        }
-        const QString name = p.name;
-        add(name, [this, name, second] { second ? chooseSecond(name) : chooseRecipe(u"preset:"_s + name); });
-    }
-    if (!second && !m_looks.empty()) {
-        menu.addSeparator();
-        addMenuHeading(&menu, tr("Looks"));
-        for (const core::LookEntry& l : m_looks) {
-            const QString id = l.id;
-            add(l.name, [this, id] { chooseRecipe(u"look:"_s + id); });
-        }
-    }
-    menu.exec(anchor->mapToGlobal(QPoint(0, anchor->height())));
     if (second && m_second.isEmpty()) {
         const QSignalBlocker block(m_secondOn);
         m_secondOn->setChecked(false);
     }
+}
+
+RecipePicker* BatchPage::newRecipePicker(bool second)
+{
+    // Choose the recipe (batch-recipe-picker.html), on the batch's first photo.
+    std::optional<RecipePicker::Opened> opened;
+    if (!second && !m_loadedStack.empty()) {
+        pfx::Settings steps;
+        for (const pfx::BatchStep& step : m_loadedStack) {
+            steps = steps.overlaidWith(step.settings);
+        }
+        opened = RecipePicker::Opened{m_loadedName, steps};
+    }
+    QString current = m_first;
+    if (second) {
+        current = m_second.isEmpty() ? QString() : u"preset:"_s + m_second;
+    }
+    const bool photo = m_previewImage != nullptr && m_files.contains(m_previewPath);
+    return new RecipePicker(second ? RecipePicker::Mode::OnTop : RecipePicker::Mode::Recipe, m_presets,
+                            m_looks, m_pickerLists, photo ? m_previewImage : nullptr,
+                            photo ? QFileInfo(m_previewPath).fileName() : QString(), std::move(current),
+                            opened, this);
 }
 
 QString BatchPage::recipeTitle() const

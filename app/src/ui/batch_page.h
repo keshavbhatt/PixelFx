@@ -7,6 +7,7 @@
 #include "services/batch_runner.h"
 #include "services/thumbnailer.h"
 #include "ui/file_row.h"
+#include "ui/recipe_picker.h"
 
 #include <QElapsedTimer>
 #include <QHash>
@@ -83,6 +84,10 @@ public:
     void chooseRecipe(const QString& choice);
     /// Convert and resize only (the welcome page's quick job): no look or preset, nothing on top.
     void chooseConvertOnly();
+    /// The favourites and recent presets Choose the recipe marks and offers first.
+    void setPickerLists(const RecipePicker::Lists& lists) { m_pickerLists = lists; }
+    /// Choose the recipe, or (second) Add a preset on top, not yet shown; the caller owns it.
+    [[nodiscard]] RecipePicker* newRecipePicker(bool second);
     /// The preset added on top (by name), or none when empty.
     void chooseSecond(const QString& presetName);
     void setFromPhoto(bool on);
@@ -187,7 +192,8 @@ private:
     /// The large preview: every photo before and after the recipe, as Batch writes it.
     void openLargePreview();
     void renderPreview();
-    void showRecipeMenu(QWidget* anchor, bool second);
+    /// Choose the recipe, or (second) a preset on top.
+    void showRecipePicker(bool second);
     void editSaveOptions();
     void outputEdited();
     /// The name previews follow the list and the options.
@@ -208,6 +214,7 @@ private:
     QString m_photoName;
     pfx::Settings m_photoSettings;
     std::vector<pfx::BatchStep> m_loadedStack; ///< the steps of an opened recipe
+    RecipePicker::Lists m_pickerLists;
     QString m_loadedName;
     core::ExportOptions m_output;
     QString m_sidecarFolder;

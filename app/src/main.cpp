@@ -20,7 +20,8 @@
 //   PIXELFX_DEBUG_BUSY=1               with ZOOM and GRAB, grab while the busy chip shows instead
 //   PIXELFX_DEBUG_BATCH=<folder>       open Batch with this folder and process it; with GRAB, grab
 //                                      when the batch is done (PIXELFX_DEBUG_BATCH_STATE=ready:
-//                                      before processing, running: after the first photo)
+//                                      before processing, running: after the first photo, picker
+//                                      or ontop: with Choose the recipe or Add a preset on top open)
 //   PIXELFX_DEBUG_EXPAND=<group>       open this adjustment group ("Color grading") and close the
 //                                      others
 //   PIXELFX_DEBUG_HEAL=<x,y;x,y...>    enter Heal once the photo is open and heal a spot at each
@@ -353,7 +354,8 @@ void applyBatchHook(pixelfx::ui::MainWindow& window, const QString& grab)
         return;
     }
     // PIXELFX_DEBUG_BATCH_STATE: "ready" grabs the page before processing, "running" once the
-    // first photo is done; by default the grab waits for the end.
+    // first photo is done, "picker" with Choose the recipe open ("ontop": Add a preset on top);
+    // by default the grab waits for the end.
     const QString state = qEnvironmentVariable("PIXELFX_DEBUG_BATCH_STATE");
     const auto save = [&window, grab] {
         window.grab().save(grab);
@@ -364,6 +366,24 @@ void applyBatchHook(pixelfx::ui::MainWindow& window, const QString& grab)
         window.batchPage()->addPaths({folder});
         if (state == u"ready"_s && !grab.isEmpty()) {
             QTimer::singleShot(2000, &window, save);
+            return;
+        }
+        if ((state == u"picker"_s || state == u"ontop"_s) && !grab.isEmpty()) {
+            // Once the first photo's small copy is there, with the tiles drawn on it.
+            QTimer::singleShot(2000, &window, [&window, state, grab] {
+                QDialog* picker = window.batchPage()->newRecipePicker(state == u"ontop"_s);
+                picker->show();
+                QTimer::singleShot(2500, &window, [&window, picker, grab] {
+                    QPixmap shot = window.grab();
+                    QPainter painter(&shot);
+                    const QPixmap front = picker->grab();
+                    painter.drawPixmap((shot.width() - front.width()) / 2,
+                                       (shot.height() - front.height()) / 2, front);
+                    painter.end();
+                    shot.save(grab);
+                    QCoreApplication::quit();
+                });
+            });
             return;
         }
         window.batchPage()->process();

@@ -83,6 +83,8 @@ qt_add_library(pixelfx_ui STATIC
     paste_sheet.cpp
     paste_sheet.h
     photo_tile.cpp
+    recipe_picker.cpp
+    recipe_picker.h
     photo_tile.h
     preview_viewer.cpp
     region_curve.cpp

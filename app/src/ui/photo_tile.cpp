@@ -225,21 +225,22 @@ void PhotoTile::focusOutEvent(QFocusEvent* event)
     Q_EMIT hovered(false);
 }
 
-QGridLayout* tileGrid(const std::vector<PhotoTile*>& tiles, QWidget* parent)
+QGridLayout* tileGrid(const std::vector<PhotoTile*>& tiles, QWidget* parent, int columns)
 {
     auto* grid = new QGridLayout;
     grid->setContentsMargins(kToolRowPadding, 2, kToolRowPadding, 6);
     grid->setHorizontalSpacing(kGapControls);
     grid->setVerticalSpacing(kGapControls);
-    grid->setColumnStretch(0, 1);
-    grid->setColumnStretch(1, 1);
+    for (int c = 0; c < columns; ++c) {
+        grid->setColumnStretch(c, 1);
+    }
     int at = 0;
     for (PhotoTile* tile : tiles) {
-        grid->addWidget(tile, at / 2, at % 2);
+        grid->addWidget(tile, at / columns, at % columns);
         ++at;
     }
-    if (at % 2 == 1) {
-        grid->addWidget(new QWidget(parent), at / 2, 1);
+    for (int c = at % columns; c > 0 && c < columns; ++c) {
+        grid->addWidget(new QWidget(parent), at / columns, c);
     }
     return grid;
 }

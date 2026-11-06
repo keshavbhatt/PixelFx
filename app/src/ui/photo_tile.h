@@ -79,8 +79,8 @@ private:
     QImage m_image;
 };
 
-/// `tiles` in two columns that share the width, as the Looks and Presets tabs lay them out; a
-/// blank beside a lone last tile keeps it as wide as the others.
-[[nodiscard]] QGridLayout* tileGrid(const std::vector<PhotoTile*>& tiles, QWidget* parent);
+/// `tiles` in `columns` that share the width (two in the Looks and Presets tabs); blanks after
+/// the last tiles keep them as wide as the others.
+[[nodiscard]] QGridLayout* tileGrid(const std::vector<PhotoTile*>& tiles, QWidget* parent, int columns = 2);
 
 } // namespace pixelfx::ui

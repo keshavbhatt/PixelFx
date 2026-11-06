@@ -1745,6 +1745,8 @@ void MainWindow::enterBatch()
     stopColorTarget();
     leaveTools();
     m_batch->setPresets(m_library.entries());
+    m_batch->setPickerLists(
+        {m_settings.favoritePresets(), m_settings.favoriteLooks(), m_settings.recentPresets()});
     m_batch->setSidecarFolder(m_settings.rememberEdits() ? core::SidecarStore::defaultFolder() : QString());
     if (m_batch->files().isEmpty() && m_strip->files().size() > 1) {
         m_batch->addPaths(m_strip->files()); // the photos open in the editor, as a start

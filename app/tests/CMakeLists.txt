@@ -29,6 +29,10 @@ pixelfx_add_test(tst_changelog       tst_changelog.cpp       pixelfx_core)
 target_compile_definitions(tst_changelog PRIVATE
     PIXELFX_CHANGELOG_PATH="${PROJECT_SOURCE_DIR}/CHANGELOG.md"
     PIXELFX_VERSION="${PROJECT_VERSION}")
+pixelfx_add_test(tst_plurals         tst_plurals.cpp         pixelfx_core)
+target_compile_definitions(tst_plurals PRIVATE
+    PIXELFX_PLURALS_PATH="${PROJECT_SOURCE_DIR}/app/i18n/pixelfx_en.ts"
+    PIXELFX_SOURCE_PATH="${PROJECT_SOURCE_DIR}/app/src")
 pixelfx_add_test(tst_about           tst_about.cpp           pixelfx_core GUI)
 target_compile_definitions(tst_about PRIVATE
     PIXELFX_THIRD_PARTY_PATH="${PROJECT_SOURCE_DIR}/THIRD_PARTY.md")
@@ -50,6 +54,7 @@ pixelfx_add_test(tst_presets_panel   tst_presets_panel.cpp   pixelfx_ui GUI)
 pixelfx_add_test(tst_looks_panel     tst_looks_panel.cpp     pixelfx_ui GUI)
 pixelfx_add_test(tst_filmstrip      tst_filmstrip.cpp       pixelfx_ui GUI)
 pixelfx_add_test(tst_about_sheet     tst_about_sheet.cpp     pixelfx_ui GUI)
+pixelfx_add_test(tst_recipe_picker   tst_recipe_picker.cpp   pixelfx_ui GUI)
 target_compile_definitions(tst_about_sheet PRIVATE PIXELFX_VERSION="${PROJECT_VERSION}")
 pixelfx_add_test(tst_batch_resources tst_batch_resources.cpp pixelfx_ui GUI)
 pixelfx_add_test(tst_batch_compress  tst_batch_compress.cpp  pixelfx_ui GUI)

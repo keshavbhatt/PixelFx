@@ -18,6 +18,20 @@
         </translation>
     </message>
     <message numerus="yes">
+        <source>%n photos would be saved over their originals. This cannot be undone.</source>
+        <translation>
+            <numerusform>%n photo would be saved over its original. This cannot be undone.</numerusform>
+            <numerusform>%n photos would be saved over their originals. This cannot be undone.</numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>Overwrite %n photos</source>
+        <translation>
+            <numerusform>Overwrite %n photo</numerusform>
+            <numerusform>Overwrite %n photos</numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
         <source>Process %n photos</source>
         <translation>
             <numerusform>Process %n photo</numerusform>
@@ -146,6 +160,14 @@
 <context>
     <name>pixelfx::ui::NameField</name>
     <message numerus="yes">
+        <source>%n photos would be saved over their originals: Overwrite replaces them.</source>
+        <extracomment>Under the name preview when If it exists is Overwrite and names are the originals&apos; own.</extracomment>
+        <translation>
+            <numerusform>%n photo would be saved over its original: Overwrite replaces it.</numerusform>
+            <numerusform>%n photos would be saved over their originals: Overwrite replaces them.</numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
         <source>and %n more</source>
         <translation>
             <numerusform>and %n more</numerusform>
@@ -201,6 +223,30 @@
         <translation>
             <numerusform>Apply to %n selected photo</numerusform>
             <numerusform>Apply to %n selected photos</numerusform>
+        </translation>
+    </message>
+</context>
+<context>
+    <name>pixelfx::ui::RecipePicker</name>
+    <message numerus="yes">
+        <source>%n looks</source>
+        <translation>
+            <numerusform>%n look</numerusform>
+            <numerusform>%n looks</numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>%n presets</source>
+        <translation>
+            <numerusform>%n preset</numerusform>
+            <numerusform>%n presets</numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>%n found</source>
+        <translation>
+            <numerusform>%n found</numerusform>
+            <numerusform>%n found</numerusform>
         </translation>
     </message>
 </context>
