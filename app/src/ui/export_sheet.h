@@ -29,6 +29,10 @@ class SliderRow;
 /// The quality of a lossy format as a slider row ("Smaller file · Better image", 1 to 100,
 /// 90 by default), for Export and Batch.
 [[nodiscard]] SliderRow* qualitySlider(int quality, QWidget* parent);
+/// Sharpen for (None, Screen, Print) as segments in `group`, for Export and Batch.
+[[nodiscard]] QFrame* sharpenSegments(pfx::OutputSharpen sharpen, QButtonGroup* group, QWidget* parent);
+/// Color space (sRGB, Display P3, Adobe RGB, Same as original), for Export and Batch.
+[[nodiscard]] QComboBox* colorSpaceList(pfx::OutputSpace space, QWidget* parent);
 
 /// Export: format, quality, size, metadata, folder, file name, and what to
 /// do when the file exists. Starts from the remembered choices; returns the chosen ones.

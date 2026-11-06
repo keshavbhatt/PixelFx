@@ -32,7 +32,7 @@ enum class DocumentKind
 // every kind read as they always did.
 inline constexpr int kDocumentVersion = 1;
 inline constexpr int kPresetVersion = 4;
-inline constexpr int kBatchVersion = 5;
+inline constexpr int kBatchVersion = 6;
 inline constexpr int kRecipeVersion = 5;
 [[nodiscard]] int currentVersion(DocumentKind kind);
 
@@ -68,6 +68,8 @@ struct BatchBody
     std::string watermark;       // version 2: the watermark as JSON text (the app's format), or empty
     std::string format = "jpeg"; // jpeg, png, tiff, webp, avif, heic, jxl
     int quality = 90;
+    std::string colorSpace = "srgb"; // version 6 reads it: srgb, display-p3, adobe-rgb, original
+    std::string sharpen = "none";    // version 6: none, screen, print (output sharpening)
     bool keepCamera = true;
     bool keepLocation = false;
     std::string folder;

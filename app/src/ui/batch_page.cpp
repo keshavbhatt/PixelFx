@@ -147,8 +147,9 @@ BatchPage::BatchPage(core::ExportOptions output, core::CompressJob job, bool com
             return; // a picture for an older recipe
         }
         QLabel* target = key % 2 == 0 ? m_before : m_after;
-        const QPixmap pixmap = QPixmap::fromImage(
-            image.scaledToHeight(static_cast<int>(56 * devicePixelRatioF()), Qt::SmoothTransformation));
+        QPixmap pixmap = QPixmap::fromImage(image.scaled(target->size() * devicePixelRatioF(),
+                                                         Qt::KeepAspectRatio, Qt::SmoothTransformation));
+        pixmap.setDevicePixelRatio(devicePixelRatioF());
         target->setPixmap(pixmap);
         if (target == m_after) {
             m_watermark->setPreview(image); // the watermark sheet previews on the batch's own photo
@@ -322,13 +323,16 @@ QWidget* BatchPage::buildPreview(QWidget* parent)
     m_after = new QLabel(m_preview);
     auto* arrow = new QLabel(m_preview);
     icons::setGlyph(arrow, u"chevron-right"_s, tokens().muted, 15);
-    auto* caption = new QLabel(tr("The first photo, before and after the recipe"), m_preview);
+    auto* caption = new ElidedLabel(m_preview);
+    caption->setText(tr("The first photo, before and after the recipe"));
     caption->setObjectName(u"muted"_s);
     auto* larger = new QPushButton(tr("View larger"), m_preview);
     larger->setObjectName(u"link"_s);
     larger->setToolTip(tr("Every photo of the batch with the recipe, larger"));
     connect(larger, &QPushButton::clicked, this, &BatchPage::openLargePreview);
     for (QLabel* picture : {m_before, m_after}) {
+        picture->setFixedSize(84, 56); // the bar keeps its height while the pictures are made
+        picture->setAlignment(Qt::AlignCenter);
         picture->setCursor(Qt::PointingHandCursor);
         picture->setToolTip(larger->toolTip());
         picture->installEventFilter(this);
@@ -620,7 +624,8 @@ QWidget* BatchPage::buildSaveAs(QWidget* parent)
     });
     auto* more = new QPushButton(tr("More..."), box);
     more->setObjectName(u"small"_s);
-    more->setToolTip(tr("Quality, bit depth, metadata, and what to do when a file is already there"));
+    more->setToolTip(tr("Quality, bit depth, sharpening, colour space, metadata, and what to do when a file "
+                        "is already there"));
     connect(more, &QPushButton::clicked, this, &BatchPage::editSaveOptions);
     auto* formatRow = new QHBoxLayout;
     formatRow->setSpacing(kGapRelated);
@@ -714,10 +719,14 @@ QFormLayout* BatchPage::saveOptionsForm(QDialog* sheet, const core::ExportOption
     c.exists->addItem(tr("Overwrite"), static_cast<int>(core::ExportOptions::IfExists::Overwrite));
     c.exists->addItem(tr("Skip"), static_cast<int>(core::ExportOptions::IfExists::Skip));
     c.exists->setCurrentIndex(std::max(0, c.exists->findData(static_cast<int>(output.ifExists))));
+    c.sharpen = new QButtonGroup(sheet);
+    c.colorSpace = colorSpaceList(output.colorSpace, sheet);
     auto* form = new QFormLayout;
     form->setLabelAlignment(Qt::AlignLeft | Qt::AlignVCenter);
     form->addRow(tr("Quality"), c.quality);
     form->addRow(tr("Bit depth"), c.deep);
+    form->addRow(tr("Sharpen for"), sharpenSegments(output.sharpen, c.sharpen, sheet));
+    form->addRow(tr("Color space"), c.colorSpace);
     auto* metadata = new QVBoxLayout;
     metadata->setSpacing(kGapSmall);
     metadata->addWidget(c.camera);
@@ -749,6 +758,8 @@ void BatchPage::editSaveOptions()
     m_output.keepMetadata = c.camera->isChecked();
     m_output.keepLocation = c.location->isChecked();
     m_output.ifExists = static_cast<core::ExportOptions::IfExists>(c.exists->currentData().toInt());
+    m_output.sharpen = static_cast<pfx::OutputSharpen>(c.sharpen->checkedId());
+    m_output.colorSpace = static_cast<pfx::OutputSpace>(c.colorSpace->currentData().toInt());
     refreshFormats();
     outputEdited();
 }
@@ -797,6 +808,9 @@ void BatchPage::setPhotoSettings(const QString& name, const pfx::Settings& setti
 {
     m_photoName = name;
     m_photoSettings = settings;
+    if (m_process != nullptr) {
+        m_process->setEnabled(canProcess());
+    }
     if (m_fromPhoto) {
         refreshRecipeCard();
         schedulePreview();
@@ -833,6 +847,9 @@ void BatchPage::chooseSecond(const QString& presetName)
 void BatchPage::setFromPhoto(bool on)
 {
     m_fromPhoto = on;
+    if (m_process != nullptr) {
+        m_process->setEnabled(canProcess());
+    }
     m_sources->button(on ? 1 : 0)->setChecked(true);
     refreshRecipeCard();
     schedulePreview();
@@ -1175,6 +1192,8 @@ QString BatchPage::loadRecipe(const QString& path)
     m_beside->setChecked(r.besideOriginals);
     m_output.keepMetadata = r.output.keepMetadata;
     m_output.keepLocation = r.output.keepLocation;
+    m_output.sharpen = r.output.sharpen;
+    m_output.colorSpace = r.output.colorSpace;
     m_output.nameTemplate = r.output.nameTemplate;
     m_name->setTemplate(m_output.nameTemplate);
     m_output.ifExists = r.output.ifExists;
@@ -1249,6 +1268,11 @@ bool BatchPage::confirmOverwrites()
 QWidget* BatchPage::makeRow(const QString& file)
 {
     const FileRow f = makeFileRow(m_rowsBox, file, describe(file));
+    // A file that is no photo is said so as soon as it is on the list, not only after a run.
+    if (const auto info = pfx::probe(file.toStdString()); !info) {
+        f.row->setSubtitle(QString::fromStdString(info.error().message));
+        f.row->setSubtitleError(true);
+    }
     connect(f.row, &ListRow::actionClicked, this, [this, file] {
         if (!m_runner.isRunning()) {
             m_files.removeAll(file);
@@ -1289,7 +1313,7 @@ void BatchPage::rebuildRows()
     m_process->setText(m_files.isEmpty()
                            ? tr("Process")
                            : tr("Process %n photos", nullptr, static_cast<int>(m_files.size())));
-    m_process->setEnabled(!m_files.isEmpty() && !m_runner.isRunning());
+    m_process->setEnabled(canProcess());
     refreshLocks();
     m_watermark->setBatchPhotos(m_files.mid(0, 50)); // the sheet's "Preview on: Batch photos"
     Q_EMIT summaryChanged(summary());
@@ -1546,6 +1570,11 @@ void BatchPage::refreshRow(int index)
     const bool explain = m_runner.state(index) == S::Failed || m_runner.state(index) == S::Skipped;
     row.row->setSubtitle(explain ? m_runner.reason(index) : describe(m_files.at(index)));
     row.row->setSubtitleError(explain);
+    // The grid says the same: a photo not saved is marked and its tooltip says why.
+    if (QListWidgetItem* item = m_grid->item(index)) {
+        item->setForeground(m_runner.state(index) == S::Failed ? QBrush(tokens().danger) : QBrush());
+        item->setToolTip(explain ? m_runner.reason(index) : describe(m_files.at(index)));
+    }
 }
 
 void BatchPage::refreshStatus()
@@ -1590,7 +1619,7 @@ void BatchPage::refreshStatus()
     m_stop->setVisible(running);
     m_retry->setVisible(!running && failed > 0);
     m_showFolder->setVisible(!running && saved > 0);
-    m_process->setEnabled(!running && !m_files.isEmpty());
+    m_process->setEnabled(canProcess());
     refreshLocks();
     if (running != m_wasRunning) {
         m_wasRunning = running;
@@ -1618,6 +1647,21 @@ void BatchPage::showStatusError(const QString& text)
         w->hide(); // nothing of the last run belongs to this line
     }
     m_status->show();
+}
+
+bool BatchPage::canProcess() const
+{
+    // Settings from a photo needs one open in the editor.
+    return !m_files.isEmpty() && !m_runner.isRunning() && !(m_fromPhoto && m_photoName.isEmpty());
+}
+
+void BatchPage::setSidecarFolder(const QString& folder)
+{
+    m_sidecarFolder = folder;
+    m_keepEdits->setEnabled(!folder.isEmpty());
+    m_keepEdits->setToolTip(folder.isEmpty()
+                                ? tr("Turn on Remember edits in Settings to start from each photo's edits")
+                                : tr("Start from each photo's remembered edits instead of the original"));
 }
 
 void BatchPage::refreshLocks()

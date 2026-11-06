@@ -380,6 +380,15 @@ void readOutput(const Json& value, BatchBody& batch)
         batch.format = format;
     }
     batch.quality = std::clamp(intField(value, "quality", batch.quality), 1, 100);
+    // Version 6: before it, the colour space was always written "srgb" and there was no sharpening.
+    if (const std::string space = stringField(value, "colorSpace");
+        space == "srgb" || space == "display-p3" || space == "adobe-rgb" || space == "original") {
+        batch.colorSpace = space;
+    }
+    if (const std::string sharpen = stringField(value, "sharpen");
+        sharpen == "none" || sharpen == "screen" || sharpen == "print") {
+        batch.sharpen = sharpen;
+    }
     if (const auto metadata = value.find("metadata"); metadata != value.end() && metadata->is_object()) {
         batch.keepCamera = boolField(*metadata, "camera", batch.keepCamera);
         batch.keepLocation = boolField(*metadata, "location", batch.keepLocation);
@@ -479,7 +488,8 @@ Json batchToJson(const BatchBody& batch, Json body)
     }
     body["output"] = {{"format", batch.format},
                       {"quality", batch.quality},
-                      {"colorSpace", "srgb"},
+                      {"colorSpace", batch.colorSpace},
+                      {"sharpen", batch.sharpen},
                       {"metadata", {{"camera", batch.keepCamera}, {"location", batch.keepLocation}}},
                       {"folder", batch.folder},
                       {"beside", batch.beside},

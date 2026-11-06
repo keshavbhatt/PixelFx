@@ -145,6 +145,8 @@ BatchRecipe recipeFromBody(const pfx::BatchBody& body, const QString& sidecarFol
         }
     }
     r.output.quality = body.quality;
+    r.output.colorSpace = core::colorSpaceFromKey(QString::fromStdString(body.colorSpace));
+    r.output.sharpen = core::sharpenFromKey(QString::fromStdString(body.sharpen));
     r.output.keepMetadata = body.keepCamera;
     r.output.keepLocation = body.keepLocation;
     r.output.folder = QString::fromStdString(body.folder);
@@ -181,6 +183,8 @@ pfx::BatchBody bodyFromRecipe(const BatchRecipe& recipe, const QStringList& name
         }
     }
     body.quality = recipe.output.quality;
+    body.colorSpace = core::colorSpaceKey(recipe.output.colorSpace).toStdString();
+    body.sharpen = core::sharpenKey(recipe.output.sharpen).toStdString();
     body.keepCamera = recipe.output.keepMetadata;
     body.keepLocation = recipe.output.keepLocation;
     body.folder = recipe.output.folder.toStdString();

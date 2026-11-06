@@ -201,15 +201,15 @@ internal units, so a file reads like the panel.
   "autoFirst": false,
   "keepExistingEdits": false,
   "resize": { "mode": "longEdge", "value": 2048, "noEnlarge": true },
-  "output": { "format": "jpeg", "quality": 90, "colorSpace": "srgb", "metadata": { "camera": true, "location": false },
+  "output": { "format": "jpeg", "quality": 90, "colorSpace": "srgb", "sharpen": "none", "metadata": { "camera": true, "location": false },
               "folder": "~/Pictures/PixelFx/Batch", "beside": false, "name": "{name}-{preset}", "ifExists": "number",
               "watermark": { ...a watermark document (section 7)..., "logoData": "<base64 PNG or SVG>" } }
 }
 ```
 
-Batch recipes are at **version 5** (version 3 added the Lightroom-compatible settings of
-section 2, version 4 the `camera` profile, version 5 `detail.lensProfile` and `creative`; looks stay at
-version 1).
+Batch recipes are at **version 6** (version 3 added the Lightroom-compatible settings of
+section 2, version 4 the `camera` profile, version 5 `detail.lensProfile` and `creative`, version 6
+the output's `colorSpace` and `sharpen`; looks stay at version 1).
 
 - The stack is applied in order onto each photo's settings (later entries win per key). A step
   is a preset (its settings, embedded) or a look on its own (`id`, `strength` 0 to 100,
@@ -229,8 +229,13 @@ version 1).
   `logoData`, the logo file's bytes in base64, so the mark travels with the recipe. Absent: no
   watermark. Opening the file adds the watermark to the user's watermarks unless an identical
   one is there already.
+- `output.colorSpace` (read from version 6; earlier files always said `srgb`): `srgb`,
+  `display-p3`, `adobe-rgb` or `original`, as the Export sheet's Color space. `output.sharpen`
+  (version 6): `none`, `screen` or `print`, as Export's Sharpen for. Files before version 6
+  read both as `srgb` and `none`, what they ran with; a value this version does not know reads
+  as the default.
 - Version 1 batch recipes had none of these keys and read unchanged; there is nothing to
-  migrate. A file with a `version` above 5 is refused as made by a newer PixelFx.
+  migrate. A file with a `version` above 6 is refused as made by a newer PixelFx.
 
 ## 5. Pipeline order (fixed, documented here and in ADR-004)
 

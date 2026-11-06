@@ -200,6 +200,19 @@ private Q_SLOTS:
         QCOMPARE(runner.waiting(), 0);
     }
 
+    void aRecipeKeepsItsSharpeningAndColourSpace()
+    {
+        BatchRecipe r;
+        r.output.sharpen = pfx::OutputSharpen::Screen;
+        r.output.colorSpace = pfx::OutputSpace::AdobeRgb;
+        const pfx::BatchBody body = pixelfx::services::bodyFromRecipe(r);
+        QCOMPARE(body.sharpen, std::string("screen"));
+        QCOMPARE(body.colorSpace, std::string("adobe-rgb"));
+        const BatchRecipe back = pixelfx::services::recipeFromBody(body, {});
+        QCOMPARE(back.output.sharpen, pfx::OutputSharpen::Screen);
+        QCOMPARE(back.output.colorSpace, pfx::OutputSpace::AdobeRgb);
+    }
+
     void compressSaysAFileIsNoPhoto()
     {
         QTemporaryDir dir;

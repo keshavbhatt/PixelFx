@@ -75,7 +75,8 @@ public:
     /// "6 photos · 129 MB", for the header.
     [[nodiscard]] QString summary() const;
     /// Where remembered edits are, for "Keep edits already made"; empty: none.
-    void setSidecarFolder(const QString& folder) { m_sidecarFolder = folder; }
+    /// Where remembered edits are; empty when Remember edits is off (Keep edits is then off too).
+    void setSidecarFolder(const QString& folder);
     /// The recipe's first choice: "" (none), "look:<id>", "preset:<name>", or "recipe" (an
     /// opened batch recipe's own steps). Settings from a photo is its own source (fromPhoto).
     void chooseRecipe(const QString& choice);
@@ -134,6 +135,8 @@ private:
         QCheckBox* camera = nullptr;
         QCheckBox* location = nullptr;
         QComboBox* exists = nullptr;
+        QButtonGroup* sharpen = nullptr;
+        QComboBox* colorSpace = nullptr;
     };
 
     QWidget* buildList();
@@ -234,6 +237,7 @@ private:
     /// Locks what would change the list or the mode while a batch runs, and what has nothing to
     /// act on while the list is empty.
     void refreshLocks();
+    [[nodiscard]] bool canProcess() const;
     /// The status line says what went wrong (a recipe not saved or not read), in danger colour,
     /// with nothing of the last run beside it.
     void showStatusError(const QString& text);

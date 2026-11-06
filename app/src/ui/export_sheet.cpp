@@ -588,31 +588,45 @@ void ExportSheet::setPreview(const QImage& preview)
     scheduleEstimate();
 }
 
+QFrame* sharpenSegments(pfx::OutputSharpen sharpen, QButtonGroup* group, QWidget* parent)
+{
+    using S = ExportSheet;
+    QFrame* box = segmentBox({S::tr("None"), S::tr("Screen"), S::tr("Print")}, static_cast<int>(sharpen),
+                             group, parent);
+    box->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+    group->button(static_cast<int>(pfx::OutputSharpen::Screen))
+        ->setToolTip(S::tr("A little crisper on screens, after resizing"));
+    group->button(static_cast<int>(pfx::OutputSharpen::Print))
+        ->setToolTip(S::tr("Crisper on paper, where ink softens detail"));
+    return box;
+}
+
+QComboBox* colorSpaceList(pfx::OutputSpace space, QWidget* parent)
+{
+    using S = ExportSheet;
+    auto* list = new QComboBox(parent);
+    list->setAccessibleName(S::tr("Color space"));
+    list->addItem(S::tr("sRGB (recommended for sharing)"), static_cast<int>(pfx::OutputSpace::Srgb));
+    list->addItem(S::tr("Display P3"), static_cast<int>(pfx::OutputSpace::DisplayP3));
+    list->addItem(S::tr("Adobe RGB"), static_cast<int>(pfx::OutputSpace::AdobeRgb));
+    list->addItem(S::tr("Same as original"), static_cast<int>(pfx::OutputSpace::Original));
+    list->setCurrentIndex(std::max(0, list->findData(static_cast<int>(space))));
+    list->setToolTip(S::tr("Display P3 and Adobe RGB keep more saturated colours, for screens and "
+                           "printers that show them; sRGB looks right everywhere"));
+    return list;
+}
+
 QWidget* ExportSheet::sharpenRow(pfx::OutputSharpen sharpen)
 {
     m_sharpen = new QButtonGroup(this);
-    QFrame* box =
-        segmentBox({tr("None"), tr("Screen"), tr("Print")}, static_cast<int>(sharpen), m_sharpen, this);
-    box->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-    m_sharpen->button(static_cast<int>(pfx::OutputSharpen::Screen))
-        ->setToolTip(tr("A little crisper on screens, after resizing"));
-    m_sharpen->button(static_cast<int>(pfx::OutputSharpen::Print))
-        ->setToolTip(tr("Crisper on paper, where ink softens detail"));
+    QFrame* box = sharpenSegments(sharpen, m_sharpen, this);
     connect(m_sharpen, &QButtonGroup::idClicked, this, &ExportSheet::scheduleEstimate);
     return box;
 }
 
 QWidget* ExportSheet::colorSpaceBox(pfx::OutputSpace space)
 {
-    m_colorSpace = new QComboBox(this);
-    m_colorSpace->setAccessibleName(tr("Color space"));
-    m_colorSpace->addItem(tr("sRGB (recommended for sharing)"), static_cast<int>(pfx::OutputSpace::Srgb));
-    m_colorSpace->addItem(tr("Display P3"), static_cast<int>(pfx::OutputSpace::DisplayP3));
-    m_colorSpace->addItem(tr("Adobe RGB"), static_cast<int>(pfx::OutputSpace::AdobeRgb));
-    m_colorSpace->addItem(tr("Same as original"), static_cast<int>(pfx::OutputSpace::Original));
-    m_colorSpace->setCurrentIndex(std::max(0, m_colorSpace->findData(static_cast<int>(space))));
-    m_colorSpace->setToolTip(tr("Display P3 and Adobe RGB keep more saturated colours, for screens and "
-                                "printers that show them; sRGB looks right everywhere"));
+    m_colorSpace = colorSpaceList(space, this);
     connect(m_colorSpace, &QComboBox::currentIndexChanged, this, &ExportSheet::scheduleEstimate);
     return m_colorSpace;
 }
