@@ -361,6 +361,38 @@ private Q_SLOTS:
         QVERIFY(window.batchPage()->isVisible());
     }
 
+    void typingInASearchFieldNeverTriggersALetterShortcut()
+    {
+        // V is Black and white, C is Crop, R is Heal, B is Batch: typed into a search field they
+        // are letters.
+        QStandardPaths::setTestModeEnabled(true);
+        pixelfx::ui::applyStyle(*qApp);
+        QTemporaryDir dir;
+        pixelfx::core::Settings settings(dir.filePath(u"s.ini"_s));
+        pixelfx::ui::MainWindow window(settings);
+        window.show();
+        QVERIFY(QTest::qWaitForWindowExposed(&window));
+        pfx::Image img(60, 40);
+        img.fill(0.4F, 0.3F, 0.2F);
+        const QString path = dir.filePath(u"p.png"_s);
+        QVERIFY(pfx::save(img, path.toStdString()).ok());
+        QSignalSpy opened(&window.document(), &pixelfx::services::Document::opened);
+        window.openFiles({path});
+        QVERIFY(opened.wait(10000));
+        QLineEdit* search = nullptr;
+        for (QLineEdit* field : window.presetsPanel()->findChildren<QLineEdit*>()) {
+            if (field->isVisible()) {
+                search = field;
+            }
+        }
+        QVERIFY(search != nullptr);
+        search->setFocus();
+        QTest::keyClicks(search, u"vivid crab hero"_s);
+        QCOMPARE(search->text(), u"vivid crab hero"_s);
+        QVERIFY(!window.document().settings().contains("bw.enabled"));
+        QVERIFY(window.adjustPanel()->isVisible()); // still editing: not Crop, Heal or Batch
+    }
+
     void severalPhotosShareThePresetThroughTheStrip()
     {
         QStandardPaths::setTestModeEnabled(true);

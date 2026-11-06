@@ -154,6 +154,10 @@ Decisions the work stopped at; everything else went ahead within the approved mo
   write over the original photo without a word (Batch warned); Export shows the same warning
   line under the name now (one shared `warningLine`). For the owner's look: a line Batch
   already shows, new in the Export sheet.
+- Every test, the one that drives the whole window on odd photos included, passes in the
+  AddressSanitizer and UndefinedBehaviorSanitizer build with nothing reported; Auto on black,
+  white and flat pictures stays in range; typing in a search field never fires a letter
+  shortcut (V, C, R, B). Tests keep all three.
 
 ### 2026-11-06 (a new app icon)
 
