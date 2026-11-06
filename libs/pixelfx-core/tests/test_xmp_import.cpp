@@ -63,6 +63,17 @@ TEST_CASE("xmp import: what has no equivalent is reported, neutral values are no
     CHECK(std::ranges::find(skipped, "GrainAmount") == skipped.end()); // mapped
 }
 
+TEST_CASE("xmp import: lens corrections switched off are kept off")
+{
+    const auto r = pfx::importXmpPreset(R"(<x crs:LensProfileEnable="0" crs:AutoLateralCA="0"/>)");
+    REQUIRE(r.ok());
+    const pfx::Settings& s = r.value().document.settings;
+    REQUIRE(s.contains("detail.lensProfile.enable"));
+    REQUIRE(s.contains("detail.ca.auto"));
+    CHECK_FALSE(s.boolean("detail.lensProfile.enable", true));
+    CHECK_FALSE(s.boolean("detail.ca.auto", true));
+}
+
 TEST_CASE("xmp import: absolute white balance becomes a shift, other files are refused")
 {
     const auto r = pfx::importXmpPreset(R"(<x crs:Temperature="9200" crs:Tint="+30"/>)");

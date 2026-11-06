@@ -307,13 +307,10 @@ bool mapSpecial(const std::string& key, const std::string& value, Settings& s)
         } else if (!s.boolean("bw.enabled", false)) {
             s.set("bw.enabled", false);
         }
-    } else if (key == "AutoLateralCA") {
-        if (v && *v != 0.0) {
-            s.set("detail.ca.auto", true);
-        }
-    } else if (key == "LensProfileEnable") {
-        if (v && *v != 0.0) {
-            s.set("detail.lensProfile.enable", true);
+    } else if (key == "AutoLateralCA" || key == "LensProfileEnable") {
+        // Off is kept too: a preset that holds Lens Corrections turns them off on the photo.
+        if (v) {
+            s.set(key == "AutoLateralCA" ? "detail.ca.auto" : "detail.lensProfile.enable", *v != 0.0);
         }
     } else if (key == "PostCropVignetteStyle") {
         // 1 highlight priority, 2 colour priority, 3 paint overlay.
