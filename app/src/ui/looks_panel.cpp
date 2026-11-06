@@ -39,6 +39,7 @@ struct Chip
     const char* label;
     const char* category; // "" all, "mine" the user's
 };
+constexpr std::size_t kMineChip = 1;
 constexpr std::size_t kFavoritesChip = 5;
 constexpr std::array<Chip, 6> kChips = {{
     {QT_TRANSLATE_NOOP("LooksPanel", "All"), ""},
@@ -319,7 +320,7 @@ void LooksPanel::rebuild()
         }
     }
     const bool all = m_chips->checkedId() <= 0 && m_search->text().trimmed().isEmpty();
-    if (!mine.empty() || all || m_chips->checkedId() == 1) {
+    if (!mine.empty() || all || m_chips->checkedId() == static_cast<int>(kMineChip)) {
         auto* make = new QPushButton(tr("New look"), m_listBox);
         make->setObjectName(u"link"_s);
         make->setToolTip(tr("Make a look of your own from steps and LUTs"));
@@ -329,16 +330,27 @@ void LooksPanel::rebuild()
     if (!builtIn.empty() || all) {
         addSection(tr("Built in"), nullptr, builtIn, all);
     }
-    if (m_chips->checkedId() == static_cast<int>(kFavoritesChip) && mine.empty() && builtIn.empty() &&
-        m_search->text().trimmed().isEmpty()) {
-        auto* empty = new QLabel(tr("No favourites yet. Press F on a look, or use its menu, to add it here."),
-                                 m_listBox);
-        empty->setObjectName(u"muted"_s);
-        empty->setWordWrap(true);
-        empty->setContentsMargins(kPanelPadding, 12, kPanelPadding, 0);
-        m_list->addWidget(empty);
+    if (mine.empty() && builtIn.empty()) {
+        addEmptyNote();
     }
     m_list->addStretch();
+}
+
+void LooksPanel::addEmptyNote()
+{
+    // Nothing to show says why, as the Presets tab does.
+    const bool searching = !m_search->text().trimmed().isEmpty();
+    QString text = tr("No look is called that.");
+    if (!searching && m_chips->checkedId() == static_cast<int>(kFavoritesChip)) {
+        text = tr("No favourites yet. Press F on a look, or use its menu, to add it here.");
+    } else if (!searching && m_chips->checkedId() == static_cast<int>(kMineChip)) {
+        text = tr("No looks of your own yet. New look makes one from steps and LUTs.");
+    }
+    auto* empty = new QLabel(text, m_listBox);
+    empty->setObjectName(u"muted"_s);
+    empty->setWordWrap(true);
+    empty->setContentsMargins(kPanelPadding, 12, kPanelPadding, 0);
+    m_list->addWidget(empty);
 }
 
 void LooksPanel::setFavorites(const QStringList& ids)

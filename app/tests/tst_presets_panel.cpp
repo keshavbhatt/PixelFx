@@ -185,6 +185,22 @@ private Q_SLOTS:
         QCOMPARE(panel.tiles().front()->name(), u"Film 4"_s); // newest first
     }
 
+    void anEmptyFilterSaysWhyRatherThanShowAHeading()
+    {
+        PresetsPanel panel;
+        panel.setEntries(catalog());
+        for (const int filter : {1, 3}) { // Favorites and Recent, both empty
+            panel.showFilter(filter);
+            QVERIFY(panel.tiles().empty());
+            bool note = false;
+            for (const QLabel* label : panel.findChildren<QLabel*>(u"muted"_s)) {
+                note = note || label->text().contains(filter == 1 ? u"favourites"_s : u"presets you apply"_s);
+            }
+            QVERIFY2(note, "the empty list explains itself");
+            QVERIFY(panel.findChildren<QLabel*>(u"section"_s).isEmpty()); // and no heading over nothing
+        }
+    }
+
     void theAmountShowsOnceAPresetIsApplied()
     {
         PresetsPanel panel;

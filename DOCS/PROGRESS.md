@@ -118,6 +118,13 @@ Decisions the work stopped at; everything else went ahead within the approved mo
   which its mock shows, and was 980 px wide, the mock 900 (a sheet size of its own now).
 - A text watermark with its text cleared was saved and used, printing nothing on every photo;
   it says to type the text first, as a logo watermark without a logo already did.
+- Empty lists in the left panel, each looked at: Presets' Favorites and Recent showed a heading
+  over nothing (the note was written but never shown); the Looks tab said nothing when a search
+  matched no look or when there were no looks of your own. Each now says why, as Looks'
+  Favorites did. Checked along the way: no leak over 120 photos opened and closed (memory
+  levels off as the caches fill), a 96-megapixel photo opens in under 2 s, the fuzzers (document,
+  loader, EXIF, .cube) found nothing in a minute each, the command line refuses bad input with
+  a message and exit code 2, and a live theme switch matches a light start pixel for pixel.
 
 ### 2026-11-06 (a new app icon)
 

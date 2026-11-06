@@ -444,8 +444,10 @@ void PresetsPanel::rebuild()
                                      : tr("Search %n presets", nullptr, static_cast<int>(m_entries.size())));
     const int filter = m_chips->checkedId();
     if (filter == Favorites || filter == Recent) {
-        addSection(tr(kChipNames.at(static_cast<std::size_t>(filter))),
-                   indexesOf(filter == Favorites ? m_favorites : m_recent), false, false);
+        // No heading over nothing: an empty list gets its note instead.
+        if (const auto chosen = indexesOf(filter == Favorites ? m_favorites : m_recent); !chosen.empty()) {
+            addSection(tr(kChipNames.at(static_cast<std::size_t>(filter))), chosen, false, false);
+        }
     } else {
         addGroupSections(filter == Mine, searching);
     }

@@ -68,6 +68,8 @@ private:
     void rebuild();
     QWidget* buildStrength();
     void addSection(const QString& title, QWidget* extra, const std::vector<int>& indexes, bool withOriginal);
+    /// Why the list is empty: no favourites, none of the user's own, nothing matching.
+    void addEmptyNote();
     [[nodiscard]] bool matches(const core::LookEntry& e) const;
     void toggleFavorite(const QString& id);
     void showMenu(const core::LookEntry& e, const QPoint& where);
