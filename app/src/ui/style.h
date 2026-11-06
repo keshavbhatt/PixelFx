@@ -139,7 +139,7 @@ QHBoxLayout* sectionHeadingRow(QLabel* label, QWidget* trailing, int sides = 0);
 QVBoxLayout* sectionColumn(const QString& heading, QWidget* box);
 /// While `area` scrolls, its scroll bar takes the right padding of `content` (its widget's
 /// layout, `edge` px), so the content keeps its width and nothing moves when the bar appears.
-void keepScrollBarInPadding(QScrollArea* area, QLayout* content, int edge);
+void keepScrollBarInPadding(const QScrollArea* area, QLayout* content, int edge);
 /// A heading inside a menu ("History"): Qt draws a menu section as a bare line under a style
 /// sheet, so the heading is a label of its own.
 void addMenuHeading(QMenu* menu, const QString& text);

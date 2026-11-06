@@ -759,7 +759,7 @@ QLabel* sectionHeading(const QString& text, QWidget* parent, int sides)
     return label;
 }
 
-void keepScrollBarInPadding(QScrollArea* area, QLayout* content, int edge)
+void keepScrollBarInPadding(const QScrollArea* area, QLayout* content, int edge)
 {
     const auto fit = [area, content, edge](int max) {
         const int bar = max > 0 ? area->verticalScrollBar()->sizeHint().width() : 0;
