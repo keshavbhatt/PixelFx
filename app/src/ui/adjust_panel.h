@@ -56,6 +56,10 @@ public:
     /// A RAW file (editor-raw.html): the Camera profile is offered, Temperature reads in Kelvin
     /// around the as-shot white, and White balance offers the light sources.
     void setRaw(bool raw, int asShotKelvin);
+    /// The photo's lens (`lens`, from its Exif) and the name of its Lensfun profile (`profile`,
+    /// empty when none is found) for Use lens profile in Optics (editor-lens-profile.html). The
+    /// rows show only when lens profiles are available.
+    void setLens(const QString& lens, const QString& profile, bool profilesAvailable);
     [[nodiscard]] AdjustSlider* slider(const QString& key) const;
     [[nodiscard]] CurveEditor* curveEditor() const { return m_curve; }
     /// Shows the curve of `key` (curves.rgb, curves.r, curves.g, curves.b) in the editor.
@@ -152,6 +156,8 @@ private:
     void setFlag(const QString& key, bool on, const QString& step);
     void buildSpecGroup(const GroupSpec& spec, QWidget* content, QVBoxLayout* groups);
     void addSpecControl(AdjustGroup* group, const ControlSpec& control);
+    void addDivider(AdjustGroup* group, const ControlSpec& control, bool lens);
+    void refreshLens();
     QWidget* buildChoiceRow(const QString& key, const QString& shown, const QString& full, QWidget* parent);
     QWidget* buildCheckRow(const QString& key, const QString& shown, const QString& note, const QString& full,
                            QWidget* parent);
@@ -227,6 +233,11 @@ private:
     QButtonGroup* m_treatment = nullptr;
     std::vector<Bound> m_choices;
     std::vector<Bound> m_checks;
+    std::vector<QWidget*> m_lensRows;
+    std::vector<AdjustSlider*> m_lensSliders;
+    QString m_lens;
+    QString m_lensProfile;
+    bool m_lensProfiles = false;
     QButtonGroup* m_gradingRanges = nullptr;
     std::array<GradingRangeButton*, 4> m_rangeButtons{};
     std::array<AdjustSlider*, 4> m_rangeLuminance{};

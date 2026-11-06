@@ -6,6 +6,7 @@
 #include <vector>
 
 class QCheckBox;
+class QLabel;
 class QComboBox;
 
 namespace pixelfx::ui {
@@ -51,12 +52,16 @@ public:
     /// Shows `on` without emitting.
     void setChecked(bool on);
     [[nodiscard]] QCheckBox* box() const { return m_box; }
+    /// The line under the box; its tooltip keeps what the setting does.
+    void setDescription(const QString& text);
+    [[nodiscard]] QString description() const;
 
 Q_SIGNALS:
     void toggled(bool on);
 
 private:
     QCheckBox* m_box;
+    QLabel* m_note;
 };
 
 } // namespace pixelfx::ui

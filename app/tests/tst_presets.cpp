@@ -168,7 +168,9 @@ private Q_SLOTS:
         QVERIFY(units.contains(u"optics"_s));
         QVERIFY(units.contains(u"calibration"_s));
         QVERIFY(!pixelfx::core::keyInUnit("detail.ca.auto", u"detail"_s)); // Optics, not Detail
-        QCOMPARE(pixelfx::core::changedCount(s, u"effects"_s), 0);         // the default style
+        QVERIFY(pixelfx::core::keyInUnit("detail.lensProfile.enable", u"optics"_s));
+        QVERIFY(!pixelfx::core::keyInUnit("detail.lensProfile.distortion", u"detail"_s));
+        QCOMPARE(pixelfx::core::changedCount(s, u"effects"_s), 0); // the default style
         const pfx::Settings preset = pixelfx::core::presetFrom(pfx::Settings(), {u"color"_s});
         QCOMPARE(preset.text("color.profile", ""), std::string("standard"));
     }

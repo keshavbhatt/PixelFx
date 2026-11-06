@@ -57,18 +57,17 @@ void ChoiceRow::setValue(const std::string& value)
 CheckRow::CheckRow(const QString& name, const QString& description, QWidget* parent)
     : QWidget(parent)
     , m_box(new QCheckBox(name, this))
+    , m_note(new QLabel(description, this))
 {
     auto* column = new QVBoxLayout(this);
     column->setContentsMargins(0, 6, 0, 6);
     column->setSpacing(kGapTight);
     column->addWidget(m_box);
-    if (!description.isEmpty()) {
-        auto* note = new QLabel(description, this);
-        note->setObjectName(u"checkNote"_s);
-        note->setWordWrap(true);
-        m_box->setToolTip(description);
-        column->addWidget(note);
-    }
+    m_note->setObjectName(u"checkNote"_s);
+    m_note->setWordWrap(true);
+    m_note->setVisible(!description.isEmpty());
+    m_box->setToolTip(description);
+    column->addWidget(m_note);
     connect(m_box, &QCheckBox::toggled, this, &CheckRow::toggled);
 }
 
@@ -83,6 +82,18 @@ void CheckRow::setChecked(bool on)
 {
     const QSignalBlocker block(m_box);
     m_box->setChecked(on);
+}
+
+void CheckRow::setDescription(const QString& text)
+{
+    m_note->setText(text);
+    m_note->setVisible(!text.isEmpty());
+    m_box->setAccessibleDescription(text);
+}
+
+QString CheckRow::description() const
+{
+    return m_note->text();
 }
 
 } // namespace pixelfx::ui

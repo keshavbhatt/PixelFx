@@ -15,6 +15,7 @@
 #include <QButtonGroup>
 #include <QComboBox>
 #include <QEvent>
+#include <QFrame>
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QMenu>
@@ -50,7 +51,9 @@ enum class ControlKind
 
 /// One row of a group built from specs. `caption` starts a sub-heading before the row; `more`
 /// puts it under the group's "More"; `fullName` is what history and screen readers say when the
-/// shown label is short ("Detail" under "Sharpening"); `display` scales the shown value.
+/// shown label is short ("Detail" under "Sharpening"); `display` scales the shown value; `note`
+/// says what the setting does (under a check box, a slider's tooltip); `divider` draws a line
+/// after the row.
 struct ControlSpec
 {
     const char* key;
@@ -62,6 +65,7 @@ struct ControlSpec
     ControlKind kind = ControlKind::Slider;
     double display = 1.0;
     const char* note = nullptr;
+    bool divider = false;
 };
 
 struct GroupSpec
@@ -201,7 +205,27 @@ GroupSpec opticsGroup()
     using K = ControlKind;
     return {QT_TRANSLATE_NOOP("AdjustPanel", "Optics"),
             "focus",
-            {{.key = "detail.ca.auto",
+            {{.key = "detail.lensProfile.enable",
+              .label = QT_TRANSLATE_NOOP("AdjustPanel", "Use lens profile"),
+              .fullName = QT_TRANSLATE_NOOP("AdjustPanel", "Lens profile"),
+              .kind = K::Check,
+              .note = QT_TRANSLATE_NOOP(
+                  "AdjustPanel",
+                  "Correct distortion, colour fringes and dark corners as measured for this lens")},
+             {.key = "detail.lensProfile.distortion",
+              .label = QT_TRANSLATE_NOOP("AdjustPanel", "Distortion"),
+              .fullName = QT_TRANSLATE_NOOP("AdjustPanel", "Lens distortion"),
+              .note = QT_TRANSLATE_NOOP(
+                  "AdjustPanel",
+                  "How much of the lens's distortion to straighten: 100 as measured, 0 none, 200 twice")},
+             {.key = "detail.lensProfile.vignetting",
+              .label = QT_TRANSLATE_NOOP("AdjustPanel", "Vignetting"),
+              .fullName = QT_TRANSLATE_NOOP("AdjustPanel", "Lens vignetting"),
+              .note = QT_TRANSLATE_NOOP(
+                  "AdjustPanel",
+                  "How much of the lens's dark corners to lift: 100 as measured, 0 none, 200 twice"),
+              .divider = true},
+             {.key = "detail.ca.auto",
               .label = QT_TRANSLATE_NOOP("AdjustPanel", "Remove chromatic aberration"),
               .kind = K::Check,
               .note = QT_TRANSLATE_NOOP(
@@ -474,6 +498,7 @@ AdjustPanel::AdjustPanel(QWidget* parent)
     column->addWidget(scroll, 1);
     setFixedWidth(316);
     refreshGroups();
+    refreshLens();
     refreshCollapseAll();
 }
 
@@ -500,6 +525,8 @@ void AdjustPanel::addSpecControl(AdjustGroup* group, const ControlSpec& c)
     const QString key = QString::fromLatin1(c.key);
     const QString shown = c.label != nullptr ? tr(c.label) : QString();
     const QString full = c.fullName != nullptr ? tr(c.fullName) : shown;
+    // The lens profile rows need Lensfun; its amounts show while the profile is on and found.
+    const bool lens = key.startsWith(u"detail.lensProfile."_s);
     QWidget* row = nullptr;
     switch (c.kind) {
     case ControlKind::Slider: {
@@ -507,9 +534,16 @@ void AdjustPanel::addSpecControl(AdjustGroup* group, const ControlSpec& c)
         if (c.fullName != nullptr) {
             s->setFullName(full);
         }
+        if (c.note != nullptr) {
+            s->setHelp(tr(c.note));
+        }
         if (c.track[0] != '\0') {
             s->slider()->setObjectName(QString::fromLatin1(c.track));
         }
+        if (lens) {
+            m_lensSliders.push_back(s);
+        }
+        addDivider(group, c, lens);
         return;
     }
     case ControlKind::Choice:
@@ -529,6 +563,55 @@ void AdjustPanel::addSpecControl(AdjustGroup* group, const ControlSpec& c)
         group->addKeys({c.key});
     }
     c.more ? group->addMoreContent(row) : group->addContent(row);
+    if (lens) {
+        m_lensRows.push_back(row);
+    }
+    addDivider(group, c, lens);
+}
+
+void AdjustPanel::addDivider(AdjustGroup* group, const ControlSpec& c, bool lens)
+{
+    if (!c.divider) {
+        return;
+    }
+    auto* line = new QFrame(group);
+    line->setObjectName(u"divider"_s);
+    line->setFixedHeight(1);
+    auto* box = new QWidget(group);
+    auto* layout = new QVBoxLayout(box);
+    layout->setContentsMargins(0, 10, 0, 4);
+    layout->addWidget(line);
+    c.more ? group->addMoreContent(box) : group->addContent(box);
+    if (lens) {
+        m_lensRows.push_back(box);
+    }
+}
+
+void AdjustPanel::setLens(const QString& lens, const QString& profile, bool profilesAvailable)
+{
+    m_lens = lens;
+    m_lensProfile = profile;
+    m_lensProfiles = profilesAvailable;
+    refreshLens();
+}
+
+void AdjustPanel::refreshLens()
+{
+    const bool on = m_settings.boolean("detail.lensProfile.enable", false);
+    for (QWidget* row : m_lensRows) {
+        row->setVisible(m_lensProfiles);
+    }
+    for (AdjustSlider* s : m_lensSliders) {
+        s->setVisible(m_lensProfiles && on && !m_lensProfile.isEmpty());
+    }
+    QString line = m_lensProfile;
+    if (line.isEmpty()) {
+        line = m_lens.isEmpty() ? tr("The photo does not say which lens took it")
+                                : tr("No profile for this lens yet: %1").arg(m_lens);
+    }
+    if (CheckRow* row = checkRow(u"detail.lensProfile.enable"_s)) {
+        row->setDescription(line);
+    }
 }
 
 QWidget* AdjustPanel::buildChoiceRow(const QString& key, const QString& shown, const QString& full,
@@ -622,6 +705,7 @@ void AdjustPanel::refreshRows()
     for (const Bound& b : m_checks) {
         static_cast<CheckRow*>(b.row)->setChecked(m_settings.boolean(b.key.toStdString(), false));
     }
+    refreshLens();
 }
 
 void AdjustPanel::refreshTreatment()

@@ -41,6 +41,8 @@ public:
     /// A full name for a row whose shown label is short because a sub-heading gives the rest
     /// ("Detail" under "Sharpening").
     void setFullName(const QString& name);
+    /// What the slider does, for its tooltip in place of its name.
+    void setHelp(const QString& text);
     [[nodiscard]] QSlider* slider() const { return m_slider; }
     /// The field the value is typed in; hidden unless typing.
     [[nodiscard]] QLineEdit* valueField() const { return m_field; }

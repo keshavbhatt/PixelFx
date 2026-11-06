@@ -17,6 +17,7 @@
 #include <pfx/auto.h>
 #include <pfx/color.h>
 #include <pfx/io.h>
+#include <pfx/lens.h>
 #include <pfx/pipeline.h>
 #include <pfx/registry.h>
 #include <pfx/resample.h>
@@ -206,6 +207,9 @@ Document::Result Document::openOnWorker(Result result,
     result.info.lens = QString::fromStdString(exif.lens).trimmed();
     result.info.exposure = core::exposureLine(exif);
     result.info.lensFacts = pfx::lensFacts(exif);
+    // On the worker: the first search reads the whole database.
+    result.info.lensProfiles = pfx::lensProfilesAvailable();
+    result.info.lensProfile = QString::fromStdString(pfx::lensProfileName(result.info.lensFacts));
     const auto display = pfx::toSrgb8(loaded.value().image);
     if (!display) {
         result.error = fromStd(display.error().message);

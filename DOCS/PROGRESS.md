@@ -35,6 +35,7 @@
 | `batch-convert-rename.html` | 2026-11-06 (`mocks/reviews/batch-convert-rename.md`) | approved 2026-11-06 ("Batch threads" of `settings.html` became "Photos at a time") |
 | `editor-raw.html` | 2026-11-06 (`mocks/reviews/editor-raw.md`) | approved 2026-11-06 (Kelvin for RAW only) |
 | `editor-presets-catalog.html`, hover preview | 2026-11-05 (same review, "Hover preview, reworked") | approved 2026-11-05 |
+| `editor-lens-profile.html` | 2026-11-06 (`mocks/reviews/editor-lens-profile.md`) | approved 2026-11-06 (the two EmulsionPresets lens tools join the catalog) |
 
 ## Waiting for the owner (2026-11-05)
 
@@ -69,11 +70,29 @@ Decisions the work stopped at; everything else went ahead within the approved mo
     the sky" in the mock needs scene recognition); Reset takes off the spots made since Heal
     opened and Done keeps them (each spot is also its own history step, and undo works in
     Heal); Reveal dust explains itself in its tooltip rather than a first-time line.
-13. `editor-lens-profile.html` (2026-11-06): the Optics row for lens profiles, with its review
-    (`mocks/reviews/editor-lens-profile.md`); the library side is built (ADR-013). Approve the
-    row, and say whether the two EmulsionPresets lens tools join the catalog.
 
 ## Sessions (newest first)
+
+### 2026-11-06 (Use lens profile in Optics)
+
+- The approved `editor-lens-profile.html`: Use lens profile at the top of Optics with the
+  profile's name under it ("No profile for this lens yet: ..." or "The photo does not say which
+  lens took it" when none is found), Distortion and Vignetting (0 to 200) while it is on and a
+  profile is found, and a divider above Remove chromatic aberration. The rows are left out when
+  no Lensfun database could be read. The profile is looked up on the worker that opens the
+  photo. Optics, not Detail, now holds the lens profile settings in Save as preset, Paste and
+  Batch ("Lens profile" by name).
+- The catalog gains the two EmulsionPresets lens tools under Tools, "Lens profile, on" and
+  "Lens profile, off" (owner, 2026-11-06). The importer now keeps `LensProfileEnable` and
+  `AutoLateralCA` of 0 as an explicit off, as it does for colour against black and white, so a
+  preset holding Lens Corrections turns them off; "Reset everything" and "Reset effects and
+  detail" now reset them too, and "Dehaze" turns the lens profile on as its source does.
+- Fixed: the catalog's file names dropped the sign, so Exposure +0.3 and -0.3 (and the 0.7 and
+  1 pairs) wrote one file and three presets were lost; 431 ship now (426 before). The other
+  files changed only their version (2 to 4, as `pfx import` writes now).
+- Checks: 163 library tests (off kept off on import), 38 app suites (the row's states, the
+  Optics part), the linters; offscreen grabs of the row on, off and without a profile against
+  the mock on a scratch photo.
 
 ### 2026-11-06 (a review of the day's code)
 
@@ -360,7 +379,7 @@ Decisions the work stopped at; everything else went ahead within the approved mo
   Export), and the Amount of the preset just applied (0 to 200, as Lightroom's): it blends from
   the photo before the preset, a setting moved by hand since keeps the user's value, and undo
   takes it away with its step. Only the tiles on show get their picture rendered.
-- The catalog: 429 of EmulsionPresets' 451 (MIT, ADR-009), converted by `scripts/catalog/
+- The catalog: 429 of EmulsionPresets' 451 (431 since 2026-11-06) (MIT, ADR-009), converted by `scripts/catalog/
   build_catalog.py` with the new `pfx import`, renamed without brands or people
   (`scripts/catalog/catalog.tsv`, a test checks it), described from their settings
   (`core::describeSettings`). On the 33 ColorWall photos every one renders and, outside Tools,

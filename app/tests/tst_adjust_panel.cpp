@@ -27,6 +27,7 @@
 
 using namespace Qt::StringLiterals;
 using pixelfx::ui::AdjustPanel;
+using pixelfx::ui::AdjustSlider;
 
 class TestAdjustPanel : public QObject
 {
@@ -487,6 +488,41 @@ private Q_SLOTS:
         panel.setSettings(s);
         QCOMPARE(panel.choiceRow(u"effects.vignette.style"_s)->value(), std::string("paint"));
         QVERIFY(!panel.checkRow(u"detail.ca.auto"_s)->isChecked());
+    }
+
+    void theLensProfileRowNamesTheLensAndShowsItsAmountsWhileOn()
+    {
+        AdjustPanel panel;
+        panel.resize(316, 900);
+        panel.show();
+        panel.group(u"Optics"_s)->setExpanded(true);
+        pixelfx::ui::CheckRow* row = panel.checkRow(u"detail.lensProfile.enable"_s);
+        QVERIFY(row != nullptr);
+        AdjustSlider* distortion = panel.slider(u"detail.lensProfile.distortion"_s);
+        AdjustSlider* vignetting = panel.slider(u"detail.lensProfile.vignetting"_s);
+        // Without lens profiles (no photo yet, or no Lensfun) the rows are left out.
+        QVERIFY(!row->isVisible());
+        panel.setLens(u"EF24-70mm f/2.8L USM"_s, u"Canon EF 24-70mm f/2.8L USM"_s, true);
+        QVERIFY(row->isVisible());
+        QCOMPARE(row->description(), u"Canon EF 24-70mm f/2.8L USM"_s);
+        QVERIFY(!distortion->isVisible()); // off
+        QSignalSpy finished(&panel, &AdjustPanel::editFinished);
+        row->box()->click();
+        QVERIFY(panel.settings().boolean("detail.lensProfile.enable", false));
+        QCOMPARE(finished.last().first().toString(), u"Lens profile on"_s);
+        QVERIFY(distortion->isVisible());
+        QVERIFY(vignetting->isVisible());
+        QCOMPARE(distortion->valueText(), u"100"_s);
+        QVERIFY(panel.group(u"Optics"_s)->isChanged(panel.settings()));
+        QCOMPARE(pixelfx::ui::settingLabel(u"detail.lensProfile.enable"_s), u"Lens profile"_s);
+        // On from a preset, for a lens with no profile, or a photo naming no lens.
+        panel.setLens(u"SIGMA 18-35mm F1.8 DC HSM | A 013"_s, QString(), true);
+        QCOMPARE(row->description(), u"No profile for this lens yet: SIGMA 18-35mm F1.8 DC HSM | A 013"_s);
+        QVERIFY(!distortion->isVisible());
+        panel.setLens(QString(), QString(), true);
+        QCOMPARE(row->description(), u"The photo does not say which lens took it"_s);
+        panel.setLens(QString(), QString(), false);
+        QVERIFY(!row->isVisible());
     }
 
     void moreOpensTheFinerSettingsAndIsRemembered()

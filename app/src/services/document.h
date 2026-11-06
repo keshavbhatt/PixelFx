@@ -33,10 +33,12 @@ struct DocumentInfo
     int bitsPerSample = 8;
     QString camera; ///< "Canon EOS R5", empty when the photo does not say
     QString lens;
-    QString exposure;         ///< "ISO 100 · f/8 · 1/250 s · 24 mm"
-    bool raw = false;         ///< a camera RAW file
-    int asShotKelvin = 0;     ///< a RAW's as-shot white balance, when it says (DNG)
-    pfx::LensFacts lensFacts; ///< what its lens profile is found by
+    QString exposure;          ///< "ISO 100 · f/8 · 1/250 s · 24 mm"
+    bool raw = false;          ///< a camera RAW file
+    int asShotKelvin = 0;      ///< a RAW's as-shot white balance, when it says (DNG)
+    pfx::LensFacts lensFacts;  ///< what its lens profile is found by
+    QString lensProfile;       ///< the lens profile found for it, empty when none
+    bool lensProfiles = false; ///< lens profiles are available (a Lensfun database was read)
 };
 
 /// One open photo (PLAN section 6): its decoded preview-size source, its settings and their

@@ -241,8 +241,9 @@ build_catalog.py` converts the presets listed in `scripts/catalog/catalog.tsv` w
 own importer (`pfx import`), so they map exactly as an import in the app would, into
 `app/src/resources/presets/<category>/*.pfxpreset`, compiled into the app as resources. The table
 gives each preset a PixelFx category and a descriptive name without any brand, product or real
-person (Portra 400 is "Portrait 400"). Left out: the 20 video copies and the two lens-profile
-tools, which do nothing in PixelFx; 429 remain. The MIT notice ships with the app (About) and
+person (Portra 400 is "Portrait 400"). Left out: the 20 video copies; 431 remain. The two
+lens-profile tools were left out until lens profiles came (ADR-013) and joined Tools on
+2026-11-06 (owner). The MIT notice ships with the app (About) and
 `REUSE.toml` marks the converted files MIT.
 
 **Consequences.** A new EmulsionPresets release is taken by running the script on it and
@@ -353,8 +354,8 @@ RawTherapee and digiKam) with a library that applies it.
 - Presets go to version 4, recipes and batch recipes to version 5; older files read unchanged.
   The Lightroom importer maps `LensProfileEnable`, `LensProfileDistortionScale` and
   `LensProfileVignettingScale`; Lightroom's own profile names are not needed and are ignored.
-- The control (a Lens profile switch in Optics naming the lens found) is drawn as a mock first
-  and built after the owner approves it.
+- The control is Use lens profile in Optics, naming the lens found (`editor-lens-profile.html`,
+  approved and built 2026-11-06); the rows are left out when no database could be read.
 
 **Consequences.** Phones are mostly absent from the database (the owner's Galaxy S22 Ultra is);
 a phone's DNG describes its own lens in opcodes (WarpRectilinear, FixVignetteRadial) that

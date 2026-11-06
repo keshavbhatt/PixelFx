@@ -90,6 +90,11 @@ void SliderRow::setFullName(const QString& name)
     m_field->setAccessibleName(name);
 }
 
+void SliderRow::setHelp(const QString& text)
+{
+    m_slider->setToolTip(tr("%1. Double-click to reset.").arg(text));
+}
+
 void SliderRow::setRange(int minimum, int maximum, int defaultTicks)
 {
     const QSignalBlocker block(m_slider);
