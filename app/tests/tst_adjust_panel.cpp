@@ -525,6 +525,14 @@ private Q_SLOTS:
         QVERIFY(!row->isVisible());
     }
 
+    void theBorderFacingThePhotoIsLeftClear()
+    {
+        // A style sheet border takes no room: the panel's content must not cover it.
+        const AdjustPanel panel;
+        QCOMPARE(panel.contentsMargins().left(), 1);
+        QCOMPARE(panel.contentsMargins().right(), 0);
+    }
+
     void moreOpensTheFinerSettingsAndIsRemembered()
     {
         AdjustPanel panel;

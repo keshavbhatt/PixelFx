@@ -849,6 +849,10 @@ void makeSidePanel(QWidget* panel, Qt::Edge photoSide)
     panel->setProperty("photoSide",
                        photoSide == Qt::LeftEdge ? QStringLiteral("left") : QStringLiteral("right"));
     panel->setAttribute(Qt::WA_StyledBackground);
+    // The 1 px border on the photo's side stays clear: a style sheet border takes no room of its
+    // own, so the panel's content would paint over it.
+    const bool left = photoSide == Qt::LeftEdge;
+    panel->setContentsMargins(left ? 1 : 0, 0, left ? 0 : 1, 0);
 }
 
 FootButtons footButtons(QWidget* parent, const QString& primary, const QList<QWidget*>& leading,
