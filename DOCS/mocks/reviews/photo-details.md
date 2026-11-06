@@ -26,7 +26,7 @@ Signature: the location kept behind a click, with a line saying whether Export w
 
 - The panel: 340 px wide, `--elevated` with a 1 px `--border`, 10 px corners and the menus'
   shadow; its left edge on the header's file name (86 px from the window's left), 6 px under the
-  header. 482 px tall with a camera photo, 358 px without Exif; at a 1024 by 640 window it fits
+  header. 487 px tall with a camera photo, 361 px without Exif; at a 1024 by 640 window it fits
   under the header with 100 px to spare.
 - Head: the file name 14 px semibold `--text`, cut in the middle when long, the whole name in
   its tooltip; the folder 12 px `--muted` with the home folder as "~", then Show in folder in
@@ -35,7 +35,13 @@ Signature: the location kept behind a click, with a line saying whether Export w
   are kept, then as many of the folders nearest the photo as fit, an ellipsis for the rest
   ("~/…/Slovenia/2026/Lake trip" for ~/Pictures/Archive/Travel/Europe/Slovenia/2026/Lake trip,
   in `photo-details-location.html`). Only a photo's folder too long by itself is cut, in its
-  middle. The whole path is in the tooltip and in Copy details; Show in folder keeps its place. The × is a 26 px flat small button, 10 px from the right edge.
+  middle. Resting on the path shows it whole in a tooltip (the app's tooltip: `--elevated`, a
+  1 px `--border`, 6 px corners, drawn in the `-location` state); Copy details has it too.
+- After the path, a copy button: icon only, 24 by 24 px, flat, the 14 px copy glyph in
+  `--muted`, 2 px from the path; Show in folder follows 6 px after it. It puts the photo's full
+  path on the clipboard, file name included; for a moment its icon turns into a check and its
+  tooltip says "Copied" (the coordinates' copy button does the same). The path line is 24 px
+  tall for it, the head 5 px taller. The × is a 26 px flat small button, 10 px from the right edge.
 - Sections: headings as the side panels' (11 px bold capitals `--muted`, 10 px above, 4 px
   below); rows 25 px apart, the label column 96 px plus a 10 px gap, labels 13 px `--muted`,
   values 13 px `--text`, 16 px from the panel's edges.
@@ -51,10 +57,11 @@ Signature: the location kept behind a click, with a line saying whether Export w
 ## Accessibility
 
 - The name button has the accessible name "Photo details for sunset-lake.jpg" and the tooltip
-  "Photo details (I)"; the × "Close (I, Esc)"; Show "Show where it was taken"; the copy button
+  "Photo details (I)"; the × "Close (I, Esc)"; the path's copy button "Copy the photo's full
+  path"; Show "Show where it was taken"; the copy button
   "Copy the coordinates". Every target is at least 26 px tall.
-- From the keyboard: I opens the panel and puts the focus on its first control, Tab walks Show
-  in folder, the ×, Show and Copy details, Esc closes it and gives the focus back. Nothing needs
+- From the keyboard: I opens the panel and puts the focus on its first control, Tab walks the
+  path's copy button, Show in folder, the ×, Show and Copy details, Esc closes it and gives the focus back. Nothing needs
   the pointer.
 - The panel is announced as "Photo details"; each row reads as its label and value.
 - Nothing is told by colour: a missing part says so in words ("No location in this file.").
@@ -117,3 +124,5 @@ location to a web site; copying the coordinates lets the person choose where the
 - A long folder path drops whole folders from its middle, keeping its start and the photo's own
   folder (chosen over wrapping to two lines and over cutting at the end); drawn in
   `photo-details-location.html`.
+- Resting on a cut path shows it whole in a tooltip, and a small icon-only copy button after the
+  path copies the photo's full path (owner, 2026-11-06); drawn in both states with a path.

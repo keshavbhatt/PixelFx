@@ -7,9 +7,12 @@
 .header .doc.pick > .ic { color: var(--muted); width: 14px; height: 14px; }
 .details { position: absolute; left: 86px; top: 87px; width: 340px; background: var(--elevated); border: 1px solid var(--border); border-radius: 10px; box-shadow: var(--shadow); z-index: 20; font-size: 13px; }
 .details .dh { display: flex; align-items: flex-start; gap: 8px; padding: 12px 10px 8px 16px; }
-.details .dh .t { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.details .dh .t { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 0; }
 .details .dh b { font-size: 14px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.details .dh .path { font-size: 12px; color: var(--muted); display: flex; gap: 8px; }
+.details .dh .path { font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 2px; height: 24px; }
+.details .dh .path .pcopy { width: 24px; height: 24px; flex: none; color: var(--muted); }
+.details .dh .path a { margin-left: 6px; }
+.tip { position: absolute; z-index: 30; background: var(--elevated); color: var(--text); border: 1px solid var(--border); border-radius: 6px; padding: 4px 8px; font-size: 12px; box-shadow: var(--shadow); white-space: nowrap; }
 .details .dh .path span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
 .details .dh .path a { flex: none; }
 .details .sec { padding: 10px 16px 4px; }
@@ -89,7 +92,7 @@
   </div>
 
 <div class="details" role="dialog" aria-label="Photo details">
-  <div class="dh"><div class="t"><b title="sunset-lake.jpg">sunset-lake.jpg</b><div class="path"><span title="~/Pictures/Archive/Travel/Europe/Slovenia/2026/Lake trip">~/&hellip;/Slovenia/2026/Lake trip</span><a href="#">Show in folder</a></div></div><button class="btn sm icon flat" title="Close (I, Esc)"><svg class="ic s"><use href="#i-x"/></svg></button></div>
+  <div class="dh"><div class="t"><b title="sunset-lake.jpg">sunset-lake.jpg</b><div class="path"><span title="~/Pictures/Archive/Travel/Europe/Slovenia/2026/Lake trip">~/&hellip;/Slovenia/2026/Lake trip</span><button class="btn flat icon pcopy" title="Copy the photo's full path"><svg class="ic s"><use href="#i-copy"/></svg></button><a href="#">Show in folder</a></div></div><button class="btn sm icon flat" title="Close (I, Esc)"><svg class="ic s"><use href="#i-x"/></svg></button></div>
   <div class="sec">File</div>
   <div class="kv"><span>Size</span><span>6000 x 4000 (24 MP)</span></div><div class="kv"><span>Format</span><span>JPEG, 8 bits</span></div><div class="kv"><span>File size</span><span>8.4 MB</span></div><div class="kv"><span>Color profile</span><span>Display P3, embedded</span></div>
   <div class="sec">Camera</div>
@@ -99,7 +102,7 @@
   <div class="note" style="padding-left:16px">Export leaves it out: Keep location is off.</div>
   <div class="df"><button class="btn sm" title="Copy these details as text"><svg class="ic s"><use href="#i-copy"/></svg>Copy details</button></div>
 </div>
-<span class="pin" style="left:272px;top:470px">1</span><span class="pin" style="left:358px;top:122px">2</span>
+<div class="tip" style="left:118px;top:146px">~/Pictures/Archive/Travel/Europe/Slovenia/2026/Lake trip</div><span class="pin" style="left:272px;top:470px">1</span><span class="pin" style="left:64px;top:122px">2</span><span class="pin" style="left:250px;top:106px">3</span>
 </div>
-<ol class="notes"><li>After Show: the coordinates, in degrees with the hemisphere, selectable; the copy button puts them on the clipboard as "46.37612, 13.83645", which every map site reads. Hide puts them away again. Pin 1.</li><li>The coordinates are hidden again for the next photo and the next time the panel opens: showing them is a choice made each time.</li><li>No "Open in map": it would send the location to a web site; copying lets the person choose where it goes.</li><li>A long folder path (here ~/Pictures/Archive/Travel/Europe/Slovenia/2026/Lake trip) keeps its start (~ or the drive) and the photo's own folder, then as many of the folders nearest the photo as fit, with an ellipsis for the rest; only a single folder too long by itself is cut with an ellipsis. The whole path is in its tooltip and in Copy details. Pin 2.</li><li><a href="photo-details.html">Back to the main state</a>.</li></ol>
+<ol class="notes"><li>After Show: the coordinates, in degrees with the hemisphere, selectable; the copy button puts them on the clipboard as "46.37612, 13.83645", which every map site reads. Hide puts them away again. Pin 1.</li><li>The coordinates are hidden again for the next photo and the next time the panel opens: showing them is a choice made each time.</li><li>No "Open in map": it would send the location to a web site; copying lets the person choose where it goes.</li><li>A long folder path (here ~/Pictures/Archive/Travel/Europe/Slovenia/2026/Lake trip) keeps its start (~ or the drive) and the photo's own folder, then as many of the folders nearest the photo as fit, with an ellipsis for the rest; only a photo's folder too long by itself is cut, in its middle. Resting on the path shows it whole in a tooltip, as drawn here. Pin 2.</li><li>The small copy button after the path puts the photo's full path on the clipboard, file name included (for a terminal, an Open dialog, a message); for a moment its icon turns into a check and its tooltip says Copied. The coordinates' copy button does the same. Pin 3.</li><li><a href="photo-details.html">Back to the main state</a>.</li></ol>
 </body></html>

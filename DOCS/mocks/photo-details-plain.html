@@ -7,9 +7,12 @@
 .header .doc.pick > .ic { color: var(--muted); width: 14px; height: 14px; }
 .details { position: absolute; left: 86px; top: 87px; width: 340px; background: var(--elevated); border: 1px solid var(--border); border-radius: 10px; box-shadow: var(--shadow); z-index: 20; font-size: 13px; }
 .details .dh { display: flex; align-items: flex-start; gap: 8px; padding: 12px 10px 8px 16px; }
-.details .dh .t { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.details .dh .t { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 0; }
 .details .dh b { font-size: 14px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.details .dh .path { font-size: 12px; color: var(--muted); display: flex; gap: 8px; }
+.details .dh .path { font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 2px; height: 24px; }
+.details .dh .path .pcopy { width: 24px; height: 24px; flex: none; color: var(--muted); }
+.details .dh .path a { margin-left: 6px; }
+.tip { position: absolute; z-index: 30; background: var(--elevated); color: var(--text); border: 1px solid var(--border); border-radius: 6px; padding: 4px 8px; font-size: 12px; box-shadow: var(--shadow); white-space: nowrap; }
 .details .dh .path span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
 .details .dh .path a { flex: none; }
 .details .sec { padding: 10px 16px 4px; }
@@ -89,7 +92,7 @@
   </div>
 
 <div class="details" role="dialog" aria-label="Photo details">
-  <div class="dh"><div class="t"><b title="sunset-lake-web.png">sunset-lake-web.png</b><div class="path"><span title="~/Downloads">~/Downloads</span><a href="#">Show in folder</a></div></div><button class="btn sm icon flat" title="Close (I, Esc)"><svg class="ic s"><use href="#i-x"/></svg></button></div>
+  <div class="dh"><div class="t"><b title="sunset-lake-web.png">sunset-lake-web.png</b><div class="path"><span title="~/Downloads">~/Downloads</span><button class="btn flat icon pcopy" title="Copy the photo's full path"><svg class="ic s"><use href="#i-copy"/></svg></button><a href="#">Show in folder</a></div></div><button class="btn sm icon flat" title="Close (I, Esc)"><svg class="ic s"><use href="#i-x"/></svg></button></div>
   <div class="sec">File</div>
   <div class="kv"><span>Size</span><span>2048 x 1365 (2.8 MP)</span></div><div class="kv"><span>Format</span><span>PNG, 8 bits, transparency</span></div><div class="kv"><span>File size</span><span>3.1 MB</span></div><div class="kv"><span>Color profile</span><span>None, read as sRGB</span></div>
   <div class="sec">Camera</div>

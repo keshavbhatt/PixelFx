@@ -101,6 +101,8 @@ Decisions the work stopped at; everything else went ahead within the approved mo
   Show in folder and Copy details. It stays open while stepping through photos.
 - Approved by the owner with the shortcut I. A long folder path keeps its start and the
   photo's own folder and drops whole folders from its middle (drawn in the `-location` state).
+  The owner added: the cut path shows whole in its tooltip, and a small copy button after it
+  copies the photo's full path.
 
 ### 2026-11-06 (the owner back: About's icon, Batch without the grid)
 

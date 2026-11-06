@@ -7,9 +7,12 @@
 .header .doc.pick > .ic { color: var(--muted); width: 14px; height: 14px; }
 .details { position: absolute; left: 86px; top: 87px; width: 340px; background: var(--elevated); border: 1px solid var(--border); border-radius: 10px; box-shadow: var(--shadow); z-index: 20; font-size: 13px; }
 .details .dh { display: flex; align-items: flex-start; gap: 8px; padding: 12px 10px 8px 16px; }
-.details .dh .t { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.details .dh .t { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 0; }
 .details .dh b { font-size: 14px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.details .dh .path { font-size: 12px; color: var(--muted); display: flex; gap: 8px; }
+.details .dh .path { font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 2px; height: 24px; }
+.details .dh .path .pcopy { width: 24px; height: 24px; flex: none; color: var(--muted); }
+.details .dh .path a { margin-left: 6px; }
+.tip { position: absolute; z-index: 30; background: var(--elevated); color: var(--text); border: 1px solid var(--border); border-radius: 6px; padding: 4px 8px; font-size: 12px; box-shadow: var(--shadow); white-space: nowrap; }
 .details .dh .path span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
 .details .dh .path a { flex: none; }
 .details .sec { padding: 10px 16px 4px; }
@@ -89,7 +92,7 @@
   </div>
 
 <div class="details" role="dialog" aria-label="Photo details">
-  <div class="dh"><div class="t"><b title="sunset-lake.jpg">sunset-lake.jpg</b><div class="path"><span title="~/Pictures/2026/Lake trip">~/Pictures/2026/Lake trip</span><a href="#">Show in folder</a></div></div><button class="btn sm icon flat" title="Close (I, Esc)"><svg class="ic s"><use href="#i-x"/></svg></button></div>
+  <div class="dh"><div class="t"><b title="sunset-lake.jpg">sunset-lake.jpg</b><div class="path"><span title="~/Pictures/2026/Lake trip">~/Pictures/2026/Lake trip</span><button class="btn flat icon pcopy" title="Copy the photo's full path"><svg class="ic s"><use href="#i-copy"/></svg></button><a href="#">Show in folder</a></div></div><button class="btn sm icon flat" title="Close (I, Esc)"><svg class="ic s"><use href="#i-x"/></svg></button></div>
   <div class="sec">File</div>
   <div class="kv"><span>Size</span><span>6000 x 4000 (24 MP)</span></div><div class="kv"><span>Format</span><span>JPEG, 8 bits</span></div><div class="kv"><span>File size</span><span>8.4 MB</span></div><div class="kv"><span>Color profile</span><span>Display P3, embedded</span></div>
   <div class="sec">Camera</div>
@@ -101,5 +104,5 @@
 </div>
 <span class="pin" style="left:148px;top:62px">1</span><span class="pin" style="left:214px;top:536px">2</span><span class="pin" style="left:400px;top:470px">3</span>
 </div>
-<ol class="notes"><li><b>Photo details</b> (I): what the file is and what the camera wrote. Clicking the file name in the header opens it (the chevron says it opens); so do I and View &gt; Photo details. Pin 1.</li><li>A panel, not a sheet: it drops from the name over the photo and stays open while you step through photos (Left, Right, the filmstrip), showing the photo on screen. I, Esc or its &times; closes it; clicking the photo does not.</li><li>Values are selectable text; Copy details puts every line on the clipboard (for a forum post or a bug report). Show in folder opens the file manager on the file. Pin 2.</li><li>Location is behind a click (pin 3): the coordinates show only after Show, so a screen share does not reveal where the photo was taken. The line under it says whether Export keeps it, from Export's Keep location (off by default).</li><li>Other states: <a href="photo-details-plain.html">a file without camera details</a>, <a href="photo-details-location.html">the location shown</a>.</li></ol>
+<ol class="notes"><li><b>Photo details</b> (I): what the file is and what the camera wrote. Clicking the file name in the header opens it (the chevron says it opens); so do I and View &gt; Photo details. Pin 1.</li><li>A panel, not a sheet: it drops from the name over the photo and stays open while you step through photos (Left, Right, the filmstrip), showing the photo on screen. I, Esc or its &times; closes it; clicking the photo does not.</li><li>Values are selectable text; Copy details puts every line on the clipboard (for a forum post or a bug report). Show in folder opens the file manager on the file; the small copy button before it copies the photo's full path. Pin 2.</li><li>Location is behind a click (pin 3): the coordinates show only after Show, so a screen share does not reveal where the photo was taken. The line under it says whether Export keeps it, from Export's Keep location (off by default).</li><li>Other states: <a href="photo-details-plain.html">a file without camera details</a>, <a href="photo-details-location.html">the location shown</a>.</li></ol>
 </body></html>
