@@ -48,7 +48,7 @@ look; a **batch recipe** is a preset plus resize and save options.
 | O4 | EXIF orientation applied on open | ignored | KEEP | done: the library applies the orientation tag on load (M1) |
 | O5 | Embedded ICC profile honoured; working space is linear and wide gamut | dropped | KEEP | done for input: embedded profiles converted to linear Rec.2020 through lcms2 (M1); display profile todo |
 | O6 | Decoding off the GUI thread, a fast embedded or downscaled preview first, full quality after | GUI thread, decoded twice | KEEP | done: decoded on a worker at screen size (`Document`), a RAW's embedded JPEG shown while it develops (2026-11-06), the full-size picture read once zoomed past the preview (`setFullResolution`, `editor-zoom-loading.html`) |
-| O7 | Image information: size, format, bit depth, colour profile, camera, lens, exposure, date, GPS (behind a click) | Info dialog | KEEP (panel, not a dialog) | wip: size, format and file size in the header; the exposure line under the histogram (editor.html) with camera and lens as its tooltip, from `pfx::readExif`; the full panel todo (no mock yet) |
+| O7 | Image information: size, format, bit depth, colour profile, camera, lens, exposure, date, GPS (behind a click) | Info dialog | KEEP (panel, not a dialog) | wip: size, format and file size in the header; the exposure line under the histogram (editor.html) with camera and lens as its tooltip, from `pfx::readExif`; the full panel drawn in `photo-details.html` (2026-11-06), waiting for the owner |
 | O8 | Temp PNG copies of every opened file | yes | DROP | |
 
 ## C. Editing (adjustments)

@@ -40,6 +40,7 @@
 | `batch-empty.html`, `batch-recipe-picker.html` | 2026-11-06 (`mocks/reviews/batch-empty.md`, `batch-recipe-picker.md`) | approved 2026-11-06 |
 | `batch.html` and its states, without the list or grid switch | 2026-11-06 (the owner's call) | approved 2026-11-06 (the grid showed less than the list: no size, no status, no reason a photo was not saved) |
 | `shortcuts.html`, the rows of bound keys it lacked; `export.html`, the overwrite warning line | 2026-11-06 (PROGRESS, testing every feature) | approved 2026-11-06 |
+| `photo-details.html`, `-plain`, `-location` | 2026-11-06 (`mocks/reviews/photo-details.md`) | waiting |
 
 ## Waiting for the owner (2026-11-05)
 
@@ -89,6 +90,16 @@ Decisions the work stopped at; everything else went ahead within the approved mo
 16. Next: the photo information panel (FEATURES O7), its mock first (owner, 2026-11-06).
 
 ## Sessions (newest first)
+
+### 2026-11-06 (Photo details, the mock)
+
+- The mock of FEATURES O7, the owner's choice for the next work: `photo-details.html` with two
+  more states (`-plain`, a file without Exif; `-location`, the location shown) and its review.
+  The file name in the header opens a panel over the photo (also I and View > Photo details):
+  File (size, format and bit depth, file size, colour profile), Camera (camera, lens, exposure,
+  focal length, date taken), Location behind Show with a line saying whether Export keeps it,
+  Show in folder and Copy details. It stays open while stepping through photos. Waiting for the
+  owner; nothing is built.
 
 ### 2026-11-06 (the owner back: About's icon, Batch without the grid)
 
