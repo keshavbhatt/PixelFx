@@ -75,6 +75,21 @@ Decisions the work stopped at; everything else went ahead within the approved mo
 
 ## Sessions (newest first)
 
+### 2026-11-06 (testing every feature, the owner away)
+
+- A test drives the whole window on odd photos (one pixel, a 4000 x 3 strip, a 2 x 3000 one,
+  grey, transparent, 16 bits, a name with accents, CJK and "#", a broken and an empty file):
+  every action, every slider to both ends, 80 undos and redos, every mode; it fails on any Qt
+  warning (`tst_monkey`). It found a 0 px icon painted onto nothing in Batch (now no icon).
+- Settings stopped at 492 px and scrolled with half the window free, cutting its last section;
+  it is as tall as its page now (the scroll area every other sheet uses).
+- Paste settings to several photos, after copying a photo with no edits, showed an empty list
+  and a Paste that did nothing; it says there is nothing to paste and Paste is greyed out. Paste
+  was also enabled at first with nothing ticked.
+- A damaged photo was reported in libvips' words ("VipsJpeg: premature end of JPEG image"); the
+  library's plain wording missed it by a capital letter and now matches any case.
+- A form's label is centred on its field but not on a note under it (Photos at a time).
+
 ### 2026-11-06 (a new app icon)
 
 - After a round of concepts here, the owner supplied the icon: a lens ring around six spectrum

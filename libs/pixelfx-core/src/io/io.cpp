@@ -322,18 +322,22 @@ vips::VImage normalizeBands(vips::VImage in, double& scale)
 // file format"); people get the reason in plain words, without the path they already see.
 std::string readFailure(const std::string& detail)
 {
-    const auto has = [&detail](const char* text) { return detail.find(text) != std::string::npos; };
+    // The loaders word the same failure in different cases ("Premature end", "premature end").
+    std::string lower = detail;
+    std::ranges::transform(lower, lower.begin(),
+                           [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+    const auto has = [&lower](const char* text) { return lower.find(text) != std::string::npos; };
     if (has("not a known file format") || has("unsupported image format") || has("not a valid")) {
         return "This file is not a photo PixelFx can read.";
     }
-    if (has("Premature end") || has("truncated") || has("end of file") || has("short read") ||
-        has("out of order read") || has("Corrupt") || has("corrupt")) {
+    if (has("premature end") || has("truncated") || has("end of file") || has("short read") ||
+        has("out of order read") || has("corrupt")) {
         return "The file is damaged or incomplete.";
     }
-    if (has("unable to unpack") || has("Unsupported file format or not RAW")) {
+    if (has("unable to unpack") || has("unsupported file format or not raw")) {
         return "This RAW file is compressed in a way PixelFx cannot read yet.";
     }
-    if (has("Permission denied")) {
+    if (has("permission denied")) {
         return "PixelFx is not allowed to read this file.";
     }
     const std::string firstLine = detail.substr(0, detail.find('\n'));

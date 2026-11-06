@@ -50,10 +50,8 @@ SettingsSheet::SettingsSheet(core::Settings& settings, QWidget* parent)
     pages->addItem(tr("General"));
     pages->setCurrentRow(0);
     pages->setAccessibleName(tr("Settings pages"));
-    auto* scroll = new QScrollArea(this);
-    scroll->setWidget(buildGeneral());
-    scroll->setWidgetResizable(true);
-    scroll->setFrameShape(QFrame::NoFrame);
+    // As tall as the page, scrolling only when the window is too short.
+    auto* scroll = new SheetScroll(buildGeneral(), kSheetPadding, this);
     auto* body = new QHBoxLayout;
     body->setContentsMargins(0, 0, 0, 0);
     body->setSpacing(0);

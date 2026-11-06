@@ -909,11 +909,22 @@ void setLabelColumn(const QFormLayout* form, int width)
             label->setObjectName(QStringLiteral("fieldLabel"));
             label->setMinimumWidth(width - std::max(0, form->horizontalSpacing()));
             // As tall as its field, with the name in the middle: a form puts a label at the top
-            // of a taller field, the mocks' `.field` centres it.
-            const QLayoutItem* field = form->itemAt(row, QFormLayout::FieldRole);
+            // of a taller field, the mocks' `.field` centres it. A note under the field (a
+            // wrapping label last in its column) is left out.
+            QLayoutItem* field = form->itemAt(row, QFormLayout::FieldRole);
             if (auto* text = qobject_cast<QLabel*>(label); text != nullptr && field != nullptr) {
+                int height = field->sizeHint().height();
+                const QLayout* column =
+                    field->widget() != nullptr ? field->widget()->layout() : field->layout();
+                if (const auto* box = qobject_cast<const QVBoxLayout*>(column);
+                    box != nullptr && box->count() > 1) {
+                    const auto* note = qobject_cast<const QLabel*>(box->itemAt(box->count() - 1)->widget());
+                    if (note != nullptr && note->wordWrap()) {
+                        height -= note->sizeHint().height() + std::max(0, box->spacing());
+                    }
+                }
                 text->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
-                text->setMinimumHeight(field->sizeHint().height());
+                text->setMinimumHeight(height);
             }
         }
     }

@@ -446,6 +446,25 @@ TEST_CASE("a file that is not a photo fails in plain words, without its path")
     CHECK(loaded.error().message.find(path.string()) == std::string::npos);
 }
 
+TEST_CASE("a photo cut off after its first marker fails in plain words, without the loader's")
+{
+    const fixtures::TempDir dir;
+    const auto cut = dir.path() / "cut.jpg";
+    {
+        std::ofstream out(cut, std::ios::binary);
+        out << std::string("\xff\xd8\xff\xe0", 4) << " the rest is missing";
+    }
+    pfx::LoadOptions preview;
+    preview.maxLongEdge = 2048; // as the editor opens a photo
+    for (const auto& loaded : {pfx::load(cut), pfx::load(cut, preview)}) {
+        REQUIRE_FALSE(loaded.ok());
+        const std::string& message = loaded.error().message;
+        CAPTURE(message);
+        CHECK((message == "The file is damaged or incomplete." ||
+               message == "This file is not a photo PixelFx can read."));
+    }
+}
+
 TEST_CASE("engine versions: libvips and Little CMS, as dotted numbers")
 {
     const auto engines = pfx::engineVersions();

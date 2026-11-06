@@ -31,6 +31,9 @@ QByteArray tintedSvg(const QString& name, const QColor& color)
 
 QPixmap render(const QByteArray& svg, int size, qreal dpr)
 {
+    if (size <= 0) {
+        return {}; // a button with no room for its icon asks for none
+    }
     QSvgRenderer renderer(svg);
     QPixmap pm(QSize(size, size) * dpr);
     pm.setDevicePixelRatio(dpr);

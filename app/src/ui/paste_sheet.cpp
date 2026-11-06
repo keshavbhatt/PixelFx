@@ -29,6 +29,12 @@ PasteSheet::PasteSheet(const pfx::Settings& copied, int photos, QWidget* parent)
     connect(buttons.primary, &QPushButton::clicked, this, &QDialog::accept);
     connect(m_parts, &PartChecklist::toggled, this,
             [this, paste = buttons.primary] { paste->setEnabled(!units().isEmpty()); });
+    buttons.primary->setEnabled(!units().isEmpty());
+    if (core::unitsIn(copied).isEmpty()) {
+        // Copied from a photo with no edits: say so rather than show an empty list.
+        m_parts->hide();
+        hint->setText(tr("The copied settings have no edits, so there is nothing to paste."));
+    }
     QVBoxLayout* column = sheetLayout(this, buttons.row);
     column->addLayout(sheetTitleRow(this, tr("Paste settings to %n photos", nullptr, photos)));
     column->addWidget(m_source);
