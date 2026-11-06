@@ -58,7 +58,7 @@ const QString kSheet = uR"(
         QToolButton#headerButton:hover { background: {{hover}}; }
         QToolButton#headerButton:checked { background: {{accentSoft}}; }
         QToolButton#headerButton::menu-indicator { image: none; width: 0; }
-        QPushButton { border: 1px solid {{border}}; border-radius: 7px; padding: 7px 14px; background: {{panel}}; }
+        QPushButton { border: 1px solid {{border}}; border-radius: 7px; padding: 7px 11px; background: {{panel}}; }
         QPushButton:hover { background: {{hover}}; }
         QPushButton#primary { background: {{accentStrong}}; border-color: {{accentStrong}}; color: white; }
         QPushButton#primary:hover { background: {{accentHover}}; }
@@ -138,7 +138,7 @@ const QString kSheet = uR"(
         #adjustName:disabled, #adjustValue:disabled, #adjustValue[changed="true"]:disabled { color: {{faint}}; }
         QSlider::handle:horizontal:disabled { background: {{track}}; }
         QLineEdit#adjustValueField { font-size: 12px; padding: 0 4px; min-height: 0; border-radius: 4px; border-color: {{accent}}; }
-        QPushButton#small { padding: 4px 10px; font-size: 12px; }
+        QPushButton#small { padding: 4px 9px; font-size: 12px; }
         QPushButton#flatSmall { border: 0; background: transparent; padding: 4px 6px; font-size: 12px; }
         QPushButton#flatSmall:hover { background: {{hover}}; }
         QPushButton#categoryHeading { border: 0; background: transparent; padding: 2px 0; color: {{muted}};
