@@ -21,6 +21,7 @@
 #include <QPainterPath>
 #include <QPalette>
 #include <QPixmap>
+#include <QPointer>
 #include <QProxyStyle>
 #include <QPushButton>
 #include <QScrollArea>
@@ -294,6 +295,7 @@ const QString kControls = uR"(
         QFrame#segmentBox QPushButton#segment:checked { background: {{accentSoft}}; }
         QFrame#segmentBox QPushButton#segment[edge="first"] { border-top-left-radius: 6px; border-bottom-left-radius: 6px; }
         QLabel#fieldLabel { color: {{muted}}; }
+        QLabel#fieldLabel:disabled { color: {{faint}}; }
         QToolButton#segmentIcon { border: 1px solid transparent; border-radius: 6px; padding: 3px 8px; background: transparent; }
         QToolButton#segmentIcon:checked { background: {{accentSoft}}; }
         QToolButton#segmentIcon[focusVisible="true"]:focus { border-color: {{accent}}; }
@@ -901,31 +903,69 @@ void addMenuHeading(QMenu* menu, const QString& text)
     menu->addAction(action);
 }
 
+namespace {
+
+// Greys a form's label out with its field, and back (EnabledChange has no signal).
+class LabelFollowsField : public QObject
+{
+public:
+    LabelFollowsField(QWidget* field, QWidget* label)
+        : QObject(field)
+        , m_label(label)
+    {
+        field->installEventFilter(this);
+        label->setEnabled(field->isEnabled());
+    }
+
+protected:
+    bool eventFilter(QObject* watched, QEvent* event) override
+    {
+        if (event->type() == QEvent::EnabledChange && m_label != nullptr) {
+            m_label->setEnabled(static_cast<QWidget*>(watched)->isEnabled());
+        }
+        return false;
+    }
+
+private:
+    QPointer<QWidget> m_label;
+};
+
+// The height a field's label centres on: the field's, less a note under it (a wrapping label
+// last in its column).
+int labelHeightFor(QLayoutItem* field)
+{
+    int height = field->sizeHint().height();
+    const QLayout* column = field->widget() != nullptr ? field->widget()->layout() : field->layout();
+    if (const auto* box = qobject_cast<const QVBoxLayout*>(column); box != nullptr && box->count() > 1) {
+        const auto* note = qobject_cast<const QLabel*>(box->itemAt(box->count() - 1)->widget());
+        if (note != nullptr && note->wordWrap()) {
+            height -= note->sizeHint().height() + std::max(0, box->spacing());
+        }
+    }
+    return height;
+}
+
+} // namespace
+
 void setLabelColumn(const QFormLayout* form, int width)
 {
     for (int row = 0; row < form->rowCount(); ++row) {
         const QLayoutItem* item = form->itemAt(row, QFormLayout::LabelRole);
-        if (QWidget* label = item != nullptr ? item->widget() : nullptr; label != nullptr) {
-            label->setObjectName(QStringLiteral("fieldLabel"));
-            label->setMinimumWidth(width - std::max(0, form->horizontalSpacing()));
-            // As tall as its field, with the name in the middle: a form puts a label at the top
-            // of a taller field, the mocks' `.field` centres it. A note under the field (a
-            // wrapping label last in its column) is left out.
-            QLayoutItem* field = form->itemAt(row, QFormLayout::FieldRole);
-            if (auto* text = qobject_cast<QLabel*>(label); text != nullptr && field != nullptr) {
-                int height = field->sizeHint().height();
-                const QLayout* column =
-                    field->widget() != nullptr ? field->widget()->layout() : field->layout();
-                if (const auto* box = qobject_cast<const QVBoxLayout*>(column);
-                    box != nullptr && box->count() > 1) {
-                    const auto* note = qobject_cast<const QLabel*>(box->itemAt(box->count() - 1)->widget());
-                    if (note != nullptr && note->wordWrap()) {
-                        height -= note->sizeHint().height() + std::max(0, box->spacing());
-                    }
-                }
-                text->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
-                text->setMinimumHeight(height);
-            }
+        QWidget* label = item != nullptr ? item->widget() : nullptr;
+        QLayoutItem* field = form->itemAt(row, QFormLayout::FieldRole);
+        if (label == nullptr || field == nullptr) {
+            continue;
+        }
+        label->setObjectName(QStringLiteral("fieldLabel"));
+        label->setMinimumWidth(width - std::max(0, form->horizontalSpacing()));
+        // As tall as its field, with the name in the middle: a form puts a label at the top of a
+        // taller field, the mocks' `.field` centres it.
+        if (auto* text = qobject_cast<QLabel*>(label)) {
+            text->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
+            text->setMinimumHeight(labelHeightFor(field));
+        }
+        if (field->widget() != nullptr) {
+            new LabelFollowsField(field->widget(), label);
         }
     }
 }

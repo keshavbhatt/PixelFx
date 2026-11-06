@@ -7,6 +7,7 @@
 #include <QApplication>
 #include <QCheckBox>
 #include <QComboBox>
+#include <QLabel>
 #include <QPushButton>
 #include <QTemporaryDir>
 #include <QTest>
@@ -40,6 +41,17 @@ private Q_SLOTS:
         QVERIFY(settings.clippingWarnings());
         auto* onOpen = sheet.findChild<QComboBox*>();
         QVERIFY(!onOpen->isEnabled()); // nothing remembered: nothing to open as left
+        // Its name greys out with it, and comes back with it.
+        const QLabel* name = nullptr;
+        for (const QLabel* l : sheet.findChildren<QLabel*>(u"fieldLabel"_s)) {
+            if (l->text() == u"On open"_s) {
+                name = l;
+            }
+        }
+        QVERIFY(name != nullptr);
+        QVERIFY(!name->isEnabled());
+        onOpen->setEnabled(true);
+        QVERIFY(name->isEnabled());
     }
 
     void shortcutsSheetFilters()

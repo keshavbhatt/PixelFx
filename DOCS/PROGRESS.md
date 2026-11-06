@@ -106,6 +106,8 @@ Decisions the work stopped at; everything else went ahead within the approved mo
   and a long name (a CJK one is three bytes a character) stays within what file systems allow.
 - A save that failed (a folder without write permission, a missing folder, a full disk) said
   so in libvips' words; it says what is wrong in plain words now, tested in the library.
+- A form's name stayed lit when its field was greyed out (On open with Remember edits off,
+  Quality for PNG); names now grey out and come back with their fields, in every form.
 
 ### 2026-11-06 (a new app icon)
 
