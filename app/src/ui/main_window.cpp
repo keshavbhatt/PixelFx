@@ -12,6 +12,7 @@
 #include "ui/batch_page.h"
 #include "ui/canvas.h"
 #include "ui/crop_panel.h"
+#include "ui/elided_label.h"
 #include "ui/export_sheet.h"
 #include "ui/filmstrip.h"
 #include "ui/heal_panel.h"
@@ -551,7 +552,10 @@ void MainWindow::buildHeader()
     m_header->setFixedHeight(50);
     auto* open = headerButton(m_header, u"open"_s, tr("Open images (Ctrl+O)"));
     connect(open, &QToolButton::clicked, this, &MainWindow::chooseFiles);
-    m_docName = new QLabel(m_header);
+    auto* name = new ElidedLabel(m_header);
+    name->setElideMode(Qt::ElideMiddle); // a long name keeps its start and its extension
+    name->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred); // whole while there is room
+    m_docName = name;
     m_docName->setObjectName(u"docName"_s);
     m_docMeta = new QLabel(m_header);
     m_docMeta->setObjectName(u"docMeta"_s);
@@ -1808,11 +1812,13 @@ void MainWindow::updateHeader()
     m_docMeta->setVisible(!welcome);
     if (batch) {
         m_docName->setText(tr("Batch"));
+        m_docName->setToolTip(QString());
         m_docMeta->setText(m_batch->summary());
         setWindowTitle(tr("Batch"));
     } else if (m_document.isOpen()) {
         const QString name = QFileInfo(m_document.info().path).fileName();
         m_docName->setText(name);
+        m_docName->setToolTip(name);
         m_docMeta->setText(describe(m_document.info()));
         setWindowTitle(name);
     } else {
@@ -2191,6 +2197,7 @@ void MainWindow::showOpened(const services::DocumentInfo& info)
 {
     const QString name = QFileInfo(info.path).fileName();
     m_docName->setText(name);
+    m_docName->setToolTip(name);
     m_docMeta->setText(describe(info));
     setWindowTitle(name);
     m_settings.addRecentFile(info.path);

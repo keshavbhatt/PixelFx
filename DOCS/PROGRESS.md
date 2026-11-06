@@ -143,6 +143,8 @@ Decisions the work stopped at; everything else went ahead within the approved mo
   folder does (it was refused as an unknown file); presets, looks and .cube LUTs are imported;
   a file PixelFx does not open is said in a toast instead of replacing the photo on show with
   an error.
+- A long file name in the header was cut off mid-letter when the window was narrow; it is
+  shortened in the middle, keeping its start and extension, with the whole name in a tooltip.
 
 ### 2026-11-06 (a new app icon)
 
