@@ -14,6 +14,8 @@ qt_add_library(pixelfx_core STATIC
     describe.h
     export_options.cpp
     export_options.h
+    file_names.cpp
+    file_names.h
     histogram.cpp
     histogram.h
     history.cpp

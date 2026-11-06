@@ -1,4 +1,5 @@
 #include "core/describe.h"
+#include "core/file_names.h"
 #include "core/presets.h"
 
 #include <QFile>
@@ -20,6 +21,25 @@ class TestPresets : public QObject
     Q_OBJECT
 
 private Q_SLOTS:
+    void namesBecomeFileNamesOnEverySystem()
+    {
+        using pixelfx::core::fileSafeName;
+        QCOMPARE(fileSafeName(u"Warm / faded: v2?"_s, u"Preset"_s), u"Warm - faded- v2-"_s);
+        QCOMPARE(fileSafeName(u"..hidden"_s, u"Preset"_s), u"hidden"_s);
+        QCOMPARE(fileSafeName(u"Ends with a dot. "_s, u"Preset"_s), u"Ends with a dot"_s);
+        QCOMPARE(fileSafeName(u"   "_s, u"Preset"_s), u"Preset"_s);
+        QCOMPARE(fileSafeName(u"..."_s, u"Look"_s), u"Look"_s);
+        // Windows keeps these for devices, with or without more after a dot.
+        QCOMPARE(fileSafeName(u"con"_s, u"Preset"_s), u"con-"_s);
+        QCOMPARE(fileSafeName(u"NUL.old"_s, u"Preset"_s), u"NUL-.old"_s);
+        QCOMPARE(fileSafeName(u"Console"_s, u"Preset"_s), u"Console"_s);
+        // Long names are cut at 80 characters, never inside one (an emoji is two UTF-16 units).
+        const QString emoji = QString(79, u'a') + QString::fromUtf8("\xF0\x9F\x8C\x85");
+        const QString cut = fileSafeName(emoji, u"Preset"_s);
+        QCOMPARE(cut, QString(79, u'a'));
+        QVERIFY(!cut.back().isHighSurrogate());
+    }
+
     void aPresetCarriesTheLook()
     {
         pfx::Settings photo;

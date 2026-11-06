@@ -1,5 +1,6 @@
 #include "core/watermark.h"
 
+#include "core/file_names.h"
 #include "core/photo_details.h"
 
 #include <QCoreApplication>
@@ -32,16 +33,6 @@ namespace pixelfx::core {
 namespace {
 
 constexpr int kVersion = 1;
-
-QString fileSafe(const QString& name)
-{
-    QString s = name.trimmed();
-    s.replace(QRegularExpression(u"[\\\\/:*?\"<>|\\x00-\\x1F]"_s), u"-"_s);
-    while (s.startsWith(u'.')) {
-        s.remove(0, 1); // a leading dot would hide the file from the list
-    }
-    return s.isEmpty() ? u"Watermark"_s : s.left(80);
-}
 
 double longEdge(const QSizeF& s)
 {
@@ -430,7 +421,7 @@ QString WatermarkLibrary::save(const Watermark& w, const QString& path) const
     // A new watermark gets a file name of its own; an edited one keeps its file.
     QString target = path;
     if (target.isEmpty()) {
-        const QString base = m_folder + u'/' + fileSafe(w.name);
+        const QString base = m_folder + u'/' + fileSafeName(w.name, u"Watermark"_s);
         target = base + u".pfxwatermark"_s;
         for (int n = 2; QFileInfo::exists(target); ++n) {
             target = base + u"-%1.pfxwatermark"_s.arg(n);

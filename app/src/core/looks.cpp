@@ -1,5 +1,7 @@
 #include "core/looks.h"
 
+#include "core/file_names.h"
+
 #include <QCoreApplication>
 #include <QDir>
 #include <QFileInfo>
@@ -56,16 +58,6 @@ pfx::Settings withCurve(pfx::Settings s, pfx::Curve curve)
 {
     s.set("curves.rgb", std::move(curve));
     return s;
-}
-
-QString fileSafe(const QString& name)
-{
-    QString s = name.trimmed();
-    s.replace(QRegularExpression(u"[\\\\/:*?\"<>|\\x00-\\x1F]"_s), u"-"_s);
-    while (s.startsWith(u'.')) {
-        s.remove(0, 1); // a leading dot would hide the file from the list
-    }
-    return s.isEmpty() ? u"Look"_s : s.left(80);
 }
 
 struct Registry
@@ -256,7 +248,7 @@ QString LookLibrary::importLut(const QString& file, QString* error) const
     if (!QDir().mkpath(m_folder)) {
         return fail(QCoreApplication::translate(kContext, "The looks folder could not be created."));
     }
-    const QString base = m_folder + u'/' + fileSafe(QFileInfo(file).completeBaseName());
+    const QString base = m_folder + u'/' + fileSafeName(QFileInfo(file).completeBaseName(), u"Look"_s);
     QString path = base + u".pfxlook"_s;
     for (int n = 2; QFileInfo::exists(path); ++n) {
         path = base + u"-%1.pfxlook"_s.arg(n);
@@ -289,7 +281,7 @@ QString LookLibrary::save(const QString& name, const pfx::Look& look, const QStr
         if (!QDir().mkpath(m_folder)) {
             return {};
         }
-        const QString base = m_folder + u'/' + fileSafe(name);
+        const QString base = m_folder + u'/' + fileSafeName(name, u"Look"_s);
         target = base + u".pfxlook"_s;
         for (int n = 2; QFileInfo::exists(target); ++n) {
             target = base + u"-%1.pfxlook"_s.arg(n);

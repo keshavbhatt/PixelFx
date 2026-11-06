@@ -99,6 +99,9 @@ Decisions the work stopped at; everything else went ahead within the approved mo
   be found. They are in the sheet and its mock now (with Close photo and Adjust a colour, which
   the app already showed); a test checks every key the sheet lists is bound. For the owner's
   look: the mock's rows changed.
+- Preset, look and watermark names became file names through three copies of one function,
+  which could cut an emoji in half at 80 characters and let through names Windows refuses (a
+  trailing dot or space, CON, NUL, COM1...). One `core::fileSafeName` serves all three, tested.
 
 ### 2026-11-06 (a new app icon)
 

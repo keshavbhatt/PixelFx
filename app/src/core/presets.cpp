@@ -1,6 +1,7 @@
 #include "core/presets.h"
 
 #include "core/describe.h"
+#include "core/file_names.h"
 
 #include <QCoreApplication>
 #include <QDir>
@@ -94,16 +95,6 @@ bool isDefault(const pfx::ParamSpec& spec, const pfx::Value& value)
         return spec.type == pfx::ParamType::Choice && !spec.choices.empty() && *t == spec.choices.front();
     }
     return false;
-}
-
-QString fileSafe(const QString& name)
-{
-    QString s = name.trimmed();
-    s.replace(QRegularExpression(u"[\\\\/:*?\"<>|\\x00-\\x1F]"_s), u"-"_s);
-    while (s.startsWith(u'.')) {
-        s.remove(0, 1); // a leading dot would hide the file from the list
-    }
-    return s.isEmpty() ? u"Preset"_s : s.left(80);
 }
 
 } // namespace
@@ -362,7 +353,7 @@ std::vector<PresetEntry> PresetLibrary::entries() const
 
 QString PresetLibrary::freePath(const QString& name) const
 {
-    const QString base = m_folder + u'/' + fileSafe(name);
+    const QString base = m_folder + u'/' + fileSafeName(name, u"Preset"_s);
     QString path = base + u".pfxpreset"_s;
     for (int n = 2; QFileInfo::exists(path); ++n) {
         path = base + u"-%1.pfxpreset"_s.arg(n);
