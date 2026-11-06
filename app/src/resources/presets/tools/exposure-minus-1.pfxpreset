@@ -1,8 +1,8 @@
 {
   "format": "pixelfx",
   "kind": "preset",
-  "version": 2,
-  "name": "Exposure +2",
+  "version": 4,
+  "name": "Exposure -1",
   "group": "Profiles",
   "workingSpace": "rec2020-linear",
   "body": {
@@ -11,7 +11,7 @@
         "enabled": false
       },
       "light": {
-        "exposure": 2.0
+        "exposure": -1.0
       }
     }
   }

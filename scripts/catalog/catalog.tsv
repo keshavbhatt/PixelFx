@@ -409,6 +409,8 @@ Grain - Medium	tools	Grain, medium
 Grain - Pushed	tools	Grain, pushed
 Heavy NR	tools	Noise reduction, heavy
 High ISO NR	tools	Noise reduction, high ISO
+Lens Correction - Disable	tools	Lens profile, off
+Lens Correction - Enable	tools	Lens profile, on
 Light NR	tools	Noise reduction, light
 Medium NR	tools	Noise reduction, medium
 Reset Basic	tools	Reset light and colour

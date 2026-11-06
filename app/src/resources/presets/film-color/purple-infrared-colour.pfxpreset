@@ -1,7 +1,7 @@
 {
   "format": "pixelfx",
   "kind": "preset",
-  "version": 2,
+  "version": 4,
   "name": "Purple infrared colour",
   "group": "Profiles",
   "workingSpace": "rec2020-linear",

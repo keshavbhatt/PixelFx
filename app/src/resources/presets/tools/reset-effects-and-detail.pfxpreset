@@ -1,7 +1,7 @@
 {
   "format": "pixelfx",
   "kind": "preset",
-  "version": 2,
+  "version": 4,
   "name": "Reset effects and detail",
   "group": "Profiles",
   "workingSpace": "rec2020-linear",
@@ -31,6 +31,9 @@
           "luminance": 0.0,
           "luminanceContrast": 0.0,
           "luminanceDetail": 50.0
+        },
+        "lensProfile": {
+          "enable": false
         },
         "sharpen": {
           "amount": 40.0,

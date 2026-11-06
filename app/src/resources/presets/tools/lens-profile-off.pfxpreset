@@ -1,0 +1,23 @@
+{
+  "format": "pixelfx",
+  "kind": "preset",
+  "version": 4,
+  "name": "Lens profile, off",
+  "group": "Profiles",
+  "workingSpace": "rec2020-linear",
+  "body": {
+    "settings": {
+      "bw": {
+        "enabled": false
+      },
+      "detail": {
+        "ca": {
+          "auto": false
+        },
+        "lensProfile": {
+          "enable": false
+        }
+      }
+    }
+  }
+}

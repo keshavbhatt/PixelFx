@@ -1,8 +1,8 @@
 {
   "format": "pixelfx",
   "kind": "preset",
-  "version": 2,
-  "name": "Exposure -0.3",
+  "version": 4,
+  "name": "Lens profile, on",
   "group": "Profiles",
   "workingSpace": "rec2020-linear",
   "body": {
@@ -10,8 +10,13 @@
       "bw": {
         "enabled": false
       },
-      "light": {
-        "exposure": -0.3
+      "detail": {
+        "ca": {
+          "auto": true
+        },
+        "lensProfile": {
+          "enable": true
+        }
       }
     }
   }

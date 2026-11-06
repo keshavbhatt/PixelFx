@@ -21,6 +21,8 @@ ROOT = HERE.parent.parent
 
 
 def slug(name):
+    # Signs are spelled out, so "Exposure +1" and "Exposure -1" get files of their own.
+    name = re.sub(r'-(?=\d)', ' minus ', name.replace('+', ' plus '))
     return re.sub(r'[^a-z0-9]+', '-', name.lower()).strip('-')
 
 

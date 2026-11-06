@@ -1,7 +1,7 @@
 {
   "format": "pixelfx",
   "kind": "preset",
-  "version": 2,
+  "version": 4,
   "name": "Daylight cine 50",
   "group": "Profiles",
   "workingSpace": "rec2020-linear",
