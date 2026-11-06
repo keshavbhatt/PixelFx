@@ -5,6 +5,7 @@
 #include "pfx/registry.h"
 
 #include <array>
+#include <cmath>
 #include <doctest/doctest.h>
 
 namespace {
@@ -59,6 +60,30 @@ TEST_CASE("auto stays inside the registry's ranges and leaves a neutral grey ram
     CHECK_FALSE(ramp.contains("color.wb.tint"));
     CHECK(std::abs(ramp.number("light.exposure", 0)) < 0.3);
     CHECK(pfx::autoAdjust(pfx::Image()).isEmpty());
+}
+
+TEST_CASE("auto on flat and extreme pictures gives settings in range, and renders")
+{
+    // Black, white, one colour, one pixel: no division by an empty range, nothing out of range.
+    for (const auto& c : std::array<std::array<float, 3>, 5>{{{0.0F, 0.0F, 0.0F},
+                                                              {1.0F, 1.0F, 1.0F},
+                                                              {0.5F, 0.5F, 0.5F},
+                                                              {1.0F, 0.0F, 0.0F},
+                                                              {0.0F, 0.0F, 1.0F}}}) {
+        for (const int side : {1, 64}) {
+            CAPTURE(c[0]);
+            CAPTURE(c[2]);
+            CAPTURE(side);
+            pfx::Settings s = pfx::autoAdjust(fixtures::flat(c[0], c[1], c[2], side, side));
+            CHECK(pfx::registry().normalize(s).empty());
+            const auto out = pfx::render(fixtures::flat(c[0], c[1], c[2], side, side), s);
+            REQUIRE(out.ok());
+            const float* px = out.value().pixel(0, 0);
+            CHECK(std::isfinite(px[0]));
+            CHECK(std::isfinite(px[1]));
+            CHECK(std::isfinite(px[2]));
+        }
+    }
 }
 
 TEST_CASE("white balance picker: the picked colour comes out grey")
