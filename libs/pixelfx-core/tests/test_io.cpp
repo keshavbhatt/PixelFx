@@ -446,7 +446,7 @@ TEST_CASE("a file that is not a photo fails in plain words, without its path")
     CHECK(loaded.error().message.find(path.string()) == std::string::npos);
 }
 
-TEST_CASE("a photo cut off after its first marker fails in plain words, without the loader's")
+TEST_CASE("a photo cut off after its first marker reads as damaged, the same on every path")
 {
     const fixtures::TempDir dir;
     const auto cut = dir.path() / "cut.jpg";
@@ -456,13 +456,18 @@ TEST_CASE("a photo cut off after its first marker fails in plain words, without 
     }
     pfx::LoadOptions preview;
     preview.maxLongEdge = 2048; // as the editor opens a photo
+    // Damaged, however it is read: before, the probe said damaged and the load "not a photo".
     for (const auto& loaded : {pfx::load(cut), pfx::load(cut, preview)}) {
         REQUIRE_FALSE(loaded.ok());
-        const std::string& message = loaded.error().message;
-        CAPTURE(message);
-        CHECK((message == "The file is damaged or incomplete." ||
-               message == "This file is not a photo PixelFx can read."));
+        CHECK(loaded.error().message == "The file is damaged or incomplete.");
     }
+    const auto probed = pfx::probe(cut);
+    REQUIRE_FALSE(probed.ok());
+    CHECK(probed.error().message == "The file is damaged or incomplete.");
+    const auto empty = dir.path() / "empty.png";
+    std::ofstream{empty, std::ios::binary}.close();
+    REQUIRE_FALSE(pfx::load(empty).ok());
+    CHECK(pfx::load(empty).error().message == "The file is empty.");
 }
 
 TEST_CASE("a save that cannot happen fails in plain words")

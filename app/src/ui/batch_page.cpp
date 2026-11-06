@@ -1511,7 +1511,11 @@ void BatchPage::renderPreview()
     connect(watcher, &QFutureWatcher<Found>::finished, this, [this, watcher, render] {
         const Found found = watcher->result();
         watcher->deleteLater();
-        if (!found.second || !m_files.contains(found.first)) {
+        if (!found.second) {
+            m_preview->hide(); // none of the first photos reads: nothing to show before and after
+            return;
+        }
+        if (!m_files.contains(found.first)) {
             return;
         }
         m_previewPath = found.first;
@@ -1819,9 +1823,10 @@ void BatchPage::showDone(int saved, int failed)
         bytes += m_runner.target(i).isEmpty() ? 0 : QFileInfo(m_runner.target(i)).size();
     }
     if (m_clock.isValid()) {
+        const qint64 seconds = std::max<qint64>(1, m_clock.elapsed() / 1000);
         //: After a batch: how long it took and how much it wrote, "in 38 s, 41 MB".
-        m_statusDetail->setText(
-            tr("in %1 s, %2").arg(std::max<qint64>(1, m_clock.elapsed() / 1000)).arg(core::sizeText(bytes)));
+        m_statusDetail->setText(saved > 0 ? tr("in %1 s, %2").arg(seconds).arg(core::sizeText(bytes))
+                                          : tr("in %1 s").arg(seconds)); // nothing written, no "0 bytes"
     }
 }
 

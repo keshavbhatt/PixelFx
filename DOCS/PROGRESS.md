@@ -125,6 +125,11 @@ Decisions the work stopped at; everything else went ahead within the approved mo
   levels off as the caches fill), a 96-megapixel photo opens in under 2 s, the fuzzers (document,
   loader, EXIF, .cube) found nothing in a minute each, the command line refuses bad input with
   a message and exit code 2, and a live theme switch matches a light start pixel for pixel.
+- Batch on photos that cannot be read: one damaged file was "damaged or incomplete" in the
+  list and "not a photo PixelFx can read" after the run (the loaders word it differently); the
+  library now decides from the file's first bytes, the same everywhere, and an empty file says
+  "The file is empty." The preview strip showed two empty boxes and a live View larger when no
+  photo reads; it hides. The finish line no longer adds "0 bytes" when nothing was saved.
 
 ### 2026-11-06 (a new app icon)
 

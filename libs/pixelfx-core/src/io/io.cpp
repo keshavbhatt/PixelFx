@@ -316,6 +316,9 @@ vips::VImage normalizeBands(vips::VImage in, double& scale)
     return in.cast(VIPS_FORMAT_FLOAT);
 }
 
+constexpr const char* kNotAPhoto = "This file is not a photo PixelFx can read.";
+constexpr const char* kDamaged = "The file is damaged or incomplete.";
+
 // libvips caches loaded files by name; `revalidate` makes it check the file again, so a photo
 // overwritten on disk (an export over an existing file) is never served from the stale cache.
 // libvips explains a failed read for developers ("VipsForeignLoad: "/path" is not a known
@@ -328,11 +331,11 @@ std::string readFailure(const std::string& detail)
                            [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
     const auto has = [&lower](const char* text) { return lower.find(text) != std::string::npos; };
     if (has("not a known file format") || has("unsupported image format") || has("not a valid")) {
-        return "This file is not a photo PixelFx can read.";
+        return kNotAPhoto;
     }
     if (has("premature end") || has("truncated") || has("end of file") || has("short read") ||
         has("out of order read") || has("corrupt")) {
-        return "The file is damaged or incomplete.";
+        return kDamaged;
     }
     if (has("unable to unpack") || has("unsupported file format or not raw")) {
         return "This RAW file is compressed in a way PixelFx cannot read yet.";
@@ -342,6 +345,44 @@ std::string readFailure(const std::string& detail)
     }
     const std::string firstLine = detail.substr(0, detail.find('\n'));
     return "The photo could not be read (" + firstLine + ").";
+}
+
+// Whether the file starts as an image does (JPEG, PNG, GIF, TIFF and most RAW, WebP, HEIF and
+// AVIF, JPEG XL, BMP), whatever its name says.
+bool startsLikeAPhoto(const std::filesystem::path& path)
+{
+    std::ifstream in(path, std::ios::binary);
+    std::array<unsigned char, 12> b{};
+    in.read(reinterpret_cast<char*>(b.data()), static_cast<std::streamsize>(b.size()));
+    if (in.gcount() < 4) {
+        return false;
+    }
+    const auto at = [&b](std::size_t i, const char* text) {
+        return std::equal(text, text + std::char_traits<char>::length(text),
+                          b.begin() + static_cast<long>(i));
+    };
+    return (b[0] == 0xFF && b[1] == 0xD8 && b[2] == 0xFF) || (b[0] == 0x89 && at(1, "PNG")) ||
+           at(0, "GIF8") || at(0, "II*") || (at(0, "MM") && b[2] == 0 && b[3] == '*') ||
+           (at(0, "RIFF") && at(8, "WEBP")) || at(4, "ftyp") || (b[0] == 0xFF && b[1] == 0x0A) ||
+           at(4, "JXL ") || at(0, "BM");
+}
+
+// A file that starts as a photo but cannot be read is damaged, not "not a photo": the loaders
+// word that differently from one path and version to the next, the first bytes do not.
+template <typename T>
+Result<T> worded(Result<T> result, const std::filesystem::path& path)
+{
+    if (result.ok() || result.error().message != kNotAPhoto) {
+        return result;
+    }
+    std::error_code ec;
+    if (std::filesystem::file_size(path, ec) == 0 && !ec) {
+        return Error{result.error().code, "The file is empty."}; // a copy that never finished
+    }
+    if (startsLikeAPhoto(path)) {
+        return Error{result.error().code, kDamaged};
+    }
+    return result;
 }
 
 // A failed write in plain words, as readFailure does for reading: people learn what to do
@@ -385,7 +426,9 @@ vips::VImage openFile(const std::filesystem::path& path)
 
 } // namespace
 
-Result<ImageInfo> probe(const std::filesystem::path& path)
+namespace {
+
+Result<ImageInfo> probeAsIs(const std::filesystem::path& path)
 {
     ensureVips();
     if (lowerExtension(path) == ".dng") {
@@ -414,7 +457,16 @@ Result<ImageInfo> probe(const std::filesystem::path& path)
     }
 }
 
-Result<Metadata> readMetadata(const std::filesystem::path& path)
+} // namespace
+
+Result<ImageInfo> probe(const std::filesystem::path& path)
+{
+    return worded(probeAsIs(path), path);
+}
+
+namespace {
+
+Result<Metadata> readMetadataAsIs(const std::filesystem::path& path)
 {
     ensureVips();
     try {
@@ -424,6 +476,13 @@ Result<Metadata> readMetadata(const std::filesystem::path& path)
     } catch (const vips::VError& e) {
         return Error{ErrorCode::DecodeFailed, readFailure(e.what())};
     }
+}
+
+} // namespace
+
+Result<Metadata> readMetadata(const std::filesystem::path& path)
+{
+    return worded(readMetadataAsIs(path), path);
 }
 
 namespace {
@@ -555,7 +614,9 @@ Result<LoadedImage> loadPreview(const std::filesystem::path& path, const LoadOpt
     return Error{ErrorCode::DecodeFailed, "This file has no preview inside it."};
 }
 
-Result<LoadedImage> load(const std::filesystem::path& path, const LoadOptions& options)
+namespace {
+
+Result<LoadedImage> loadAsIs(const std::filesystem::path& path, const LoadOptions& options)
 {
     ensureVips();
     std::error_code ec;
@@ -585,6 +646,13 @@ Result<LoadedImage> load(const std::filesystem::path& path, const LoadOptions& o
     } catch (const vips::VError& e) {
         return Error{ErrorCode::DecodeFailed, readFailure(e.what())};
     }
+}
+
+} // namespace
+
+Result<LoadedImage> load(const std::filesystem::path& path, const LoadOptions& options)
+{
+    return worded(loadAsIs(path, options), path);
 }
 
 namespace {
