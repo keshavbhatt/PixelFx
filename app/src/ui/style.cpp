@@ -151,6 +151,7 @@ const QString kSheet = uR"(
         QSlider#temperatureTrack::groove:horizontal { background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #4F86E8, stop:0.5 #DDDDDD, stop:1 #F0B040); }
         QSlider#tintTrack::groove:horizontal { background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #4CB060, stop:0.5 #DDDDDD, stop:1 #D050C0); }
         QSlider#saturationTrack::groove:horizontal { background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #888888, stop:0.2 #E04F4F, stop:0.4 #E0C04F, stop:0.6 #4FE070, stop:0.8 #4F9CE0, stop:1 #B04FE0); }
+        QSlider#saturationTrack:disabled::groove:horizontal { background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 rgba(136,136,136,100), stop:0.2 rgba(224,79,79,100), stop:0.4 rgba(224,192,79,100), stop:0.6 rgba(79,224,112,100), stop:0.8 rgba(79,156,224,100), stop:1 rgba(176,79,224,100)); }
         QSlider#bwTrack::groove:horizontal { background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #1E1E1E, stop:0.5 #8A8A8A, stop:1 #F0F0F0); }
         QSlider#redHueTrack::groove:horizontal { background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #D04FA0, stop:0.5 #E04F4F, stop:1 #E8904A); }
         QSlider#greenHueTrack::groove:horizontal { background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #C8C04F, stop:0.5 #4FC060, stop:1 #4FC0B0); }

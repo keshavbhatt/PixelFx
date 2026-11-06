@@ -459,7 +459,8 @@ QHBoxLayout* AdjustPanel::buildTopRow()
     m_collapseAll->setAccessibleName(tr("Collapse all groups"));
     connect(m_collapseAll, &QPushButton::clicked, this, &AdjustPanel::collapseAll);
     top->addWidget(m_collapseAll);
-    for (QPushButton* icon : {static_cast<QPushButton*>(resetAll), static_cast<QPushButton*>(m_collapseAll)}) {
+    for (QPushButton* icon :
+         {static_cast<QPushButton*>(resetAll), static_cast<QPushButton*>(m_collapseAll)}) {
         icon->setFixedSize(26, 26); // the mocks' small icon buttons
     }
     return top;
@@ -939,7 +940,7 @@ QWidget* AdjustPanel::buildWhiteBalanceRow(QWidget* parent)
         }
     });
     auto* layout = new QHBoxLayout(row);
-    layout->setContentsMargins(0, 5, 0, 5);
+    layout->setContentsMargins(0, 2, 0, 2); // as the Profile row above it
     layout->setSpacing(kGapRelated);
     layout->addWidget(label);
     layout->addStretch();

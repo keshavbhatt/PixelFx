@@ -85,8 +85,12 @@ AdjustGroup::AdjustGroup(QString id, const QString& name, const QString& glyph, 
     m_reset->setObjectName(u"flatIcon"_s);
     m_reset->setIcon(icons::themed(u"reset"_s, tokens().muted));
     setName(name);
+    // 39 px whether or not its reset shows (the mock's 10 px around a line of text); the 24 px
+    // reset fits inside instead of making a changed group's title taller.
+    constexpr int kHeaderHeight = 39;
+    header->setFixedHeight(kHeaderHeight);
     auto* row = new QHBoxLayout(header);
-    row->setContentsMargins(kPanelPadding, 10, kPanelPadding, 10);
+    row->setContentsMargins(kPanelPadding, 0, kPanelPadding, 0);
     row->setSpacing(kGapControls);
     row->addWidget(m_chevron);
     row->addWidget(icon);

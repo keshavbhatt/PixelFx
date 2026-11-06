@@ -31,7 +31,7 @@ ChoiceRow::ChoiceRow(const QString& name, std::vector<std::string> values, const
     m_list->addItems(texts);
     m_list->setAccessibleName(name);
     auto* row = new QHBoxLayout(this);
-    row->setContentsMargins(0, 5, 0, 5);
+    row->setContentsMargins(0, 2, 0, 2); // rows 28 px apart, as the mock's 4 px margins that meet
     row->setSpacing(kGapRelated);
     row->addWidget(label);
     row->addStretch();
