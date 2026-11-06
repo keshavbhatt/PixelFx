@@ -331,6 +331,36 @@ private Q_SLOTS:
         QCOMPARE(window.document().info().path, file);
     }
 
+    void aFolderGoesToBatchAndOtherFilesLeaveThePhotoOnShow()
+    {
+        QStandardPaths::setTestModeEnabled(true);
+        pixelfx::ui::applyStyle(*qApp);
+        QTemporaryDir dir;
+        pixelfx::core::Settings settings(dir.filePath(u"s.ini"_s));
+        pixelfx::ui::MainWindow window(settings);
+        window.show();
+        QVERIFY(QTest::qWaitForWindowExposed(&window));
+        QDir().mkpath(dir.filePath(u"shoot"_s));
+        for (const QString& name : {u"shoot/a.png"_s, u"photo.png"_s}) {
+            pfx::Image img(30, 20);
+            img.fill(0.3F, 0.2F, 0.1F);
+            QVERIFY(pfx::save(img, dir.filePath(name).toStdString()).ok());
+        }
+        QSignalSpy opened(&window.document(), &pixelfx::services::Document::opened);
+        window.openFiles({dir.filePath(u"photo.png"_s)});
+        QVERIFY(opened.wait(10000));
+        // A file PixelFx does not open: said, and the photo stays on show.
+        QFile notes(dir.filePath(u"notes.txt"_s));
+        QVERIFY(notes.open(QIODevice::WriteOnly));
+        notes.close();
+        window.openFiles({notes.fileName()});
+        QCOMPARE(window.document().info().path, dir.filePath(u"photo.png"_s));
+        QVERIFY(window.canvas()->isVisible());
+        // A folder opens in Batch, as Open folder does.
+        window.openFiles({dir.filePath(u"shoot"_s)});
+        QVERIFY(window.batchPage()->isVisible());
+    }
+
     void severalPhotosShareThePresetThroughTheStrip()
     {
         QStandardPaths::setTestModeEnabled(true);

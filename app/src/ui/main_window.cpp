@@ -1244,9 +1244,19 @@ void MainWindow::importPresets()
         tr("Presets and looks (*.pfxpreset *.pfxrecipe *.xmp *.pfxlook *.cube *.png *.tif *.tiff);;"
            "PixelFx presets and looks (*.pfxpreset *.pfxrecipe *.pfxlook);;"
            "Lightroom and Camera Raw presets (*.xmp);;LUTs (*.cube *.png *.tif *.tiff)"));
-    if (files.isEmpty()) {
-        return;
+    if (!files.isEmpty()) {
+        importFiles(files);
     }
+}
+
+bool MainWindow::isImportable(const QString& path)
+{
+    static const QStringList kSuffixes = {u"pfxpreset"_s, u"pfxrecipe"_s, u"xmp"_s, u"pfxlook"_s, u"cube"_s};
+    return kSuffixes.contains(QFileInfo(path).suffix().toLower());
+}
+
+void MainWindow::importFiles(const QStringList& files)
+{
     ImportTally tally;
     for (const QString& file : files) {
         const QString suffix = QFileInfo(file).suffix().toLower();
@@ -1917,16 +1927,36 @@ bool MainWindow::isSupported(const QString& path)
 
 void MainWindow::openFiles(const QStringList& files)
 {
+    // Photos open in the editor; folders go to Batch, as Open folder does; presets, looks and LUTs
+    // are imported; anything else is said, without taking the photo on show off the screen.
     QStringList photos;
+    QStringList folders;
+    QStringList imports;
+    QStringList others;
     for (const QString& file : files) {
-        if (isSupported(file)) {
-            photos << QFileInfo(file).absoluteFilePath();
+        const QFileInfo info(file);
+        if (info.isDir()) {
+            folders << info.absoluteFilePath();
+        } else if (isSupported(file)) {
+            photos << info.absoluteFilePath();
+        } else if (isImportable(file)) {
+            imports << info.absoluteFilePath();
+        } else {
+            others << info.fileName();
         }
     }
+    if (!imports.isEmpty()) {
+        importFiles(imports);
+    }
+    if (!folders.isEmpty()) {
+        enterBatch();
+        m_batch->addPaths(folders + photos);
+        return;
+    }
+    if (!others.isEmpty() && imports.isEmpty()) {
+        showToast(tr("PixelFx does not open %1.").arg(others.first()));
+    }
     if (photos.isEmpty()) {
-        if (!files.isEmpty()) {
-            showFailed(files.first(), tr("PixelFx does not open this kind of file yet."));
-        }
         return;
     }
     // Several photos replace the strip; one joins it (or is switched to when already there).
@@ -2242,8 +2272,10 @@ void MainWindow::closeEvent(QCloseEvent* event)
 void MainWindow::dragEnterEvent(QDragEnterEvent* event)
 {
     const QList<QUrl> urls = event->mimeData()->urls();
-    const bool any = std::ranges::any_of(
-        urls, [](const QUrl& url) { return url.isLocalFile() && isSupported(url.toLocalFile()); });
+    const bool any = std::ranges::any_of(urls, [](const QUrl& url) {
+        const QString path = url.toLocalFile();
+        return url.isLocalFile() && (isSupported(path) || isImportable(path) || QFileInfo(path).isDir());
+    });
     if (any) {
         event->acceptProposedAction();
         m_welcome->setDragActive(true);

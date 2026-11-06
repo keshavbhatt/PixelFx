@@ -77,6 +77,9 @@ public:
     /// Imports presets (PixelFx, Lightroom, Camera Raw) and looks (PixelFx looks, .cube LUTs,
     /// HaldCLUT pictures) chosen in one file dialog.
     void importPresets();
+    /// Imports presets (.pfxpreset, .pfxrecipe, Lightroom .xmp), looks (.pfxlook) and .cube LUTs.
+    void importFiles(const QStringList& files);
+    [[nodiscard]] static bool isImportable(const QString& path);
     /// Crop mode (C): the crop box over the whole photo and the crop panel.
     void enterCrop();
     /// Leaves Crop mode, keeping the changes as one history step (`apply`) or dropping them.

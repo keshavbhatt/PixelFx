@@ -137,6 +137,10 @@ Decisions the work stopped at; everything else went ahead within the approved mo
 - Paste image (Ctrl+V): photos copied in a file manager open as themselves (they were ignored);
   with nothing usable on the clipboard it says so instead of doing nothing; two pastes in one
   second no longer share a file name (the second replaced the first).
+- Dropping on the window (and files on the command line): a folder goes to Batch, as Open
+  folder does (it was refused as an unknown file); presets, looks and .cube LUTs are imported;
+  a file PixelFx does not open is said in a toast instead of replacing the photo on show with
+  an error.
 
 ### 2026-11-06 (a new app icon)
 
