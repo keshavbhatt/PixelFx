@@ -1960,6 +1960,115 @@ void MainWindow::connectFilmstrip()
     };
     // Left and Right step through the strip in keyPressEvent, so a focused slider keeps its arrows.
     key(QKeySequence::SelectAll, [this] { m_strip->selectAll(); });
+    auto* closePhoto = new QAction(tr("Close photo"), this);
+    closePhoto->setObjectName(u"closePhoto"_s);
+    // Ctrl+W explicitly: QKeySequence::Close is Ctrl+F4 under some platform themes.
+    closePhoto->setShortcut(QKeySequence(u"Ctrl+W"_s));
+    connect(closePhoto, &QAction::triggered, this, [this] { closePhotos({m_strip->current()}); });
+    addAction(closePhoto);
+    connect(m_strip, &Filmstrip::closeRequested, this, &MainWindow::closePhotos);
+}
+
+namespace {
+
+// The photo shown after closing `closed` of `files` while `current` is on show: itself when it
+// stays, else the one after it, or before it when it was last; its index among those left.
+int shownAfterClosing(const QStringList& files, int current, const QList<int>& closed)
+{
+    QStringList kept;
+    for (int i = 0; i < files.size(); ++i) {
+        if (!closed.contains(i)) {
+            kept << files.at(i);
+        }
+    }
+    const auto candidates = [&] {
+        QList<int> order{current};
+        for (int i = current + 1; i < files.size(); ++i) {
+            order << i;
+        }
+        for (int i = current - 1; i >= 0; --i) {
+            order << i;
+        }
+        return order;
+    }();
+    for (const int i : candidates) {
+        if (i >= 0 && i < files.size() && !closed.contains(i)) {
+            return static_cast<int>(kept.indexOf(files.at(i)));
+        }
+    }
+    return -1;
+}
+
+} // namespace
+
+void MainWindow::closePhotos(const QList<int>& indices)
+{
+    if (isInTool() || isBatching() || !m_document.isOpen()) {
+        return; // Done or Cancel first; Batch keeps its own list
+    }
+    const QStringList files = m_strip->files();
+    const int current = m_strip->current();
+    const bool onShow = indices.contains(current) || files.isEmpty();
+    if (onShow && !confirmClosing(static_cast<int>(std::max<qsizetype>(1, indices.size())))) {
+        return;
+    }
+    // The closed photos lead Recent, the one on show first.
+    QStringList kept;
+    for (int i = static_cast<int>(files.size()) - 1; i >= 0; --i) {
+        if (!indices.contains(i)) {
+            kept.prepend(files.at(i));
+        } else if (i != current) {
+            m_settings.addRecentFile(files.at(i));
+        }
+    }
+    if (onShow) {
+        m_settings.addRecentFile(m_document.info().path);
+    }
+    const int next = shownAfterClosing(files, current, indices);
+    m_strip->setFiles(kept);
+    if (kept.isEmpty() || next < 0) {
+        m_document.close();
+        showNoPhoto();
+        return;
+    }
+    m_strip->setCurrent(next);
+    if (onShow) {
+        m_document.open(kept.at(next), previewLongEdge());
+    }
+}
+
+bool MainWindow::confirmClosing(int count)
+{
+    if (m_settings.rememberEdits() || !m_document.isEdited()) {
+        return true; // nothing is lost
+    }
+    const QString name = QFileInfo(m_document.info().path).fileName();
+    QMessageBox box(QMessageBox::Question, tr("Close without keeping the edit?"),
+                    tr("Remember edits is off in Settings, so the edit of %1 is not kept.").arg(name),
+                    QMessageBox::NoButton, this);
+    const QPushButton* close = box.addButton(
+        count > 1 ? tr("Close %n photos", nullptr, count) : tr("Close photo"), QMessageBox::AcceptRole);
+    box.setDefaultButton(box.addButton(QMessageBox::Cancel));
+    box.exec();
+    return box.clickedButton() == close;
+}
+
+void MainWindow::showNoPhoto()
+{
+    m_stack->setCurrentWidget(m_welcome);
+    m_welcome->setRecentFiles(m_settings.recentFiles());
+    m_panels->hide();
+    m_presets->hide();
+    m_strip->hide();
+    m_compare->setChecked(false);
+    m_compare->setEnabled(false);
+    m_original->setEnabled(false);
+    m_export->setEnabled(false);
+    m_cropMode->setEnabled(false);
+    m_healMode->setEnabled(false);
+    m_canvas->setImage(QImage(), QSize());
+    updateHistoryButtons();
+    updateHeader();
 }
 
 void MainWindow::applyToSelection(const std::function<pfx::Settings(const pfx::Settings&)>& change,
@@ -2280,7 +2389,14 @@ void MainWindow::buildMainMenu()
     auto* menu = new QMenu(m_menuButton);
     fillMenu(menu, std::array{MenuEntry{"open", "open"}, MenuEntry{"openFolder", "folder"}});
     buildRecentMenu(menu->addMenu(menuIcon("clock"), tr("Open recent")));
-    fillMenu(menu, std::array{MenuEntry{"pasteImage", "paste"}, kSeparator});
+    fillMenu(menu,
+             std::array{MenuEntry{"pasteImage", "paste"}, MenuEntry{"closePhoto", "close"}, kSeparator});
+    // Close photo needs a photo and no tool open (close-photo.html).
+    connect(menu, &QMenu::aboutToShow, this, [this] {
+        namedAction(u"closePhoto"_s)->setEnabled(m_document.isOpen() && !isInTool() && !isBatching());
+    });
+    // Ctrl+W checks for itself when the menu is closed.
+    connect(menu, &QMenu::aboutToHide, this, [this] { namedAction(u"closePhoto"_s)->setEnabled(true); });
     fillMenu(menu->addMenu(menuIcon("undo"), tr("Edit")), kEditEntries);
     fillMenu(menu->addMenu(menuIcon("eye"), tr("View")), kViewEntries);
     fillMenu(menu->addMenu(menuIcon("image"), tr("Photo")), kPhotoEntries);

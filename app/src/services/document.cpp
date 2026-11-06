@@ -240,6 +240,43 @@ void Document::openPreview(const QString& path, int previewLongEdge)
     watcher->setFuture(QtConcurrent::run(&Document::openOnWorker, request, previewLongEdge));
 }
 
+void Document::close()
+{
+    flush();        // the photo keeps its last edit
+    ++m_generation; // an open still on its way is dropped
+    ++m_fullGeneration;
+    setDeveloping(false);
+    m_fullTimer->stop();
+    m_saveTimer->stop();
+    m_scheduler->setSource(nullptr);
+    m_originalScheduler->setSource(nullptr);
+    m_fullScheduler->setSource(nullptr);
+    m_info = {};
+    m_preview = {};
+    m_original = {};
+    m_plainOriginal = {};
+    m_full = {};
+    m_fullOfEdit = {};
+    m_histogram = {};
+    m_settings = {};
+    m_openedWith = {};
+    m_snapshots.clear();
+    m_history.reset({}, QString());
+    m_source.reset();
+    m_thumbnailSource.reset();
+    m_beforeMixer = {};
+    m_fingerprint.clear();
+    m_cropEditing = false;
+    m_healEditing = false;
+    m_fullOn = false;
+    m_fullLoaded = false;
+    m_hover.reset();
+    setFullState(FullState::Off);
+    setHoverState(HoverState::Off);
+    Q_EMIT historyChanged();
+    Q_EMIT closed();
+}
+
 void Document::open(const QString& path, int previewLongEdge)
 {
     flush(); // the photo being left keeps its last edit
@@ -336,6 +373,7 @@ void Document::deliver(const Result& result)
         start.set("color.profile", std::string("camera")); // a RAW looks as its camera showed it
     }
     m_history.reset(start, tr("Opened"));
+    m_openedWith = start;
     replaceSettings(start, !start.isEmpty()); // no settings: the original is the render
     qCInfo(lcDocument) << "opened" << m_info.path << m_info.size << m_info.format;
     Q_EMIT opened(m_info);

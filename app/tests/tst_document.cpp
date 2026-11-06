@@ -81,6 +81,39 @@ private Q_SLOTS:
         QCOMPARE(doc.settings().number("light.exposure", 0), 1.0);
     }
 
+    void closingLeavesNothingOpenAndSaysWhetherAnEditIsLost()
+    {
+        QTemporaryDir dir;
+        const QString path = writePhoto(dir, u"photo.png"_s, 160, 120);
+        Document doc;
+        QSignalSpy ready(&doc, &Document::previewReady);
+        doc.open(path, 200);
+        QVERIFY(ready.wait(10000));
+        QVERIFY(!doc.isEdited());
+        pfx::Settings brighter;
+        brighter.set("light.exposure", 1.0);
+        doc.setSettings(brighter);
+        doc.commit(u"Exposure +1"_s);
+        QVERIFY(doc.isEdited());
+        doc.undo();
+        QVERIFY(!doc.isEdited()); // back as it opened: nothing to lose
+        QSignalSpy closed(&doc, &Document::closed);
+        doc.close();
+        QCOMPARE(closed.count(), 1);
+        QVERIFY(!doc.isOpen());
+        QVERIFY(!doc.isEdited());
+        QVERIFY(doc.preview().isNull());
+        QVERIFY(doc.settings().isEmpty());
+        QVERIFY(!doc.history().canUndo());
+        // An open still on its way when closed is dropped.
+        QSignalSpy opened(&doc, &Document::opened);
+        doc.open(path, 200);
+        doc.close();
+        QTest::qWait(500);
+        QCOMPARE(opened.count(), 0);
+        QVERIFY(!doc.isOpen());
+    }
+
     void manyQuickChangesRenderTheLastOne()
     {
         QTemporaryDir dir;

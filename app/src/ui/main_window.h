@@ -202,6 +202,14 @@ private:
     void deleteLook(const QString& id);
     void requestLookThumbnails();
     void connectFilmstrip();
+    /// Closes the strip's photos at `indices` (close-photo.html): the next photo opens, or the
+    /// welcome page after the last. With Remember edits off, an edit that would be lost is
+    /// asked about first.
+    void closePhotos(const QList<int>& indices);
+    /// Whether closing `count` photos, the one on show among them, may go ahead.
+    [[nodiscard]] bool confirmClosing(int count);
+    /// Back to the welcome page with nothing open.
+    void showNoPhoto();
     /// `change` on the current photo as one step, and on every other selected photo's
     /// remembered edits.
     void applyToSelection(const std::function<pfx::Settings(const pfx::Settings&)>& change,

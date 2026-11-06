@@ -39,6 +39,7 @@ const std::array<Section, 4>& sections()
           {QT_TRANSLATE_NOOP("ShortcutsSheet", "Open folder"), "Ctrl+Shift+O"},
           {QT_TRANSLATE_NOOP("ShortcutsSheet", "Export"), "Ctrl+Shift+E"},
           {QT_TRANSLATE_NOOP("ShortcutsSheet", "Paste image"), "Ctrl+V"},
+          {QT_TRANSLATE_NOOP("ShortcutsSheet", "Close photo"), "Ctrl+W"},
           {QT_TRANSLATE_NOOP("ShortcutsSheet", "Settings"), "Ctrl+,"}}},
         {QT_TRANSLATE_NOOP("ShortcutsSheet", "Editing"),
          {{QT_TRANSLATE_NOOP("ShortcutsSheet", "Undo / Redo"), "Ctrl+Z / Ctrl+Shift+Z"},

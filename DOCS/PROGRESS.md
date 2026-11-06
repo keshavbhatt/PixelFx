@@ -36,6 +36,7 @@
 | `editor-raw.html` | 2026-11-06 (`mocks/reviews/editor-raw.md`) | approved 2026-11-06 (Kelvin for RAW only) |
 | `editor-presets-catalog.html`, hover preview | 2026-11-05 (same review, "Hover preview, reworked") | approved 2026-11-05 |
 | `editor-lens-profile.html` | 2026-11-06 (`mocks/reviews/editor-lens-profile.md`) | approved 2026-11-06 (the two EmulsionPresets lens tools join the catalog) |
+| `close-photo.html` | 2026-11-06 (`mocks/reviews/close-photo.md`) | approved 2026-11-06 (with Remember edits off, closing an edited photo asks first) |
 
 ## Waiting for the owner (2026-11-05)
 
@@ -70,11 +71,25 @@ Decisions the work stopped at; everything else went ahead within the approved mo
     the sky" in the mock needs scene recognition); Reset takes off the spots made since Heal
     opened and Done keeps them (each spot is also its own history step, and undo works in
     Heal); Reveal dust explains itself in its tooltip rather than a first-time line.
-13. `close-photo.html` (2026-11-06): Close photo, asked for by the owner, with its review
-    (`mocks/reviews/close-photo.md`). Approve it, and say whether closing an edited photo with
-    Remember edits off should ask first (recommended: no, as switching photos does not).
 
 ## Sessions (newest first)
+
+### 2026-11-06 (Close photo)
+
+- The approved `close-photo.html`: Close photo (Ctrl+W) in the main menu after Paste image, and
+  in the Keyboard shortcuts sheet; a × on a filmstrip tile under the pointer (a 20 px circle in
+  a 24 px target, "Close b.jpg" to screen readers) and a tile menu (Close photo, Close N photos
+  for a selection, Close all photos). The next photo opens, or the one before when the last
+  closed; after every photo the welcome page, the closed photos first under Recent. Greyed out
+  in Crop and Heal and on Batch. `Document::close` and `Document::isEdited`; the strip keeps its
+  pictures when photos leave it.
+- Decided by the owner: with Remember edits off, closing an edited photo asks first ("Close
+  without keeping the edit?", Close photo or Cancel, Cancel the default); drawn in the mock (7).
+- Ctrl+W is set by its keys: `QKeySequence::Close` is Ctrl+F4 under some platform themes.
+- A debug hook, `PIXELFX_DEBUG_CLOSE`, closes the photo on show once it opens.
+- Checks: 38 app suites (the document closing and dropping an open on its way, an undone edit
+  not counted as one; the tile's ×, its names and the menus), the linters; grabs of the menu,
+  closing to the next photo and to the welcome page.
 
 ### 2026-11-06 (sheets that fit the window)
 

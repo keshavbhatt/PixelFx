@@ -3,9 +3,11 @@
 #include "ui/icons.h"
 #include "ui/style.h"
 
+#include <QContextMenuEvent>
 #include <QFileInfo>
 #include <QHBoxLayout>
 #include <QLabel>
+#include <QMenu>
 #include <QMouseEvent>
 #include <QPainter>
 #include <QPainterPath>
@@ -81,6 +83,9 @@ QList<FilmTile*> Filmstrip::tiles() const
 void Filmstrip::setFiles(const QStringList& files)
 {
     m_files = files;
+    for (auto it = m_thumbnails.begin(); it != m_thumbnails.end();) {
+        it = files.contains(it.key()) ? std::next(it) : m_thumbnails.erase(it);
+    }
     m_selected.clear();
     m_current = files.isEmpty() ? -1 : std::clamp(m_current, 0, static_cast<int>(files.size()) - 1);
     rebuild();
@@ -101,6 +106,15 @@ void Filmstrip::rebuild()
                 Q_EMIT currentRequested(i);
             }
         });
+        connect(tile, &FilmTile::closeClicked, this, [this, i] { Q_EMIT closeRequested({i}); });
+        connect(tile, &FilmTile::menuRequested, this, [this, i](const QPoint& at) {
+            QMenu* menu = tileMenu(i);
+            menu->exec(at);
+            menu->deleteLater();
+        });
+        if (const auto it = m_thumbnails.constFind(m_files.at(i)); it != m_thumbnails.constEnd()) {
+            tile->setThumbnail(it->image, it->edited);
+        }
         m_tiles->addWidget(tile);
     }
     auto* add = new QToolButton(m_row);
@@ -128,8 +142,37 @@ void Filmstrip::setCurrent(int index)
     }
 }
 
-void Filmstrip::setThumbnail(const QString& path, const QImage& image, bool edited) const
+QMenu* Filmstrip::tileMenu(int index)
 {
+    // A tile of the selection closes the selection, any other just itself.
+    const QList<int> selected = selection();
+    const QList<int> these = selected.contains(index) ? selected : QList<int>{index};
+    auto* menu = new QMenu(this);
+    const QIcon close = icons::themed(u"close"_s, tokens().muted);
+    QAction* one = menu->addAction(close, these.size() > 1
+                                              ? tr("Close %n photos", nullptr, static_cast<int>(these.size()))
+                                              : tr("Close photo"));
+    if (these == QList<int>{m_current}) {
+        one->setShortcut(QKeySequence(u"Ctrl+W"_s)); // shown; the window's own Close photo does the work
+        one->setShortcutContext(Qt::WidgetShortcut);
+    }
+    connect(one, &QAction::triggered, this, [this, these] { Q_EMIT closeRequested(these); });
+    const QAction* all = menu->addAction(icons::themed(u"images"_s, tokens().muted), tr("Close all photos"));
+    connect(all, &QAction::triggered, this, [this] {
+        QList<int> every;
+        for (int i = 0; i < m_files.size(); ++i) {
+            every << i;
+        }
+        Q_EMIT closeRequested(every);
+    });
+    return menu;
+}
+
+void Filmstrip::setThumbnail(const QString& path, const QImage& image, bool edited)
+{
+    if (m_files.contains(path)) {
+        m_thumbnails.insert(path, {image, edited});
+    }
     for (FilmTile* t : tiles()) {
         if (t->path() == path) {
             t->setThumbnail(image, edited);
@@ -210,11 +253,26 @@ FilmTile::FilmTile(int index, const QString& path, QWidget* parent)
     : QWidget(parent)
     , m_index(index)
     , m_path(path)
+    , m_close(new QToolButton(this))
 {
     setFixedSize(kWidth, kHeight);
     setCursor(Qt::PointingHandCursor);
     setToolTip(QFileInfo(path).fileName());
     setAccessibleName(QFileInfo(path).fileName());
+    // A 20 px circle in a 24 px target, 2 px in from the top right corner.
+    constexpr int kTarget = 24;
+    m_close->setObjectName(u"tileClose"_s);
+    m_close->setIcon(icons::themed(u"close"_s, Qt::white));
+    m_close->setIconSize(QSize(12, 12));
+    m_close->setFixedSize(kTarget, kTarget);
+    m_close->move(kWidth - kTarget - 2, 2);
+    m_close->setCursor(Qt::PointingHandCursor);
+    //: The × on a filmstrip tile; "Close harbour.jpg".
+    m_close->setAccessibleName(tr("Close %1").arg(QFileInfo(path).fileName()));
+    m_close->setToolTip(tr("Close photo"));
+    m_close->setFocusPolicy(Qt::NoFocus); // the keyboard closes with Ctrl+W
+    m_close->hide();
+    connect(m_close, &QToolButton::clicked, this, &FilmTile::closeClicked);
 }
 
 FilmTile::~FilmTile() = default;
@@ -228,6 +286,7 @@ void FilmTile::setThumbnail(const QImage& image, bool edited)
 
 void FilmTile::setState(bool current, bool selected, bool ticks)
 {
+    m_close->setToolTip(current ? tr("Close photo (Ctrl+W)") : tr("Close photo"));
     m_current = current;
     m_selected = selected;
     m_ticks = ticks;
@@ -279,6 +338,23 @@ void FilmTile::paintEvent(QPaintEvent* /*event*/)
                                       tick.topLeft() + QPointF(12, 5)}));
         }
     }
+}
+
+void FilmTile::enterEvent(QEnterEvent* event)
+{
+    m_close->show();
+    QWidget::enterEvent(event);
+}
+
+void FilmTile::leaveEvent(QEvent* event)
+{
+    m_close->hide();
+    QWidget::leaveEvent(event);
+}
+
+void FilmTile::contextMenuEvent(QContextMenuEvent* event)
+{
+    Q_EMIT menuRequested(event->globalPos());
 }
 
 void FilmTile::mouseReleaseEvent(QMouseEvent* event)

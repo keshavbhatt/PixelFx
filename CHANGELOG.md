@@ -55,7 +55,7 @@ A new editor, a new image engine, and a new look.
 - White balance: As shot, Auto, or click something grey with the picker (W).
 - Open many photos at once: they line up in a strip under the photo; Left and Right step
   through them, Ctrl or Shift click (or Ctrl+A) selects several, and a preset, pasted settings or
-  Export then go to all of them.
+  Export then go to all of them. Close a photo with Ctrl+W or the × on its picture in the strip.
 - Lens corrections: Use lens profile in Optics straightens your lens's distortion, removes its
   colour fringes and lifts its dark corners, for lenses in the Lensfun database; the panel names
   the lens it found, and Distortion and Vignetting set how much.

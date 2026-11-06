@@ -29,6 +29,8 @@
 //   PIXELFX_DEBUG_HOVER=<name>[;<name>] preview the first preset or look as after resting on its tile;
 //                                      the second's tile shows the wait half done
 //   PIXELFX_DEBUG_THEME=light|dark    switch the theme once the window is up (the live switch)
+//   PIXELFX_DEBUG_CLOSE=1              close the photo on show once it is open (Ctrl+W); with
+//                                      GRAB, grab the next photo or the welcome page
 //   PIXELFX_DEBUG_GRAB=<file.png>      grab the window once the photo is shown (or after 2 s
 //                                      with nothing to show) and quit
 #include "app/application.h"
@@ -328,6 +330,8 @@ void applyGrabHook(pixelfx::ui::MainWindow& window, const QStringList& files)
                      });
     QObject::connect(&window.document(), &pixelfx::services::Document::failed, &window,
                      [save] { QTimer::singleShot(300, save); });
+    QObject::connect(&window.document(), &pixelfx::services::Document::closed, &window,
+                     [save] { QTimer::singleShot(300, save); });
     if (files.isEmpty()) {
         QTimer::singleShot(2000, &window, save);
     }
@@ -413,6 +417,14 @@ void applyDebugHooks(pixelfx::ui::MainWindow& window, QStringList& files)
                              window.setCompare(true);
                              window.namedAction(u"sideBySide"_s)->setChecked(compare == u"side"_s);
                          });
+    }
+    if (qEnvironmentVariableIsSet("PIXELFX_DEBUG_CLOSE")) {
+        QObject::connect(
+            &window.document(), &pixelfx::services::Document::opened, &window,
+            [&window] {
+                QTimer::singleShot(0, &window, [&window] { window.namedAction(u"closePhoto"_s)->trigger(); });
+            },
+            Qt::SingleShotConnection); // the first photo only
     }
     applyCropHook(window);
     applyExpandHook(window);

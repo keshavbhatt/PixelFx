@@ -84,6 +84,12 @@ public:
     void open(const QString& path, int previewLongEdge);
 
     [[nodiscard]] bool isOpen() const { return !m_info.path.isEmpty(); }
+    /// Closes the photo (close-photo.html): its edit is written first when edits are
+    /// remembered, then nothing is open; `closed` follows.
+    void close();
+    /// The settings differ from those the photo opened with: an edit that is lost on closing
+    /// when edits are not remembered.
+    [[nodiscard]] bool isEdited() const { return isOpen() && m_settings != m_openedWith; }
     [[nodiscard]] const DocumentInfo& info() const { return m_info; }
     /// The newest rendered preview, and the photo with no settings (for before and after).
     [[nodiscard]] const QImage& preview() const { return m_preview; }
@@ -156,6 +162,8 @@ public:
 Q_SIGNALS:
     void openStarted(const QString& path);
     void opened(const pixelfx::services::DocumentInfo& info);
+    /// The photo was closed: nothing is open.
+    void closed();
     void previewReady(const QImage& image);
     void histogramReady(const pixelfx::core::Histogram& histogram);
     /// The photo with only its geometry, for before and after (it lines up with the edit).
@@ -197,6 +205,7 @@ private:
     QImage m_original;
     core::Histogram m_histogram;
     pfx::Settings m_settings;
+    pfx::Settings m_openedWith; ///< the settings the photo opened with
     std::vector<pfx::BatchStep> m_snapshots;
     core::History m_history;
     RenderScheduler* m_scheduler = nullptr;

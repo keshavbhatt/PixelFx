@@ -75,3 +75,10 @@ for what Ctrl+W, the menu and the tile already do.
 - With Remember edits switched off, closing an edited photo loses its edit, as switching to
   another photo already does. Close without asking (recommended, the same as switching and
   quitting today), or ask once before closing an edited photo?
+
+## Decided by the owner (2026-11-06)
+
+Approved. With Remember edits off, closing an edited photo asks first: "Close without keeping
+the edit?", Close photo (or Close N photos) and Cancel, Cancel the default. Drawn as 7 in the
+mock.
+

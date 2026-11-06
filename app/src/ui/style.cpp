@@ -260,6 +260,8 @@ const QString kControls = uR"(
         QToolButton#iconButton:checked { background: {{accentSoft}}; border-color: transparent; }
         QToolButton#sheetClose { border: 0; border-radius: 7px; padding: 6px; background: transparent; }
         QToolButton#sheetClose:hover { background: {{hover}}; }
+        QToolButton#tileClose { border: 0; margin: 2px; border-radius: 10px; padding: 0; background: rgba(0, 0, 0, 153); }
+        QToolButton#tileClose:hover { background: rgba(0, 0, 0, 204); }
         #headerSep { background: {{border}}; }
         #wordmark { font-weight: 700; font-size: 14px; }
         #batchPage, #batchList, #batchRows, #batchPanelContent { background: {{panel}}; }
