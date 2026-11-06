@@ -10,6 +10,7 @@
 //                                      a straightening angle once the photo is open
 //   PIXELFX_DEBUG_SHEET=<name>         with GRAB, grab the window with that sheet open: export,
 //                                      settings, preset, shortcuts, watermark, look, newlook, preview,
+//                                      lookpreview (the large preview opened from the look editor),
 //                                      about, notices, diagnostics, whatsnew, paste
 //   PIXELFX_DEBUG_TAB=presets          show the Presets tab of the left panel
 //   PIXELFX_DEBUG_MENU=<submenu>       with GRAB, grab the main menu open ("-" for the menu
@@ -248,17 +249,25 @@ QDialog* photoSheet(pixelfx::ui::MainWindow& window, const QString& name)
         return new pixelfx::ui::LookEditor(doc.previewSource(), doc.settings(), entry,
                                            pixelfx::core::LookLibrary::defaultFolder(), &window);
     }
-    if (name == u"preview"_s) { // the large preview on the open photo, as three photos of a batch
+    if (name == u"preview"_s || name == u"lookpreview"_s) {
+        // The large preview on the open photo: as three photos of a batch, or as the look editor's.
         const QImage before = doc.original();
         const QImage after = doc.preview();
         const QSize full = doc.outputSize();
+        const bool look = name == u"lookpreview"_s;
+        QWidget* from = &window;
+        if (look) {
+            from = new pixelfx::ui::LookEditor(doc.previewSource(), doc.settings(), {},
+                                               pixelfx::core::LookLibrary::defaultFolder(), &window);
+        }
         return new pixelfx::ui::PreviewViewer(
-            3, [name = QFileInfo(doc.info().path).fileName()](int) { return name; },
-            QStringLiteral("Batch preview \u00B7 Golden hour"),
+            look ? 1 : 3,
+            [name = look ? u"My look"_s : QFileInfo(doc.info().path).fileName()](int) { return name; },
+            look ? u"Look preview"_s : u"Batch preview \u00B7 Golden hour"_s,
             [before, after, full](int, int) {
                 return pixelfx::ui::PreviewViewer::Photo{before, after, full};
             },
-            &window);
+            from);
     }
     if (name == u"export"_s) {
         return window.newExportSheet();

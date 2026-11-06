@@ -65,6 +65,9 @@ public:
     [[nodiscard]] double split() const { return m_split; }
     void setSplit(double split);
     void setStatus(const QString& text);
+    /// A label in the photo's top left corner, outside before and after ("After" in the large
+    /// preview); empty for none.
+    void setTag(const QString& text);
     /// Work under way on the picture ("Loading", "Updating"), said beside the zoom bar once it
     /// has taken longer than kBusyDelay; empty when it is done.
     void setBusy(const QString& text);
@@ -194,6 +197,7 @@ private:
     void paintSideBySide(QPainter& painter);
     /// A "Before" or "After" label in a top corner of `photo`.
     void drawTag(QPainter& painter, const QRect& photo, const QString& text, bool right) const;
+    QString m_tag;
     static constexpr double kKnobRadius = 17.0;
     void paintCrop(QPainter& painter, const QRect& target);
     void paintOverlay(QPainter& painter, const QRectF& box) const;

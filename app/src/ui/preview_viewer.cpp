@@ -79,8 +79,13 @@ PreviewViewer::PreviewViewer(int count, std::function<QString(int)> names, QStri
     column->setSpacing(0);
     column->addWidget(buildBar());
     column->addWidget(m_stage, 1);
-    if (const QWidget* window = parent != nullptr ? parent->window() : nullptr) {
-        resize(window->size()); // over the window it opens from
+    // Over the app's window, also when it opens from a sheet (the look editor).
+    const QWidget* under = parent != nullptr ? parent->window() : nullptr;
+    while (qobject_cast<const QDialog*>(under) != nullptr && under->parentWidget() != nullptr) {
+        under = under->parentWidget()->window();
+    }
+    if (under != nullptr) {
+        setGeometry(under->geometry());
     }
 }
 
@@ -107,13 +112,16 @@ QWidget* PreviewViewer::buildBar()
     m_views->button(static_cast<int>(View::Split))
         ->setToolTip(tr("Before and after side by side on a line you drag (\\)"));
     m_views->button(static_cast<int>(View::After))->setToolTip(tr("The photo as it will be"));
+    m_views->button(static_cast<int>(View::Split))
+        ->setIcon(icons::themed(u"square-split-horizontal"_s, tokens().text));
+    m_views->button(static_cast<int>(View::Split))->setIconSize(QSize(14, 14));
     connect(m_views, &QButtonGroup::idClicked, this, [this](int id) { setView(static_cast<View>(id)); });
     auto* row = new QHBoxLayout(bar);
     row->setContentsMargins(kPanelPadding, 0, kToolRowPadding, 0);
     row->setSpacing(kGapControls);
     row->addLayout(text);
     row->addStretch();
-    row->addWidget(views);
+    row->addWidget(views, 0, Qt::AlignVCenter);
     row->addSpacing(kGapControls);
     row->addWidget(sheetCloseButton(this));
     return bar;
@@ -212,6 +220,7 @@ void PreviewViewer::present()
     const View shown = m_holdingBefore ? View::Before : m_view;
     m_canvas->setOriginal(m_photo.before);
     m_canvas->setCompare(shown == View::Split);
+    m_canvas->setTag(shown == View::Before ? tr("Before") : tr("After")); // split tags each side
     m_canvas->showImage(shown == View::Before ? m_photo.before : m_photo.after);
 }
 

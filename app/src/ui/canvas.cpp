@@ -871,6 +871,8 @@ void Canvas::paintPhoto(QPainter& painter)
         }
     } else if (m_compare && !m_original.isNull()) {
         paintCompare(painter, target);
+    } else if (!m_tag.isEmpty()) {
+        drawTag(painter, target, m_tag, false);
     }
     if (!m_previewName.isEmpty() && !m_cropping) {
         drawTag(painter, target, tr("Preview"), false);
@@ -959,6 +961,14 @@ void paintCanvasBanner(QPainter& painter, double canvasWidth, const QString& tex
     painter.setPen(t.muted);
     painter.drawText(banner.adjusted(0, 0, -12, 0), Qt::AlignRight | Qt::AlignVCenter, note);
     painter.restore();
+}
+
+void Canvas::setTag(const QString& text)
+{
+    if (text != m_tag) {
+        m_tag = text;
+        update();
+    }
 }
 
 void Canvas::drawTag(QPainter& painter, const QRect& photo, const QString& text, bool right) const

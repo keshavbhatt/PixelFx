@@ -74,6 +74,15 @@ Decisions the work stopped at; everything else went ahead within the approved mo
 
 ## Sessions (newest first)
 
+### 2026-11-06 (the large preview against its mock)
+
+- Fixed (owner's report): opened from the look editor, the large preview was the size of the
+  look editor's sheet, not the window as `preview-viewer.html` draws; it now covers the app's
+  window from wherever it opens. Before, Split, After sits at its own height in the bar (it was
+  stretched to the bar's), Split has its icon, and the photo carries its "After" or "Before" tag
+  (`Canvas::setTag`; the split keeps its two tags).
+- A debug sheet, `lookpreview`, opens the large preview from a look editor.
+
 ### 2026-11-06 (Close photo)
 
 - The approved `close-photo.html`: Close photo (Ctrl+W) in the main menu after Paste image, and
