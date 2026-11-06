@@ -72,6 +72,11 @@ Canvas::Canvas(QWidget* parent)
     m_dial->hide();
 }
 
+QColor Canvas::backdrop() const
+{
+    return m_background.isValid() ? m_background : tokens().canvas;
+}
+
 void Canvas::setBackground(const QColor& color)
 {
     m_background = color;
@@ -823,7 +828,7 @@ void Canvas::paintEvent(QPaintEvent* /*event*/)
 {
     const Tokens& t = tokens();
     QPainter painter(this);
-    painter.fillRect(rect(), m_background.isValid() ? m_background : t.canvas);
+    painter.fillRect(rect(), backdrop());
     if (!m_image.isNull()) {
         if (m_compare && m_sideBySide && !m_original.isNull() && !m_cropping) {
             paintSideBySide(painter);

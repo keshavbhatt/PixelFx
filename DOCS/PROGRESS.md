@@ -89,6 +89,11 @@ Decisions the work stopped at; everything else went ahead within the approved mo
 - A damaged photo was reported in libvips' words ("VipsJpeg: premature end of JPEG image"); the
   library's plain wording missed it by a capital letter and now matches any case.
 - A form's label is centred on its field but not on a note under it (Photos at a time).
+- The straighten dial under the photo drew white numbers and ticks whatever the canvas, so on
+  the light theme's canvas, middle grey or white they all but vanished; they are dark on a
+  light canvas now.
+- The end-to-end test on real photos (every look and preset, crop, heal, every export format,
+  batch, the command line) passes.
 
 ### 2026-11-06 (a new app icon)
 

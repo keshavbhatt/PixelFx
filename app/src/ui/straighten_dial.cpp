@@ -1,5 +1,6 @@
 #include "ui/straighten_dial.h"
 
+#include "ui/canvas.h"
 #include "ui/style.h"
 
 #include <QKeyEvent>
@@ -55,6 +56,12 @@ void StraightenDial::paintEvent(QPaintEvent* /*event*/)
 {
     QPainter p(this);
     p.setRenderHint(QPainter::Antialiasing);
+    // Drawn on the canvas around the photo, whose colour is a setting: dark marks on a light one.
+    const auto* canvas = qobject_cast<const Canvas*>(parentWidget());
+    const bool onLight = (canvas != nullptr ? canvas->backdrop() : tokens().canvas).lightnessF() > 0.5F;
+    const QColor strong = onLight ? QColor(0x1A, 0x1A, 0x1A) : QColor(Qt::white);
+    const QColor label = onLight ? QColor(0x1A, 0x1A, 0x1A, 170) : QColor(0xDD, 0xDD, 0xDD, 180);
+    const QColor tick = onLight ? QColor(0x70, 0x70, 0x70) : QColor(0x99, 0x99, 0x99);
     const int labelsHeight = fontMetrics().height();
     const QRect labels(0, 0, width(), labelsHeight);
     // Labels at -45, -30, -15, the angle, 15, 30, 45, spread evenly.
@@ -66,7 +73,7 @@ void StraightenDial::paintEvent(QPaintEvent* /*event*/)
         f.setPixelSize(11);
         f.setBold(middle);
         p.setFont(f);
-        p.setPen(middle ? QColor(Qt::white) : QColor(0xDD, 0xDD, 0xDD, 180));
+        p.setPen(middle ? strong : label);
         const QString text = middle ? u"%1°"_s.arg(m_angle, 0, 'f', 1) : QString::number(mark);
         const int w = p.fontMetrics().horizontalAdvance(text);
         p.drawText(QRect(std::clamp(x - (w / 2), 0, width() - w), labels.top(), w, labelsHeight),
@@ -74,12 +81,12 @@ void StraightenDial::paintEvent(QPaintEvent* /*event*/)
     }
     // Ticks every degree and a half, and the current angle.
     const int top = labelsHeight + 2;
-    p.setPen(QPen(QColor(0x99, 0x99, 0x99), 1));
+    p.setPen(QPen(tick, 1));
     for (int x = 0; x < width(); x += 14) {
         p.drawLine(x, top, x, top + 10);
     }
     const double at = (m_angle + kRange) / (2 * kRange) * (width() - 1);
-    p.setPen(QPen(Qt::white, 2));
+    p.setPen(QPen(strong, 2));
     p.drawLine(QPointF(at, top - 2), QPointF(at, top + 12));
     if (showsFocusRing(this)) {
         p.setPen(QPen(tokens().accent, 1));

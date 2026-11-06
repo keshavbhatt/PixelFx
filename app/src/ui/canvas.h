@@ -115,6 +115,8 @@ public:
     void setDetail(const QImage& detail);
     /// The colour around the photo (Settings, Canvas background); invalid for the theme's.
     void setBackground(const QColor& color);
+    /// The colour shown around the photo: the one set, else the theme's.
+    [[nodiscard]] QColor backdrop() const;
     /// Clipped highlights in red and crushed shadows in blue, over the photo (J).
     void setClippingWarnings(bool on);
     [[nodiscard]] bool clippingWarnings() const { return m_clipping; }
