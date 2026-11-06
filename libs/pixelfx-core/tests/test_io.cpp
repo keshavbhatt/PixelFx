@@ -465,6 +465,24 @@ TEST_CASE("a photo cut off after its first marker fails in plain words, without 
     }
 }
 
+TEST_CASE("a save that cannot happen fails in plain words")
+{
+    const fixtures::TempDir dir;
+    pfx::Image img(8, 8);
+    img.fill(0.5F, 0.5F, 0.5F);
+    const auto missing = pfx::save(img, dir.path() / "no such folder" / "photo.jpg");
+    REQUIRE_FALSE(missing.ok());
+    CHECK(missing.error().message == "The folder to save in does not exist.");
+    const auto locked = dir.path() / "locked";
+    std::filesystem::create_directory(locked);
+    std::filesystem::permissions(locked,
+                                 std::filesystem::perms::owner_read | std::filesystem::perms::owner_exec);
+    const auto refused = pfx::save(img, locked / "photo.png");
+    std::filesystem::permissions(locked, std::filesystem::perms::owner_all);
+    REQUIRE_FALSE(refused.ok());
+    CHECK(refused.error().message == "PixelFx is not allowed to save in this folder.");
+}
+
 TEST_CASE("engine versions: libvips and Little CMS, as dotted numbers")
 {
     const auto engines = pfx::engineVersions();

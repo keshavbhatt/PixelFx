@@ -344,6 +344,30 @@ std::string readFailure(const std::string& detail)
     return "The photo could not be read (" + firstLine + ").";
 }
 
+// A failed write in plain words, as readFailure does for reading: people learn what to do
+// about it (another folder, room on the disk), not which libvips call gave up.
+std::string writeFailure(const std::string& detail)
+{
+    std::string lower = detail;
+    std::ranges::transform(lower, lower.begin(),
+                           [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+    const auto has = [&lower](const char* text) { return lower.find(text) != std::string::npos; };
+    if (has("permission denied") || has("access is denied")) {
+        return "PixelFx is not allowed to save in this folder.";
+    }
+    if (has("read-only file system")) {
+        return "This folder is read-only.";
+    }
+    if (has("no space left") || has("disk full") || has("not enough space")) {
+        return "There is no room left on the disk.";
+    }
+    if (has("no such file or directory")) {
+        return "The folder to save in does not exist.";
+    }
+    const std::string firstLine = detail.substr(0, detail.find('\n'));
+    return "The photo could not be saved (" + firstLine + ").";
+}
+
 std::optional<std::vector<std::uint8_t>> readAll(const std::filesystem::path& path)
 {
     std::ifstream in(path, std::ios::binary);
@@ -724,7 +748,7 @@ Status save(const Image& image, const std::filesystem::path& path, const SaveOpt
     try {
         prepared.value().write_to_file(path.string().c_str(), saverOptions(ext, options));
     } catch (const vips::VError& e) {
-        return Error{ErrorCode::EncodeFailed, std::string("Could not save the image: ") + e.what()};
+        return Error{ErrorCode::Io, writeFailure(e.what())};
     }
     return {};
 }

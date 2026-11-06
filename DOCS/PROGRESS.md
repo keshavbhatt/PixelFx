@@ -104,6 +104,8 @@ Decisions the work stopped at; everything else went ahead within the approved mo
   trailing dot or space, CON, NUL, COM1...). One `core::fileSafeName` serves all three, tested.
   Export and Batch names use it too: a template such as ".{name}" no longer hides the photo,
   and a long name (a CJK one is three bytes a character) stays within what file systems allow.
+- A save that failed (a folder without write permission, a missing folder, a full disk) said
+  so in libvips' words; it says what is wrong in plain words now, tested in the library.
 
 ### 2026-11-06 (a new app icon)
 
