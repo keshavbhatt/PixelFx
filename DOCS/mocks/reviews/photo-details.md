@@ -30,7 +30,12 @@ Signature: the location kept behind a click, with a line saying whether Export w
   under the header with 100 px to spare.
 - Head: the file name 14 px semibold `--text`, cut in the middle when long, the whole name in
   its tooltip; the folder 12 px `--muted` with the home folder as "~", then Show in folder in
-  `--link`. The × is a 26 px flat small button, 10 px from the right edge.
+  `--link`.
+- A long folder path stays on one line: its start (~ or the drive) and the photo's own folder
+  are kept, then as many of the folders nearest the photo as fit, an ellipsis for the rest
+  ("~/…/Slovenia/2026/Lake trip" for ~/Pictures/Archive/Travel/Europe/Slovenia/2026/Lake trip,
+  in `photo-details-location.html`). Only a photo's folder too long by itself is cut, in its
+  middle. The whole path is in the tooltip and in Copy details; Show in folder keeps its place. The × is a 26 px flat small button, 10 px from the right edge.
 - Sections: headings as the side panels' (11 px bold capitals `--muted`, 10 px above, 4 px
   below); rows 25 px apart, the label column 96 px plus a 10 px gap, labels 13 px `--muted`,
   values 13 px `--text`, 16 px from the panel's edges.
@@ -105,3 +110,10 @@ location to a web site; copying the coordinates lets the person choose where the
   too; the File, Camera and Location sections; the location behind Show; Copy details.
 - The shortcut: I (recommended; Lightroom's key for photo information, one key as J, H and V
   are) or Ctrl+I (Get Info on macOS)?
+
+## Decided by the owner (2026-11-06)
+
+- Approved as drawn, with the shortcut I.
+- A long folder path drops whole folders from its middle, keeping its start and the photo's own
+  folder (chosen over wrapping to two lines and over cutting at the end); drawn in
+  `photo-details-location.html`.

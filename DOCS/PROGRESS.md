@@ -40,7 +40,7 @@
 | `batch-empty.html`, `batch-recipe-picker.html` | 2026-11-06 (`mocks/reviews/batch-empty.md`, `batch-recipe-picker.md`) | approved 2026-11-06 |
 | `batch.html` and its states, without the list or grid switch | 2026-11-06 (the owner's call) | approved 2026-11-06 (the grid showed less than the list: no size, no status, no reason a photo was not saved) |
 | `shortcuts.html`, the rows of bound keys it lacked; `export.html`, the overwrite warning line | 2026-11-06 (PROGRESS, testing every feature) | approved 2026-11-06 |
-| `photo-details.html`, `-plain`, `-location` | 2026-11-06 (`mocks/reviews/photo-details.md`) | waiting |
+| `photo-details.html`, `-plain`, `-location` | 2026-11-06 (`mocks/reviews/photo-details.md`) | approved 2026-11-06 (the shortcut I; a long folder path drops whole folders from its middle) |
 
 ## Waiting for the owner (2026-11-05)
 
@@ -87,7 +87,7 @@ Decisions the work stopped at; everything else went ahead within the approved mo
     and the four-corner keystone not built yet, the grading wheels in true hues, the curve line
     1.6 px, the Effects Style list 3 px and Heal's switches 2 px taller than drawn.
 15. Pushing: not yet (owner, 2026-11-06); commits stay local until the owner pushes.
-16. Next: the photo information panel (FEATURES O7), its mock first (owner, 2026-11-06).
+16. Next: the photo information panel (FEATURES O7); its mock approved 2026-11-06, to be built.
 
 ## Sessions (newest first)
 
@@ -98,8 +98,9 @@ Decisions the work stopped at; everything else went ahead within the approved mo
   The file name in the header opens a panel over the photo (also I and View > Photo details):
   File (size, format and bit depth, file size, colour profile), Camera (camera, lens, exposure,
   focal length, date taken), Location behind Show with a line saying whether Export keeps it,
-  Show in folder and Copy details. It stays open while stepping through photos. Waiting for the
-  owner; nothing is built.
+  Show in folder and Copy details. It stays open while stepping through photos.
+- Approved by the owner with the shortcut I. A long folder path keeps its start and the
+  photo's own folder and drops whole folders from its middle (drawn in the `-location` state).
 
 ### 2026-11-06 (the owner back: About's icon, Batch without the grid)
 
