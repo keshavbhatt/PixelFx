@@ -74,15 +74,30 @@ Decisions the work stopped at; everything else went ahead within the approved mo
     opened and Done keeps them (each spot is also its own history step, and undo works in
     Heal); Reveal dust explains itself in its tooltip rather than a first-time line.
 
+13. For the owner's look (2026-11-06): the Keyboard shortcuts sheet and `shortcuts.html` gained
+    the rows of keys that were bound but not listed (New look, Quit, Crop's Enter, Escape and
+    X, Heal's Delete); Export shows Batch's overwrite warning line when Overwrite, the photo's
+    own folder and {name} would write over the original.
+14. Kept apart from the mocks after the pixel pass (reasons in
+    `mocks/reviews/drift-2026-11-06.md`): AVIF only where the build writes it, auto straighten
+    and the four-corner keystone not built yet, the grading wheels in true hues, the curve line
+    1.6 px, the Effects Style list 3 px and Heal's switches 2 px taller than drawn.
+
 ## Sessions (newest first)
 
-### 2026-11-06 (Batch without the grid)
+### 2026-11-06 (the owner back: About's icon, Batch without the grid)
 
+- About cut its icon short at the bottom (the owner's screenshot): it took the same margin from
+  every edge, but the icon's canvas has less below the lens, where its side is. It now cuts
+  around the part the icon draws, checked at 1x and 2x.
 - The owner dropped Batch's list or grid switch: the grid showed only names and pictures, none
   of the list's size, status or reason a photo was not saved, and it only appeared in Edit and
-  export. Batch shows the list; the five Batch mocks lose the switch.
-- About cuts its icon around the part the icon draws: the lens's side at the bottom was cut off
-  when the same margin was taken from every edge.
+  export. Batch shows the list; the five Batch mocks lose the switch, and its glyph is gone.
+- FEATURES S5 is done (folders, presets, looks and LUTs dropped anywhere, files from a file
+  manager pasted).
+- State: 33 commits since `e4c0b91`, local only, none pushed. 42 app suites pass, in the
+  normal build and under AddressSanitizer and UndefinedBehaviorSanitizer; 167 library tests;
+  the linters clean.
 
 ### 2026-11-06 (testing every feature, the owner away)
 
