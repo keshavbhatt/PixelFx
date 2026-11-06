@@ -1685,7 +1685,10 @@ void MainWindow::savePreset()
         core::PresetEntry entry;
         entry.name = sheet.name();
         entry.settings = preset;
-        (void)core::PresetLibrary::exportTo(entry, sheet.fileCopy());
+        if (!core::PresetLibrary::exportTo(entry, sheet.fileCopy())) {
+            showToast(tr("The preset is saved, but its copy could not be written to %1.")
+                          .arg(QDir::toNativeSeparators(QFileInfo(sheet.fileCopy()).absolutePath())));
+        }
     }
     refreshPresets();
     showToast(tr("Saved preset %1").arg(sheet.name()));

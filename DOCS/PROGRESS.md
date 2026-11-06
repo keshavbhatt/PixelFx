@@ -148,6 +148,8 @@ Decisions the work stopped at; everything else went ahead within the approved mo
 - Remembered edits that could not be written (a data folder without write permission, a full
   disk) were only logged; the person is told once a session that edits are not being kept, and
   to export to keep them.
+- Two other saves failed silently: Save as preset's copy to a file, and the watermark sheet's
+  Save as; both say so now.
 
 ### 2026-11-06 (a new app icon)
 

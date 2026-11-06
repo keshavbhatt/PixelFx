@@ -638,7 +638,9 @@ void WatermarkSheet::saveAs()
     }
     m_mark.name = name;
     const QString path = m_library.save(m_mark);
-    if (!path.isEmpty()) {
+    if (path.isEmpty()) {
+        m_message->showError(tr("The watermark could not be saved."));
+    } else {
         refreshList(path);
         if (const auto saved = core::WatermarkLibrary::load(path)) {
             load(*saved, path);
