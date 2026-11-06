@@ -63,6 +63,18 @@ private Q_SLOTS:
         QCOMPARE(exportFileName(u"/p/photo.png"_s, o, {}, {}), u"photo.jpg"_s);
     }
 
+    void namesNeitherHideNorRunPastWhatFileSystemsAllow()
+    {
+        ExportOptions o;
+        o.nameTemplate = u".{name}"_s; // a leading dot would hide the photo
+        QCOMPARE(exportFileName(u"/p/photo.jpg"_s, o, {}, {}), u"photo.jpg"_s);
+        o.nameTemplate = u"{name}-edit"_s;
+        const QString longName = QString(120, QChar(0x5199)); // 写, 3 bytes in UTF-8
+        const QString saved = exportFileName(u"/p/"_s + longName + u".jpg"_s, o, {}, {});
+        QVERIFY(saved.toUtf8().size() <= 255);
+        QVERIFY(saved.endsWith(u".jpg"_s));
+    }
+
     void ifExistsPolicies()
     {
         QTemporaryDir dir;

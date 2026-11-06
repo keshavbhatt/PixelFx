@@ -102,6 +102,8 @@ Decisions the work stopped at; everything else went ahead within the approved mo
 - Preset, look and watermark names became file names through three copies of one function,
   which could cut an emoji in half at 80 characters and let through names Windows refuses (a
   trailing dot or space, CON, NUL, COM1...). One `core::fileSafeName` serves all three, tested.
+  Export and Batch names use it too: a template such as ".{name}" no longer hides the photo,
+  and a long name (a CJK one is three bytes a character) stays within what file systems allow.
 
 ### 2026-11-06 (a new app icon)
 

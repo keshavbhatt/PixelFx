@@ -1,9 +1,10 @@
 #include "core/export_options.h"
 
+#include "core/file_names.h"
+
 #include <QDir>
 #include <QFileInfo>
 #include <QObject>
-#include <QRegularExpression>
 
 #include <algorithm>
 #include <array>
@@ -133,13 +134,8 @@ QString exportFileName(const QString& source, const ExportOptions& options, cons
     name.replace(u"{h}"_s, QString::number(outputSize.height()));
     name.replace(u"{preset}"_s,
                  options.recipeName.trimmed().isEmpty() ? u"edit"_s : options.recipeName.trimmed());
-    static const QRegularExpression kUnsafe(uR"([\\/:*?"<>|\x00-\x1f])"_s);
-    name.replace(kUnsafe, u"-"_s);
-    name = name.trimmed();
-    if (name.isEmpty() || name == u"."_s || name == u".."_s) {
-        name = base;
-    }
-    return name + u'.' + options.extension;
+    constexpr qsizetype kLongest = 200; // a long template over a long name still fits
+    return fileSafeName(name, fileSafeName(base, u"photo"_s, kLongest), kLongest) + u'.' + options.extension;
 }
 
 QString exportTarget(const QString& source, const ExportOptions& options, const QSize& outputSize,
