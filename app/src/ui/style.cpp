@@ -121,7 +121,7 @@ const QString kSheet = uR"(
     )"_s + uR"(
         #panelScroll, #panelContent { background: {{panel}}; }
         #adjustGroup { border-top: 1px solid {{border}}; }
-        QToolButton#groupToggle { border: 0; background: transparent; font-weight: 600; padding: 2px; }
+        QToolButton#groupToggle { border: 0; background: transparent; font-weight: 600; padding: 0; }
         QToolButton#flatIcon { border: 1px solid transparent; border-radius: 6px; padding: 3px; background: transparent; }
         QToolButton#flatIcon:hover { background: {{hover}}; }
         QToolButton#flatIcon[focusVisible="true"]:focus { border-color: {{accent}}; }
@@ -779,6 +779,62 @@ QLabel* sectionHeading(const QString& text, QWidget* parent, int sides)
     QLabel* label = sectionLabel(text, parent);
     label->setContentsMargins(sides, kAboveSection, sides, kBelowSection);
     return label;
+}
+
+namespace {
+
+// Keeps a floating scroll bar along the right edge of its scroll area.
+class OverlayPlacer : public QObject
+{
+public:
+    OverlayPlacer(QScrollArea* area, QScrollBar* bar)
+        : QObject(area)
+        , m_area(area)
+        , m_bar(bar)
+    {
+        area->installEventFilter(this);
+    }
+
+    void place() const
+    {
+        const int width = m_bar->sizeHint().width();
+        m_bar->setGeometry(m_area->width() - width, 0, width, m_area->height());
+        m_bar->raise();
+    }
+
+protected:
+    bool eventFilter(QObject* watched, QEvent* event) override
+    {
+        if (watched == m_area && (event->type() == QEvent::Resize || event->type() == QEvent::Show)) {
+            place();
+        }
+        return QObject::eventFilter(watched, event);
+    }
+
+private:
+    QScrollArea* m_area;
+    QScrollBar* m_bar;
+};
+
+} // namespace
+
+void overlayScrollBar(QScrollArea* area)
+{
+    // The area's own bar is never shown but keeps the range and the position; this one shows them.
+    area->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    QScrollBar* inner = area->verticalScrollBar();
+    auto* bar = new QScrollBar(Qt::Vertical, area);
+    bar->hide();
+    QObject::connect(inner, &QScrollBar::rangeChanged, bar, [bar, inner](int min, int max) {
+        bar->setRange(min, max);
+        bar->setPageStep(inner->pageStep());
+        bar->setSingleStep(inner->singleStep());
+        bar->setVisible(max > min);
+    });
+    QObject::connect(inner, &QScrollBar::valueChanged, bar, &QScrollBar::setValue);
+    QObject::connect(bar, &QScrollBar::valueChanged, inner, &QScrollBar::setValue);
+    auto* placer = new OverlayPlacer(area, bar);
+    placer->place();
 }
 
 void keepScrollBarInPadding(const QScrollArea* area, QLayout* content, int edge)

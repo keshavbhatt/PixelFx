@@ -131,6 +131,7 @@ QToolButton* headerButton(QWidget* parent, const QString& glyph, const QString& 
     b->setObjectName(u"headerButton"_s);
     b->setIcon(headerIcon(glyph));
     b->setIconSize(QSize(18, 18));
+    b->setFixedSize(32, 32); // the mocks' icon buttons
     b->setToolTip(tip);
     b->setAccessibleName(tip);
     b->setAutoRaise(true);
@@ -559,25 +560,34 @@ void MainWindow::buildHeader()
     m_menuButton = headerButton(m_header, u"menu"_s, tr("Main menu (F10)"));
     m_menuButton->setPopupMode(QToolButton::InstantPopup);
 
-    // Thin separators between the groups.
+    // Thin separators between the groups, 4 px clear on each side (menu.html, editor.html).
     const auto separator = [this] {
-        auto* line = new QFrame(m_header);
+        auto* box = new QWidget(m_header);
+        auto* line = new QFrame(box);
         line->setObjectName(u"headerSep"_s);
         line->setFixedSize(1, 24);
-        return line;
+        auto* centre = new QHBoxLayout(box);
+        centre->setContentsMargins(4, 0, 4, 0);
+        centre->addWidget(line);
+        return box;
     };
     QWidget* sepHistory = separator();
     QWidget* sepView = separator();
+    // As the mocks' header: 8 px in, the mark 4 px further with 8 px after it (and the wordmark
+    // 8 px after the mark on the start page), then 6 px between everything.
     auto* header = new QHBoxLayout(m_header);
-    header->setContentsMargins(kToolRowPadding, 0, kToolRowPadding, 0);
+    header->setContentsMargins(8, 0, kToolRowPadding, 0);
     header->setSpacing(kGapRelated);
-    header->addWidget(new BrandMark(m_header));
+    auto* brand = new QHBoxLayout;
+    brand->setContentsMargins(4, 0, 8, 0);
+    brand->setSpacing(8);
+    brand->addWidget(new BrandMark(m_header));
     m_wordmark = new QLabel(u"PixelFx"_s, m_header);
     m_wordmark->setObjectName(u"wordmark"_s);
-    header->addWidget(m_wordmark);
-    header->addSpacing(kGapSmall);
+    brand->addWidget(m_wordmark);
+    header->addLayout(brand);
     header->addWidget(open);
-    header->addSpacing(kGapSmall);
+    doc->setContentsMargins(6, 0, 6, 0);
     header->addLayout(doc);
     header->addStretch();
     header->addWidget(m_undo);

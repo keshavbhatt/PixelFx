@@ -146,6 +146,9 @@ QVBoxLayout* sectionColumn(const QString& heading, QWidget* box);
 /// While `area` scrolls, its scroll bar takes the right padding of `content` (its widget's
 /// layout, `edge` px), so the content keeps its width and nothing moves when the bar appears.
 void keepScrollBarInPadding(const QScrollArea* area, QLayout* content, int edge);
+/// `area`'s vertical scroll bar floats over its right edge instead of taking width: for side
+/// panels, whose 14 px padding holds it (the mocks draw no track); the content keeps its width.
+void overlayScrollBar(QScrollArea* area);
 /// A heading inside a menu ("History"): Qt draws a menu section as a bare line under a style
 /// sheet, so the heading is a label of its own.
 void addMenuHeading(QMenu* menu, const QString& text);

@@ -173,6 +173,7 @@ QWidget* HealPanel::buildSpots()
     scroll->setWidgetResizable(true);
     scroll->setFrameShape(QFrame::NoFrame);
     scroll->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    overlayScrollBar(scroll); // over the panel's padding, as the mocks draw it
     auto* column = new QVBoxLayout(box);
     column->setContentsMargins(0, 0, 0, 0);
     column->setSpacing(0);

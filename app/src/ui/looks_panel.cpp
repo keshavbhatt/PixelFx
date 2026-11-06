@@ -101,6 +101,7 @@ LooksPanel::LooksPanel(QWidget* parent)
     scroll->setWidgetResizable(true);
     scroll->setFrameShape(QFrame::NoFrame);
     scroll->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    overlayScrollBar(scroll); // over the panel's padding, as the mocks draw it
     m_listBox->setObjectName(u"panelContent"_s);
 
     auto* column = new QVBoxLayout(this);
