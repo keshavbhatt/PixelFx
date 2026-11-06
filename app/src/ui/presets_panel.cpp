@@ -145,7 +145,7 @@ QHBoxLayout* PresetsPanel::buildHead()
 {
     m_search->setObjectName(u"presetSearch"_s);
     m_search->setPlaceholderText(tr("Search presets"));
-    m_search->setFixedHeight(30); // the mocks' search fields
+    m_search->setProperty("search", true); // 30 px, as the mocks' search fields
     m_search->setClearButtonEnabled(true);
     m_search->addAction(icons::themed(u"search"_s, tokens().muted), QLineEdit::LeadingPosition);
     connect(m_search, &QLineEdit::textChanged, this, &PresetsPanel::rebuild);
@@ -162,7 +162,7 @@ QHBoxLayout* PresetsPanel::buildHead()
     m_closeAll->setAccessibleName(tr("Close all categories"));
     connect(m_closeAll, &QToolButton::clicked, this, &PresetsPanel::closeAllCategories);
     auto* head = new QHBoxLayout;
-    head->setContentsMargins(kToolRowPadding, 10, kToolRowPadding, 6);
+    head->setContentsMargins(kToolRowPadding, 10, kToolRowPadding, 10);
     head->setSpacing(kGapRelated);
     head->addWidget(m_search, 1);
     head->addWidget(m_closeAll);
@@ -247,6 +247,7 @@ QWidget* PresetsPanel::buildFoot()
     m_appliedBox->hide();
     auto* save =
         new IconTextButton(icons::themed(u"plus"_s, tokens().text), tr("Save current as preset"), foot);
+    save->setObjectName(u"small"_s); // a small button across the panel, as drawn
     save->setToolTip(tr("Keep this photo's settings, or some of them, as a preset"));
     connect(save, &QPushButton::clicked, this, &PresetsPanel::saveRequested);
     column->addWidget(m_appliedBox);

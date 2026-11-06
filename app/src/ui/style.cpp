@@ -98,7 +98,7 @@ const QString kSheet = uR"(
         QListWidget#pickerGroups { background: {{bar}}; border: 0; border-right: 1px solid {{border}}; padding: 6px 0; outline: 0; }
         QListWidget#pickerGroups::item { padding: 0 12px; margin: 0 8px; border-radius: 7px; }
         QListWidget#pickerGroups::item:selected { background: {{accentSoft}}; color: {{accent}}; font-weight: 600; }
-        QPushButton#panelTab { padding: 7px 10px 9px; border: 0; border-bottom: 2px solid transparent; border-radius: 0; background: transparent; color: {{muted}}; font-weight: 500; }
+        QPushButton#panelTab { padding: 7px 10px 10px; border: 0; border-bottom: 2px solid transparent; border-radius: 0; background: transparent; color: {{muted}}; font-weight: 500; }
         QPushButton#panelTab:checked { border-bottom-color: {{accent}}; color: {{text}}; }
         QPushButton#panelTab:hover { color: {{text}}; }
         #lookStrength { background: {{panel}}; border-top: 1px solid {{border}}; }
@@ -237,6 +237,7 @@ const QString kControls = uR"(
         QSpinBox::up-arrow { image: url({{glyphs}}/chevron-up.svg); width: 11px; height: 11px; }
         QSpinBox::down-arrow { image: url({{glyphs}}/chevron-down.svg); width: 11px; height: 11px; }
         QLineEdit { selection-background-color: {{accentStrong}}; min-height: 20px; }
+        QLineEdit[search="true"] { min-height: 18px; }
         QListWidget, QTextBrowser, QPlainTextEdit, QTextEdit { background: {{input}}; border: 1px solid {{border}}; border-radius: 8px; color: {{text}}; outline: 0; }
         QListWidget::item:selected { background: {{accentSoft}}; color: {{text}}; }
         QListWidget::item:hover:!selected { background: {{hover}}; }
