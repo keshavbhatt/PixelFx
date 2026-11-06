@@ -19,6 +19,7 @@ class QFormLayout;
 class QHBoxLayout;
 class QLabel;
 class QComboBox;
+class QLineEdit;
 class QLayout;
 class QScrollArea;
 class QMenu;
@@ -126,6 +127,8 @@ QFrame* segmentBox(const QStringList& names, int checked, QButtonGroup* group, Q
 /// Lets `list` be narrower than its longest choice, cut with "..." (a choice is shown whole when
 /// the list opens): for lists in a side panel of fixed width, whose longest choices would widen it.
 void fitToPanel(QComboBox* list);
+/// The magnifier at the start of a search field, named "Search" for screen readers.
+void addSearchIcon(QLineEdit* field);
 /// `box` (a segmentBox) at the small size, 25 px tall in 12 px type, for choices inside a section.
 QFrame* smallSegments(QFrame* box);
 /// `text` for a button or a tool button, whose "&" would otherwise mark a shortcut letter.

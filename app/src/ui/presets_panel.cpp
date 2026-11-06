@@ -147,7 +147,7 @@ QHBoxLayout* PresetsPanel::buildHead()
     m_search->setPlaceholderText(tr("Search presets"));
     m_search->setProperty("search", true); // 30 px, as the mocks' search fields
     m_search->setClearButtonEnabled(true);
-    m_search->addAction(icons::themed(u"search"_s, tokens().muted), QLineEdit::LeadingPosition);
+    addSearchIcon(m_search);
     connect(m_search, &QLineEdit::textChanged, this, &PresetsPanel::rebuild);
     auto* import = new QToolButton(this);
     import->setObjectName(u"iconButton"_s);

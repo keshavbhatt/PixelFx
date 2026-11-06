@@ -88,7 +88,7 @@ ShortcutsSheet::ShortcutsSheet(QWidget* parent)
     setWindowTitle(tr("Keyboard shortcuts"));
     m_search->setPlaceholderText(tr("Search"));
     m_search->setClearButtonEnabled(true);
-    m_search->addAction(icons::themed(u"search"_s, tokens().muted), QLineEdit::LeadingPosition);
+    addSearchIcon(m_search);
     m_search->setFixedWidth(240);
     connect(m_search, &QLineEdit::textChanged, this, &ShortcutsSheet::filter);
 

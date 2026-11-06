@@ -115,6 +115,7 @@ RecipePicker::RecipePicker(Mode mode, const std::vector<core::PresetEntry>& pres
     m_search->setPlaceholderText(mode == Mode::Recipe ? tr("Search looks and presets")
                                                       : tr("Search presets"));
     m_search->setClearButtonEnabled(true);
+    addSearchIcon(m_search);
     m_search->setFixedWidth(260);
     connect(m_search, &QLineEdit::textChanged, this, &RecipePicker::showSearch);
     QHBoxLayout* heading = sheetTitleRow(this, title, {m_search});
@@ -143,7 +144,7 @@ RecipePicker::RecipePicker(Mode mode, const std::vector<core::PresetEntry>& pres
         }
     });
 
-    setSize(Size::Editor);
+    setSize(Size::Picker);
     showGroup(startGroup(m_choice));
     if (!remembered(mode).search.isEmpty()) {
         m_search->setText(remembered(mode).search);

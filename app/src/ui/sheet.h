@@ -30,6 +30,7 @@ public:
         Regular, ///< 560 px: a form (Export, Save as preset, About)
         Wide,    ///< 820 px: two columns or a sidebar (Settings, Keyboard shortcuts)
         Editor,  ///< 980 by 640 px at least, resizable from its edges: controls beside a preview
+        Picker,  ///< 900 by 640 px at least, resizable: groups beside tiles to choose from
     };
     /// Gives the sheet its size; call once its content is built. Sheets other than Editor then
     /// follow their content's height as it changes, no taller than the window they cover.

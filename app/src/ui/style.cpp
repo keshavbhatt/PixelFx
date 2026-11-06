@@ -5,9 +5,11 @@
 #include "ui/menu_style.h"
 
 #include <QAbstractItemView>
+#include <QAction>
 #include <QApplication>
 #include <QButtonGroup>
 #include <QComboBox>
+#include <QCoreApplication>
 #include <QDialog>
 #include <QFile>
 #include <QFocusEvent>
@@ -16,6 +18,7 @@
 #include <QHash>
 #include <QImage>
 #include <QLabel>
+#include <QLineEdit>
 #include <QMenu>
 #include <QPainter>
 #include <QPainterPath>
@@ -754,6 +757,13 @@ QFrame* segmentBox(const QStringList& names, int checked, QButtonGroup* group, Q
         row->addStretch();
     }
     return box;
+}
+
+void addSearchIcon(QLineEdit* field)
+{
+    QAction* icon =
+        field->addAction(icons::themed(QStringLiteral("search"), tokens().muted), QLineEdit::LeadingPosition);
+    icon->setText(QCoreApplication::translate("PixelFx", "Search"));
 }
 
 void fitToPanel(QComboBox* list)

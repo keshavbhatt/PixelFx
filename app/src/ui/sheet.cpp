@@ -90,10 +90,13 @@ void Sheet::setSize(Size size)
         setFixedWidth(820);
         break;
     case Size::Editor:
-        setMinimumSize(980, 640);
-        resize(980, 640);
+    case Size::Picker: {
+        const QSize least = size == Size::Editor ? QSize(980, 640) : QSize(900, 640);
+        setMinimumSize(least);
+        resize(least);
         m_resizable = true;
         return;
+    }
     }
     m_followsContent = true;
     fitHeight();
