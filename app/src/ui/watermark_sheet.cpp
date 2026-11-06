@@ -652,6 +652,10 @@ bool WatermarkSheet::useWatermark()
         m_message->showError(tr("Choose a logo first, or switch to Text."));
         return false;
     }
+    if (m_mark.kind == core::Watermark::Kind::Text && m_mark.text.trimmed().isEmpty()) {
+        m_message->showError(tr("Type the text first, or switch to Logo.")); // it would print nothing
+        return false;
+    }
     if (m_mark.name.trimmed().isEmpty()) {
         m_mark.name = tr("My watermark");
     }

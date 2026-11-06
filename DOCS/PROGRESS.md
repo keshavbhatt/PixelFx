@@ -116,6 +116,8 @@ Decisions the work stopped at; everything else went ahead within the approved mo
 - Every unnamed button was looked for: only the magnifier in the search fields had no name for
   a screen reader; one helper adds it, named "Search". Choose the recipe lacked that magnifier,
   which its mock shows, and was 980 px wide, the mock 900 (a sheet size of its own now).
+- A text watermark with its text cleared was saved and used, printing nothing on every photo;
+  it says to type the text first, as a logo watermark without a logo already did.
 
 ### 2026-11-06 (a new app icon)
 

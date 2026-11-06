@@ -11,6 +11,7 @@
 #include <QFile>
 #include <QLabel>
 #include <QLayout>
+#include <QLineEdit>
 #include <QMenu>
 #include <QPushButton>
 #include <QScrollArea>
@@ -280,6 +281,24 @@ private Q_SLOTS:
         auto* message = sheet.findChild<pixelfx::ui::MessageLine*>();
         QVERIFY(message && message->isError());
         QVERIFY(message->text().contains(u"logo"_s));
+    }
+
+    void aTextWatermarkWithoutTextSaysSo()
+    {
+        QTemporaryDir dir;
+        QImage photo(60, 40, QImage::Format_RGB32);
+        photo.fill(Qt::gray);
+        pixelfx::ui::WatermarkSheet sheet(photo, {}, dir.filePath(u"marks"_s));
+        for (auto* field : sheet.findChildren<QLineEdit*>()) {
+            if (field->accessibleName() == u"Watermark text"_s) {
+                field->selectAll();
+                QTest::keyClick(field, Qt::Key_Backspace); // as a person clears it
+            }
+        }
+        QVERIFY(!sheet.useWatermark());
+        auto* message = sheet.findChild<pixelfx::ui::MessageLine*>();
+        QVERIFY(message && message->isError());
+        QVERIFY(message->text().contains(u"text"_s));
     }
 
     void rareFormatsAreUnderMore()
