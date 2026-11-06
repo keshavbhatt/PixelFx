@@ -66,6 +66,7 @@ const QString kSheet = uR"(
         #dropZone { background: {{panel}}; border: 2px dashed {{border}}; border-radius: 10px; }
         #dropZone[dragActive="true"] { border-color: {{accent}}; background: {{accentSoft}}; }
         #welcomeTitle { font-size: 20px; font-weight: 600; }
+        #batchEmptyTitle { font-size: 18px; font-weight: 600; }
         #welcomeHint, #muted { color: {{muted}}; }
         #faint { color: {{faint}}; font-size: 12px; }
         #faintSmall { color: {{faint}}; font-size: 11px; }

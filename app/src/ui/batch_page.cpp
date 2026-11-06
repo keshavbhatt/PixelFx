@@ -32,10 +32,12 @@
 #include <QDialog>
 #include <QDirIterator>
 #include <QDragEnterEvent>
+#include <QDragLeaveEvent>
 #include <QEvent>
 #include <QFileDialog>
 #include <QFileInfo>
 #include <QFormLayout>
+#include <QFrame>
 #include <QFutureWatcher>
 #include <QHBoxLayout>
 #include <QLabel>
@@ -223,7 +225,7 @@ QWidget* BatchPage::buildListHead(QWidget* parent)
         m_viewModes->addButton(b, i);
         viewRow->addWidget(b);
     }
-    connect(m_viewModes, &QButtonGroup::idClicked, this, [this](int id) { m_views->setCurrentIndex(id); });
+    connect(m_viewModes, &QButtonGroup::idClicked, this, &BatchPage::refreshView);
     m_sortBox = buildSortBox(head);
     auto* clear = new QPushButton(tr("Clear"), head);
     m_clear = clear;
@@ -303,6 +305,7 @@ QWidget* BatchPage::buildList()
     m_views->addWidget(scroll);
     m_views->addWidget(m_grid);
     m_views->addWidget(compressScroll);
+    m_views->addWidget(buildEmpty(box));
     m_compare = new CompressCompare(box);
     auto* column = new QVBoxLayout(box);
     column->setContentsMargins(0, 0, 0, 0);
@@ -313,6 +316,99 @@ QWidget* BatchPage::buildList()
     column->addWidget(m_compare);
     column->addWidget(buildStatus(box));
     return box;
+}
+
+QWidget* BatchPage::buildEmpty(QWidget* parent)
+{
+    auto* page = new QWidget(parent);
+    m_emptyZone = new QFrame(page);
+    m_emptyZone->setObjectName(u"dropZone"_s);
+    m_emptyZone->setMaximumWidth(520);
+    m_emptyGlyph = new QLabel(m_emptyZone);
+    m_emptyGlyph->setFixedHeight(56);
+    m_emptyGlyph->setAlignment(Qt::AlignHCenter | Qt::AlignTop);
+    m_emptyTitle = new QLabel(m_emptyZone);
+    m_emptyTitle->setObjectName(u"batchEmptyTitle"_s);
+    m_emptyTitle->setAlignment(Qt::AlignCenter);
+    m_emptyHint = new QLabel(m_emptyZone);
+    m_emptyHint->setObjectName(u"welcomeHint"_s);
+    m_emptyHint->setAlignment(Qt::AlignCenter);
+    m_emptyHint->setWordWrap(true);
+    auto* add = new IconTextButton(icons::themed(u"plus"_s, Qt::white), tr("Add photos"), m_emptyZone);
+    add->setObjectName(u"primary"_s);
+    connect(add, &QPushButton::clicked, this, &BatchPage::chooseFiles);
+    auto* folder =
+        new IconTextButton(icons::themed(u"folder"_s, tokens().text), tr("Add folder"), m_emptyZone);
+    folder->setToolTip(tr("Every photo in a folder, subfolders included"));
+    connect(folder, &QPushButton::clicked, this, &BatchPage::chooseFolder);
+    auto* buttons = new QHBoxLayout;
+    buttons->setSpacing(kGapItems);
+    buttons->addStretch();
+    buttons->addWidget(add);
+    buttons->addWidget(folder);
+    buttons->addStretch();
+    m_emptyMore = new QLabel(tr("Or open a batch recipe from the main menu, or drop one here."), m_emptyZone);
+    m_emptyMore->setObjectName(u"faint"_s);
+    m_emptyMore->setAlignment(Qt::AlignCenter);
+    m_emptyMore->setWordWrap(true);
+    auto* zone = new QVBoxLayout(m_emptyZone);
+    zone->setContentsMargins(20, 36, 20, 36);
+    zone->setSpacing(kGapControls);
+    zone->addWidget(m_emptyGlyph);
+    zone->addWidget(m_emptyTitle);
+    zone->addWidget(m_emptyHint);
+    zone->addSpacing(kGapControls);
+    zone->addLayout(buttons);
+    zone->addSpacing(kGapRelated);
+    zone->addWidget(m_emptyMore);
+    // As wide as it may be (520 px), centred; in a row so its wrapped lines get their height.
+    m_emptyZone->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
+    auto* row = new QHBoxLayout;
+    row->addStretch(1);
+    row->addWidget(m_emptyZone, 10);
+    row->addStretch(1);
+    auto* column = new QVBoxLayout(page);
+    column->setContentsMargins(24, 24, 24, 24);
+    column->addStretch();
+    column->addLayout(row);
+    column->addStretch();
+    return page;
+}
+
+void BatchPage::refreshView()
+{
+    constexpr int kCompressPage = 2;
+    constexpr int kEmptyPage = 3;
+    if (m_files.isEmpty()) {
+        // What to drop, in the mode's own words (batch-empty.html).
+        icons::setGlyph(m_emptyGlyph, m_compressOnly ? u"download"_s : u"images"_s, tokens().muted, 44);
+        m_emptyTitle->setText(m_compressOnly ? tr("Drop photos or folders to compress")
+                                             : tr("Drop photos or folders here"));
+        m_emptyHint->setText(
+            m_compressOnly
+                ? tr("They are made smaller without editing them, as set on the right.")
+                : tr("Every photo gets the recipe on the right. Folders bring their subfolders too."));
+        m_emptyMore->setVisible(!m_compressOnly);
+        m_views->setCurrentIndex(kEmptyPage);
+        return;
+    }
+    m_views->setCurrentIndex(m_compressOnly ? kCompressPage : m_viewModes->checkedId());
+}
+
+void BatchPage::setDragActive(bool active)
+{
+    if (m_emptyZone->property("dragActive").toBool() == active) {
+        return;
+    }
+    m_emptyZone->setProperty("dragActive", active);
+    m_emptyZone->style()->unpolish(m_emptyZone);
+    m_emptyZone->style()->polish(m_emptyZone);
+    if (active) {
+        icons::setGlyph(m_emptyGlyph, u"images"_s, tokens().accent, 44);
+        m_emptyTitle->setText(tr("Drop to add them"));
+    } else {
+        refreshView();
+    }
 }
 
 QWidget* BatchPage::buildPreview(QWidget* parent)
@@ -1274,13 +1370,7 @@ void BatchPage::rebuildRows()
     }
     m_fileRows.clear();
     m_grid->clear();
-    if (m_files.isEmpty()) {
-        auto* empty = new QLabel(
-            tr("Drop photos or folders here, or use Add photos and Add folder at the top."), m_rowsBox);
-        empty->setObjectName(u"muted"_s);
-        empty->setContentsMargins(kPanelPadding - 8, 20, 0, 0);
-        m_rows->addWidget(empty);
-    }
+    refreshView();
     for (const QString& file : m_files) {
         m_rows->addWidget(makeRow(file));
         auto* item = new QListWidgetItem(QFileInfo(file).fileName(), m_grid);
@@ -1416,7 +1506,7 @@ void BatchPage::setCompressOnly(bool on)
     m_listTitle->setText(tr("Photos"));
     m_viewBox->setVisible(!on);
     m_sortBox->setVisible(on);
-    m_views->setCurrentIndex(on ? 2 : m_viewModes->checkedId());
+    refreshView();
     m_preview->setVisible(!on && !m_files.isEmpty());
     if (!on) {
         m_compare->hide();
@@ -1741,7 +1831,14 @@ void BatchPage::dragEnterEvent(QDragEnterEvent* event)
 {
     if (event->mimeData()->hasUrls() && !m_runner.isRunning()) {
         event->acceptProposedAction();
+        setDragActive(true);
     }
+}
+
+void BatchPage::dragLeaveEvent(QDragLeaveEvent* event)
+{
+    setDragActive(false);
+    QWidget::dragLeaveEvent(event);
 }
 
 void BatchPage::dropEvent(QDropEvent* event)
@@ -1752,6 +1849,7 @@ void BatchPage::dropEvent(QDropEvent* event)
             paths << url.toLocalFile();
         }
     }
+    setDragActive(false);
     addPaths(paths);
     event->acceptProposedAction();
 }

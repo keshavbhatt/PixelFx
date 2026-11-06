@@ -9,6 +9,7 @@
 
 #include <QApplication>
 #include <QFileInfo>
+#include <QFrame>
 #include <QLabel>
 #include <QLineEdit>
 #include <QPushButton>
@@ -95,6 +96,25 @@ private Q_SLOTS:
         QSignalSpy finished(&safe.runner(), &pixelfx::services::BatchRunner::finished);
         QVERIFY(finished.wait(20000));
         QTRY_COMPARE(running.count(), 2);
+    }
+
+    void anEmptyListIsADropZoneUntilPhotosCome()
+    {
+        QTemporaryDir dir;
+        const QString photo = dir.filePath(u"one.png"_s);
+        pfx::Image img(40, 30);
+        img.fill(0.3F, 0.3F, 0.3F);
+        QVERIFY(pfx::save(img, photo.toStdString()).ok());
+        BatchPage page({}, {}, false);
+        page.resize(1200, 800);
+        page.show();
+        QVERIFY(QTest::qWaitForWindowExposed(&page));
+        const auto zone = [&page] { return page.findChild<QFrame*>(u"dropZone"_s); };
+        QVERIFY(zone() != nullptr && zone()->isVisible());
+        page.setCompressOnly(true);
+        QVERIFY(zone()->isVisible()); // in both modes, in each one's words
+        page.addPaths({photo});
+        QVERIFY(!zone()->isVisible());
     }
 
     void theNameShowsTheFirstNamesAndSaysWhenTheyClash()

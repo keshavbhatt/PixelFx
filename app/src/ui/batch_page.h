@@ -19,6 +19,7 @@
 
 class QButtonGroup;
 class QCheckBox;
+class QFrame;
 class QComboBox;
 class QDialog;
 class QFormLayout;
@@ -125,6 +126,7 @@ protected:
     bool eventFilter(QObject* watched, QEvent* event) override;
     void dragEnterEvent(QDragEnterEvent* event) override;
     void dropEvent(QDropEvent* event) override;
+    void dragLeaveEvent(QDragLeaveEvent* event) override;
 
 private:
     /// The controls of More..., read back once the sheet is accepted.
@@ -145,6 +147,11 @@ private:
     QWidget* buildSortBox(QWidget* head);
     void connectCompress();
     QWidget* buildPreview(QWidget* parent);
+    /// The empty list (batch-empty.html): a drop zone with Add photos and Add folder.
+    QWidget* buildEmpty(QWidget* parent);
+    /// The list, the grid, Compress only's list, or the drop zone when there are no photos.
+    void refreshView();
+    void setDragActive(bool active);
     QWidget* buildStatus(QWidget* parent);
     QWidget* buildPanel();
     QWidget* buildMode(QWidget* parent);
@@ -216,6 +223,11 @@ private:
     std::shared_ptr<const pfx::Image> m_previewImage; ///< the first photo, small
     quint64 m_previewGeneration = 0;
     QStackedWidget* m_views = nullptr;
+    QFrame* m_emptyZone = nullptr;
+    QLabel* m_emptyGlyph = nullptr;
+    QLabel* m_emptyTitle = nullptr;
+    QLabel* m_emptyHint = nullptr;
+    QLabel* m_emptyMore = nullptr;
     QVBoxLayout* m_rows = nullptr;
     QWidget* m_rowsBox = nullptr;
     std::vector<FileRow> m_fileRows; ///< the list's rows, in the order of m_files

@@ -37,6 +37,7 @@
 | `editor-presets-catalog.html`, hover preview | 2026-11-05 (same review, "Hover preview, reworked") | approved 2026-11-05 |
 | `editor-lens-profile.html` | 2026-11-06 (`mocks/reviews/editor-lens-profile.md`) | approved 2026-11-06 (the two EmulsionPresets lens tools join the catalog) |
 | `close-photo.html` | 2026-11-06 (`mocks/reviews/close-photo.md`) | approved 2026-11-06 (with Remember edits off, closing an edited photo asks first) |
+| `batch-empty.html`, `batch-recipe-picker.html` | 2026-11-06 (`mocks/reviews/batch-empty.md`, `batch-recipe-picker.md`) | approved 2026-11-06 |
 
 ## Waiting for the owner (2026-11-05)
 
@@ -71,9 +72,6 @@ Decisions the work stopped at; everything else went ahead within the approved mo
     the sky" in the mock needs scene recognition); Reset takes off the spots made since Heal
     opened and Done keeps them (each spot is also its own history step, and undo works in
     Heal); Reveal dust explains itself in its tooltip rather than a first-time line.
-13. `batch-empty.html` and `batch-recipe-picker.html` (2026-11-06), from the Batch audit, with
-    their reviews: the empty Batch page, and Choose the recipe in place of the flat menu of
-    presets. Approve them; they are not built yet.
 
 ## Sessions (newest first)
 
