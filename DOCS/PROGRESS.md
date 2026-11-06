@@ -145,6 +145,9 @@ Decisions the work stopped at; everything else went ahead within the approved mo
   an error.
 - A long file name in the header was cut off mid-letter when the window was narrow; it is
   shortened in the middle, keeping its start and extension, with the whole name in a tooltip.
+- Remembered edits that could not be written (a data folder without write permission, a full
+  disk) were only logged; the person is told once a session that edits are not being kept, and
+  to export to keep them.
 
 ### 2026-11-06 (a new app icon)
 

@@ -9,6 +9,7 @@
 #include <QFileInfo>
 #include <QFutureWatcher>
 #include <QPointF>
+#include <QPointer>
 #include <QThreadPool>
 #include <QTimer>
 #include <QtConcurrent/QtConcurrentRun>
@@ -151,9 +152,11 @@ void Document::saveNow(bool wait)
         return;
     }
     m_savePool->start([store = *m_sidecars, photo = m_info.path, fp = m_fingerprint, settings = m_settings,
-                       snapshots = m_snapshots] {
+                       snapshots = m_snapshots, self = QPointer<Document>(this)] {
         if (!store.write(photo, fp, settings, &snapshots)) {
             qCWarning(lcDocument) << "could not remember the edits of" << photo;
+            QMetaObject::invokeMethod(
+                self, [self, photo] { Q_EMIT self->editsNotRemembered(photo); }, Qt::QueuedConnection);
         }
     });
     if (wait) {

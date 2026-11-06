@@ -2229,6 +2229,14 @@ void MainWindow::connectRaw()
     connect(&m_document, &services::Document::developingChanged, this, &MainWindow::refreshBusy);
     connect(&m_document, &services::Document::opened, this,
             [this](const services::DocumentInfo& info) { m_adjust->setRaw(info.raw, info.asShotKelvin); });
+    // Said once a session: each edit after the first would say it again.
+    connect(&m_document, &services::Document::editsNotRemembered, this, [this] {
+        if (!m_toldEditsNotRemembered) {
+            m_toldEditsNotRemembered = true;
+            showToast(tr("Edits cannot be remembered: the app's data folder cannot be written. "
+                         "Export to keep them."));
+        }
+    });
 }
 
 void MainWindow::showFailed(const QString& path, const QString& message)

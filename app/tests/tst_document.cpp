@@ -1,6 +1,7 @@
 #include "services/document.h"
 
 #include <QDir>
+#include <QFile>
 #include <QSignalSpy>
 #include <QTemporaryDir>
 #include <QTest>
@@ -183,6 +184,29 @@ private Q_SLOTS:
         again.apply({}, u"Reset all"_s);
         again.flush();
         QVERIFY(QDir(edits).entryList(QDir::Files).isEmpty()); // nothing left to remember
+    }
+
+    void editsThatCannotBeRememberedAreSaid()
+    {
+        QTemporaryDir dir;
+        const QString path = writePhoto(dir, u"photo.png"_s, 64, 48);
+        const QString edits = dir.filePath(u"edits"_s);
+        QDir().mkpath(edits);
+        QFile::setPermissions(edits, QFileDevice::ReadOwner | QFileDevice::ExeOwner); // cannot be written
+        Document doc;
+        doc.setSidecarFolder(edits);
+        QSignalSpy ready(&doc, &Document::previewReady);
+        QSignalSpy notRemembered(&doc, &Document::editsNotRemembered);
+        doc.open(path, 64);
+        QVERIFY(ready.wait(10000));
+        pfx::Settings s;
+        s.set("light.shadows", 40.0);
+        doc.apply(s, u"Shadows +40"_s);
+        doc.flush();
+        QVERIFY(notRemembered.wait(5000));
+        QCOMPARE(notRemembered.first().first().toString(), path);
+        QFile::setPermissions(edits,
+                              QFileDevice::ReadOwner | QFileDevice::WriteOwner | QFileDevice::ExeOwner);
     }
 
     void autoBrightensADarkPhotoAndKeepsCurves()

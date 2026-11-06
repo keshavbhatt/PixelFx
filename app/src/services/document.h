@@ -181,6 +181,9 @@ Q_SIGNALS:
     void historyChanged();
     /// `message` is user-facing and says why, in plain words.
     void failed(const QString& path, const QString& message);
+    /// The photo's edits could not be written to the app's library (a folder that cannot be
+    /// written, a full disk): they will not come back when the photo is opened again.
+    void editsNotRemembered(const QString& path);
 
 private:
     struct Result;
