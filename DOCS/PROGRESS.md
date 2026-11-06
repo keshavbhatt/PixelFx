@@ -41,6 +41,7 @@
 | `batch.html` and its states, without the list or grid switch | 2026-11-06 (the owner's call) | approved 2026-11-06 (the grid showed less than the list: no size, no status, no reason a photo was not saved) |
 | `shortcuts.html`, the rows of bound keys it lacked; `export.html`, the overwrite warning line | 2026-11-06 (PROGRESS, testing every feature) | approved 2026-11-06 |
 | `photo-details.html`, `-plain`, `-location` | 2026-11-06 (`mocks/reviews/photo-details.md`) | approved 2026-11-06 (the shortcut I; a long folder path drops whole folders from its middle) |
+| `crop-corners.html`, `-done` | 2026-11-06 (`mocks/reviews/crop-corners.md`) | waiting |
 
 ## Waiting for the owner (2026-11-05)
 
@@ -90,6 +91,15 @@ Decisions the work stopped at; everything else went ahead within the approved mo
 16. Next: the photo information panel (FEATURES O7); its mock approved 2026-11-06, to be built.
 
 ## Sessions (newest first)
+
+### 2026-11-06 (Fix by four corners, the mock)
+
+- Next after Photo details: FEATURES G5's four-corner fix, whose button `crop.html` draws but
+  whose use it never did. `crop-corners.html` (placing the corners: handles, the shape's
+  outline and thirds, the outside dimmed, a magnifier at the dragged corner, Keep: Whole photo
+  or Inside the corners, the sliders off) and `crop-corners-done.html` (after applying), with
+  the review. Waiting for the owner; nothing is built. Building it changes the recipe format
+  (`geometry.perspective.corners` and `keep`): a version, a migration and a test.
 
 ### 2026-11-06 (Photo details, built)
 

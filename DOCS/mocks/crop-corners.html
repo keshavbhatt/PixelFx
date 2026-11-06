@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>PixelFx mock: Crop, fixing by four corners</title><link rel="stylesheet" href="mock.css"><script src="mock.js"></script></head>
+<body>
+<div class="window">
+  <div class="titlebar"><div class="lights"><i></i><i></i><i></i></div><div class="title">sunset-lake.jpg - PixelFx</div><div class="wc"><span>&#x2212;</span><span>&#x25A1;</span><span>&#x2715;</span></div></div>
+  <div class="menubar"><b>PixelFx</b><span>File</span><span>Edit</span><span>Image</span><span>View</span><span>Window</span><span>Help</span></div>
+  <div class="header">
+    <div class="brand"><span class="mark"></span></div>
+    <button class="btn flat icon" title="Open images (Ctrl+O)"><svg class="ic "><use href="#i-open"/></svg></button>
+    <div class="doc"><b>sunset-lake.jpg</b><span>6000 x 4000 &middot; JPEG &middot; 8.4 MB</span></div>
+    <span class="grow"></span>
+    <button class="btn flat icon" title="Undo (Ctrl+Z)"><svg class="ic "><use href="#i-undo"/></svg></button>
+    <button class="btn flat icon" title="Redo (Ctrl+Shift+Z)"><svg class="ic "><use href="#i-redo"/></svg></button>
+    <button class="btn flat icon" title="History (H)"><svg class="ic "><use href="#i-history"/></svg></button>
+    <span class="sep"></span>
+    <button class="btn flat icon" title="Before and after (\)"><svg class="ic "><use href="#i-compare"/></svg></button>
+    <button class="btn flat icon" title="Show original while held (Space)"><svg class="ic "><use href="#i-eye"/></svg></button>
+    <span class="sep"></span>
+    <button class="btn" title="Save a copy with these settings (Ctrl+Shift+E)"><svg class="ic s"><use href="#i-export"/></svg>Export</button>
+    <button class="btn flat icon" title="Main menu (F10)"><svg class="ic "><use href="#i-menu"/></svg></button>
+  </div>
+  <div class="body no-left">
+    <div class="rail">
+      <div class="r" title="Edit"><svg class="ic "><use href="#i-sliders"/></svg><span>Edit</span></div><div class="r on" title="Crop"><svg class="ic "><use href="#i-crop"/></svg><span>Crop</span></div><div class="r" title="Heal"><svg class="ic "><use href="#i-bandage"/></svg><span>Heal</span></div><div class="r" title="Batch"><svg class="ic "><use href="#i-stack"/></svg><span>Batch</span></div>
+      <span class="spacer"></span>
+      <div class="r" title="Settings (Ctrl+,)"><svg class="ic "><use href="#i-settings"/></svg></div>
+    </div>
+    <div class="center"><div class="canvas"><div class="photo" style="width:min(80%,820px)"><svg viewBox="0 0 1200 800" style="display:block;width:100%;height:auto"><defs><linearGradient id="desk" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7a4e33"/><stop offset="1" stop-color="#5b3824"/></linearGradient>
+<linearGradient id="sheet" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f4f1ea"/><stop offset="1" stop-color="#d9d4c8"/></linearGradient></defs>
+<rect width="1200" height="800" fill="url(#desk)"/>
+<g stroke="#4c2e1d" stroke-width="3" opacity=".35"><line x1="0" y1="120" x2="1200" y2="95"/><line x1="0" y1="330" x2="1200" y2="300"/><line x1="0" y1="560" x2="1200" y2="530"/><line x1="0" y1="740" x2="1200" y2="720"/></g>
+<polygon points="380,170 860,205 965,640 255,600" fill="url(#sheet)"/>
+<g stroke="#7d7a74" stroke-width="7" stroke-linecap="round"><line x1="412" y1="242" x2="670" y2="260"/><line x1="404" y1="275" x2="831" y2="304"/><line x1="396" y1="307" x2="837" y2="336"/><line x1="389" y1="339" x2="673" y2="358"/><line x1="381" y1="372" x2="850" y2="401"/><line x1="373" y1="404" x2="856" y2="434"/><line x1="366" y1="436" x2="676" y2="455"/><line x1="358" y1="468" x2="868" y2="499"/><line x1="350" y1="501" x2="874" y2="532"/></g>
+<circle cx="1040" cy="300" r="74" fill="#2f5d8a"/><circle cx="1040" cy="300" r="56" fill="#3b2418"/>
+<rect x="120" y="660" width="210" height="16" rx="8" fill="#d8b23a" transform="rotate(-18 120 660)"/><path d="M0 0H1200V800H0Z M380 170 L860 205 L965 640 L255 600 Z" fill="rgba(0,0,0,.45)" fill-rule="evenodd"/>
+<polygon points="380,170 860,205 965,640 255,600" fill="none" stroke="#fff" stroke-width="2.5"/>
+<g stroke="rgba(255,255,255,.45)" stroke-width="1.2"><line x1="540" y1="182" x2="492" y2="613"/><line x1="338" y1="313" x2="895" y2="350"/><line x1="700" y1="193" x2="728" y2="627"/><line x1="297" y1="457" x2="930" y2="495"/></g>
+<circle cx="380" cy="170" r="9" fill="#fff" stroke="rgba(0,0,0,.55)" stroke-width="2"/><circle cx="860" cy="205" r="9" fill="#fff" stroke="rgba(0,0,0,.55)" stroke-width="2"/><circle cx="965" cy="640" r="14" fill="none" stroke="var(--accent)" stroke-width="4"/><circle cx="965" cy="640" r="9" fill="#fff" stroke="rgba(0,0,0,.55)" stroke-width="2"/><circle cx="255" cy="600" r="9" fill="#fff" stroke="rgba(0,0,0,.55)" stroke-width="2"/><clipPath id="lens"><circle cx="805" cy="490" r="78"/></clipPath>
+<g clip-path="url(#lens)"><g transform="translate(805 490) scale(3) translate(-965 -640)"><defs><linearGradient id="desk" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7a4e33"/><stop offset="1" stop-color="#5b3824"/></linearGradient>
+<linearGradient id="sheet" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f4f1ea"/><stop offset="1" stop-color="#d9d4c8"/></linearGradient></defs>
+<rect width="1200" height="800" fill="url(#desk)"/>
+<g stroke="#4c2e1d" stroke-width="3" opacity=".35"><line x1="0" y1="120" x2="1200" y2="95"/><line x1="0" y1="330" x2="1200" y2="300"/><line x1="0" y1="560" x2="1200" y2="530"/><line x1="0" y1="740" x2="1200" y2="720"/></g>
+<polygon points="380,170 860,205 965,640 255,600" fill="url(#sheet)"/>
+<g stroke="#7d7a74" stroke-width="7" stroke-linecap="round"><line x1="412" y1="242" x2="670" y2="260"/><line x1="404" y1="275" x2="831" y2="304"/><line x1="396" y1="307" x2="837" y2="336"/><line x1="389" y1="339" x2="673" y2="358"/><line x1="381" y1="372" x2="850" y2="401"/><line x1="373" y1="404" x2="856" y2="434"/><line x1="366" y1="436" x2="676" y2="455"/><line x1="358" y1="468" x2="868" y2="499"/><line x1="350" y1="501" x2="874" y2="532"/></g>
+<circle cx="1040" cy="300" r="74" fill="#2f5d8a"/><circle cx="1040" cy="300" r="56" fill="#3b2418"/>
+<rect x="120" y="660" width="210" height="16" rx="8" fill="#d8b23a" transform="rotate(-18 120 660)"/>
+<polygon points="380,170 860,205 965,640 255,600" fill="none" stroke="#fff" stroke-width="0.8"/></g></g>
+<circle cx="805" cy="490" r="78" fill="none" stroke="#fff" stroke-width="3"/>
+<g stroke="var(--accent)" stroke-width="2"><line x1="791" y1="490" x2="819" y2="490"/><line x1="805" y1="476" x2="805" y2="504"/></g></svg></div>
+<div class="zoombar"><button class="btn sm icon flat"><svg class="ic s"><use href="#i-zoom-out"/></svg></button><span class="z">Fit</span><button class="btn sm icon flat"><svg class="ic s"><use href="#i-zoom-in"/></svg></button><span class="sep" style="width:1px;height:18px;background:var(--border);margin:0 4px"></span><button class="btn sm flat" title="100% (Ctrl+1)">1:1</button><button class="btn sm icon flat" title="Full screen (F11)"><svg class="ic s"><use href="#i-maximize"/></svg></button></div></div>
+      <div class="strip" style="justify-content:center;gap:16px;color:var(--muted)"><span>Drag each corner onto a corner of something that should be square: a page, a window, a wall. Enter applies, Escape cancels.</span></div>
+    </div>
+    <div class="side right">
+      <div class="sec">Aspect ratio</div>
+      <div class="chips"><span class="">Free</span><span class="">Original</span><span class="">1:1</span><span class="">4:5</span><span class="">5:7</span><span class="on">3:2</span><span class="">16:9</span><span class="">9:16</span><span class="">Custom</span></div>
+      <div class="row" style="padding:4px 14px"><span class="small muted">Orientation</span><span class="grow"></span><div class="seg"><span class="on">Landscape</span><span>Portrait</span></div></div>
+      <div class="sec">Straighten and rotate</div>
+      <div style="padding:0 14px"><div class="adj  changed"><div class="lab"><span>Straighten</span><span class="val">+1.5&deg;</span></div><input type="range" min="-45" max="45" value="1.5"></div>
+        <div class="row" style="margin-top:6px"><button class="btn sm"><svg class="ic s"><use href="#i-rotate-ccw"/></svg>90&deg;</button><button class="btn sm"><svg class="ic s"><use href="#i-rotate-cw"/></svg>90&deg;</button><button class="btn sm"><svg class="ic s"><use href="#i-flip-h"/></svg>Flip</button><button class="btn sm"><svg class="ic s"><use href="#i-flip-v"/></svg>Flip</button></div>
+        <div class="row" style="margin-top:8px"><button class="btn sm"><svg class="ic s"><use href="#i-ruler"/></svg>Draw a level line</button><button class="btn sm"><svg class="ic s"><use href="#i-wand"/></svg>Auto straighten</button></div>
+      </div>
+      <div class="sec">Perspective</div>
+      <div style="padding:0 14px"><div class="adj" style="opacity:.45" title="Off while four corners set the perspective"><div class="lab"><span>Vertical</span><span class="val">0</span></div><input type="range" min="-100" max="100" value="0" disabled></div><div class="adj" style="opacity:.45" title="Off while four corners set the perspective"><div class="lab"><span>Horizontal</span><span class="val">0</span></div><input type="range" min="-100" max="100" value="0" disabled></div><div class="row" style="margin-top:4px"><button class="btn sm on"><svg class="ic s"><use href="#i-frame"/></svg>Fix by four corners</button><span class="grow"></span><a href="#" class="small">Reset corners</a></div><div class="small muted" style="margin-top:10px;margin-bottom:4px">Keep</div><div class="seg full"><span class="on">Whole photo</span><span>Inside the corners</span></div></div>
+      <div class="sec">Overlay</div>
+      <div class="chips"><span class="on">Thirds</span><span>Grid</span><span>Golden</span><span>Diagonal</span><span>None</span></div>
+      <span class="grow"></span>
+      <div class="foot" style="margin-top:auto"><button class="btn">Reset</button><span class="grow"></span><button class="btn">Cancel</button><button class="btn primary">Done</button></div>
+    </div>
+  </div>
+<span class="pin" style="left:calc(56px + 40% + 120px);top:62%">1</span><span class="pin" style="left:calc(56px + 40% - 60px);top:36%">2</span><span class="pin" style="left:calc(100% - 312px);top:598px">3</span><span class="pin" style="left:calc(100% - 22px);top:508px">4</span>
+</div>
+<ol class="notes"><li><b>Fix by four corners</b> (Crop, then the button under Perspective): four handles on the photo; drag each onto a corner of something that should be square, a page, a window, a wall. The rest of the photo dims, thirds lines follow the shape. Pin 1.</li><li>While a corner is dragged, a magnifier beside it shows three times the area under the pointer with a cross, so the corner lands on the exact spot; the arrow keys move the selected corner by a pixel (Shift: ten). Pin 2.</li><li>Keep (pin 3): <b>Whole photo</b> turns the whole picture so the shape is square and trims the empty corners, for a building or a wall; <b>Inside the corners</b> keeps only the shape, squared, for a page or a whiteboard.</li><li>The two sliders are off while the corners set the perspective (their tooltip says so); Reset corners puts the handles back on the photo&rsquo;s corners (pin 4). Enter applies and goes back to the crop frame, Escape leaves the corners as they were.</li><li><a href="crop-corners-done.html">After applying</a>.</li></ol>
+</body></html>
