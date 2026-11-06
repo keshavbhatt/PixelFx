@@ -93,8 +93,16 @@ struct ExifSummary
     double exposureTime = 0.0; // seconds
     double fNumber = 0.0;
     double focalLength = 0.0; // millimetres
+    // Where it was taken, in degrees, north and east positive, when the GPS block says. A block
+    // without a fix (no coordinates, or 0 and 0) leaves hasLocation false.
+    bool hasLocation = false;
+    double latitude = 0.0;
+    double longitude = 0.0;
 };
 [[nodiscard]] ExifSummary readExif(const std::vector<std::uint8_t>& exif);
+// The name an ICC profile gives itself ("Display P3", "Adobe RGB (1998)"); empty when it has none
+// or the bytes are not a profile.
+[[nodiscard]] std::string profileName(const std::vector<std::uint8_t>& icc);
 
 // 8-bit sRGB pixels with straight alpha, interleaved R, G, B, A, for display.
 struct Rgba8Image

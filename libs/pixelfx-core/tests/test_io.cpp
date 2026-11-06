@@ -391,6 +391,61 @@ TEST_CASE("the camera, the date and the exposure are read from Exif")
     CHECK(pfx::readExif(exifWithGps()).make == "ABC");
 }
 
+TEST_CASE("where a photo was taken is read from its GPS block")
+{
+    // exifWithGps has a latitude and no longitude: no location.
+    std::vector<std::uint8_t> b = exifWithGps();
+    CHECK_FALSE(pfx::readExif(b).hasLocation);
+    // A GPS directory of four at 300: latitude south, longitude west.
+    const auto put16 = [&b](std::size_t at, unsigned v) {
+        b.resize(std::max(b.size(), 6 + at + 2));
+        b[6 + at] = static_cast<std::uint8_t>(v & 0xFFU);
+        b[6 + at + 1] = static_cast<std::uint8_t>(v >> 8U);
+    };
+    const auto put32 = [&put16](std::size_t at, unsigned v) {
+        put16(at, v & 0xFFFFU);
+        put16(at + 2, v >> 16U);
+    };
+    put16(300, 4); // a new GPS directory at 300
+    const auto entry = [&](std::size_t at, unsigned tag, unsigned type, unsigned count, unsigned value) {
+        put16(at, tag);
+        put16(at + 2, type);
+        put32(at + 4, count);
+        put32(at + 8, value);
+    };
+    entry(302, 0x0001, 2, 2, 'S');
+    entry(314, 0x0002, 5, 3, 400);
+    entry(326, 0x0003, 2, 2, 'W');
+    entry(338, 0x0004, 5, 3, 440);
+    put32(350, 0);
+    // Latitude 46 22 34.05 at 400, longitude 13 50 18.00 at 440: numerator, denominator.
+    const std::array<unsigned, 6> latitude = {46, 1, 22, 1, 3405, 100};
+    const std::array<unsigned, 6> longitude = {13, 1, 50, 1, 1800, 100};
+    for (std::size_t i = 0; i < 6; ++i) {
+        put32(400 + (4 * i), latitude.at(i));
+        put32(440 + (4 * i), longitude.at(i));
+    }
+    put32(30, 300); // IFD0's GPS pointer to the new directory
+    const pfx::ExifSummary e = pfx::readExif(b);
+    REQUIRE(e.hasLocation);
+    CHECK(e.latitude == doctest::Approx(-(46.0 + (22.0 / 60.0) + (34.05 / 3600.0))));
+    CHECK(e.longitude == doctest::Approx(-(13.0 + (50.0 / 60.0) + (18.0 / 3600.0))));
+    // A camera without a fix writes zeros: no location. Out of range: none either.
+    std::vector<std::uint8_t> zero = b;
+    for (std::size_t i = 0; i < 3; ++i) { // every numerator to 0
+        std::fill_n(zero.begin() + static_cast<std::ptrdiff_t>(6 + 400 + (8 * i)), 4, std::uint8_t{0});
+        std::fill_n(zero.begin() + static_cast<std::ptrdiff_t>(6 + 440 + (8 * i)), 4, std::uint8_t{0});
+    }
+    CHECK_FALSE(pfx::readExif(zero).hasLocation);
+    std::vector<std::uint8_t> far = b;
+    far[6 + 400] = 120; // 120 degrees of latitude
+    CHECK_FALSE(pfx::readExif(far).hasLocation);
+    // Cut short: no location, no crash.
+    std::vector<std::uint8_t> cut = b;
+    cut.resize(6 + 420);
+    CHECK_FALSE(pfx::readExif(cut).hasLocation);
+}
+
 TEST_CASE("location is removed from XMP, the rest kept")
 {
     const std::string xmp =
@@ -553,6 +608,25 @@ TEST_CASE("Display P3 and Adobe RGB are embedded and keep colours sRGB clips")
     REQUIRE(none.ok());
     CHECK(profileDescription(none.value().profile) ==
           profileDescription(srgb.profile)); // bytes carry the time
+}
+
+TEST_CASE("a profile's name is the one it gives itself")
+{
+    const fixtures::TempDir dir;
+    pfx::Image img(4, 4);
+    img.fill(0.5F, 0.3F, 0.2F);
+    for (const auto& [space, name] : {std::pair{pfx::OutputSpace::DisplayP3, "Display P3"},
+                                      std::pair{pfx::OutputSpace::AdobeRgb, "Adobe RGB (1998) compatible"}}) {
+        const auto path = dir.path() / "tagged.png";
+        pfx::SaveOptions options;
+        options.space = space;
+        REQUIRE(pfx::save(img, path, options).ok());
+        const auto loaded = pfx::load(path);
+        REQUIRE(loaded.ok());
+        CHECK(pfx::profileName(loaded.value().profile) == name);
+    }
+    CHECK(pfx::profileName({}).empty());
+    CHECK(pfx::profileName({1, 2, 3, 4}).empty());
 }
 
 TEST_CASE("encode gives the bytes save writes")

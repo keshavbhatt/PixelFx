@@ -485,6 +485,30 @@ Result<Metadata> readMetadata(const std::filesystem::path& path)
     return worded(readMetadataAsIs(path), path);
 }
 
+std::string profileName(const std::vector<std::uint8_t>& icc)
+{
+    if (icc.empty()) {
+        return {};
+    }
+    const ProfilePtr profile(cmsOpenProfileFromMem(icc.data(), static_cast<cmsUInt32Number>(icc.size())),
+                             &cmsCloseProfile);
+    if (!profile) {
+        return {};
+    }
+    const cmsUInt32Number size =
+        cmsGetProfileInfoASCII(profile.get(), cmsInfoDescription, "en", "US", nullptr, 0);
+    if (size == 0) {
+        return {};
+    }
+    std::string name(size, '\0');
+    cmsGetProfileInfoASCII(profile.get(), cmsInfoDescription, "en", "US", name.data(), size);
+    name.resize(name.find('\0') == std::string::npos ? name.size() : name.find('\0'));
+    while (!name.empty() && (name.back() == ' ' || name.back() == '\n')) {
+        name.pop_back();
+    }
+    return name;
+}
+
 namespace {
 
 // Converts decoded pixels from their embedded profile (sRGB when there is none or it is not an

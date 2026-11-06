@@ -234,6 +234,37 @@ double readNumber(const Tiff& tiff, std::uint32_t directory, std::uint32_t tag)
     }
 }
 
+// Degrees from a GPS coordinate (three rationals: degrees, minutes, seconds) and its reference
+// ("N", "S", "E", "W"); nullopt when it is missing or out of `range`.
+std::optional<double> readCoordinate(const Tiff& tiff, std::uint32_t directory, std::uint32_t tag,
+                                     std::uint32_t refTag, double range)
+{
+    const auto e = findEntry(tiff, directory, tag);
+    if (!e || e->type != 5 || e->count != 3) {
+        return std::nullopt;
+    }
+    const std::size_t at = tiff.read32(e->field).value_or(0);
+    double degrees = 0.0;
+    double unit = 1.0;
+    for (std::size_t i = 0; i < 3; ++i) {
+        const auto num = tiff.read32(at + (8 * i));
+        const auto den = tiff.read32(at + (8 * i) + 4);
+        if (!num || !den || *den == 0) {
+            return std::nullopt;
+        }
+        degrees += static_cast<double>(*num) / static_cast<double>(*den) * unit;
+        unit /= 60.0;
+    }
+    const std::string ref = readText(tiff, directory, refTag);
+    if (ref == "S" || ref == "W") {
+        degrees = -degrees;
+    }
+    if (degrees < -range || degrees > range) {
+        return std::nullopt;
+    }
+    return degrees;
+}
+
 } // namespace
 
 ExifSummary readExif(const std::vector<std::uint8_t>& exif)
@@ -258,6 +289,16 @@ ExifSummary readExif(const std::vector<std::uint8_t>& exif)
         out.exposureTime = readNumber(tiff, *at, 0x829A);
         out.fNumber = readNumber(tiff, *at, 0x829D);
         out.focalLength = readNumber(tiff, *at, 0x920A);
+    }
+    const auto gps = findEntry(tiff, *ifd0, kGpsPointer);
+    if (const auto at = gps ? tiff.read32(gps->field) : std::nullopt) {
+        const auto latitude = readCoordinate(tiff, *at, 0x0002, 0x0001, 90.0);
+        const auto longitude = readCoordinate(tiff, *at, 0x0004, 0x0003, 180.0);
+        if (latitude && longitude && (*latitude != 0.0 || *longitude != 0.0)) {
+            out.hasLocation = true;
+            out.latitude = *latitude;
+            out.longitude = *longitude;
+        }
     }
     return out;
 }
