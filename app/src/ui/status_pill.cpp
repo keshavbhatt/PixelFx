@@ -23,8 +23,10 @@ StatusPill::StatusPill(QWidget* parent)
     auto* row = new QHBoxLayout(this);
     row->setContentsMargins(8, 2, 8, 2);
     row->setSpacing(kGapSmall);
+    row->addStretch(); // centred in a slot wider than the pill needs
     row->addWidget(m_glyph);
     row->addWidget(m_text);
+    row->addStretch();
     hide();
 }
 

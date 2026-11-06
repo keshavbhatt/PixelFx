@@ -81,7 +81,7 @@ QWidget* CompressPanel::buildCompression(QWidget* parent)
     auto* jpegRow = new QHBoxLayout;
     jpegRow->setSpacing(kGapItems);
     jpegRow->addWidget(formatLabel(tr("JPEG"), box));
-    jpegRow->addWidget(segmentBox({tr("Lossless"), tr("Target quality")}, 0, m_jpeg, box));
+    jpegRow->addWidget(smallSegments(segmentBox({tr("Lossless"), tr("Target quality")}, 0, m_jpeg, box)));
     jpegRow->addStretch(); // the choices as wide as their words
     m_jpegQuality = indentedSlider(tr("JPEG quality"), 1, 100, pfx::CompressOptions().jpegQuality, box);
     m_jpegQuality->setToolTip(tr("JPEGs are encoded again at this quality when that makes them smaller"));
@@ -90,7 +90,7 @@ QWidget* CompressPanel::buildCompression(QWidget* parent)
     auto* pngRow = new QHBoxLayout;
     pngRow->setSpacing(kGapItems);
     pngRow->addWidget(formatLabel(tr("PNG"), box));
-    pngRow->addWidget(segmentBox({tr("Lossless"), tr("Fewer colours")}, 0, m_png, box));
+    pngRow->addWidget(smallSegments(segmentBox({tr("Lossless"), tr("Fewer colours")}, 0, m_png, box)));
     pngRow->addStretch(); // the choices as wide as their words
     m_pngQuality = indentedSlider(tr("PNG quality"), 40, 100, pfx::CompressOptions().pngQuality, box);
     m_pngQuality->setToolTip(tr("The lowest quality a palette of 256 colours may have; "
@@ -98,7 +98,7 @@ QWidget* CompressPanel::buildCompression(QWidget* parent)
 
     auto* othersRow = new QHBoxLayout;
     othersRow->setSpacing(kGapItems);
-    othersRow->addWidget(formatLabel(tr("Others"), box), 0, Qt::AlignTop);
+    othersRow->addWidget(formatLabel(tr("Others"), box), 0, Qt::AlignVCenter);
     auto* others = new QLabel(tr("WebP, GIF and TIFF made smaller without loss when they can be"), box);
     others->setObjectName(u"itemDetail"_s);
     others->setWordWrap(true);

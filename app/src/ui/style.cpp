@@ -285,6 +285,7 @@ const QString kControls = uR"(
         QFrame#segmentBox { border: 1px solid {{border}}; border-radius: 7px; background: {{input}}; }
         QFrame#segmentBox QPushButton#segment { border: 1px solid transparent; border-right: 1px solid {{border}}; padding: 4px 12px 4px 11px; background: transparent; }
         QFrame#segmentBox QPushButton#segment[focusVisible="true"]:focus { border: 1px solid {{accent}}; }
+        QFrame#segmentBox[compact="true"] QPushButton#segment { padding: 2px 10px 2px 9px; font-size: 12px; }
         QFrame#segmentBox QPushButton#segment:checked { background: {{accentSoft}}; }
         QFrame#segmentBox QPushButton#segment[edge="first"] { border-top-left-radius: 6px; border-bottom-left-radius: 6px; }
         QLabel#fieldLabel { color: {{muted}}; }
@@ -740,6 +741,12 @@ QFrame* segmentBox(const QStringList& names, int checked, QButtonGroup* group, Q
     if (fit == SegmentFit::Row) {
         row->addStretch();
     }
+    return box;
+}
+
+QFrame* smallSegments(QFrame* box)
+{
+    box->setProperty("compact", true);
     return box;
 }
 

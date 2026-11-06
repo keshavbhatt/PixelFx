@@ -25,6 +25,8 @@ namespace pixelfx::ui {
 
 namespace {
 
+constexpr int kPillSlot = 76; // "Saved 38%", "No change" (batch-compress.html)
+
 constexpr int kBarWidth = 180;
 
 QString bytesText(qint64 bytes)
@@ -168,6 +170,7 @@ void CompressList::build()
         sizes->addWidget(r.bar);
         r.sizes->hide();
         r.file = makeFileRow(this, file, u"%1 \u00B7 %2"_s.arg(formatOf(file), bytesText(r.before)), r.sizes);
+        r.file.pill->setMinimumWidth(kPillSlot); // a slot of one width, so the bars line up
         r.row = r.file.row;
         r.pill = r.file.pill;
         r.row->setSelected(file == m_selected);

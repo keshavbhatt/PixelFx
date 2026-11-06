@@ -120,6 +120,8 @@ enum class SegmentFit
 /// to `group` with its index as id.
 QFrame* segmentBox(const QStringList& names, int checked, QButtonGroup* group, QWidget* parent,
                    SegmentFit fit = SegmentFit::Content);
+/// `box` (a segmentBox) at the small size, 25 px tall in 12 px type, for choices inside a section.
+QFrame* smallSegments(QFrame* box);
 /// `text` for a button or a tool button, whose "&" would otherwise mark a shortcut letter.
 [[nodiscard]] QString buttonText(QString text);
 
