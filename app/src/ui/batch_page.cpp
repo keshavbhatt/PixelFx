@@ -800,7 +800,8 @@ QFormLayout* BatchPage::saveOptionsForm(QDialog* sheet, const core::ExportOption
 {
     c.quality = qualitySlider(output.quality, sheet);
     c.quality->setEnabled(lossy(output.extension));
-    c.deep = new QCheckBox(tr("16 bits per channel (larger file, more room for later edits)"), sheet);
+    c.deep = new QCheckBox(tr("16 bits per channel, for later edits"), sheet);
+    c.deep->setToolTip(tr("A larger file, with more room for later edits in another app"));
     c.deep->setChecked(output.bitsPerSample == 16);
     c.deep->setEnabled(!lossy(output.extension));
     c.camera = new QCheckBox(tr("Keep camera details and copyright"), sheet);

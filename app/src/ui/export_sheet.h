@@ -8,6 +8,7 @@
 
 #include <vector>
 
+class QAbstractButton;
 class QButtonGroup;
 class QCheckBox;
 class QComboBox;
@@ -118,6 +119,7 @@ private:
     int m_longEdge = 0;
     int m_sizeIndex = 0;
     class QPushButton* m_more = nullptr;
+    QAbstractButton* m_shownFormat = nullptr; ///< the format the sheet is set for
     QSize m_photoSize;
     core::CustomSize m_custom;
     std::vector<core::CustomSize> m_mySizes;

@@ -203,6 +203,8 @@ input[type=range]::-moz-range-thumb { width: 13px; height: 13px; border-radius: 
 
 /* Sheets and menus. */
 .scrim { position: absolute; inset: 0; background: rgba(0,0,0,.45); display: grid; place-items: center; z-index: 10; }
+/* A sheet covers the window's content, not its title bar (or the macOS menu bar under it). */
+[data-os] .window > .scrim { top: 32px; } [data-os=macos] .window > .scrim { top: 56px; }
 .sheet { width: 560px; max-height: 88%; background: var(--panel); border: 1px solid var(--border); border-radius: var(--r-sheet); box-shadow: var(--shadow); display: flex; flex-direction: column; overflow: hidden; }
 .sheet.wide { width: 820px; } .sheet.narrow { width: 440px; }
 .sheet .sh { padding: 16px 20px 6px; display: flex; align-items: center; gap: 10px; }

@@ -236,6 +236,12 @@ bool SliderRow::fieldEvent(QEvent* event)
     return false;
 }
 
+void SliderRow::setFlush()
+{
+    // The name level with the field's top; under the track as much room as a field's own box.
+    layout()->setContentsMargins(0, 0, 0, kGapRelated);
+}
+
 void SliderRow::changeEvent(QEvent* event)
 {
     if (event->type() == QEvent::EnabledChange) {

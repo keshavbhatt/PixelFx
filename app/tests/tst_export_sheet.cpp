@@ -10,8 +10,11 @@
 #include <QComboBox>
 #include <QFile>
 #include <QLabel>
+#include <QLayout>
 #include <QMenu>
 #include <QPushButton>
+#include <QScrollArea>
+#include <QScrollBar>
 #include <QTemporaryDir>
 #include <QTest>
 
@@ -125,6 +128,33 @@ private Q_SLOTS:
         list->setCurrentIndex(1); // Original
         QTRY_VERIFY(!picker->isVisible());
         QTRY_COMPARE(sheet.height(), before);
+    }
+
+    void aSheetThatFitsDoesNotScroll()
+    {
+        // At a desktop's text size, room to spare: no scroll range, the content keeps the sheet's
+        // full right padding, and no field is wider than the sheet (the size list was: its right
+        // side was cut off).
+        const QFont before = QApplication::font();
+        QFont desktop = before;
+        desktop.setPixelSize(13); // a desktop's text (KDE's 10 pt)
+        QApplication::setFont(desktop);
+        QWidget window;
+        window.resize(1440, 900);
+        ExportSheet sheet(u"/p/photo.jpg"_s, QSize(6000, 4000), ExportOptions());
+        sheet.setParent(&window, sheet.windowFlags());
+        window.show();
+        sheet.show();
+        QVERIFY(QTest::qWaitForWindowExposed(&sheet));
+        const auto* scroll = sheet.findChild<QScrollArea*>(u"sheetScroll"_s);
+        QVERIFY(scroll != nullptr);
+        QTRY_COMPARE(scroll->verticalScrollBar()->maximum(), 0);
+        QCOMPARE(scroll->widget()->layout()->contentsMargins().right(), 20);
+        // Nothing in the form is wider than the sheet: the fields end 20 px from its edge.
+        QCOMPARE(scroll->widget()->width(), scroll->viewport()->width());
+        const QComboBox* size = sheet.sizeList();
+        QCOMPARE(size->mapTo(&sheet, QPoint(size->width(), 0)).x(), sheet.width() - 1 - 20);
+        QApplication::setFont(before);
     }
 
     void watermarkRowListsTheSavedOnes()
@@ -255,16 +285,17 @@ private Q_SLOTS:
     void rareFormatsAreUnderMore()
     {
         ExportSheet sheet(u"/p/photo.jpg"_s, QSize(600, 400), ExportOptions{});
+        auto* menu = sheet.findChild<QMenu*>();
         QPushButton* more = nullptr;
         for (QPushButton* b : sheet.findChildren<QPushButton*>(u"segment"_s)) {
-            if (b->menu() != nullptr) {
+            if (b->text() == u"More"_s) {
                 more = b;
             }
         }
-        if (more == nullptr) {
+        if (more == nullptr || menu == nullptr) {
             QSKIP("this build writes no format that goes under More");
         }
-        QAction* rare = more->menu()->actions().first();
+        QAction* rare = menu->actions().first();
         rare->trigger();
         QCOMPARE(more->text(), rare->text());
         QVERIFY(more->isChecked());
@@ -275,6 +306,29 @@ private Q_SLOTS:
         in.extension = chosen;
         const ExportSheet again(u"/p/photo.jpg"_s, QSize(600, 400), in);
         QCOMPARE(again.options().extension, chosen);
+    }
+
+    void closingMoreWithoutAChoiceKeepsTheFormat()
+    {
+        ExportSheet sheet(u"/p/photo.jpg"_s, QSize(600, 400), ExportOptions{});
+        sheet.show();
+        QVERIFY(QTest::qWaitForWindowExposed(&sheet));
+        QPushButton* more = nullptr;
+        for (QPushButton* b : sheet.findChildren<QPushButton*>(u"segment"_s)) {
+            if (b->text() == u"More"_s) {
+                more = b;
+            }
+        }
+        if (more == nullptr) {
+            QSKIP("this build writes no format that goes under More");
+        }
+        const QString before = sheet.options().extension;
+        more->click();
+        auto* menu = sheet.findChild<QMenu*>();
+        QTRY_VERIFY(menu->isVisible());
+        menu->hide();
+        QTRY_VERIFY(!more->isChecked());
+        QCOMPARE(sheet.options().extension, before);
     }
 
     void aCustomSizeIsTheLongEdgeInTheList()

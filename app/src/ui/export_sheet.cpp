@@ -74,6 +74,19 @@ const Format* formatFor(const QString& extension)
 
 } // namespace
 
+// A line across the form, 8 px from the rows on either side, as drawn.
+QWidget* formDivider(QWidget* parent)
+{
+    auto* line = new QFrame(parent);
+    line->setObjectName(u"divider"_s);
+    line->setFixedHeight(1);
+    auto* box = new QWidget(parent);
+    auto* layout = new QVBoxLayout(box);
+    layout->setContentsMargins(0, 2, 0, 2); // with the form's 12 px between rows
+    layout->addWidget(line);
+    return box;
+}
+
 SliderRow* qualitySlider(int quality, QWidget* parent)
 {
     auto* row = new SliderRow(ExportSheet::tr("Smaller file \u00B7 Better image"), parent);
@@ -106,8 +119,9 @@ ExportSheet::ExportSheet(const QString& source, const QSize& photoSize, const co
 
     form->addRow(tr("Quality"), qualityRow(options.quality));
 
-    m_sixteen = new QCheckBox(tr("16 bits per channel (larger file, more room for later edits)"), this);
+    m_sixteen = new QCheckBox(tr("16 bits per channel, for later edits"), this);
     m_sixteen->setChecked(options.bitsPerSample == 16);
+    m_sixteen->setToolTip(tr("A larger file, with more room for later edits in another app"));
     form->addRow(QString(), m_sixteen);
 
     form->addRow(tr("Size"), sizeRow(photoSize, options));
@@ -121,10 +135,7 @@ ExportSheet::ExportSheet(const QString& source, const QSize& photoSize, const co
 
     form->addRow(tr("Metadata"), metadataRow(options));
 
-    auto* divider = new QFrame(this);
-    divider->setObjectName(u"divider"_s);
-    divider->setFixedHeight(1);
-    form->addRow(divider);
+    form->addRow(formDivider(this));
 
     form->addRow(tr("Save to"), folderRow());
 
@@ -137,6 +148,7 @@ ExportSheet::ExportSheet(const QString& source, const QSize& photoSize, const co
     QVBoxLayout* column = sheetLayout(this, foot);
     column->setSpacing(kGapGroups);
     addScrollingContent(column, heading, form, this);
+    form->setContentsMargins(0, kGapRelated, 0, 0); // the mock's 8 px over its first row
     updateForFormat();
     setSize(Size::Regular);
 
@@ -171,6 +183,7 @@ QHBoxLayout* ExportSheet::addFooter(QFormLayout* form)
 QWidget* ExportSheet::qualityRow(int quality)
 {
     m_quality = qualitySlider(quality, this);
+    m_quality->setFlush();
     m_qualityRow = m_quality;
     return m_qualityRow;
 }
@@ -184,6 +197,7 @@ QWidget* ExportSheet::sizeRow(const QSize& photoSize, const core::ExportOptions&
     m_size->setObjectName(u"sizeList"_s);
     m_size->setAccessibleName(tr("Size"));
     sizelist::install(m_size);
+    fitToPanel(m_size); // a long size name never widens the sheet
     QString chosen = options.sizePreset;
     if (chosen.isEmpty() && (options.longEdge > 0 || core::hasSize(options.customSize))) {
         chosen = u"custom"_s;
@@ -462,12 +476,13 @@ QWidget* ExportSheet::ifExistsBox(core::ExportOptions::IfExists ifExists)
 QWidget* ExportSheet::formatRow(const QString& current)
 {
     auto* row = new QWidget(this);
-    row->setObjectName(u"segmented"_s);
     auto* layout = new QHBoxLayout(row);
     layout->setContentsMargins(0, 0, 0, 0);
     layout->setSpacing(0);
     m_formats = new QButtonGroup(this);
     auto* more = new QMenu(row);
+    QStringList names;
+    QStringList extensions;
     const auto writable = pfx::writableExtensions();
     for (const Format& f : kFormats) {
         const std::string ext = std::string(".") + f.extension;
@@ -480,21 +495,31 @@ QWidget* ExportSheet::formatRow(const QString& current)
                             [this, extension] { chooseRareFormat(extension); });
             continue;
         }
-        auto* button = new QPushButton(QString::fromLatin1(f.label), row);
-        button->setCheckable(true);
-        button->setObjectName(u"segment"_s);
-        button->setProperty("extension", extension);
-        button->setChecked(current == extension);
-        m_formats->addButton(button);
-        layout->addWidget(button, 1);
+        names << QString::fromLatin1(f.label);
+        extensions << extension;
     }
     if (!more->isEmpty()) {
-        m_more = new QPushButton(tr("More"), row);
-        m_more->setObjectName(u"segment"_s);
-        m_more->setCheckable(true);
-        m_more->setMenu(more);
-        m_formats->addButton(m_more);
-        layout->addWidget(m_more, 1);
+        names << tr("More");
+    }
+    const auto checked = static_cast<int>(std::max<qsizetype>(0, extensions.indexOf(current)));
+    // Across the row, each segment as wide as its name, as drawn.
+    layout->addWidget(segmentBox(names, checked, m_formats, row, SegmentFit::Row));
+    for (qsizetype i = 0; i < extensions.size(); ++i) {
+        m_formats->button(static_cast<int>(i))->setProperty("extension", extensions.at(i));
+    }
+    if (!more->isEmpty()) {
+        m_more = qobject_cast<QPushButton*>(m_formats->button(static_cast<int>(extensions.size())));
+        // Opened by hand: a button with its own menu draws its name as if pressed.
+        connect(m_more, &QPushButton::clicked, this,
+                [this, more] { more->popup(m_more->mapToGlobal(QPoint(0, m_more->height()))); });
+        connect(more, &QMenu::aboutToHide, this, [this] {
+            // After the choice, if any: closed without one, the format shown before stays.
+            QTimer::singleShot(0, this, [this] {
+                if (m_more->property("extension").toString().isEmpty() && m_shownFormat != nullptr) {
+                    m_shownFormat->setChecked(true);
+                }
+            });
+        });
         if (formatFor(current)->rare && current == QLatin1StringView(formatFor(current)->extension)) {
             showRareFormat(current);
         }
@@ -526,7 +551,8 @@ void ExportSheet::chooseRareFormat(const QString& extension)
 
 void ExportSheet::updateForFormat()
 {
-    const QString ext = m_formats->checkedButton()->property("extension").toString();
+    m_shownFormat = m_formats->checkedButton();
+    const QString ext = m_shownFormat->property("extension").toString();
     const Format* f = formatFor(ext);
     m_qualityRow->setEnabled(f->lossy);
     m_sixteen->setVisible(f->deep);
@@ -592,8 +618,7 @@ QFrame* sharpenSegments(pfx::OutputSharpen sharpen, QButtonGroup* group, QWidget
 {
     using S = ExportSheet;
     QFrame* box = segmentBox({S::tr("None"), S::tr("Screen"), S::tr("Print")}, static_cast<int>(sharpen),
-                             group, parent);
-    box->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+                             group, parent, SegmentFit::Row);
     group->button(static_cast<int>(pfx::OutputSharpen::Screen))
         ->setToolTip(S::tr("A little crisper on screens, after resizing"));
     group->button(static_cast<int>(pfx::OutputSharpen::Print))

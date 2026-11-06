@@ -287,6 +287,8 @@ const QString kControls = uR"(
         QLabel#batchThumb { background: {{input}}; border-radius: 4px; }
         QFrame#segmentBox { border: 1px solid {{border}}; border-radius: 7px; background: {{input}}; }
         QFrame#segmentBox QPushButton#segment { border: 1px solid transparent; border-right: 1px solid {{border}}; padding: 3px 12px 4px 11px; background: transparent; }
+        QFrame#segmentBox QPushButton#segment[edge="last"] { border-right-color: transparent; }
+        QFrame#segmentBox QPushButton#segment::menu-indicator { image: none; width: 0; }
         QFrame#segmentBox QPushButton#segment[focusVisible="true"]:focus { border: 1px solid {{accent}}; }
         QFrame#segmentBox[compact="true"] QPushButton#segment { padding: 2px 10px 2px 9px; font-size: 12px; }
         QFrame#segmentBox QPushButton#segment:checked { background: {{accentSoft}}; }
@@ -740,6 +742,8 @@ QFrame* segmentBox(const QStringList& names, int checked, QButtonGroup* group, Q
         b->setChecked(i == checked);
         if (i == 0) {
             b->setProperty("edge", QStringLiteral("first"));
+        } else if (i == names.size() - 1) {
+            b->setProperty("edge", QStringLiteral("last"));
         }
         group->addButton(b, i);
         row->addWidget(b, fit == SegmentFit::Equal ? 1 : 0);
@@ -904,6 +908,13 @@ void setLabelColumn(const QFormLayout* form, int width)
         if (QWidget* label = item != nullptr ? item->widget() : nullptr; label != nullptr) {
             label->setObjectName(QStringLiteral("fieldLabel"));
             label->setMinimumWidth(width - std::max(0, form->horizontalSpacing()));
+            // As tall as its field, with the name in the middle: a form puts a label at the top
+            // of a taller field, the mocks' `.field` centres it.
+            const QLayoutItem* field = form->itemAt(row, QFormLayout::FieldRole);
+            if (auto* text = qobject_cast<QLabel*>(label); text != nullptr && field != nullptr) {
+                text->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
+                text->setMinimumHeight(field->sizeHint().height());
+            }
         }
     }
 }
