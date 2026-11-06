@@ -40,7 +40,7 @@ change is coded before its mock is approved; approval is recorded per screen in
 | `text` | `#ECECEC` | `#1A1A1A` | primary text, slider thumbs |
 | `muted` | `#A8A8A8` | `#555555` | labels, secondary text |
 | `faint` | `#8E8E8E` | `#676767` | hints |
-| `success` / `warning` / `danger` | `#5CCB84` / `#F5B14C` / `#FF6B6B` | `#1B7F38` / `#B45309` / `#C01C28` | states |
+| `success` / `warning` / `danger` | `#5CCB84` / `#F5B14C` / `#FF6B6B` | `#166B2D` / `#B45309` / `#C01C28` | states |
 
 Slider tracks carry meaning where it helps: Temperature blue to amber, Tint green to magenta,
 Saturation from grey through the hues (as v1's gradient tracks did). Type: the system UI
@@ -194,6 +194,8 @@ Low, What works. Findings carry the token or the measurement.
 | `accent` on `accentSoft` (selected row text) | 6.0 | 4.9 | 4.5 |
 | white on `accentStrong` (primary button) | 4.7 | 5.8 | 4.5 |
 | `track` on `panel` (slider, switch off) | 3.0 | 3.0 | 3.0 |
+| `success` / `danger` on `hover` (status pill text) | 6.9 / 5.0 | 5.3 / 4.9 | 4.5 |
 
 The first pass failed three rows (`faint` 3.3 and 3.0, light `accent` 4.3, `track` 1.5) and the
-tokens above are the fixed values.
+tokens above are the fixed values. The Batch audit (2026-11-06) found light `success` at 4.1 on a pill (`hover`); it went
+from `#1B7F38` to `#166B2D`.

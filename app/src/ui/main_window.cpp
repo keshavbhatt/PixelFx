@@ -115,7 +115,7 @@ protected:
         wheel.setColorAt(1.0, stops.first());
         p.setPen(Qt::NoPen);
         p.setBrush(wheel);
-        p.drawEllipse(rect().adjusted(1, 1, -1, -1));
+        p.drawEllipse(QRectF(rect()));
     }
 };
 

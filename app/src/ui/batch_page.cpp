@@ -253,6 +253,7 @@ QWidget* BatchPage::buildSortBox(QWidget* head)
     auto* sortLabel = new QLabel(tr("Sort"), box);
     sortLabel->setObjectName(u"fieldLabel"_s);
     auto* sort = new QComboBox(box);
+    sort->setObjectName(u"small"_s); // as tall as the head's small buttons
     sort->setAccessibleName(tr("Sort"));
     sort->addItem(tr("Biggest saving"), static_cast<int>(CompressList::Sort::BiggestSaving));
     sort->addItem(tr("Name"), static_cast<int>(CompressList::Sort::Name));
@@ -282,6 +283,7 @@ QWidget* BatchPage::buildList()
     scroll->setWidget(m_rowsBox);
     scroll->setWidgetResizable(true);
     scroll->setFrameShape(QFrame::NoFrame);
+    keepScrollBarInPadding(scroll, m_rows, 8);
     m_grid = new QListWidget(box);
     m_grid->setObjectName(u"batchGrid"_s);
     m_grid->setViewMode(QListView::IconMode);
@@ -296,6 +298,7 @@ QWidget* BatchPage::buildList()
     compressScroll->setWidget(m_compressList);
     compressScroll->setWidgetResizable(true);
     compressScroll->setFrameShape(QFrame::NoFrame);
+    keepScrollBarInPadding(compressScroll, m_compressList->layout(), 8);
     m_views = new QStackedWidget(box);
     m_views->addWidget(scroll);
     m_views->addWidget(m_grid);
@@ -436,10 +439,8 @@ QWidget* BatchPage::buildMode(QWidget* parent)
 {
     auto* box = new QWidget(parent);
     box->setObjectName(u"batchPanelContent"_s);
-    auto* column = new QVBoxLayout(box);
-    column->setContentsMargins(kPanelPadding, 0, kPanelPadding, 0);
-    column->setSpacing(kGapControls);
-    column->addWidget(sectionHeading(tr("1. What to do"), box));
+    QVBoxLayout* column = sectionColumn(tr("1. What to do"), box);
+    box->layout()->setContentsMargins(kPanelPadding, 0, kPanelPadding, 0);
     m_modes = new QButtonGroup(this);
     column->addWidget(segmentBox({tr("Edit and export"), tr("Compress only")}, m_compressOnly ? 1 : 0,
                                  m_modes, box, SegmentFit::Equal));
@@ -459,7 +460,7 @@ QWidget* BatchPage::buildEditPanel(QWidget* parent)
     content->setObjectName(u"batchPanelContent"_s);
     auto* sections = new QVBoxLayout(content);
     sections->setContentsMargins(kPanelPadding, 0, kPanelPadding, 12);
-    sections->setSpacing(kGapRelated);
+    sections->setSpacing(0); // each section's heading spaces it
     sections->addWidget(buildRecipe(content));
     sections->addWidget(buildResize(content));
     sections->addWidget(sectionHeading(tr("4. Watermark"), content));
@@ -484,24 +485,11 @@ QWidget* BatchPage::buildEditPanel(QWidget* parent)
 QWidget* BatchPage::buildRecipe(QWidget* parent)
 {
     auto* box = new QWidget(parent);
-    auto* column = new QVBoxLayout(box);
-    column->setContentsMargins(0, 0, 0, 0);
-    column->setSpacing(kGapControls);
-    column->addWidget(sectionHeading(tr("2. Recipe"), box));
-    auto* sources = new QHBoxLayout;
-    sources->setSpacing(0);
+    QVBoxLayout* column = sectionColumn(tr("2. Recipe"), box);
     m_sources = new QButtonGroup(this);
-    const QStringList names = {tr("Preset or look"), tr("Settings from a photo")};
-    for (int i = 0; i < 2; ++i) {
-        auto* b = new QPushButton(names.at(i), box);
-        b->setObjectName(u"segment"_s);
-        b->setCheckable(true);
-        b->setChecked(i == 0);
-        m_sources->addButton(b, i);
-        sources->addWidget(b, 1);
-    }
+    column->addWidget(segmentBox({tr("Preset or look"), tr("Settings from a photo")}, 0, m_sources, box,
+                                 SegmentFit::Equal));
     connect(m_sources, &QButtonGroup::idClicked, this, [this](int id) { setFromPhoto(id == 1); });
-    column->addLayout(sources);
     column->addWidget(buildRecipeCard(box));
     column->addLayout(buildSecondRow(box));
     m_auto = new QCheckBox(tr("Auto enhance each photo first"), box);
@@ -570,7 +558,7 @@ QComboBox* BatchPage::buildSizes(QWidget* parent)
     sizes->setAccessibleName(tr("Resize"));
     sizelist::install(sizes);
     sizelist::addHeading(sizes, tr("Keep"));
-    sizelist::addItem(sizes, tr("Original size"), QString(), 0);
+    sizelist::addItem(sizes, tr("Original"), QString(), 0);
     sizelist::addHeading(sizes, tr("Long edge"));
     for (const int edge : {3840, 2048, 1600, 1080}) {
         sizelist::addItem(sizes, tr("%1 px long edge").arg(edge), QString(), edge);
@@ -592,10 +580,7 @@ QComboBox* BatchPage::buildSizes(QWidget* parent)
 QWidget* BatchPage::buildResize(QWidget* parent)
 {
     auto* box = new QWidget(parent);
-    auto* column = new QVBoxLayout(box);
-    column->setContentsMargins(0, 0, 0, 0);
-    column->setSpacing(kGapControls);
-    column->addWidget(sectionHeading(tr("3. Resize"), box));
+    QVBoxLayout* column = sectionColumn(tr("3. Resize"), box);
     m_size = buildSizes(box);
     showSize(m_output.sizePreset, m_output.longEdge);
     connect(m_size, &QComboBox::currentIndexChanged, this, &BatchPage::outputEdited);
@@ -611,10 +596,7 @@ QWidget* BatchPage::buildResize(QWidget* parent)
 QWidget* BatchPage::buildSaveAs(QWidget* parent)
 {
     auto* box = new QWidget(parent);
-    auto* column = new QVBoxLayout(box);
-    column->setContentsMargins(0, 0, 0, 0);
-    column->setSpacing(kGapControls);
-    column->addWidget(sectionHeading(tr("5. Save as"), box));
+    QVBoxLayout* column = sectionColumn(tr("5. Save as"), box);
     m_format = new QComboBox(box);
     m_format->setAccessibleName(tr("Format"));
     refreshFormats();

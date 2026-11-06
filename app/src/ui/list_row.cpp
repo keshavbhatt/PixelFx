@@ -79,6 +79,8 @@ void ListRow::setSubtitleError(bool error)
 void ListRow::setAction(const QString& glyph, const QString& tip)
 {
     if (m_action == nullptr) {
+        // The button's own 24 px target is padding enough at the row's right end.
+        m_row->setContentsMargins(10, 7, 4, 7);
         m_action = new QToolButton(this);
         m_action->setObjectName(u"flatIcon"_s);
         m_row->addWidget(m_action);

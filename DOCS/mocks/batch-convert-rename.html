@@ -19,8 +19,8 @@
         </div>
         <div class="row" style="justify-content:center;margin-top:16px;gap:8px">
           <span class="small muted">Quick jobs</span>
-          <button class="btn sm"><svg class="ic s"><use href="#i-file-image"/></svg>Convert or resize</button>
-          <button class="btn sm"><svg class="ic s"><use href="#i-download"/></svg>Make files smaller</button>
+          <button class="btn sm"><svg class="ic s"><use href="#i-file-image"/></svg>Convert and resize</button>
+          <button class="btn sm"><svg class="ic s"><use href="#i-download"/></svg>Compress photos</button>
         </div>
         <p class="small faint" style="margin-top:14px">JPEG, PNG, WebP, AVIF, HEIC, TIFF, JPEG XL and camera RAW. Paste from the clipboard with Ctrl+V.</p>
       </div>
@@ -35,7 +35,7 @@
 <span class="pin" style="left:calc(50% - 205px);top:366px">1</span>
 </div>
 <div class="specs">
-  <div class="spec" style="width:380px"><div class="cap">2. Convert or resize opens Batch with this recipe</div><div class="side right" style="border:1px solid var(--border);border-radius:10px;width:auto"><div class="sec">1. What to do</div>
+  <div class="spec" style="width:380px"><div class="cap">2. Convert and resize opens Batch with this recipe</div><div class="side right" style="border:1px solid var(--border);border-radius:10px;width:auto"><div class="sec">1. What to do</div>
 <div style="padding:0 14px"><div class="seg full"><span class="on">Edit and export</span><span>Compress only</span></div></div>
 <div class="sec">2. Recipe</div>
 <div style="padding:0 14px" class="stack">
@@ -47,11 +47,11 @@
 <div class="sec">4. Watermark</div>
 <div style="padding:0 14px"><select class="input"><option>None</option></select></div>
 <div class="sec">5. Save as</div>
-<div style="padding:0 14px" class="stack"><div class="row"><select class="input" style="width:auto"><option>JPEG, quality 85</option></select><button class="btn sm">More...</button></div><div class="row"><span class="mono small grow">~/Pictures/PixelFx</span><button class="btn sm">Change</button></div></div></div></div>
+<div style="padding:0 14px" class="stack"><div class="row"><select class="input" style="width:auto"><option>JPEG, quality 85</option></select><button class="btn sm">More...</button></div><div class="row"><span class="mono small grow">~/Pictures/PixelFx</span><button class="btn sm">Change...</button></div></div></div></div>
   <div class="spec" style="width:380px"><div class="cap">3. The name, with a token menu and the first names it gives</div><div class="side right" style="border:1px solid var(--border);border-radius:10px;width:auto"><div class="sec">5. Save as</div>
 <div style="padding:0 14px" class="stack">
   <div class="row"><select class="input" style="width:auto"><option>JPEG, quality 85</option></select><button class="btn sm">More...</button></div>
-  <div class="row"><span class="mono small grow">~/Pictures/PixelFx</span><button class="btn sm">Change</button></div>
+  <div class="row"><span class="mono small grow">~/Pictures/PixelFx</span><button class="btn sm">Change...</button></div>
   <div class="row"><input class="input mono grow" value="trip-{n}"><button class="btn sm"><svg class="ic s"><use href="#i-plus"/></svg>Token</button></div>
   <div class="stack" style="gap:4px;padding:2px 0 0"><div class="row small" style="gap:6px"><span class="mono muted grow" style="overflow:hidden;text-overflow:ellipsis">IMG_0412.HEIC</span><span class="faint">&rarr;</span><span class="mono" style="min-width:110px">trip-001.jpg</span></div><div class="row small" style="gap:6px"><span class="mono muted grow" style="overflow:hidden;text-overflow:ellipsis">IMG_0413.HEIC</span><span class="faint">&rarr;</span><span class="mono" style="min-width:110px">trip-002.jpg</span></div><div class="row small" style="gap:6px"><span class="mono muted grow" style="overflow:hidden;text-overflow:ellipsis">IMG_0415.HEIC</span><span class="faint">&rarr;</span><span class="mono" style="min-width:110px">trip-003.jpg</span></div><div class="small faint">and 297 more</div></div>
   <div class="row small"><span class="check"></span>Next to each original, in a subfolder</div>
@@ -77,7 +77,7 @@
 </div></div></div>
 </div>
 <ol class="notes">
-<li><b>Quick jobs</b> (1) on the welcome page: <b>Convert or resize</b> opens Batch in Edit and export with no preset (2), <b>Make files smaller</b> opens it in Compress only; then Add photos or drop them. One click for "HEIC to JPG" or "shrink 300 photos for email", without first opening a photo.</li>
+<li><b>Quick jobs</b> (1) on the welcome page: <b>Convert and resize</b> opens Batch in Edit and export with no preset (2), <b>Compress photos</b> opens it in Compress only; then Add photos or drop them. One click for "HEIC to JPG" or "shrink 300 photos for email", without first opening a photo.</li>
 <li><b>Convert and resize only</b> (2) is the recipe's first choice, renamed from "None: resize and save only"; its card says what happens. The rest of the page is unchanged: size, watermark, format.</li>
 <li><b>The name</b> (3) takes text and tokens; prefix and suffix are just text around {name}. <b>+ Token</b> (4) lists every token with an example from the first photo. Under the field, the first three names as they will be saved, updated as you type, then "and N more". The same field and preview serve Compress only.</li>
 <li><b>{n}</b> numbers the photos in the list's order, padded to the count's width (001 for 300 photos). <b>{taken}</b> is the day from the photo's Exif, today when it has none.</li>

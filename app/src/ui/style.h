@@ -19,6 +19,7 @@ class QFormLayout;
 class QHBoxLayout;
 class QLabel;
 class QLayout;
+class QScrollArea;
 class QMenu;
 class QPushButton;
 class QToolButton;
@@ -133,6 +134,12 @@ QLabel* sectionHeading(const QString& text, QWidget* parent, int sides = 0);
 /// A section heading with a control at its right end ("SPOTS (3)  Remove all", "MY LOOKS  New
 /// look"), spaced as sectionHeading.
 QHBoxLayout* sectionHeadingRow(QLabel* label, QWidget* trailing, int sides = 0);
+/// A numbered section of a side panel laid in `box`: its heading, spaced only by its own
+/// margins, and the column returned for the section's controls, kGapControls apart.
+QVBoxLayout* sectionColumn(const QString& heading, QWidget* box);
+/// While `area` scrolls, its scroll bar takes the right padding of `content` (its widget's
+/// layout, `edge` px), so the content keeps its width and nothing moves when the bar appears.
+void keepScrollBarInPadding(QScrollArea* area, QLayout* content, int edge);
 /// A heading inside a menu ("History"): Qt draws a menu section as a bare line under a style
 /// sheet, so the heading is a label of its own.
 void addMenuHeading(QMenu* menu, const QString& text);

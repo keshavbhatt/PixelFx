@@ -53,7 +53,7 @@ CompressPanel::CompressPanel(core::CompressJob job, QWidget* parent)
     content->setObjectName(u"batchPanelContent"_s);
     auto* sections = new QVBoxLayout(content);
     sections->setContentsMargins(kPanelPadding, 0, kPanelPadding, 12);
-    sections->setSpacing(kGapRelated);
+    sections->setSpacing(0); // each section's heading spaces it
     sections->addWidget(buildCompression(content));
     sections->addWidget(buildSave(content));
     sections->addStretch();
@@ -75,16 +75,14 @@ CompressPanel::~CompressPanel() = default;
 QWidget* CompressPanel::buildCompression(QWidget* parent)
 {
     auto* box = new QWidget(parent);
-    auto* column = new QVBoxLayout(box);
-    column->setContentsMargins(0, 0, 0, 0);
-    column->setSpacing(kGapControls);
-    column->addWidget(sectionHeading(tr("2. Compression"), box));
+    QVBoxLayout* column = sectionColumn(tr("2. Compression"), box);
 
     m_jpeg = new QButtonGroup(this);
     auto* jpegRow = new QHBoxLayout;
     jpegRow->setSpacing(kGapItems);
     jpegRow->addWidget(formatLabel(tr("JPEG"), box));
-    jpegRow->addWidget(segmentBox({tr("Lossless"), tr("Target quality")}, 0, m_jpeg, box), 1);
+    jpegRow->addWidget(segmentBox({tr("Lossless"), tr("Target quality")}, 0, m_jpeg, box));
+    jpegRow->addStretch(); // the choices as wide as their words
     m_jpegQuality = indentedSlider(tr("JPEG quality"), 1, 100, pfx::CompressOptions().jpegQuality, box);
     m_jpegQuality->setToolTip(tr("JPEGs are encoded again at this quality when that makes them smaller"));
 
@@ -92,7 +90,8 @@ QWidget* CompressPanel::buildCompression(QWidget* parent)
     auto* pngRow = new QHBoxLayout;
     pngRow->setSpacing(kGapItems);
     pngRow->addWidget(formatLabel(tr("PNG"), box));
-    pngRow->addWidget(segmentBox({tr("Lossless"), tr("Fewer colours")}, 0, m_png, box), 1);
+    pngRow->addWidget(segmentBox({tr("Lossless"), tr("Fewer colours")}, 0, m_png, box));
+    pngRow->addStretch(); // the choices as wide as their words
     m_pngQuality = indentedSlider(tr("PNG quality"), 40, 100, pfx::CompressOptions().pngQuality, box);
     m_pngQuality->setToolTip(tr("The lowest quality a palette of 256 colours may have; "
                                 "below it the PNG stays lossless"));
@@ -129,10 +128,7 @@ QWidget* CompressPanel::buildCompression(QWidget* parent)
 QWidget* CompressPanel::buildSave(QWidget* parent)
 {
     auto* box = new QWidget(parent);
-    auto* column = new QVBoxLayout(box);
-    column->setContentsMargins(0, 0, 0, 0);
-    column->setSpacing(kGapControls);
-    column->addWidget(sectionHeading(tr("3. Save"), box));
+    QVBoxLayout* column = sectionColumn(tr("3. Save"), box);
     m_where = new QButtonGroup(this);
     column->addWidget(
         segmentBox({tr("Into a folder"), tr("Replace the originals")}, 0, m_where, box, SegmentFit::Equal));

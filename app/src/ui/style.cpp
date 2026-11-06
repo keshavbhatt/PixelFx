@@ -22,6 +22,8 @@
 #include <QPixmap>
 #include <QProxyStyle>
 #include <QPushButton>
+#include <QScrollArea>
+#include <QScrollBar>
 #include <QStyleFactory>
 #include <QTemporaryDir>
 #include <QToolButton>
@@ -74,8 +76,9 @@ const QString kSheet = uR"(
         #messageText[kind="error"] { color: {{danger}}; }
         QLabel#small { font-size: 12px; }
         #recentTitle { font-size: 13px; font-weight: 600; }
-        QPushButton#link { border: 0; background: transparent; color: {{link}}; font-size: 12px; padding: 2px 4px; }
+        QPushButton#link { border: 1px solid transparent; border-radius: 4px; background: transparent; color: {{link}}; font-size: 12px; padding: 3px; }
         QPushButton#link:hover { text-decoration: underline; }
+        QPushButton#link[focusVisible="true"]:focus { border-color: {{accent}}; }
         #sidePanel { background: {{panel}}; }
         #sidePanel[photoSide="left"] { border-left: 1px solid {{border}}; }
         #sidePanel[photoSide="right"] { border-right: 1px solid {{border}}; }
@@ -114,8 +117,9 @@ const QString kSheet = uR"(
         #panelScroll, #panelContent { background: {{panel}}; }
         #adjustGroup { border-top: 1px solid {{border}}; }
         QToolButton#groupToggle { border: 0; background: transparent; font-weight: 600; padding: 2px; }
-        QToolButton#flatIcon { border: 0; border-radius: 6px; padding: 3px; background: transparent; }
+        QToolButton#flatIcon { border: 1px solid transparent; border-radius: 6px; padding: 3px; background: transparent; }
         QToolButton#flatIcon:hover { background: {{hover}}; }
+        QToolButton#flatIcon[focusVisible="true"]:focus { border-color: {{accent}}; }
         #viewerStage { background: {{canvas}}; }
         QToolButton#navButton { border: 1px solid {{border}}; border-radius: 20px; background: {{elevated}}; }
         QToolButton#navButton:hover { background: {{hover}}; }
@@ -213,6 +217,7 @@ const QString kControls = uR"(
         QPushButton#primary:disabled { background: {{accentSoft}}; border-color: {{accentSoft}}; color: {{muted}}; }
         QToolButton:disabled { color: {{faint}}; }
         QComboBox { padding: 5px 28px 5px 10px; min-height: 20px; color: {{text}}; }
+        QComboBox#small { padding: 3px 26px 3px 9px; min-height: 18px; font-size: 12px; }
         QComboBox:hover { border-color: {{faint}}; }
         QComboBox:disabled, QLineEdit:disabled, QSpinBox:disabled { color: {{faint}}; background: {{panel}}; }
         QComboBox::drop-down { subcontrol-origin: padding; subcontrol-position: center right; width: 24px; border: 0; }
@@ -272,12 +277,14 @@ const QString kControls = uR"(
         QLabel#comparePicture { background: {{canvas}}; border-radius: 6px; }
         QLabel#batchThumb { background: {{input}}; border-radius: 4px; }
         QFrame#segmentBox { border: 1px solid {{border}}; border-radius: 7px; background: {{input}}; }
-        QFrame#segmentBox QPushButton#segment { border: 0; border-right: 1px solid {{border}}; background: transparent; }
+        QFrame#segmentBox QPushButton#segment { border: 1px solid transparent; border-right: 1px solid {{border}}; padding: 4px 12px 4px 11px; background: transparent; }
+        QFrame#segmentBox QPushButton#segment[focusVisible="true"]:focus { border: 1px solid {{accent}}; }
         QFrame#segmentBox QPushButton#segment:checked { background: {{accentSoft}}; }
         QFrame#segmentBox QPushButton#segment[edge="first"] { border-top-left-radius: 6px; border-bottom-left-radius: 6px; }
         QLabel#fieldLabel { color: {{muted}}; }
-        QToolButton#segmentIcon { border: 0; border-radius: 6px; padding: 4px 9px; background: transparent; }
+        QToolButton#segmentIcon { border: 1px solid transparent; border-radius: 6px; padding: 3px 8px; background: transparent; }
         QToolButton#segmentIcon:checked { background: {{accentSoft}}; }
+        QToolButton#segmentIcon[focusVisible="true"]:focus { border-color: {{accent}}; }
         QFrame#card { border: 1px solid {{border}}; border-radius: 10px; background: {{input}}; }
         QLabel#heading { font-weight: 600; }
         QFrame#pill { border-radius: 10px; background: {{hover}}; }
@@ -382,7 +389,7 @@ const Tokens& lightTokens()
     static const Tokens t{hex("#2560CC"), hex("#2560CC"), hex("#1F52B0"), hex("#E3ECFC"), hex("#EDEDED"),
                           hex("#D6D6D6"), hex("#FAFAFA"), hex("#F5F5F5"), hex("#FFFFFF"), hex("#E6E6E6"),
                           hex("#FFFFFF"), hex("#D4D4D4"), hex("#8E8E8E"), hex("#1A1A1A"), hex("#555555"),
-                          hex("#676767"), hex("#C01C28"), hex("#2560CC"), hex("#1B7F38"), hex("#B45309"),
+                          hex("#676767"), hex("#C01C28"), hex("#2560CC"), hex("#166B2D"), hex("#B45309"),
                           hex("#E05050"), hex("#50C060"), hex("#5080F0")};
     return t;
 }
@@ -437,7 +444,6 @@ public:
     }
     using QProxyStyle::polish;
 
-    // Scroll bars lie over the panels' own padding instead of taking width from the content.
     void drawPrimitive(PrimitiveElement element, const QStyleOption* option, QPainter* painter,
                        const QWidget* widget) const override
     {
@@ -751,6 +757,31 @@ QLabel* sectionHeading(const QString& text, QWidget* parent, int sides)
     QLabel* label = sectionLabel(text, parent);
     label->setContentsMargins(sides, kAboveSection, sides, kBelowSection);
     return label;
+}
+
+void keepScrollBarInPadding(QScrollArea* area, QLayout* content, int edge)
+{
+    const auto fit = [area, content, edge](int max) {
+        const int bar = max > 0 ? area->verticalScrollBar()->sizeHint().width() : 0;
+        const QMargins m = content->contentsMargins();
+        content->setContentsMargins(m.left(), m.top(), std::max(0, edge - bar), m.bottom());
+    };
+    fit(area->verticalScrollBar()->maximum());
+    QObject::connect(area->verticalScrollBar(), &QScrollBar::rangeChanged, area,
+                     [fit](int /*min*/, int max) { fit(max); });
+}
+
+QVBoxLayout* sectionColumn(const QString& heading, QWidget* box)
+{
+    auto* outer = new QVBoxLayout(box);
+    outer->setContentsMargins(0, 0, 0, 0);
+    outer->setSpacing(0); // the heading's own margins space it
+    outer->addWidget(sectionHeading(heading, box));
+    auto* controls = new QVBoxLayout;
+    controls->setContentsMargins(0, 0, 0, 0);
+    controls->setSpacing(kGapControls);
+    outer->addLayout(controls);
+    return controls;
 }
 
 QHBoxLayout* sectionHeadingRow(QLabel* label, QWidget* trailing, int sides)

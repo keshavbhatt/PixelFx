@@ -10,8 +10,9 @@ to its original, so a lossy setting is judged by eye, not trusted blindly.
 
 ## Blocking
 
-None. Measured: the "Saved" pills use `success` on `hover`-grey pills (dark 5.6:1, light
-4.6:1); the size figures are `text` on `panel`; the bars are `accentStrong` on `track`
+None. Measured: the "Saved" pills use `success` on `hover`-grey pills (dark 6.9:1, light
+5.3:1 since 2026-11-06; the light 4.6:1 first given here was against the panel, the pill
+itself measured 4.1:1); the size figures are `text` on `panel`; the bars are `accentStrong` on `track`
 (non-text, 3:1 or better in both themes). Saving is stated in words and numbers, not only by
 bar length.
 
@@ -49,8 +50,9 @@ bar length.
   now 2. Recipe to 5. Save as; the mode is remembered.
 - **JPEG Target quality** shows a JPEG quality slider under it, as Fewer colours shows PNG
   quality. A JPEG is encoded again only when that is smaller than its lossless result.
-- **Run again with these settings** replaces the files the last run of the same list wrote,
-  instead of numbering them.
+- **Compress again** (the one button after a run; it was a second button, "Run again with
+  these settings", that did the same, until the Batch audit of 2026-11-06) replaces the files
+  the last run of the same list wrote, instead of numbering them.
 - **The before and after** shows the most detailed spot of the photo, found on a small copy;
   when the originals are replaced, that spot of the original is kept during the run so the
   before still shows.

@@ -44,6 +44,12 @@ QString formatOf(const QString& path)
     if (ext == u"webp"_s) {
         return u"WebP"_s;
     }
+    if (ext == u"jxl"_s) {
+        return u"JPEG XL"_s; // as Save as names it
+    }
+    if (ext == u"heic"_s || ext == u"heif"_s) {
+        return u"HEIC"_s;
+    }
     return ext.toUpper();
 }
 

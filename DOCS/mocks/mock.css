@@ -6,7 +6,7 @@
   --bg: #EDEDED; --canvas: #D6D6D6; --bar: #FAFAFA; --panel: #F5F5F5; --elevated: #FFFFFF; --hover: #E6E6E6;
   --input: #FFFFFF; --border: #D4D4D4; --text: #1A1A1A; --muted: #555555; --faint: #676767; --link: #2560CC;
   --track: #8E8E8E; --changed: #2560CC;
-  --success: #1B7F38; --warning: #B45309; --danger: #C01C28; --shadow: 0 10px 32px rgba(0,0,0,.18);
+  --success: #166B2D; --warning: #B45309; --danger: #C01C28; --shadow: 0 10px 32px rgba(0,0,0,.18);
   --r-ctl: 7px; --r-card: 10px; --r-sheet: 14px; --rail-w: 56px; --left-w: 272px; --right-w: 316px; --strip-h: 92px;
   --font: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", sans-serif;
 }

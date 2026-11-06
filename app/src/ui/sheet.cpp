@@ -250,16 +250,9 @@ SheetScroll::SheetScroll(QWidget* content, int edge, QWidget* parent)
     viewport()->setAutoFillBackground(false); // the sheet's own panel shows through
     content->setAutoFillBackground(false);
     content->installEventFilter(this);
-    const auto keepEdge = [this, content, edge](int max) {
-        if (QLayout* layout = content->layout()) {
-            const int bar = max > 0 ? verticalScrollBar()->sizeHint().width() : 0;
-            const QMargins m = layout->contentsMargins();
-            layout->setContentsMargins(m.left(), m.top(), std::max(0, edge - bar), m.bottom());
-        }
-    };
-    keepEdge(0);
-    connect(verticalScrollBar(), &QScrollBar::rangeChanged, this,
-            [keepEdge](int /*min*/, int max) { keepEdge(max); });
+    if (QLayout* layout = content->layout()) {
+        keepScrollBarInPadding(this, layout, edge);
+    }
 }
 
 SheetScroll::~SheetScroll() = default;

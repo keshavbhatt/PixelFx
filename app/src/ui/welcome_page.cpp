@@ -109,15 +109,15 @@ QHBoxLayout* WelcomePage::buildQuickJobs()
 {
     auto* label = new QLabel(tr("Quick jobs"), m_dropZone);
     label->setObjectName(u"muted"_s);
-    auto* convert = new IconTextButton(icons::themed(u"file-image"_s, tokens().text), tr("Convert or resize"),
-                                       m_dropZone);
+    auto* convert = new IconTextButton(icons::themed(u"file-image"_s, tokens().text),
+                                       tr("Convert and resize"), m_dropZone);
     convert->setObjectName(u"small"_s);
     convert->setToolTip(tr("Batch with no edits: a new size or format for many photos"));
     connect(convert, &QPushButton::clicked, this, &WelcomePage::convertRequested);
     auto* smaller =
-        new IconTextButton(icons::themed(u"download"_s, tokens().text), tr("Make files smaller"), m_dropZone);
+        new IconTextButton(icons::themed(u"download"_s, tokens().text), tr("Compress photos"), m_dropZone);
     smaller->setObjectName(u"small"_s);
-    smaller->setToolTip(tr("Batch's Compress only: smaller files without editing them"));
+    smaller->setToolTip(tr("Batch's Compress only: smaller photos without editing them"));
     connect(smaller, &QPushButton::clicked, this, &WelcomePage::compressRequested);
     auto* row = new QHBoxLayout;
     row->setSpacing(kGapRelated);
