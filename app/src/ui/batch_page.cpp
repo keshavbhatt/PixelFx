@@ -846,6 +846,7 @@ void BatchPage::outputEdited()
 {
     Q_EMIT outputChanged(recipe().output);
     refreshNames();
+    refreshRecipeCard(); // the card says what happens to the size
 }
 
 void BatchPage::refreshNames()
@@ -1000,12 +1001,26 @@ std::pair<QString, QString> BatchPage::convertCardText() const
     if (m_secondOn != nullptr && m_secondOn->isChecked() && !m_second.isEmpty()) {
         extras << m_second;
     }
-    if (extras.isEmpty()) {
-        return {tr("Convert and resize only"), tr("No edits: each photo is resized and saved as below")};
+    // What happens to the size, as Resize says it: at the original size nothing is resized.
+    QString size;
+    if (m_size == nullptr || m_size->currentIndex() < 0) {
+        size = tr("saved as below");
+    } else if (const services::BatchRecipe r = recipe();
+               r.output.sizePreset.isEmpty() && r.output.longEdge <= 0) {
+        size = tr("saved as below at the original size");
+    } else {
+        //: The recipe card: "resized to Web · 2048 long edge and saved as below".
+        size = tr("resized to %1 and saved as below").arg(m_size->currentText());
     }
-    //: The recipe card when only Auto enhance or a second preset is on: "Only Auto enhance and Warm, ...".
-    return {tr("No look or preset"),
-            tr("Only %1, then resized and saved as below").arg(extras.join(tr(" and ")))};
+    if (extras.isEmpty()) {
+        //: The recipe card with nothing to do but resize or convert: "No edits: each photo is saved as below
+        //: ...".
+        return {tr("Convert and resize only"), tr("No edits: each photo is %1").arg(size)};
+    }
+    // What is on top is the recipe, so it is the card's name.
+    //: The recipe card when only Auto enhance or a preset on top is on: "No look or preset first, then saved
+    //: ...".
+    return {extras.join(tr(" and ")), tr("No look or preset first, then %1").arg(size)};
 }
 
 std::pair<QString, QString> BatchPage::recipeCardText() const

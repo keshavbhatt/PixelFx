@@ -117,6 +117,36 @@ private Q_SLOTS:
         QVERIFY(!zone()->isVisible());
     }
 
+    void theRecipeCardSaysWhatReallyHappens()
+    {
+        const auto shown = [](const BatchPage& page) {
+            QStringList texts;
+            for (const QLabel* l : page.findChildren<QLabel*>()) {
+                texts << l->text();
+            }
+            return texts;
+        };
+        // Nothing to do at the original size: nothing is resized.
+        BatchPage page({}, {}, false);
+        QVERIFY(shown(page).contains(u"Convert and resize only"_s));
+        QVERIFY(shown(page).contains(u"No edits: each photo is saved as below at the original size"_s));
+        // A preset on top is the recipe, and is named.
+        page.chooseSecond(u"Soft ember"_s);
+        QVERIFY(shown(page).contains(u"Soft ember"_s));
+        QVERIFY(shown(page).contains(u"No look or preset first, then saved as below at the original size"_s));
+        QVERIFY(!shown(page).contains(u"No look or preset"_s));
+        // A size: then it is resized, to that size.
+        pixelfx::core::ExportOptions web;
+        web.longEdge = 2048;
+        const BatchPage sized(web, {}, false);
+        bool resized = false;
+        for (const QString& t : shown(sized)) {
+            resized =
+                resized || (t.startsWith(u"No edits: each photo is resized to "_s) && t.contains(u"2048"_s));
+        }
+        QVERIFY(resized);
+    }
+
     void theNameShowsTheFirstNamesAndSaysWhenTheyClash()
     {
         QTemporaryDir dir;
