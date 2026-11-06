@@ -61,7 +61,8 @@ CheckRow::CheckRow(const QString& name, const QString& description, QWidget* par
 {
     auto* column = new QVBoxLayout(this);
     column->setContentsMargins(0, 6, 0, 6);
-    column->setSpacing(kGapTight);
+    constexpr int kNoteGap = 5; // the description 9 px under the check's text, as drawn
+    column->setSpacing(kNoteGap);
     column->addWidget(m_box);
     m_note->setObjectName(u"checkNote"_s);
     m_note->setWordWrap(true);

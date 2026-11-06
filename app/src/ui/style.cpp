@@ -135,8 +135,6 @@ const QString kSheet = uR"(
         #adjustValue { color: {{text}}; font-size: 12px; border: 1px solid transparent; border-radius: 4px; }
         #adjustValue:hover { border-color: {{border}}; padding: 0 4px; }
         #adjustValue[changed="true"] { color: {{accent}}; }
-        #adjustName:disabled, #adjustValue:disabled, #adjustValue[changed="true"]:disabled { color: {{faint}}; }
-        QSlider::handle:horizontal:disabled { background: {{track}}; }
         QLineEdit#adjustValueField { font-size: 12px; padding: 0 4px; min-height: 0; border-radius: 4px; border-color: {{accent}}; }
         QPushButton#small { padding: 4px 9px; font-size: 12px; }
         QPushButton#flatSmall { border: 0; background: transparent; padding: 4px 6px; font-size: 12px; }
@@ -151,7 +149,6 @@ const QString kSheet = uR"(
         QSlider#temperatureTrack::groove:horizontal { background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #4F86E8, stop:0.5 #DDDDDD, stop:1 #F0B040); }
         QSlider#tintTrack::groove:horizontal { background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #4CB060, stop:0.5 #DDDDDD, stop:1 #D050C0); }
         QSlider#saturationTrack::groove:horizontal { background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #888888, stop:0.2 #E04F4F, stop:0.4 #E0C04F, stop:0.6 #4FE070, stop:0.8 #4F9CE0, stop:1 #B04FE0); }
-        QSlider#saturationTrack:disabled::groove:horizontal { background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 rgba(136,136,136,100), stop:0.2 rgba(224,79,79,100), stop:0.4 rgba(224,192,79,100), stop:0.6 rgba(79,224,112,100), stop:0.8 rgba(79,156,224,100), stop:1 rgba(176,79,224,100)); }
         QSlider#bwTrack::groove:horizontal { background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #1E1E1E, stop:0.5 #8A8A8A, stop:1 #F0F0F0); }
         QSlider#redHueTrack::groove:horizontal { background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #D04FA0, stop:0.5 #E04F4F, stop:1 #E8904A); }
         QSlider#greenHueTrack::groove:horizontal { background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #C8C04F, stop:0.5 #4FC060, stop:1 #4FC0B0); }
@@ -166,8 +163,9 @@ const QString kSheet = uR"(
         QSlider#greenSaturationTrack::groove:horizontal, QSlider#blueSaturationTrack::groove:horizontal {
             border: 1px solid {{faint}}; height: 3px; }
         QFrame#hairline { background: {{border}}; border: 0; }
-        #subcaption { color: {{muted}}; font-size: 11px; font-weight: 600; padding-top: 10px; }
-        QToolButton#disclose { border: 0; background: transparent; color: {{muted}}; font-size: 12px; padding: 4px 0; }
+        #subcaption { color: {{muted}}; font-size: 11px; font-weight: 600; padding-top: 12px; }
+        #subcaption[underRow="true"] { padding-top: 4px; }
+        QToolButton#disclose { border: 0; background: transparent; color: {{muted}}; font-size: 12px; margin-top: 4px; padding: 4px 0 1px; }
         QToolButton#disclose:hover { color: {{text}}; }
         #checkNote { color: {{muted}}; font-size: 12px; margin-left: 24px; }
         QDialog { background: {{panel}}; }
@@ -247,7 +245,6 @@ const QString kControls = uR"(
         QLabel#menuHeading { color: {{muted}}; font-size: 11px; font-weight: 700; padding: 6px 15px 4px; }
         QProgressBar { background: {{track}}; border: 0; border-radius: 2px; max-height: 4px; text-align: center; color: transparent; }
         QProgressBar::chunk { background: {{accentStrong}}; border-radius: 2px; }
-        QSlider::handle:horizontal:disabled { background: {{faint}}; }
         QScrollBar:vertical { width: {{scrollbar}}px; background: transparent; margin: 2px 2px 2px 0; }
         QScrollBar:horizontal { height: {{scrollbar}}px; background: transparent; margin: 0 2px 2px 2px; }
         QScrollBar::handle { background: {{border}}; border-radius: 3px; }
@@ -268,7 +265,7 @@ const QString kControls = uR"(
         QCheckBox#switch::indicator:checked { image: url({{glyphs}}/switch-on.svg); }
         QCheckBox#switch::indicator:disabled { image: url({{glyphs}}/switch-off.svg); }
         QComboBox#compact { padding: 2px 24px 2px 8px; min-height: 18px; font-size: 12px; }
-        QToolButton#iconButton { border: 1px solid {{border}}; border-radius: 7px; background: {{panel}}; padding: 4px; }
+        QToolButton#iconButton { border: 1px solid {{border}}; border-radius: 7px; background: {{panel}}; padding: 0; min-width: 24px; max-width: 24px; min-height: 24px; max-height: 24px; }
         QToolButton#iconButton:hover { background: {{hover}}; }
         QToolButton#iconButton:checked { background: {{accentSoft}}; border-color: transparent; }
         QToolButton#sheetClose { border: 0; border-radius: 7px; padding: 6px; background: transparent; }
@@ -287,7 +284,7 @@ const QString kControls = uR"(
         QLabel#comparePicture { background: {{canvas}}; border-radius: 6px; }
         QLabel#batchThumb { background: {{input}}; border-radius: 4px; }
         QFrame#segmentBox { border: 1px solid {{border}}; border-radius: 7px; background: {{input}}; }
-        QFrame#segmentBox QPushButton#segment { border: 1px solid transparent; border-right: 1px solid {{border}}; padding: 4px 12px 4px 11px; background: transparent; }
+        QFrame#segmentBox QPushButton#segment { border: 1px solid transparent; border-right: 1px solid {{border}}; padding: 3px 12px 4px 11px; background: transparent; }
         QFrame#segmentBox QPushButton#segment[focusVisible="true"]:focus { border: 1px solid {{accent}}; }
         QFrame#segmentBox[compact="true"] QPushButton#segment { padding: 2px 10px 2px 9px; font-size: 12px; }
         QFrame#segmentBox QPushButton#segment:checked { background: {{accentSoft}}; }

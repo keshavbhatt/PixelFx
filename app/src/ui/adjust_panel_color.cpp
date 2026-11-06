@@ -150,7 +150,7 @@ QWidget* AdjustPanel::buildMixerSwatches(QWidget* parent)
 {
     auto* swatches = new QWidget(parent);
     auto* swatchRow = new QHBoxLayout(swatches);
-    swatchRow->setContentsMargins(0, 0, 0, 6);
+    swatchRow->setContentsMargins(0, 4, 0, 8); // `.swatches` margins
     swatchRow->setSpacing(kGapRelated);
     m_mixerBands = new QButtonGroup(this);
     const std::vector<MixerBand>& bands = mixerBands();
@@ -412,7 +412,8 @@ void AdjustPanel::buildGradingGroup(QWidget* content, QVBoxLayout* groups)
     m_wheelValues->setTextFormat(Qt::RichText);
     auto* wheelBox = new QWidget(group);
     auto* column = new QVBoxLayout(wheelBox);
-    column->setContentsMargins(0, kGapControls, 0, kGapSmall);
+    // 8 px from the ranges with their own 4 px (the mock's margins meet), 6 px from the luminance.
+    column->setContentsMargins(0, kGapSmall, 0, kGapTight);
     column->setSpacing(kGapRelated);
     column->addWidget(m_wheel, 0, Qt::AlignHCenter);
     column->addWidget(m_wheelValues);
@@ -428,7 +429,7 @@ void AdjustPanel::buildGradingGroup(QWidget* content, QVBoxLayout* groups)
     }
     auto* ruleBox = new QWidget(group);
     auto* ruleLayout = new QVBoxLayout(ruleBox);
-    ruleLayout->setContentsMargins(0, kGapRelated, 0, kGapRelated);
+    ruleLayout->setContentsMargins(0, kGapControls, 0, kGapSmall);
     auto* rule = new QFrame(ruleBox);
     rule->setObjectName(u"hairline"_s);
     rule->setFixedHeight(1);
@@ -542,7 +543,7 @@ void AdjustPanel::buildCurvesGroup(QWidget* content, QVBoxLayout* groups)
     m_curveModes = new QButtonGroup(this);
     auto* modes = new QWidget(group);
     auto* modeRow = new QVBoxLayout(modes);
-    modeRow->setContentsMargins(0, 4, 0, 4);
+    modeRow->setContentsMargins(0, 6, 0, 8);
     QFrame* box = segmentBox({tr("Points"), tr("Regions")}, 0, m_curveModes, modes, SegmentFit::Equal);
     box->setToolTip(tr("Points: drag the curve itself. Regions: lift or lower four ranges of tones."));
     modeRow->addWidget(box);
@@ -614,6 +615,7 @@ void AdjustPanel::buildCurveRegions(AdjustGroup* group)
     auto* hint = new QLabel(tr("Drag the marks under the curve to move where the regions meet"), group);
     hint->setObjectName(u"faint"_s);
     hint->setWordWrap(true);
+    hint->setContentsMargins(0, 2, 0, 0);
     group->addContent(hint);
     m_regionsWidgets.push_back(hint);
     connect(m_regionCurve, &RegionCurveView::splitMoved, this, &AdjustPanel::splitMoved);

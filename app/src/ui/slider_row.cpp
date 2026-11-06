@@ -5,6 +5,7 @@
 
 #include <QEvent>
 #include <QFont>
+#include <QGraphicsOpacityEffect>
 #include <QHBoxLayout>
 #include <QKeyEvent>
 #include <QLabel>
@@ -64,8 +65,10 @@ SliderRow::SliderRow(const QString& label, QWidget* parent)
     top->addWidget(m_value);
     top->addWidget(m_field);
     auto* column = new QVBoxLayout(this);
-    column->setContentsMargins(0, 6, 0, 7); // the value's 1 px hover border fills the top pixel
-    column->setSpacing(kGapTight);
+    // The track 24 px under the name's top, as `.adj` draws it; the value's 1 px hover border
+    // fills the top pixel.
+    column->setContentsMargins(0, 6, 0, 8);
+    column->setSpacing(1);
     column->addLayout(top);
     column->addWidget(m_slider);
     connect(m_slider, &QSlider::valueChanged, this, [this](int ticks) {
@@ -231,6 +234,20 @@ bool SliderRow::fieldEvent(QEvent* event)
         return true;
     }
     return false;
+}
+
+void SliderRow::changeEvent(QEvent* event)
+{
+    if (event->type() == QEvent::EnabledChange) {
+        constexpr double kOffOpacity = 0.45;
+        QGraphicsOpacityEffect* dim = nullptr;
+        if (!isEnabled()) {
+            dim = new QGraphicsOpacityEffect(this);
+            dim->setOpacity(kOffOpacity);
+        }
+        setGraphicsEffect(dim); // deletes the one before
+    }
+    QWidget::changeEvent(event);
 }
 
 bool SliderRow::eventFilter(QObject* watched, QEvent* event)

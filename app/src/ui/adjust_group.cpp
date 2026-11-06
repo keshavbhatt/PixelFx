@@ -2,6 +2,7 @@
 
 #include "ui/adjust_panel.h"
 #include "ui/icons.h"
+#include "ui/setting_rows.h"
 #include "ui/style.h"
 
 #include <QContextMenuEvent>
@@ -49,13 +50,24 @@ private:
     std::function<void(const QPoint&)> m_onMenu;
 };
 
+// The group's name as a button exactly as wide as its text, so the name starts where the row
+// puts it: a QToolButton adds a space's width on each side and centres the text in it.
+class TitleButton : public QToolButton
+{
+public:
+    using QToolButton::QToolButton;
+
+    [[nodiscard]] QSize sizeHint() const override { return fontMetrics().size(Qt::TextShowMnemonic, text()); }
+    [[nodiscard]] QSize minimumSizeHint() const override { return sizeHint(); }
+};
+
 } // namespace
 
 AdjustGroup::AdjustGroup(QString id, const QString& name, const QString& glyph, QWidget* parent)
     : QWidget(parent)
     , m_id(std::move(id))
     , m_name(name)
-    , m_toggle(new QToolButton(this))
+    , m_toggle(new TitleButton(this))
     , m_chevron(new QLabel(this))
     , m_dot(new QLabel(this))
     , m_reset(new QToolButton(this))
@@ -98,7 +110,7 @@ AdjustGroup::AdjustGroup(QString id, const QString& name, const QString& glyph, 
     row->addWidget(m_dot);
     row->addStretch();
     row->addWidget(m_reset);
-    m_bodyLayout->setContentsMargins(kPanelPadding, 0, kPanelPadding, 10);
+    m_bodyLayout->setContentsMargins(kPanelPadding, 0, kPanelPadding, 12);
     m_bodyLayout->setSpacing(0);
     auto* column = new QVBoxLayout(this);
     column->setContentsMargins(0, 0, 0, 0);
@@ -173,6 +185,13 @@ void AdjustGroup::addCaption(const QString& text, bool more)
 {
     auto* caption = new QLabel(text, this);
     caption->setObjectName(u"subcaption"_s);
+    // Under a check row the caption's space meets the row's own margin, as CSS margins do;
+    // under a slider it adds to the slider's.
+    const QVBoxLayout* column = more && m_moreLayout != nullptr ? m_moreLayout : m_bodyLayout;
+    if (column->count() > 0 &&
+        qobject_cast<CheckRow*>(column->itemAt(column->count() - 1)->widget()) != nullptr) {
+        caption->setProperty("underRow", true);
+    }
     if (more) {
         addMoreContent(caption);
     } else {

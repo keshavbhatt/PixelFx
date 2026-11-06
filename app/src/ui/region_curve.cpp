@@ -25,6 +25,7 @@ constexpr double kMinimum = 5.0;
 constexpr double kMaximum = 95.0;
 constexpr double kGap = 5.0;      // splits stay this far apart
 constexpr double kMarkHalf = 6.0; // half the mark's width; its hit area is 12 px either side
+constexpr double kMarkGap = 2.0;  // from the plot to the marks' tips
 
 } // namespace
 
@@ -59,13 +60,14 @@ double RegionCurveView::split(int index) const
 
 QRectF RegionCurveView::plot() const
 {
-    return QRectF(0.5, 0.5, width() - 1.0, kPlotHeight - 1.0).adjusted(6, 6, -6, -6);
+    // The whole frame: nothing on the curve is dragged, so its ends need no room around them.
+    return {0.5, 0.5, width() - 1.0, kPlotHeight - 1.0};
 }
 
 QPointF RegionCurveView::markPosition(int index) const
 {
     const QRectF r = plot();
-    return {r.left() + (r.width() * split(index) / 100.0), kPlotHeight + (kMarkStrip / 2.0)};
+    return {r.left() + (r.width() * split(index) / 100.0), kPlotHeight + kMarkGap + 5.0};
 }
 
 void RegionCurveView::paintEvent(QPaintEvent* /*event*/)
@@ -73,11 +75,14 @@ void RegionCurveView::paintEvent(QPaintEvent* /*event*/)
     const Tokens& t = tokens();
     QPainter p(this);
     p.setRenderHint(QPainter::Antialiasing);
-    const QRectF frame(0.5, 0.5, width() - 1.0, kPlotHeight - 1.0);
-    p.setPen(t.border);
-    p.setBrush(t.input);
-    p.drawRoundedRect(frame, 8, 8);
     const QRectF r = plot();
+    QPainterPath frame;
+    frame.addRoundedRect(r, 8, 8);
+    p.setPen(Qt::NoPen);
+    p.setBrush(t.input);
+    p.drawPath(frame);
+    p.save();
+    p.setClipPath(frame);
     // Every other region shaded, so the four read at a glance.
     const std::array<double, 5> edges = {0.0, m_splits[0], m_splits[1], m_splits[2], 100.0};
     p.setPen(Qt::NoPen);
@@ -103,6 +108,10 @@ void RegionCurveView::paintEvent(QPaintEvent* /*event*/)
     p.setPen(QPen(t.text, 1.6));
     p.setBrush(Qt::NoBrush);
     p.drawPath(path);
+    p.restore();
+    p.setPen(t.border); // over the bands and the curve's ends
+    p.setBrush(Qt::NoBrush);
+    p.drawPath(frame);
     const bool ring = showsFocusRing(this);
     for (int i = 0; i < 3; ++i) {
         const QPointF c = markPosition(i);

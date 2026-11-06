@@ -59,6 +59,8 @@ Q_SIGNALS:
 
 protected:
     bool eventFilter(QObject* watched, QEvent* event) override;
+    /// Off (disabled), the row is dimmed as a whole: its name, value and track keep their colours.
+    void changeEvent(QEvent* event) override;
 
 private:
     void refresh();

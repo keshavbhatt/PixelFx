@@ -656,7 +656,7 @@ QWidget* AdjustPanel::buildTreatmentRow(QWidget* parent)
     box->setToolTip(tr("Color or black and white (V)"));
     auto* row = new QWidget(parent);
     auto* layout = new QVBoxLayout(row);
-    layout->setContentsMargins(0, 4, 0, 4);
+    layout->setContentsMargins(0, 6, 0, 6);
     layout->setSpacing(0);
     box->setParent(row);
     layout->addWidget(box);

@@ -22,8 +22,8 @@
 //                                      when the batch is done (PIXELFX_DEBUG_BATCH_STATE=ready:
 //                                      before processing, running: after the first photo, picker
 //                                      or ontop: with Choose the recipe or Add a preset on top open)
-//   PIXELFX_DEBUG_EXPAND=<group>       open this adjustment group ("Color grading") and close the
-//                                      others
+//   PIXELFX_DEBUG_EXPAND=<group>[,<group>] open these adjustment groups ("Color grading") and
+//                                      close the others; "Detail+" opens its More too
 //   PIXELFX_DEBUG_HEAL=<x,y;x,y...>    enter Heal once the photo is open and heal a spot at each
 //                                      point (fractions of the photo); "-" enters only
 //   PIXELFX_DEBUG_TARGET=<x,y[,steps]> pick a colour on the photo for the Color mixer at x,y
@@ -46,6 +46,7 @@
 #include "core/watermark.h"
 #include "services/batch_runner.h"
 #include "ui/about_sheet.h"
+#include "ui/adjust_group.h"
 #include "ui/batch_page.h"
 #include "ui/canvas.h"
 #include "ui/color_target_tool.h"
@@ -68,9 +69,9 @@
 
 #include <QDialog>
 #include <QFileInfo>
+#include <QFont>
 #include <QGuiApplication>
 #include <QMenu>
-#include <QFont>
 #include <QPainter>
 #include <QPixmap>
 #include <QStyleHints>
@@ -161,15 +162,22 @@ void applyHoverHook(pixelfx::ui::MainWindow& window)
     });
 }
 
-void applyExpandHook(const pixelfx::ui::MainWindow& window)
+void applyExpandHook(pixelfx::ui::MainWindow& window)
 {
-    const QString name = qEnvironmentVariable("PIXELFX_DEBUG_EXPAND");
-    if (name.isEmpty()) {
+    const QStringList names = qEnvironmentVariable("PIXELFX_DEBUG_EXPAND").split(u',', Qt::SkipEmptyParts);
+    if (names.isEmpty()) {
         return;
     }
-    for (auto* toggle : window.findChildren<QToolButton*>(u"groupToggle"_s)) {
-        toggle->setChecked(toggle->text() == name);
-    }
+    // After the photo and any PIXELFX_DEBUG_PRESET, which can rename a group (B&W mix).
+    QObject::connect(&window.document(), &pixelfx::services::Document::opened, &window, [&window, names] {
+        for (auto* group : window.findChildren<pixelfx::ui::AdjustGroup*>()) {
+            const bool more = names.contains(group->name() + u'+');
+            group->setExpanded(more || names.contains(group->name()));
+            if (more) {
+                group->setMoreOpen(true);
+            }
+        }
+    });
 }
 
 // The main menu or one of its submenus instead of the window (PIXELFX_DEBUG_MENU).
