@@ -94,6 +94,11 @@ Decisions the work stopped at; everything else went ahead within the approved mo
   light canvas now.
 - The end-to-end test on real photos (every look and preset, crop, heal, every export format,
   batch, the command line) passes.
+- Keyboard shortcuts listed every key that is bound, but not every bound key: New look
+  (Ctrl+Shift+N), Quit (Ctrl+Q), Crop's Enter, Escape and X, and Heal's Delete were nowhere to
+  be found. They are in the sheet and its mock now (with Close photo and Adjust a colour, which
+  the app already showed); a test checks every key the sheet lists is bound. For the owner's
+  look: the mock's rows changed.
 
 ### 2026-11-06 (a new app icon)
 

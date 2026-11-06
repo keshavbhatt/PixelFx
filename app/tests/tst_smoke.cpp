@@ -9,6 +9,7 @@
 #include "ui/main_window.h"
 #include "ui/photo_tile.h"
 #include "ui/presets_panel.h"
+#include "ui/shortcuts_sheet.h"
 #include "ui/slider_row.h"
 #include "ui/straighten_dial.h"
 #include "ui/style.h"
@@ -21,6 +22,7 @@
 #include <QDir>
 #include <QFile>
 #include <QFileInfo>
+#include <QLabel>
 #include <QLineEdit>
 #include <QMenu>
 #include <QSignalSpy>
@@ -43,6 +45,44 @@ class TestSmoke : public QObject
     Q_OBJECT
 
 private Q_SLOTS:
+    void everyKeyTheShortcutsSheetListsIsBound()
+    {
+        // The sheet is written by hand: each key it lists must do something in the window.
+        pixelfx::ui::applyStyle(*qApp);
+        QTemporaryDir dir;
+        pixelfx::core::Settings settings(dir.filePath(u"s.ini"_s));
+        pixelfx::ui::MainWindow window(settings);
+        QList<QKeySequence> bound;
+        for (const QAction* a : window.findChildren<QAction*>()) {
+            bound << a->shortcuts();
+        }
+        // Handled by the views themselves, not by actions.
+        const QStringList byHand = {u"Space (hold)"_s, u"Double-click"_s, u"Right"_s, u"Left"_s};
+        const pixelfx::ui::ShortcutsSheet sheet;
+        int checked = 0;
+        for (const QLabel* keys : sheet.findChildren<QLabel*>(u"kbd"_s)) {
+            QString modifiers;
+            for (QString part : keys->text().split(u" / "_s)) {
+                if (byHand.contains(part)) {
+                    continue;
+                }
+                part.replace(u"Plus"_s, u"+"_s).replace(u"Minus"_s, u"-"_s);
+                // "Ctrl+Shift+C / V": the second key keeps the first one's modifiers.
+                const qsizetype keyAt = part.endsWith(u'+') ? part.size() - 1 : part.lastIndexOf(u'+') + 1;
+                if (keyAt > 0) {
+                    modifiers = part.left(keyAt);
+                } else if (!modifiers.isEmpty()) {
+                    part.prepend(modifiers);
+                }
+                const QKeySequence key(part);
+                QVERIFY2(bound.contains(key),
+                         qPrintable(keys->text() + u": "_s + part + u" is bound to nothing"_s));
+                ++checked;
+            }
+        }
+        QVERIFY(checked > 30);
+    }
+
     void initTestCase()
     {
         QStandardPaths::setTestModeEnabled(true);
