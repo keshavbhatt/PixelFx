@@ -279,6 +279,7 @@ const QString kControls = uR"(
         QListWidget#batchGrid { background: {{panel}}; border: 0; }
         #batchHead { border-bottom: 1px solid {{border}}; }
         QLabel#cardName { font-weight: 600; }
+        QWidget#batchPanelContent QCheckBox, QWidget#batchPanelContent QLabel#itemTitle { font-size: 12px; }
         #batchBar { background: {{panel}}; border-top: 1px solid {{border}}; }
         #batchStatus { background: {{bar}}; border-top: 1px solid {{border}}; }
         QLabel#comparePicture { background: {{canvas}}; border-radius: 6px; }
