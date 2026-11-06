@@ -70,6 +70,9 @@ Decisions the work stopped at; everything else went ahead within the approved mo
     the sky" in the mock needs scene recognition); Reset takes off the spots made since Heal
     opened and Done keeps them (each spot is also its own history step, and undo works in
     Heal); Reveal dust explains itself in its tooltip rather than a first-time line.
+13. `close-photo.html` (2026-11-06): Close photo, asked for by the owner, with its review
+    (`mocks/reviews/close-photo.md`). Approve it, and say whether closing an edited photo with
+    Remember edits off should ask first (recommended: no, as switching photos does not).
 
 ## Sessions (newest first)
 
