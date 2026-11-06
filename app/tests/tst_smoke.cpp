@@ -25,6 +25,7 @@
 #include <QLabel>
 #include <QLineEdit>
 #include <QMenu>
+#include <QMimeData>
 #include <QSignalSpy>
 #include <QSlider>
 #include <QStandardPaths>
@@ -32,6 +33,7 @@
 #include <QTest>
 #include <QTimer>
 #include <QToolButton>
+#include <QUrl>
 
 #include <algorithm>
 #include <cmath>
@@ -315,6 +317,18 @@ private Q_SLOTS:
         QCOMPARE(window.document().info().size, QSize(64, 48));
         QVERIFY(QFileInfo(window.document().info().path).fileName().startsWith(u"pasted-"_s));
         QFile::remove(window.document().info().path);
+        // A photo's file copied in a file manager opens as itself, not as a copy.
+        pfx::Image img(30, 20);
+        img.fill(0.2F, 0.4F, 0.6F);
+        const QString file = dir.filePath(u"copied.png"_s);
+        QVERIFY(pfx::save(img, file.toStdString()).ok());
+        auto* links = new QMimeData;
+        links->setUrls({QUrl::fromLocalFile(file)});
+        QGuiApplication::clipboard()->setMimeData(links);
+        opened.clear();
+        QTest::keyClick(&window, Qt::Key_V, Qt::ControlModifier);
+        QVERIFY(opened.wait(10000));
+        QCOMPARE(window.document().info().path, file);
     }
 
     void severalPhotosShareThePresetThroughTheStrip()

@@ -1101,16 +1101,30 @@ void MainWindow::pasteSettings()
 
 void MainWindow::pasteImage()
 {
+    // Photos copied in a file manager open as themselves.
+    const QMimeData* copied = QGuiApplication::clipboard()->mimeData();
+    QStringList files;
+    for (const QUrl& url : copied != nullptr ? copied->urls() : QList<QUrl>()) {
+        if (url.isLocalFile() && isSupported(url.toLocalFile())) {
+            files << url.toLocalFile();
+        }
+    }
+    if (!files.isEmpty()) {
+        openFiles(files);
+        return;
+    }
     // A picture on the clipboard (a screenshot, an image copied in a browser) opens like a file:
     // saved once as PNG in the app's cache, so edits are remembered and Export works as usual.
     const QImage image = QGuiApplication::clipboard()->image();
     if (image.isNull()) {
+        showToast(tr("Nothing to paste: copy a picture or a photo's file first."));
         return;
     }
     const QString folder = QStandardPaths::writableLocation(QStandardPaths::CacheLocation) + u"/pasted"_s;
     QDir().mkpath(folder);
+    // To the millisecond: two pastes in one second are two pictures.
     const QString path =
-        folder + u"/pasted-%1.png"_s.arg(QDateTime::currentDateTime().toString(u"yyyyMMdd-HHmmss"_s));
+        folder + u"/pasted-%1.png"_s.arg(QDateTime::currentDateTime().toString(u"yyyyMMdd-HHmmss-zzz"_s));
     if (!image.save(path, "PNG")) {
         showToast(tr("Could not keep the pasted picture: the cache folder is not writable."));
         return;

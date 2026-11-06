@@ -134,6 +134,9 @@ Decisions the work stopped at; everything else went ahead within the approved mo
   sight, so a drag changed sliders nobody could see; the mixer now comes to the top of the panel.
 - Comments across the app cited mocks or the reason for a UI fix (the owner's rule: comments say
   what the code does); some 80 rewritten or dropped.
+- Paste image (Ctrl+V): photos copied in a file manager open as themselves (they were ignored);
+  with nothing usable on the clipboard it says so instead of doing nothing; two pastes in one
+  second no longer share a file name (the second replaced the first).
 
 ### 2026-11-06 (a new app icon)
 
