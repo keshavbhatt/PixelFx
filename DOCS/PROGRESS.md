@@ -39,19 +39,23 @@
 | `close-photo.html` | 2026-11-06 (`mocks/reviews/close-photo.md`) | approved 2026-11-06 (with Remember edits off, closing an edited photo asks first) |
 | `batch-empty.html`, `batch-recipe-picker.html` | 2026-11-06 (`mocks/reviews/batch-empty.md`, `batch-recipe-picker.md`) | approved 2026-11-06 |
 | `batch.html` and its states, without the list or grid switch | 2026-11-06 (the owner's call) | approved 2026-11-06 (the grid showed less than the list: no size, no status, no reason a photo was not saved) |
+| `shortcuts.html`, the rows of bound keys it lacked; `export.html`, the overwrite warning line | 2026-11-06 (PROGRESS, testing every feature) | approved 2026-11-06 |
 
 ## Waiting for the owner (2026-11-05)
 
 Decisions the work stopped at; everything else went ahead within the approved mocks.
 
-1. Built-in looks (13) and presets (4): the values are drafts by eye; tune or replace them.
-2. Kelvin white balance presets (Daylight, Cloudy, Shade, Tungsten in the mock) are left out:
-   the engine's white balance is relative; keep them out or add absolute Kelvin.
+1. Built-in looks (13) and presets (4): the values are drafts by eye. Decided 2026-11-06
+   (owner): keep them, the owner tunes them before the release.
+2. Kelvin white balance presets: decided 2026-11-06 (owner), RAW only, as now and as
+   Lightroom. A JPEG or PNG has its white balance baked in, so a named light source cannot be
+   right for it; those photos keep As shot, Auto, the picker, Temp and Tint.
 3. Theme: switches live, done 2026-11-06 (owner).
 4. macOS CI skips one curve-editor test (a crash only on the runner, clean under ASan locally).
 5. Real Lightroom `.xmp` exports should be tried on the importer (EmulsionPresets' 451 so far,
    2026-11-05; a second, real-world set is still wanted for the 95% target of FEATURES P8).
-6. Batch writes beside each original into a folder named "PixelFx": keep the name?
+6. Batch writes beside each original into a folder named "PixelFx": decided 2026-11-06
+   (owner), keep the name.
    (The catalog's names and Tools: decided 2026-11-05, see below.)
 7. Zoom has a FEATURES row now (E17b, 2026-11-06).
 8. Small departures from approved mocks, until their parts exist: the look
@@ -73,8 +77,7 @@ Decisions the work stopped at; everything else went ahead within the approved mo
     the sky" in the mock needs scene recognition); Reset takes off the spots made since Heal
     opened and Done keeps them (each spot is also its own history step, and undo works in
     Heal); Reveal dust explains itself in its tooltip rather than a first-time line.
-
-13. For the owner's look (2026-11-06): the Keyboard shortcuts sheet and `shortcuts.html` gained
+13. Approved by the owner 2026-11-06: the Keyboard shortcuts sheet and `shortcuts.html` gained
     the rows of keys that were bound but not listed (New look, Quit, Crop's Enter, Escape and
     X, Heal's Delete); Export shows Batch's overwrite warning line when Overwrite, the photo's
     own folder and {name} would write over the original.
@@ -82,6 +85,8 @@ Decisions the work stopped at; everything else went ahead within the approved mo
     `mocks/reviews/drift-2026-11-06.md`): AVIF only where the build writes it, auto straighten
     and the four-corner keystone not built yet, the grading wheels in true hues, the curve line
     1.6 px, the Effects Style list 3 px and Heal's switches 2 px taller than drawn.
+15. Pushing: not yet (owner, 2026-11-06); commits stay local until the owner pushes.
+16. Next: the photo information panel (FEATURES O7), its mock first (owner, 2026-11-06).
 
 ## Sessions (newest first)
 
@@ -95,6 +100,9 @@ Decisions the work stopped at; everything else went ahead within the approved mo
   export. Batch shows the list; the five Batch mocks lose the switch, and its glyph is gone.
 - FEATURES S5 is done (folders, presets, looks and LUTs dropped anywhere, files from a file
   manager pasted).
+- The owner's answers, in Waiting for the owner: both changes for review approved, the looks
+  kept for now, white balance presets RAW only, the Batch folder stays "PixelFx", no push yet,
+  the photo information panel next.
 - State: 33 commits since `e4c0b91`, local only, none pushed. 42 app suites pass, in the
   normal build and under AddressSanitizer and UndefinedBehaviorSanitizer; 167 library tests;
   the linters clean.
