@@ -7,6 +7,7 @@
 #include <QApplication>
 #include <QLineEdit>
 #include <QListWidget>
+#include <QMouseEvent>
 #include <QPushButton>
 #include <QTest>
 
@@ -85,6 +86,27 @@ private Q_SLOTS:
         picker.select(QString());
         QCOMPARE(picker.useButton()->text(), u"Use no look or preset"_s);
         picker.searchField()->clear();
+    }
+
+    void aClickSelectsADoubleClickUses()
+    {
+        auto photo = std::make_shared<pfx::Image>(60, 40);
+        photo->fill(0.4F, 0.4F, 0.4F);
+        RecipePicker picker(RecipePicker::Mode::OnTop, presets(), pixelfx::core::builtInLooks(), {}, photo,
+                            u"a.jpg"_s, QString(), std::nullopt, nullptr);
+        picker.show();
+        QVERIFY(QTest::qWaitForWindowExposed(&picker));
+        pixelfx::ui::PhotoTile* tile = picker.tiles().at(0);
+        // The tile keeps the press: passed on, the sheet would start a window move and the
+        // release would never reach the tile.
+        QMouseEvent press(QEvent::MouseButtonPress, QPointF(20, 20), tile->mapToGlobal(QPointF(20, 20)),
+                          Qt::LeftButton, Qt::LeftButton, Qt::NoModifier);
+        QApplication::sendEvent(tile, &press);
+        QVERIFY(press.isAccepted());
+        QTest::mouseClick(tile, Qt::LeftButton, {}, QPoint(20, 20));
+        QCOMPARE(picker.choice(), u"preset:"_s + tile->name()); // one click selects
+        QVERIFY(picker.isVisible());
+        QVERIFY(picker.useButton()->isEnabled());
     }
 
     void onTopOffersPresetsOnly()

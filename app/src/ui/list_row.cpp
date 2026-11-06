@@ -122,6 +122,17 @@ QString ListRow::title() const
     return m_title->text();
 }
 
+void ListRow::mousePressEvent(QMouseEvent* event)
+{
+    // The press is taken here, where the click is: passed on, a sheet would start moving its
+    // window and the release would never come back (a click on a tile in a sheet did nothing).
+    if (event->button() == Qt::LeftButton) {
+        event->accept();
+        return;
+    }
+    QWidget::mousePressEvent(event);
+}
+
 void ListRow::mouseReleaseEvent(QMouseEvent* event)
 {
     if (event->button() == Qt::LeftButton && rect().contains(event->position().toPoint())) {
