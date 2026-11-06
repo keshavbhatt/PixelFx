@@ -41,6 +41,8 @@ Q_SIGNALS:
     void quitRequested();
 
 private:
+    /// The name, version and organisation that settings, paths and the log derive from.
+    void setIdentity();
     void setupLogging() const;
     [[nodiscard]] bool forwardToPrimary();
 

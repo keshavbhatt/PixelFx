@@ -16,8 +16,7 @@ using namespace Qt::StringLiterals;
 
 namespace pixelfx::app {
 
-Application::Application(int& argc, char** argv)
-    : QApplication(argc, argv)
+void Application::setIdentity()
 {
     // Identity first: QSettings, QStandardPaths and the log location derive from it.
     setApplicationName(QString::fromLatin1(version::kApplicationName));
@@ -29,6 +28,12 @@ Application::Application(int& argc, char** argv)
     setOrganizationDomain(QString::fromLatin1(version::kOrganizationDomain));
     setDesktopFileName(QString::fromLatin1(version::kDesktopId));
     setWindowIcon(QIcon(u":/icons/pixelfx.png"_s));
+}
+
+Application::Application(int& argc, char** argv)
+    : QApplication(argc, argv)
+{
+    setIdentity();
     core::installPluralForms(*this); // before any text is made
 
     const CliParseResult parsed = parseCliOptions(arguments(), QDir::currentPath());
