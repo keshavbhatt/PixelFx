@@ -822,7 +822,7 @@ void overlayScrollBar(QScrollArea* area)
 {
     // The area's own bar is never shown but keeps the range and the position; this one shows them.
     area->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    QScrollBar* inner = area->verticalScrollBar();
+    const QScrollBar* inner = area->verticalScrollBar();
     auto* bar = new QScrollBar(Qt::Vertical, area);
     bar->hide();
     QObject::connect(inner, &QScrollBar::rangeChanged, bar, [bar, inner](int min, int max) {
@@ -833,7 +833,7 @@ void overlayScrollBar(QScrollArea* area)
     });
     QObject::connect(inner, &QScrollBar::valueChanged, bar, &QScrollBar::setValue);
     QObject::connect(bar, &QScrollBar::valueChanged, inner, &QScrollBar::setValue);
-    auto* placer = new OverlayPlacer(area, bar);
+    const auto* placer = new OverlayPlacer(area, bar);
     placer->place();
 }
 

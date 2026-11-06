@@ -125,6 +125,19 @@ QIcon headerIcon(const QString& glyph)
     return icons::toggle(glyph, tokens().text, tokens().accent, tokens().faint);
 }
 
+// A thin separator between groups of the header, 4 px clear on each side (editor.html).
+QWidget* headerSeparator(QWidget* parent)
+{
+    auto* box = new QWidget(parent);
+    auto* line = new QFrame(box);
+    line->setObjectName(u"headerSep"_s);
+    line->setFixedSize(1, 24);
+    auto* centre = new QHBoxLayout(box);
+    centre->setContentsMargins(4, 0, 4, 0);
+    centre->addWidget(line);
+    return box;
+}
+
 QToolButton* headerButton(QWidget* parent, const QString& glyph, const QString& tip)
 {
     auto* b = new QToolButton(parent);
@@ -560,19 +573,8 @@ void MainWindow::buildHeader()
     m_menuButton = headerButton(m_header, u"menu"_s, tr("Main menu (F10)"));
     m_menuButton->setPopupMode(QToolButton::InstantPopup);
 
-    // Thin separators between the groups, 4 px clear on each side (menu.html, editor.html).
-    const auto separator = [this] {
-        auto* box = new QWidget(m_header);
-        auto* line = new QFrame(box);
-        line->setObjectName(u"headerSep"_s);
-        line->setFixedSize(1, 24);
-        auto* centre = new QHBoxLayout(box);
-        centre->setContentsMargins(4, 0, 4, 0);
-        centre->addWidget(line);
-        return box;
-    };
-    QWidget* sepHistory = separator();
-    QWidget* sepView = separator();
+    QWidget* sepHistory = headerSeparator(m_header);
+    QWidget* sepView = headerSeparator(m_header);
     // As the mocks' header: 8 px in, the mark 4 px further with 8 px after it (and the wordmark
     // 8 px after the mark on the start page), then 6 px between everything.
     auto* header = new QHBoxLayout(m_header);
