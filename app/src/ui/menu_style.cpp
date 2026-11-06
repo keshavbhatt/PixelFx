@@ -25,6 +25,7 @@ constexpr int kRowRadius = 6; // a highlighted row's corners
 constexpr int kRowPaddingX = 10;
 constexpr int kRowPaddingY = 6;
 constexpr int kIcon = 16;
+constexpr int kLine = 19;        // a row's line, as the mocks' 13 px text on a 1.45 line height
 constexpr int kShortcutGap = 24; // the least space between a row's text and its shortcut
 constexpr int kEndMark = 14;     // a submenu's chevron or a check
 constexpr int kSeparator = 11;   // its height: 5 px either side of a 1 px line
@@ -212,7 +213,7 @@ std::optional<QSize> itemSize(const QStyleOption* option, const QSize& contents)
     if (hasEndColumn(*item)) {
         width += kEndMark + kGapItems;
     }
-    const int height = std::max(contents.height(), kIcon) + (2 * kRowPaddingY);
+    const int height = std::max({contents.height(), kIcon, kLine}) + (2 * kRowPaddingY);
     return QSize(width, height);
 }
 
