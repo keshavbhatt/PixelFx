@@ -153,7 +153,7 @@ BatchPage::BatchPage(core::ExportOptions output, core::CompressJob job, bool com
         target->setPixmap(pixmap);
         if (target == m_after) {
             m_watermark->setPreview(image); // the watermark sheet previews on the batch's own photo
-            m_afterPixmap = pixmap;
+            m_afterPixmap = std::move(pixmap);
             refreshRecipeCard(); // the card shows the recipe on the first photo
         }
     });
