@@ -81,6 +81,9 @@ namespace {
 // Lightroom's radius refers to (the importer uses the same).
 constexpr double kRadiusPixels = 6000.0;
 
+// The histogram and the buttons under it sit 12 px from the panel's sides (editor.html's .histo).
+constexpr int kHistogramSide = 12;
+
 // The panel's order and wording (DESIGN section 3, editor-develop.html), Lightroom's words for
 // every setting. Ranges, defaults and units come from the registry; names live here (ADR-005).
 GroupSpec lightGroup()
@@ -443,8 +446,9 @@ QHBoxLayout* AdjustPanel::buildTopRow()
     autoButton->setToolTip(tr("Set light and color from the photo (Ctrl+Shift+A)"));
     connect(autoButton, &QPushButton::clicked, this, &AdjustPanel::autoRequested);
     auto* top = new QHBoxLayout;
-    top->setContentsMargins(kPanelPadding, 6, kPanelPadding, 8);
+    top->setContentsMargins(kHistogramSide, 6, kHistogramSide, 8);
     top->setSpacing(kGapRelated);
+    autoButton->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed); // the row's width, as drawn
     top->addWidget(autoButton, 1);
     top->addWidget(copy);
     top->addWidget(m_paste);
@@ -455,6 +459,9 @@ QHBoxLayout* AdjustPanel::buildTopRow()
     m_collapseAll->setAccessibleName(tr("Collapse all groups"));
     connect(m_collapseAll, &QPushButton::clicked, this, &AdjustPanel::collapseAll);
     top->addWidget(m_collapseAll);
+    for (QPushButton* icon : {static_cast<QPushButton*>(resetAll), static_cast<QPushButton*>(m_collapseAll)}) {
+        icon->setFixedSize(26, 26); // the mocks' small icon buttons
+    }
     return top;
 }
 
@@ -465,7 +472,7 @@ AdjustPanel::AdjustPanel(QWidget* parent)
     makeSidePanel(this, Qt::LeftEdge);
     QHBoxLayout* top = buildTopRow();
     auto* histogramBox = new QVBoxLayout;
-    histogramBox->setContentsMargins(kPanelPadding, 10, kPanelPadding, 0);
+    histogramBox->setContentsMargins(kHistogramSide, 10, kHistogramSide, 0);
     histogramBox->addWidget(m_histogram);
 
     auto* content = new QWidget(this);

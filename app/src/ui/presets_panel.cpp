@@ -145,6 +145,7 @@ QHBoxLayout* PresetsPanel::buildHead()
 {
     m_search->setObjectName(u"presetSearch"_s);
     m_search->setPlaceholderText(tr("Search presets"));
+    m_search->setFixedHeight(30); // the mocks' search fields
     m_search->setClearButtonEnabled(true);
     m_search->addAction(icons::themed(u"search"_s, tokens().muted), QLineEdit::LeadingPosition);
     connect(m_search, &QLineEdit::textChanged, this, &PresetsPanel::rebuild);

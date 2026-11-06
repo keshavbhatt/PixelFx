@@ -65,6 +65,7 @@ LooksPanel::LooksPanel(QWidget* parent)
     });
     connect(m_hover, &HoverPreview::ended, this, &LooksPanel::previewEnded);
     m_search->setPlaceholderText(tr("Search looks"));
+    m_search->setFixedHeight(30); // the mocks' search fields
     m_search->setClearButtonEnabled(true);
     m_search->addAction(icons::themed(u"search"_s, tokens().muted), QLineEdit::LeadingPosition);
     connect(m_search, &QLineEdit::textChanged, this, &LooksPanel::rebuild);
@@ -75,7 +76,7 @@ LooksPanel::LooksPanel(QWidget* parent)
     add->setAccessibleName(tr("New look"));
     connect(add, &QToolButton::clicked, this, &LooksPanel::newLookRequested);
     auto* head = new QHBoxLayout;
-    head->setContentsMargins(kToolRowPadding, 10, kToolRowPadding, 4);
+    head->setContentsMargins(kToolRowPadding, 10, kToolRowPadding, 10);
     head->setSpacing(kGapRelated);
     head->addWidget(m_search, 1);
     head->addWidget(add);
