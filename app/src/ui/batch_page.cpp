@@ -73,6 +73,8 @@ namespace {
 bool (*isPhotoTest)(const QString&) = nullptr;
 
 constexpr int kPanelWidth = 380;
+constexpr int kListSide = 16;    // the list's head, preview and status rows (batch.html)
+constexpr int kStatusGlyph = 18; // the status line's tick or alert
 
 QString describe(const QString& path)
 {
@@ -237,7 +239,7 @@ QWidget* BatchPage::buildListHead(QWidget* parent)
         }
     });
     auto* row = new QHBoxLayout(head);
-    row->setContentsMargins(kPanelPadding, 10, kPanelPadding, 10);
+    row->setContentsMargins(kListSide, 10, kListSide, 10);
     row->setSpacing(kGapControls);
     row->addWidget(m_listTitle);
     row->addWidget(hint);
@@ -436,7 +438,7 @@ QWidget* BatchPage::buildPreview(QWidget* parent)
         picture->installEventFilter(this);
     }
     auto* row = new QHBoxLayout(m_preview);
-    row->setContentsMargins(kPanelPadding, 10, kPanelPadding, 10);
+    row->setContentsMargins(kListSide, 10, kListSide, 10);
     row->setSpacing(kGapItems);
     row->addWidget(previewLabel);
     row->addWidget(m_before);
@@ -453,7 +455,7 @@ QWidget* BatchPage::buildStatus(QWidget* parent)
     // batch-running.html: "Saving 4 of 6, about 20 s left", Pause, Stop, a progress line;
     // batch-done.html: "5 saved, 1 not saved, in 38 s, 41 MB", Retry failed, Show in folder.
     m_status = new QWidget(parent);
-    m_status->setObjectName(u"batchBar"_s);
+    m_status->setObjectName(u"batchStatus"_s);
     m_status->setAttribute(Qt::WA_StyledBackground);
     m_statusIcon = new QLabel(m_status);
     m_statusText = new QLabel(m_status);
@@ -502,7 +504,7 @@ QWidget* BatchPage::buildStatus(QWidget* parent)
         line->addWidget(b);
     }
     auto* column = new QVBoxLayout(m_status);
-    column->setContentsMargins(kPanelPadding, 10, kPanelPadding, 12);
+    column->setContentsMargins(kListSide, 12, kListSide, 12);
     column->setSpacing(kGapControls);
     column->addLayout(line);
     column->addWidget(m_progress);
@@ -1701,6 +1703,7 @@ void BatchPage::refreshStatus()
         showDone(saved, failed);
     }
     m_status->setVisible(total > 0 && ours);
+    m_statusIcon->setVisible(!m_statusIcon->pixmap().isNull()); // no gap where there is no tick
     m_compressPanel->setState(running, !running && m_runner.isCompressing() && m_runner.files() == m_files &&
                                            total > 0);
     m_progress->setVisible(running);
@@ -1736,7 +1739,8 @@ void BatchPage::setStatusError(bool error)
 
 void BatchPage::showStatusError(const QString& text)
 {
-    icons::setGlyph(m_statusIcon, u"alert"_s, tokens().danger, 16);
+    icons::setGlyph(m_statusIcon, u"alert"_s, tokens().danger, kStatusGlyph);
+    m_statusIcon->show();
     m_statusText->setText(text);
     setStatusError(true);
     m_statusDetail->clear();
@@ -1798,7 +1802,7 @@ void BatchPage::showDone(int saved, int failed)
 {
     const int total = m_runner.total();
     icons::setGlyph(m_statusIcon, failed > 0 ? u"alert"_s : u"check"_s,
-                    failed > 0 ? tokens().danger : tokens().success, 16);
+                    failed > 0 ? tokens().danger : tokens().success, kStatusGlyph);
     QString text =
         failed > 0 ? tr("%1 saved, %2 not saved").arg(saved).arg(failed) : tr("%n saved", nullptr, saved);
     if (m_runner.waiting() > 0) {
@@ -1831,7 +1835,7 @@ void BatchPage::showCompressDone(int failed)
     const auto size = [](qint64 bytes) { return core::sizeText(bytes); };
     const qint64 percent = before > 0 ? (100 * (before - after) + (before / 2)) / before : 0;
     icons::setGlyph(m_statusIcon, failed > 0 ? u"alert"_s : u"check"_s,
-                    failed > 0 ? tokens().danger : tokens().success, 16);
+                    failed > 0 ? tokens().danger : tokens().success, kStatusGlyph);
     //: After Compress only: "Saved 54 MB of 108 MB (50%)".
     QString text = tr("Saved %1 of %2 (%3%)").arg(size(before - after), size(before)).arg(percent);
     if (m_runner.waiting() > 0) {

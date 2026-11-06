@@ -14,7 +14,6 @@ namespace pixelfx::ui {
 namespace {
 
 constexpr QSize kThumb(72, 48);
-constexpr int kPillWidth = 76;
 
 } // namespace
 
@@ -34,7 +33,6 @@ FileRow makeFileRow(QWidget* parent, const QString& path, const QString& detail,
         f.row->addTrailing(extra);
     }
     f.pill = new StatusPill;
-    f.pill->setMinimumWidth(kPillWidth);
     f.row->addTrailing(f.pill);
     f.row->setAction(u"close"_s, QObject::tr("Leave %1 out").arg(name));
     return f;

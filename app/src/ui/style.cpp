@@ -279,6 +279,7 @@ const QString kControls = uR"(
         #batchHead { border-bottom: 1px solid {{border}}; }
         QLabel#cardName { font-weight: 600; }
         #batchBar { background: {{panel}}; border-top: 1px solid {{border}}; }
+        #batchStatus { background: {{bar}}; border-top: 1px solid {{border}}; }
         QLabel#comparePicture { background: {{canvas}}; border-radius: 6px; }
         QLabel#batchThumb { background: {{input}}; border-radius: 4px; }
         QFrame#segmentBox { border: 1px solid {{border}}; border-radius: 7px; background: {{input}}; }

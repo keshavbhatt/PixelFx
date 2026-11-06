@@ -53,7 +53,7 @@ void StatusPill::setStatus(Kind kind, const QString& text, const QString& glyph)
     }
     m_glyph->setVisible(!glyph.isEmpty());
     if (!glyph.isEmpty()) {
-        icons::setGlyph(m_glyph, glyph, colour, 12);
+        icons::setGlyph(m_glyph, glyph, colour, 14);
     }
     m_text->setText(text);
     setProperty("kind", name);
