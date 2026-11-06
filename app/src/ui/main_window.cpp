@@ -4,6 +4,7 @@
 #include "core/describe.h"
 #include "core/links.h"
 #include "core/looks.h"
+#include "core/photo_details.h"
 #include "core/settings/settings.h"
 #include "core/settings_clipboard.h"
 #include "services/notifier.h"
@@ -22,6 +23,7 @@
 #include "ui/look_editor.h"
 #include "ui/looks_panel.h"
 #include "ui/paste_sheet.h"
+#include "ui/photo_details_panel.h"
 #include "ui/preset_save_sheet.h"
 #include "ui/presets_panel.h"
 #include "ui/settings_sheet.h"
@@ -56,6 +58,7 @@
 #include <QScreen>
 #include <QStackedWidget>
 #include <QStandardPaths>
+#include <QStyle>
 #include <QTimer>
 #include <QToolButton>
 #include <QUrl>
@@ -112,6 +115,30 @@ protected:
     }
 };
 
+/// The header's file name over its size, format and file size, with a chevron: a button that
+/// opens Photo details. As wide as its labels want, narrower when the header is.
+class DocButton : public QPushButton
+{
+public:
+    explicit DocButton(QWidget* parent)
+        : QPushButton(parent)
+    {
+        setObjectName(QStringLiteral("docButton"));
+        setFixedHeight(40);
+        setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Fixed); // its labels' width at most
+        setFocusPolicy(Qt::TabFocus);
+    }
+
+    [[nodiscard]] QSize sizeHint() const override
+    {
+        return layout() != nullptr ? layout()->sizeHint() : QPushButton::sizeHint();
+    }
+    [[nodiscard]] QSize minimumSizeHint() const override
+    {
+        return layout() != nullptr ? layout()->minimumSize() : QPushButton::minimumSizeHint();
+    }
+};
+
 // A header button's icon: the text colour, the accent while it is on.
 QIcon headerIcon(const QString& glyph)
 {
@@ -146,13 +173,7 @@ QToolButton* headerButton(QWidget* parent, const QString& glyph, const QString& 
 
 QString describe(const services::DocumentInfo& info)
 {
-    QString format = info.format.endsWith(u"load"_s) ? info.format.chopped(4).toUpper() : info.format;
-    const QString suffix = QFileInfo(info.path).suffix().toUpper();
-    if (format == u"HEIF"_s && !suffix.isEmpty()) {
-        format = suffix; // one loader for HEIC, HEIF and AVIF: name the file's own kind
-    } else if (info.raw) {
-        format = u"RAW (%1)"_s.arg(suffix); // camera raw: say which maker's format
-    }
+    const QString format = core::formatName(info.format, info.path, info.raw);
     const QString size = core::sizeText(QFileInfo(info.path).size());
     return u"%1 x %2 · %3 · %4"_s.arg(info.size.width()).arg(info.size.height()).arg(format, size);
 }
@@ -544,6 +565,35 @@ void MainWindow::buildEditButtons()
     connect(m_export, &QPushButton::clicked, this, &MainWindow::exportPhoto);
 }
 
+void MainWindow::buildDocButton()
+{
+    m_docButton = new DocButton(m_header);
+    connect(m_docButton, &QPushButton::clicked, this, [this] { namedAction(u"photoDetails"_s)->trigger(); });
+    auto* name = new ElidedLabel(m_docButton);
+    name->setElideMode(Qt::ElideMiddle); // a long name keeps its start and its extension
+    name->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred); // whole while there is room
+    m_docName = name;
+    m_docName->setObjectName(u"docName"_s);
+    m_docMeta = new QLabel(m_docButton);
+    m_docMeta->setObjectName(u"docMeta"_s);
+    m_docChevron = new QLabel(m_docButton);
+    icons::setGlyph(m_docChevron, u"expanded"_s, tokens().muted, 14);
+    for (QWidget* w : std::initializer_list<QWidget*>{m_docName, m_docMeta, m_docChevron}) {
+        w->setAttribute(Qt::WA_TransparentForMouseEvents); // the button takes the click
+    }
+    auto* lines = new QVBoxLayout;
+    lines->setSpacing(0);
+    lines->addStretch();
+    lines->addWidget(m_docName);
+    lines->addWidget(m_docMeta);
+    lines->addStretch();
+    auto* doc = new QHBoxLayout(m_docButton);
+    doc->setContentsMargins(kGapControls, 0, kGapControls, 0);
+    doc->setSpacing(kGapRelated);
+    doc->addLayout(lines, 1);
+    doc->addWidget(m_docChevron);
+}
+
 void MainWindow::buildHeader()
 {
     m_header = new QWidget(this);
@@ -552,19 +602,7 @@ void MainWindow::buildHeader()
     m_header->setFixedHeight(50);
     auto* open = headerButton(m_header, u"open"_s, tr("Open images (Ctrl+O)"));
     connect(open, &QToolButton::clicked, this, &MainWindow::chooseFiles);
-    auto* name = new ElidedLabel(m_header);
-    name->setElideMode(Qt::ElideMiddle); // a long name keeps its start and its extension
-    name->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred); // whole while there is room
-    m_docName = name;
-    m_docName->setObjectName(u"docName"_s);
-    m_docMeta = new QLabel(m_header);
-    m_docMeta->setObjectName(u"docMeta"_s);
-    auto* doc = new QVBoxLayout;
-    doc->setSpacing(0);
-    doc->addStretch();
-    doc->addWidget(m_docName);
-    doc->addWidget(m_docMeta);
-    doc->addStretch();
+    buildDocButton();
     buildEditButtons();
     buildBatchHeaderButtons();
     m_menuButton = headerButton(m_header, u"menu"_s, tr("Main menu (F10)"));
@@ -588,8 +626,7 @@ void MainWindow::buildHeader()
     brand->addWidget(m_wordmark);
     header->addLayout(brand);
     header->addWidget(open);
-    doc->setContentsMargins(6, 0, 6, 0);
-    header->addLayout(doc);
+    header->addWidget(m_docButton);
     header->addStretch();
     header->addWidget(m_undo);
     header->addWidget(m_redo);
@@ -765,6 +802,8 @@ void MainWindow::setupUi()
     column->addWidget(m_header);
     column->addLayout(body, 1);
     setCentralWidget(central);
+    m_details = new PhotoDetailsPanel(central);
+    m_details->setAnchor(m_docButton, m_header);
     setWindowTitle(QString());
 }
 
@@ -819,10 +858,36 @@ void MainWindow::setupActions()
     connect(clipping, &QAction::triggered, this,
             [this] { m_settings.setClippingWarnings(!m_settings.clippingWarnings()); });
     addActions({openAction, quitAction, fullScreen, exportAction, settingsAction, clipping});
+    setupDetailsAction();
     setupEditActions();
     setupCropActions();
     setupHeal();
     setupZoomActions();
+}
+
+void MainWindow::setupDetailsAction()
+{
+    auto* details = new QAction(tr("Photo details"), this);
+    details->setObjectName(u"photoDetails"_s);
+    details->setShortcut(QKeySequence(Qt::Key_I));
+    details->setCheckable(true);
+    connect(details, &QAction::triggered, this, [this](bool open) {
+        if (open && !photoOnShow()) {
+            namedAction(u"photoDetails"_s)->setChecked(false);
+            return;
+        }
+        if (open) {
+            refreshDetails();
+        }
+        m_details->setOpen(open);
+    });
+    connect(m_details, &PhotoDetailsPanel::openChanged, this, [this, details](bool open) {
+        details->setChecked(open);
+        m_docButton->setProperty("open", open);
+        m_docButton->style()->unpolish(m_docButton);
+        m_docButton->style()->polish(m_docButton);
+    });
+    addAction(details);
 }
 
 void MainWindow::setupEditActions()
@@ -1811,8 +1876,8 @@ void MainWindow::updateHeader()
         w->setVisible(batch);
     }
     m_wordmark->setVisible(welcome);
-    m_docName->setVisible(!welcome);
-    m_docMeta->setVisible(!welcome);
+    m_docButton->setVisible(!welcome);
+    updateDocButton();
     if (batch) {
         m_docName->setText(tr("Batch"));
         m_docName->setToolTip(QString());
@@ -1827,6 +1892,43 @@ void MainWindow::updateHeader()
     } else {
         setWindowTitle(QString());
     }
+}
+
+void MainWindow::updateDocButton()
+{
+    const bool details = photoOnShow();
+    m_docChevron->setVisible(details);
+    // Over Batch the name is only a title.
+    m_docButton->setAttribute(Qt::WA_TransparentForMouseEvents, !details);
+    m_docButton->setFocusPolicy(details ? Qt::TabFocus : Qt::NoFocus);
+    m_docButton->setProperty("clickable", details);
+    m_docButton->style()->unpolish(m_docButton);
+    m_docButton->style()->polish(m_docButton);
+    m_docButton->setAccessibleName(
+        details ? tr("Photo details for %1").arg(QFileInfo(m_document.info().path).fileName()) : QString());
+    m_docButton->setToolTip(details ? tr("Photo details (I)") : QString());
+    if (!details) {
+        m_details->setOpen(false);
+    }
+}
+
+bool MainWindow::photoOnShow() const
+{
+    return m_document.isOpen() && m_stack->currentWidget() == m_canvasPage;
+}
+
+void MainWindow::refreshDetails()
+{
+    if (!m_document.isOpen()) {
+        return;
+    }
+    using L = PhotoDetailsPanel::LocationOnExport;
+    const core::ExportOptions options = m_settings.exportOptions();
+    L onExport = options.keepLocation ? L::Kept : L::LeftOut;
+    if (!options.keepMetadata) {
+        onExport = L::LeftOutWithMetadata;
+    }
+    m_details->setDetails(m_document.info(), onExport);
 }
 
 void MainWindow::leaveBatch()
@@ -2204,6 +2306,8 @@ void MainWindow::showOpened(const services::DocumentInfo& info)
     m_docMeta->setText(describe(info));
     setWindowTitle(name);
     m_settings.addRecentFile(info.path);
+    refreshDetails();
+    updateDocButton();
     m_adjust->setPhotoDetails(info.exposure, QStringList{info.camera, info.lens}.join(u'\n').trimmed());
     m_adjust->setLens(info.lens, info.lensProfile, info.lensProfiles);
     m_panels->show();
@@ -2402,6 +2506,7 @@ constexpr std::array kViewEntries{MenuEntry{"compare", "compare"},
                                   MenuEntry{"sideBySide", "square-split-horizontal"},
                                   MenuEntry{"showOriginal", "eye"},
                                   MenuEntry{"clipping", "alert"},
+                                  MenuEntry{"photoDetails", "info"},
                                   kSeparator,
                                   MenuEntry{"fit", "maximize"},
                                   MenuEntry{"zoomIn", "zoom-in"},

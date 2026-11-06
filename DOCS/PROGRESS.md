@@ -91,6 +91,27 @@ Decisions the work stopped at; everything else went ahead within the approved mo
 
 ## Sessions (newest first)
 
+### 2026-11-06 (Photo details, built)
+
+- The approved `photo-details.html` built: `PhotoDetailsPanel`, opened by the header's file name
+  (now a button with a chevron, the "open" shade while the panel shows), I, and View > Photo
+  details; it stays open while stepping through photos and follows the photo, Esc, I or its ×
+  close it and give the focus back; it scrolls when the window is shorter than it.
+- libpixelfx: `ExifSummary` reads where the photo was taken from the GPS block (a block without
+  a fix, 0 and 0, or out of range is no location), and `pfx::profileName` reads a colour
+  profile's own name through Little CMS; both tested (169 library tests).
+- Camera makes are said as people say them, everywhere the camera is named (the panel, the
+  histogram's tooltip, watermark and Batch {camera}): "Fujifilm X-T4", "Nikon Z 6_2", "Olympus
+  E-M5" for FUJIFILM, NIKON CORPORATION and OLYMPUS IMAGING CORP.
+- Paths in a label (Export's, Batch's and Compress only's folders, the panel's) keep their start
+  and their last folder and drop whole folders from the middle (`PathLabel::fitted`), as approved
+  for the panel; before, they were cut mid-word.
+- Copy details leaves the coordinates out until Show, so a pasted bug report does not carry
+  them by accident.
+- Checked against the mock by pixel: every line within 1 to 3 px; light and dark; a 1024 by 640
+  window. `tst_photo_details` (the words, the path rule, the panel, I and Esc, the header's name);
+  43 app suites pass. Debug: `PIXELFX_DEBUG_DETAILS=1|location`.
+
 ### 2026-11-06 (Photo details, the mock)
 
 - The mock of FEATURES O7, the owner's choice for the next work: `photo-details.html` with two

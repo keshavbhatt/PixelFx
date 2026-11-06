@@ -35,6 +35,8 @@
 //                                      are otherwise a size smaller)
 //   PIXELFX_DEBUG_CLOSE=1              close the photo on show once it is open (Ctrl+W); with
 //                                      GRAB, grab the next photo or the welcome page
+//   PIXELFX_DEBUG_DETAILS=1|location  open Photo details once the photo is open (location: with
+//                                      the coordinates shown)
 //   PIXELFX_DEBUG_GRAB=<file.png>      grab the window once the photo is shown (or after 2 s
 //                                      with nothing to show) and quit
 #include "app/application.h"
@@ -57,6 +59,7 @@
 #include "ui/looks_panel.h"
 #include "ui/main_window.h"
 #include "ui/paste_sheet.h"
+#include "ui/photo_details_panel.h"
 #include "ui/photo_tile.h"
 #include "ui/preset_save_sheet.h"
 #include "ui/presets_panel.h"
@@ -456,6 +459,15 @@ void applyDebugHooks(pixelfx::ui::MainWindow& window, QStringList& files)
                          [&window, compare] {
                              window.setCompare(true);
                              window.namedAction(u"sideBySide"_s)->setChecked(compare == u"side"_s);
+                         });
+    }
+    if (const QString details = qEnvironmentVariable("PIXELFX_DEBUG_DETAILS"); !details.isEmpty()) {
+        QObject::connect(&window.document(), &pixelfx::services::Document::opened, &window,
+                         [&window, details] {
+                             window.namedAction(u"photoDetails"_s)->trigger();
+                             if (auto* panel = window.findChild<pixelfx::ui::PhotoDetailsPanel*>()) {
+                                 panel->showLocation(details == u"location"_s);
+                             }
                          });
     }
     if (qEnvironmentVariableIsSet("PIXELFX_DEBUG_CLOSE")) {

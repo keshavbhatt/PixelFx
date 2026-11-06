@@ -205,7 +205,11 @@ Document::Result Document::openOnWorker(Result result,
     result.info.bitsPerSample = info.bitsPerSample;
     result.info.raw = loaded.value().info.raw;
     result.info.asShotKelvin = loaded.value().info.asShotKelvin;
+    result.info.hasAlpha = info.hasAlpha;
+    result.info.hasProfile = loaded.value().info.hasProfile;
+    result.info.profileName = QString::fromStdString(pfx::profileName(loaded.value().profile)).trimmed();
     const pfx::ExifSummary exif = pfx::readExif(loaded.value().metadata.exif);
+    result.info.exif = exif;
     result.info.camera = core::cameraName(exif);
     result.info.lens = QString::fromStdString(exif.lens).trimmed();
     result.info.exposure = core::exposureLine(exif);

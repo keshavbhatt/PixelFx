@@ -186,6 +186,13 @@ const QString kSheet = uR"(
         QLineEdit, QComboBox, QSpinBox { background: {{input}}; border: 1px solid {{border}}; border-radius: 7px; padding: 5px 8px; }
         QLineEdit:focus, QSpinBox:focus, QComboBox[focusVisible="true"]:focus { border-color: {{accent}}; }
         #toast { background: {{elevated}}; border: 1px solid {{border}}; border-radius: 9px; padding: 7px 12px; }
+        #photoDetails { background: {{elevated}}; border: 1px solid {{border}}; border-radius: 10px; }
+        #photoDetails #footBar, #photoDetails QScrollArea, #photoDetails QScrollArea > QWidget > QWidget { background: transparent; }
+        QLabel#detailsName { font-size: 14px; font-weight: 600; }
+        QLabel#detailsPath, QLabel#detailsNote { color: {{muted}}; font-size: 12px; }
+        QPushButton#docButton { border: 1px solid transparent; border-radius: 8px; background: transparent; padding: 0; }
+        QPushButton#docButton[clickable="true"]:hover, QPushButton#docButton[open="true"] { background: {{hover}}; }
+        QPushButton#docButton[focusVisible="true"]:focus { border-color: {{accent}}; }
         #sheetSide { background: {{panel}}; border-top: 1px solid {{border}}; border-right: 1px solid {{border}}; }
         #previewArea { background: {{canvas}}; border-top: 1px solid {{border}}; }
         #previewBar { background: {{panel}}; border-top: 1px solid {{border}}; }

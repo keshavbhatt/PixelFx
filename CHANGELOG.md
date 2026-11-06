@@ -56,6 +56,9 @@ A new editor, a new image engine, and a new look.
 - Open many photos at once: they line up in a strip under the photo; Left and Right step
   through them, Ctrl or Shift click (or Ctrl+A) selects several, and a preset, pasted settings or
   Export then go to all of them. Close a photo with Ctrl+W or the × on its picture in the strip.
+- Photo details (I, or click the file name): the size, format and colour profile, the camera,
+  lens, exposure and the day it was taken, with Copy details. Where it was taken shows only when
+  you ask, with a line saying whether Export keeps it.
 - Lens corrections: Use lens profile in Optics straightens your lens's distortion, removes its
   colour fringes and lifts its dark corners, for lenses in the Lensfun database; the panel names
   the lens it found, and Distortion and Vignetting set how much.

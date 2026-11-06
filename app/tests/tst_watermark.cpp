@@ -31,7 +31,7 @@ private Q_SLOTS:
         exif.model = "Z 6";
         exif.dateTaken.clear();
         const auto u = pixelfx::core::tokensFrom(exif, QDate(2026, 1, 1));
-        QCOMPARE(u.camera, u"NIKON CORPORATION Z 6"_s);
+        QCOMPARE(u.camera, u"Nikon Z 6"_s);  // the make as people say it
         QCOMPARE(u.date, QDate(2026, 1, 1)); // no date in the photo: the fallback
     }
 

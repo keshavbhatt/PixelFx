@@ -81,7 +81,9 @@ qt_add_library(pixelfx_ui STATIC
     part_checklist.cpp
     part_checklist.h
     paste_sheet.cpp
+    photo_details_panel.cpp
     paste_sheet.h
+    photo_details_panel.h
     photo_tile.cpp
     recipe_picker.cpp
     recipe_picker.h

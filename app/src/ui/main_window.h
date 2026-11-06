@@ -29,6 +29,7 @@ namespace pixelfx::ui {
 
 class AdjustPanel;
 class Canvas;
+class PhotoDetailsPanel;
 class BatchPage;
 class CropPanel;
 class Filmstrip;
@@ -310,9 +311,12 @@ private:
     QWidget* m_stripDock = nullptr;
     QAction* m_hidePanels = nullptr;
     bool m_showingOriginal = false;
-    bool m_copying = false; ///< the exporter is copying to the clipboard, not saving
+    bool m_copying = false;             ///< the exporter is copying to the clipboard, not saving
+    QPushButton* m_docButton = nullptr; ///< the file name: opens Photo details
     QLabel* m_docName = nullptr;
     QLabel* m_docMeta = nullptr;
+    QLabel* m_docChevron = nullptr;
+    PhotoDetailsPanel* m_details = nullptr;
     QWidget* m_header = nullptr;
     /// What the header shows while editing, hidden while Batch is up, and Batch's own buttons.
     QList<QWidget*> m_editHeader;
@@ -320,6 +324,16 @@ private:
     QLabel* m_wordmark = nullptr;
     /// The header for the page on show: start page, editor or Batch.
     void updateHeader();
+    /// The header's file name over its size, format and file size: the button of Photo details.
+    void buildDocButton();
+    /// Photo details (I) and the panel it opens.
+    void setupDetailsAction();
+    /// The header's name opens Photo details while a photo is on show, and is a title otherwise.
+    void updateDocButton();
+    /// A photo is open and its page is on show (not Batch, not the start page).
+    [[nodiscard]] bool photoOnShow() const;
+    /// Photo details with the open photo, and what Export does with its location.
+    void refreshDetails();
     void buildBatchHeaderButtons();
     /// A new render of the photo, on the canvas (or as Heal shows it).
     void showPreview(const QImage& image);
