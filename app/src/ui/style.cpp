@@ -759,6 +759,21 @@ QFrame* segmentBox(const QStringList& names, int checked, QButtonGroup* group, Q
     return box;
 }
 
+QLabel* warningLine(QWidget* line, const QString& text)
+{
+    auto* icon = new QLabel(line);
+    icons::setGlyph(icon, QStringLiteral("alert"), tokens().warning, 14);
+    auto* label = new QLabel(text, line);
+    label->setObjectName(QStringLiteral("warningText"));
+    label->setWordWrap(true);
+    auto* row = new QHBoxLayout(line);
+    row->setContentsMargins(0, 2, 0, 0);
+    row->setSpacing(6);
+    row->addWidget(icon, 0, Qt::AlignTop);
+    row->addWidget(label, 1);
+    return label;
+}
+
 void addSearchIcon(QLineEdit* field)
 {
     QAction* icon =

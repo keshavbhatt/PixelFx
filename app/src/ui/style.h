@@ -127,6 +127,8 @@ QFrame* segmentBox(const QStringList& names, int checked, QButtonGroup* group, Q
 /// Lets `list` be narrower than its longest choice, cut with "..." (a choice is shown whole when
 /// the list opens): for lists in a side panel of fixed width, whose longest choices would widen it.
 void fitToPanel(QComboBox* list);
+/// Fills `line` with a warning: the alert icon and `text`, wrapping. Returns the text's label.
+QLabel* warningLine(QWidget* line, const QString& text);
 /// The magnifier at the start of a search field, named "Search" for screen readers.
 void addSearchIcon(QLineEdit* field);
 /// `box` (a segmentBox) at the small size, 25 px tall in 12 px type, for choices inside a section.

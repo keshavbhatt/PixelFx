@@ -14,6 +14,7 @@
 #include <QCheckBox>
 #include <QComboBox>
 #include <QCoreApplication>
+#include <QDate>
 #include <QDir>
 #include <QFileDialog>
 #include <QFileInfo>
@@ -453,11 +454,34 @@ QWidget* ExportSheet::nameRow(const QString& nameTemplate)
     m_name->setToolTip(tr("{name}: the photo's name, {date}: today, {w} and {h}: the size"));
     m_extension = new QLabel(row);
     m_extension->setObjectName(u"muted"_s);
-    auto* nameLayout = new QHBoxLayout(row);
-    nameLayout->setContentsMargins(0, 0, 0, 0);
-    nameLayout->addWidget(m_name, 1);
-    nameLayout->addWidget(m_extension);
+    auto* nameLine = new QHBoxLayout;
+    nameLine->setContentsMargins(0, 0, 0, 0);
+    nameLine->addWidget(m_name, 1);
+    nameLine->addWidget(m_extension);
+    m_overwrites = new QWidget(row);
+    warningLine(m_overwrites, tr("Overwrite would save over the original photo."));
+    m_overwrites->hide();
+    auto* column = new QVBoxLayout(row);
+    column->setContentsMargins(0, 0, 0, 0);
+    column->setSpacing(kGapSmall);
+    column->addLayout(nameLine);
+    column->addWidget(m_overwrites);
+    connect(m_name, &QLineEdit::textChanged, this, &ExportSheet::refreshOverwrites);
     return row;
+}
+
+void ExportSheet::refreshOverwrites()
+{
+    if (m_ifExists == nullptr || m_formats == nullptr || m_formats->checkedButton() == nullptr) {
+        return; // still being built
+    }
+    const core::ExportOptions o = options();
+    const QFileInfo source(m_source);
+    const QString folder = o.folder.isEmpty() ? source.absolutePath() : o.folder;
+    const QString target =
+        QDir(folder).absoluteFilePath(core::exportFileName(m_source, o, m_photoSize, QDate::currentDate()));
+    m_overwrites->setVisible(o.ifExists == core::ExportOptions::IfExists::Overwrite &&
+                             QFileInfo(target).absoluteFilePath() == source.absoluteFilePath());
 }
 
 QWidget* ExportSheet::ifExistsBox(core::ExportOptions::IfExists ifExists)
@@ -470,6 +494,7 @@ QWidget* ExportSheet::ifExistsBox(core::ExportOptions::IfExists ifExists)
     m_ifExists->addItem(tr("Skip"),
                         QVariant::fromValue(static_cast<int>(core::ExportOptions::IfExists::Skip)));
     m_ifExists->setCurrentIndex(m_ifExists->findData(static_cast<int>(ifExists)));
+    connect(m_ifExists, &QComboBox::currentIndexChanged, this, &ExportSheet::refreshOverwrites);
     return m_ifExists;
 }
 
@@ -558,6 +583,7 @@ void ExportSheet::updateForFormat()
     m_sixteen->setVisible(f->deep);
     m_extension->setText(u"."_s + ext);
     scheduleEstimate();
+    refreshOverwrites();
 }
 
 void ExportSheet::chooseFolder()
@@ -567,6 +593,7 @@ void ExportSheet::chooseFolder()
         m_folderPath = folder;
         m_folder->setPath(folder);
     }
+    refreshOverwrites();
 }
 
 void ExportSheet::setPhotoCount(int count)

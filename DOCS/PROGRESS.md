@@ -150,6 +150,10 @@ Decisions the work stopped at; everything else went ahead within the approved mo
   to export to keep them.
 - Two other saves failed silently: Save as preset's copy to a file, and the watermark sheet's
   Save as; both say so now.
+- Export with If it exists: Overwrite, the photo's own folder and a name of just {name} would
+  write over the original photo without a word (Batch warned); Export shows the same warning
+  line under the name now (one shared `warningLine`). For the owner's look: a line Batch
+  already shows, new in the Export sheet.
 
 ### 2026-11-06 (a new app icon)
 

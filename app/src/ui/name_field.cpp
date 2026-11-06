@@ -92,21 +92,6 @@ NameField::NameField(QWidget* parent)
     refresh();
 }
 
-QLabel* NameField::warningLine(QWidget* line, const QString& text)
-{
-    auto* icon = new QLabel(line);
-    icons::setGlyph(icon, u"alert"_s, tokens().warning, 14);
-    auto* label = new QLabel(text, line);
-    label->setObjectName(u"warningText"_s);
-    label->setWordWrap(true);
-    auto* row = new QHBoxLayout(line);
-    row->setContentsMargins(0, 2, 0, 0);
-    row->setSpacing(6);
-    row->addWidget(icon, 0, Qt::AlignTop);
-    row->addWidget(label, 1);
-    return label;
-}
-
 void NameField::setOverwrites(int count)
 {
     //: Under the name preview when If it exists is Overwrite and names are the originals' own.

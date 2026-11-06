@@ -158,6 +158,35 @@ private Q_SLOTS:
         QApplication::setFont(before);
     }
 
+    void overwritingThePhotoItselfIsSaid()
+    {
+        QTemporaryDir dir;
+        const QString source = dir.filePath(u"photo.jpg"_s);
+        ExportOptions in;
+        in.folder = dir.path();
+        in.nameTemplate = u"{name}"_s;
+        in.extension = u"jpg"_s;
+        in.ifExists = ExportOptions::IfExists::Overwrite;
+        ExportSheet sheet(source, QSize(600, 400), in);
+        sheet.show();
+        QVERIFY(QTest::qWaitForWindowExposed(&sheet));
+        const auto said = [&sheet] {
+            for (const QLabel* l : sheet.findChildren<QLabel*>(u"warningText"_s)) {
+                if (l->isVisible() && l->text().contains(u"original"_s)) {
+                    return true;
+                }
+            }
+            return false;
+        };
+        QVERIFY(said());
+        for (QLineEdit* field : sheet.findChildren<QLineEdit*>()) {
+            if (field->text() == u"{name}"_s) {
+                field->setText(u"{name}-edit"_s); // another name: nothing to warn about
+            }
+        }
+        QVERIFY(!said());
+    }
+
     void watermarkRowListsTheSavedOnes()
     {
         QTemporaryDir dir;

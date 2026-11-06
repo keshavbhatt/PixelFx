@@ -73,6 +73,8 @@ private:
     class QPushButton* m_exportButton = nullptr;
     class QPushButton* m_copyButton = nullptr;
     void chooseFolder();
+    /// Shows the warning when Overwrite and the name would write over the photo itself.
+    void refreshOverwrites();
     [[nodiscard]] QWidget* formatRow(const QString& current);
     [[nodiscard]] QWidget* qualityRow(int quality);
     [[nodiscard]] QWidget* sizeRow(const QSize& photoSize, const core::ExportOptions& options);
@@ -120,6 +122,7 @@ private:
     int m_sizeIndex = 0;
     class QPushButton* m_more = nullptr;
     QAbstractButton* m_shownFormat = nullptr; ///< the format the sheet is set for
+    QWidget* m_overwrites = nullptr;          ///< says when Overwrite would replace the photo itself
     QSize m_photoSize;
     core::CustomSize m_custom;
     std::vector<core::CustomSize> m_mySizes;

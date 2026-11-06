@@ -54,8 +54,6 @@ Q_SIGNALS:
 
 private:
     void showTokenMenu();
-    /// An alert icon and `text` in warning colour, laid in `line`; returns the text.
-    static QLabel* warningLine(QWidget* line, const QString& text);
     [[nodiscard]] core::NameFacts factsOf(int index);
     [[nodiscard]] static QString meaningOf(const QString& token);
 
