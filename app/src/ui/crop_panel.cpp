@@ -9,6 +9,7 @@
 
 #include <QButtonGroup>
 #include <QDialog>
+#include <QFrame>
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QPushButton>
@@ -162,14 +163,10 @@ QWidget* CropPanel::buildOrientation()
     orientationLabel->setObjectName(u"adjustName"_s);
     orientationRow->addWidget(orientationLabel);
     orientationRow->addStretch();
-    for (const QString& name : {tr("Landscape"), tr("Portrait")}) {
-        auto* b = new QPushButton(name, orientation);
-        b->setObjectName(u"segment"_s);
-        b->setCheckable(true);
-        b->setToolTip(tr("Swap landscape and portrait (X)"));
-        m_orientation->addButton(b);
-        orientationRow->addWidget(b);
-    }
+    QFrame* choice =
+        segmentBox({tr("Landscape"), tr("Portrait")}, 0, m_orientation, orientation, SegmentFit::Content);
+    choice->setToolTip(tr("Swap landscape and portrait (X)"));
+    orientationRow->addWidget(choice);
     connect(m_orientation, &QButtonGroup::buttonClicked, this, [this](QAbstractButton* b) {
         const bool portrait = m_orientation->buttons().indexOf(b) == 1;
         const QSize size = uncropped();
@@ -199,10 +196,10 @@ QLayout* CropPanel::buildStraighten()
     connect(flipV, &QPushButton::clicked, this, [this] { flip(Qt::Vertical); });
     auto* straighten = new QVBoxLayout;
     straighten->setContentsMargins(kPanelPadding, 0, kPanelPadding, 0);
-    straighten->setSpacing(kGapRelated);
+    straighten->setSpacing(kGapControls);
     straighten->addWidget(m_angle);
     auto* turns = new QHBoxLayout;
-    turns->setSpacing(kGapRelated);
+    turns->setSpacing(kGapControls);
     for (QPushButton* b : {turnLeft, turnRight, flipH, flipV}) {
         turns->addWidget(b);
     }

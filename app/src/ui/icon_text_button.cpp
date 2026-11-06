@@ -6,12 +6,16 @@
 namespace pixelfx::ui {
 
 namespace {
-constexpr int kQtGap = 4; // what Qt leaves between a push button's icon and text
+// The room Qt's size gives a push button between its icon and text (it draws them 4 px apart).
+constexpr int kQtGap = 5;
 } // namespace
 
 IconTextButton::IconTextButton(const QIcon& icon, const QString& text, QWidget* parent)
     : QPushButton(icon, text, parent)
-{}
+{
+    constexpr int kIcon = 15; // the mocks' icon in a button (`.ic.s`)
+    setIconSize(QSize(kIcon, kIcon));
+}
 
 IconTextButton::~IconTextButton() = default;
 
