@@ -152,7 +152,7 @@ void setGlyph(QLabel* label, const QString& name, const QColor& color, int size)
 
 QIcon brand()
 {
-    return QIcon(u":/icons/pixelfx.png"_s);
+    return QIcon(u":/icons/pixelfx.svg"_s);
 }
 
 QString tintedFile(const QString& name, const QColor& color)

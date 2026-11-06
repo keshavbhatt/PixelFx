@@ -4,6 +4,7 @@
 #include "core/changelog.h"
 #include "core/links.h"
 #include "core/log_sink.h"
+#include "ui/icons.h"
 #include "ui/style.h"
 
 #include <QApplication>
@@ -108,7 +109,7 @@ QWidget* AboutSheet::buildAboutPage()
 {
     auto* page = new QWidget(this);
     auto* icon = new QLabel(page);
-    icon->setPixmap(QIcon(u":/icons/pixelfx.png"_s).pixmap(56, 56));
+    icon->setPixmap(icons::brand().pixmap(56, 56));
     icon->setFixedSize(56, 56);
     auto* name = new QLabel(tr("PixelFx %1").arg(QApplication::applicationVersion()), page);
     name->setObjectName(u"aboutName"_s);

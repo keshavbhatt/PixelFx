@@ -124,7 +124,10 @@ target_link_libraries(pixelfx_ui PUBLIC pixelfx_services Qt6::Widgets Qt6::Svg)
 
 set(_pixelfx_resources "${CMAKE_CURRENT_SOURCE_DIR}/../resources")
 file(GLOB _pixelfx_ui_glyphs "${_pixelfx_resources}/icons/ui/*.svg")
+# The app icon as the desktop installs it, built in as :/icons/pixelfx.svg.
+set(_pixelfx_app_icon "${CMAKE_CURRENT_SOURCE_DIR}/../../data/icons/hicolor/scalable/apps/com.ktechpit.pixelfx.svg")
+set_source_files_properties("${_pixelfx_app_icon}" PROPERTIES QT_RESOURCE_ALIAS "icons/pixelfx.svg")
 qt_add_resources(pixelfx_ui "pixelfx_icons"
     PREFIX "/"
     BASE "${_pixelfx_resources}"
-    FILES ${_pixelfx_ui_glyphs} "${_pixelfx_resources}/icons/pixelfx.png")
+    FILES ${_pixelfx_ui_glyphs} "${_pixelfx_app_icon}")

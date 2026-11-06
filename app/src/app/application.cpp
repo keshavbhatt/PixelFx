@@ -6,9 +6,9 @@
 #include "core/log_sink.h"
 #include "core/plurals.h"
 #include "core/settings/settings.h"
+#include "ui/icons.h"
 
 #include <QDir>
-#include <QIcon>
 #include <QJsonArray>
 #include <QTextStream>
 
@@ -27,7 +27,7 @@ void Application::setIdentity()
     setOrganizationName(QString::fromLatin1(version::kOrganizationName));
     setOrganizationDomain(QString::fromLatin1(version::kOrganizationDomain));
     setDesktopFileName(QString::fromLatin1(version::kDesktopId));
-    setWindowIcon(QIcon(u":/icons/pixelfx.png"_s));
+    setWindowIcon(ui::icons::brand());
 }
 
 Application::Application(int& argc, char** argv)

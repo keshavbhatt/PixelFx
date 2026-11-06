@@ -54,7 +54,8 @@ p { margin: 0; }
 .header .doc span { font-size: 11px; color: var(--muted); }
 .header .sep { width: 1px; height: 24px; background: var(--border); margin: 0 4px; }
 .brand { display: flex; align-items: center; gap: 8px; padding: 0 8px 0 4px; font-weight: 700; letter-spacing: .01em; }
-.brand .mark { width: 22px; height: 22px; border-radius: 50%; background: conic-gradient(#FF5A4E, #FFB84D, #F7E35A, #6CCB5F, #3FC1C9, #3B82F6, #8B5CF6, #E04FA0, #FF5A4E); }
+/* The app icon itself (its 128 px canvas has 16 px around the body, so 28 px shows a 21 px body). */
+.brand .mark { width: 28px; height: 28px; margin: -3px; background: url(../../app/data/icons/hicolor/scalable/apps/com.ktechpit.pixelfx.svg) center / contain no-repeat; }
 
 /* Buttons and controls. */
 .btn { height: 32px; padding: 0 12px; border-radius: var(--r-ctl); border: 1px solid var(--border); background: var(--panel); color: var(--text); font: inherit; display: inline-flex; align-items: center; gap: 6px; cursor: default; white-space: nowrap; }

@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+  <defs>
+    <linearGradient id="vividSky" x1="0" y1="20" x2="0" y2="96" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#e66100"/>
+      <stop offset="1" stop-color="#ffbe6f"/>
+    </linearGradient>
+    <linearGradient id="dullSky" x1="0" y1="20" x2="0" y2="96" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#c0bfbc"/>
+      <stop offset="1" stop-color="#deddda"/>
+    </linearGradient>
+    <linearGradient id="vividSide" x1="0" y1="24" x2="0" y2="112" gradientUnits="userSpaceOnUse">
+      <stop offset="0.75" stop-color="#c64600"/>
+      <stop offset="0.75" stop-color="#613583"/>
+    </linearGradient>
+    <linearGradient id="dullSide" x1="0" y1="24" x2="0" y2="112" gradientUnits="userSpaceOnUse">
+      <stop offset="0.75" stop-color="#9a9996"/>
+      <stop offset="0.75" stop-color="#5e5c64"/>
+    </linearGradient>
+  </defs>
+  <!-- side (the body's thickness), split as the face is -->
+  <rect x="16" y="24" width="96" height="88" rx="12" fill="url(#vividSide)"/>
+  <path d="M28 24 H90.5 L38.5 112 H28 A12 12 0 0 1 16 100 V36 A12 12 0 0 1 28 24 Z" fill="url(#dullSide)"/>
+  <!-- after: vivid sky, sun and hills -->
+  <rect x="16" y="20" width="96" height="88" rx="12" fill="url(#vividSky)"/>
+  <circle cx="90" cy="48" r="11" fill="#f9f06b"/>
+  <path d="M16 88 L44 62 L64 78 L84 64 L112 86 V96 A12 12 0 0 1 100 108 H28 A12 12 0 0 1 16 96 Z" fill="#9141ac"/>
+  <!-- before: the same photo, grey and flat -->
+  <path d="M28 20 H90.5 L38.5 108 H28 A12 12 0 0 1 16 96 V32 A12 12 0 0 1 28 20 Z" fill="url(#dullSky)"/>
+  <path d="M16 88 L44 62 L58.3 73.4 L38.5 108 H28 A12 12 0 0 1 16 96 Z" fill="#77767b"/>
+  <!-- the line between them -->
+  <path d="M88 20 H93 L41 108 H36 Z" fill="#ffffff"/>
+</svg>

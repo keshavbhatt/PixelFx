@@ -47,7 +47,7 @@ a catalogue manager (no import step, no database of photos).
 | D14 | 2.0 renders on the CPU; a GPU preview through Qt RHI follows in 2.1 (Q2) | Smaller 2.0, no GPU driver issues in snaps; the CPU path meets the 30 fps target |
 | D15 | Camera RAW ships in 2.0 through LibRaw (Q3) | The main reason photographers would choose PixelFx over a simple editor |
 | D16 | What the licensing module gates (owner, 2026-11-04): recorded in the private notes, `DOCS/private/business.md` | Business decision, not published |
-| D17 | The icon is redrawn as a vector in the colour-wheel spirit (Q5) | Crisp at 16 px, a dark-background variant for Flathub |
+| D17 | A new icon (owner, 2026-11-06, replacing the colour-wheel redraw): one photo split by a diagonal, grey before it and vivid after it, as vector SVGs with a symbolic icon (Q5) | Says what the app does, crisp at 16 px, reads on light and dark |
 | D18 | Edits are kept in the app library by default; next-to-photo is a setting (Q6) | No clutter in photo folders, works on read-only media |
 | D19 | Windows and macOS build in CI from M2; their store releases follow the Linux 2.0 (Q8) | Nothing Linux-only creeps in, the first release stays focused |
 | D20 | The rewrite lives in `github.com/keshavbhatt/PixelFx` with the old main archived on a branch; `pixel` becomes read-only (Q9) | Keeps the history, stars and links |
@@ -235,7 +235,7 @@ that had none. The decisions are D13 to D26 in section 2.
 | Q2 | GPU preview in 2.0? | **CPU first** in 2.0 (libvips-driven, preview-scale, SIMD); GPU through Qt RHI in 2.1 for the pointwise operations, CPU authoritative |
 | Q3 | Camera RAW in 2.0? | **Yes**, through LibRaw |
 | Q4 | A licensing question | Answered; recorded in `DOCS/private/business.md` |
-| Q5 | App icon | **Redraw as a vector** in the colour-wheel spirit, with a dark-background variant |
+| Q5 | App icon | **A new icon** (2026-11-06): the before and after split, `app/data/icons/hicolor/` |
 | Q6 | Where edits live | **App library by default**, a `.pfx` file next to the photo as a setting |
 | Q8 | Windows and macOS | **Built in CI from M2**; store releases after the Linux 2.0 |
 | Q9 | Repository | **Reuse `github.com/keshavbhatt/PixelFx`**, old main archived on a branch; `pixel` made read-only |

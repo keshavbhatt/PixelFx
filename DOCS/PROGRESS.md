@@ -75,6 +75,18 @@ Decisions the work stopped at; everything else went ahead within the approved mo
 
 ## Sessions (newest first)
 
+### 2026-11-06 (a new app icon)
+
+- The owner asked for a new icon, then for a totally new one (PLAN D17 and Q5 changed): of six
+  concepts they chose one photo split by a diagonal, grey and flat before it, a vivid sunset
+  after it. `app/data/icons/hicolor/scalable/apps/com.ktechpit.pixelfx.svg` and its symbolic
+  icon, in the layout the packages will install; Flathub's checks pass (0 fail; the only warning
+  is the two-capital name, kept). Brand colours for the metainfo: #8de0d8 and #1f6f74. Review:
+  `DOCS/mocks/reviews/app-icon.md`.
+- The window, About and `icons::brand()` use the SVG, built in as `:/icons/pixelfx.svg`; the
+  PixelFx 1 PNG is gone. The mocks show the icon as the header's mark and in About; the app's
+  header keeps its colour wheel until the owner approves that.
+
 ### 2026-11-06 (the empty Batch page and Choose the recipe)
 
 - The approved `batch-empty.html`: with no photos the list is a drop zone, Add photos and Add
