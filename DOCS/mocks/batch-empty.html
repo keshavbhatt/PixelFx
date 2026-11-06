@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>PixelFx mock: Batch, empty</title><link rel="stylesheet" href="mock.css"><script src="mock.js"></script></head>
+<body style="height:auto">
+<div class="window" style="height:900px">
+  <div class="titlebar"><div class="lights"><i></i><i></i><i></i></div><div class="title">Batch - PixelFx</div><div class="wc"><span>&#x2212;</span><span>&#x25A1;</span><span>&#x2715;</span></div></div>
+  <div class="menubar"><b>PixelFx</b><span>File</span><span>Edit</span><span>Image</span><span>View</span><span>Window</span><span>Help</span></div>
+  <div class="header"><div class="brand"><span class="mark"></span></div><div class="doc"><b>Batch</b><span>No photos yet</span></div><span class="grow"></span><button class="btn"><svg class="ic s"><use href="#i-plus"/></svg>Add photos</button><button class="btn"><svg class="ic s"><use href="#i-folder"/></svg>Add folder</button><button class="btn flat icon" title="Main menu (F10)"><svg class="ic "><use href="#i-menu"/></svg></button></div>
+  <div class="body" style="grid-template-columns:var(--rail-w) 1fr 380px">
+    <div class="rail">
+      <div class="r" title="Edit"><svg class="ic "><use href="#i-sliders"/></svg><span>Edit</span></div><div class="r" title="Crop"><svg class="ic "><use href="#i-crop"/></svg><span>Crop</span></div><div class="r" title="Heal"><svg class="ic "><use href="#i-bandage"/></svg><span>Heal</span></div><div class="r on" title="Batch"><svg class="ic "><use href="#i-stack"/></svg><span>Batch</span></div>
+      <span class="spacer"></span>
+      <div class="r" title="Settings (Ctrl+,)"><svg class="ic "><use href="#i-settings"/></svg></div>
+    </div>
+    <div class="center" style="background:var(--panel)">
+      <div class="row" style="padding:10px 16px;border-bottom:1px solid var(--border)"><b>Photos</b><span class="muted">Drop photos or folders here</span><span class="grow"></span><div class="seg" style="opacity:.45" aria-disabled="true"><span class="on"><svg class="ic s"><use href="#i-list"/></svg></span><span><svg class="ic s"><use href="#i-layout-grid"/></svg></span></div><button class="btn sm" disabled style="opacity:.45">Clear</button></div>
+      <div class="list" style="flex:1;overflow:auto;display:grid;place-items:center;padding:24px">
+        <div style="width:min(520px,92%)">
+          <div class="card" style="border-style:dashed;border-width:2px;padding:36px 20px;text-align:center;background:var(--panel)">
+            <div class="muted"><svg class="ic xl"><use href="#i-images"/></svg></div>
+            <h2 style="margin-top:10px;font-size:18px">Drop photos or folders here</h2>
+            <p class="muted" style="margin-top:6px">Every photo gets the recipe on the right. Folders bring their subfolders too.</p>
+            <div class="row" style="justify-content:center;margin-top:16px;gap:10px">
+              <button class="btn primary"><svg class="ic s"><use href="#i-plus"/></svg>Add photos</button>
+              <button class="btn"><svg class="ic s"><use href="#i-folder"/></svg>Add folder</button>
+            </div>
+            <p class="small faint" style="margin-top:14px">Or open a batch recipe from the main menu, or drop one here.</p>
+          </div>
+        </div>
+      </div>
+      
+    </div>
+    <div class="side right" style="width:auto">
+      <div class="sec">1. Recipe</div>
+      <div style="padding:0 14px" class="stack">
+        <div class="seg full"><span class="on">Preset or look</span><span>Settings from a photo</span></div>
+        <div class="card row" style="padding:8px"><img src="sample-1.svg" data-look="golden" style="width:54px;height:36px;object-fit:cover;border-radius:4px"><div class="grow"><b>Golden hour</b><div class="small muted">Look, strength 72</div></div><button class="btn sm">Change</button></div>
+        <div class="row small"><span class="check on"></span>Then add preset <b>Product white</b><span class="grow"></span><a>Change</a></div>
+        <div class="row small"><span class="check"></span>Auto enhance each photo first</div>
+        <div class="row small"><span class="check"></span>Keep edits already made in PixelFx</div>
+      </div>
+      <div class="sec">2. Resize</div>
+      <div style="padding:0 14px" class="stack"><button class="btn" style="justify-content:space-between">Web &middot; 2048 long edge<svg class="ic s"><use href="#i-down"/></svg></button><span class="row small"><span class="check on"></span>Never enlarge</span></div>
+      <div class="sec">3. Watermark</div>
+      <div style="padding:0 14px" class="row"><select class="input" style="flex:1"><option>Studio signature</option><option>None</option></select><button class="btn sm">Edit...</button></div>
+      <div class="sec">4. Save as</div>
+      <div style="padding:0 14px" class="stack">
+        <div class="row"><select class="input"><option>JPEG, quality 90</option></select><button class="btn sm">More...</button></div>
+        <div class="row"><span class="mono small grow">~/Pictures/PixelFx/Batch</span><button class="btn sm">Change...</button></div>
+        <div class="row"><input class="input mono" value="{name}-{preset}"></div>
+        <div class="row small"><span class="check"></span>Next to each original, in a subfolder</div>
+      </div>
+      <div class="foot" style="margin-top:auto"><button class="btn"><svg class="ic s"><use href="#i-save"/></svg>Save as batch recipe</button><span class="grow"></span><button class="btn primary" disabled style="opacity:.5"><svg class="ic s"><use href="#i-play"/></svg>Process</button></div>
+    </div>
+  </div>
+  
+<span class="pin" style="left:calc(50% - 250px);top:calc(50% - 60px)">1</span>
+</div>
+<div class="specs">
+  <div class="spec" style="width:460px"><div class="cap">2. Compress only, empty</div><div class="card" style="border-style:dashed;border-width:2px;padding:28px 18px;text-align:center;background:var(--panel)">
+            <div class="muted"><svg class="ic xl"><use href="#i-download"/></svg></div>
+            <h2 style="margin-top:8px;font-size:16px">Drop photos or folders to compress</h2>
+            <p class="muted small" style="margin-top:6px">They are made smaller without editing them, as set on the right.</p>
+            <div class="row" style="justify-content:center;margin-top:14px;gap:10px">
+              <button class="btn primary"><svg class="ic s"><use href="#i-plus"/></svg>Add photos</button>
+              <button class="btn"><svg class="ic s"><use href="#i-folder"/></svg>Add folder</button>
+            </div></div></div>
+  <div class="spec" style="width:420px"><div class="cap">3. Dragging photos over the page</div><div class="card" style="border-style:dashed;border-width:2px;border-color:var(--accent);padding:28px 18px;text-align:center;background:var(--accent-soft)"><div style="color:var(--accent)"><svg class="ic xl"><use href="#i-images"/></svg></div><h2 style="margin-top:8px;font-size:16px;color:var(--accent)">Drop to add them</h2></div></div>
+</div>
+<ol class="notes">
+<li><b>Empty</b> (1): the list area holds a drop zone like the welcome page's, centred: what to do in words, Add photos (the primary action) and Add folder, the same as the header's, and the other way in, a batch recipe. The header says "No photos yet".</li>
+<li>Nothing to act on is greyed out: the list or grid switch, Clear, and Process. The preview bar shows once there is a photo. The right panel stays live, so the recipe can be set first.</li>
+<li><b>Compress only</b> (2): the same zone, its words about compressing.</li>
+<li><b>Dragging</b> (3): the zone takes the accent while photos are over the page, as the welcome page does.</li>
+</ol>
+</body></html>

@@ -71,8 +71,51 @@ Decisions the work stopped at; everything else went ahead within the approved mo
     the sky" in the mock needs scene recognition); Reset takes off the spots made since Heal
     opened and Done keeps them (each spot is also its own history step, and undo works in
     Heal); Reveal dust explains itself in its tooltip rather than a first-time line.
+13. `batch-empty.html` and `batch-recipe-picker.html` (2026-11-06), from the Batch audit, with
+    their reviews: the empty Batch page, and Choose the recipe in place of the flat menu of
+    presets. Approve them; they are not built yet.
 
 ## Sessions (newest first)
+
+### 2026-11-06 (the Batch audit)
+
+- An audit of Batch against its mocks (a separate read-only pass) found 34 issues; the owner
+  asked for all of them fixed, mocks for what has none, and the wording made one.
+- Bugs: Batch asks before saving over originals ("Overwrite 3 photos") and says so under the
+  name; every row says Waiting when a run starts, so nothing of an earlier run stays; Stop says
+  "Stopped: 3 of 30 saved" and offers Process the rest; Compress only fails a file that is no
+  photo instead of keeping it "unchanged", and its before and after is of the top saved photo
+  of the sorted list once a run ends (Biggest saving sorts by the share saved, as the pills
+  say); one Compress button, "Compress again" after a run; the list, its Clear, the rows' ×,
+  Add and the mode hold still while a batch runs; an error reads as one (alert, danger colour,
+  nothing of the last run beside it); the window title says "Saving 3 of 30" as the page does
+  and "Batch" after; Convert and resize starts with nothing on top, and the card says what is
+  on top when there is; a file that is no photo is said so when it joins the list; Settings
+  from a photo needs a photo open; Keep edits needs Remember edits; the grid marks failures.
+- Plurals: "1 photos" everywhere, as no translation was loaded; English plural forms now ship
+  (ADR-014).
+- Batch recipes version 6 carry the colour space (always written "srgb" before) and output
+  sharpening; More... shows both, with Export's own controls.
+- Alignment: sections spaced as the mocks (`sectionColumn`), the recipe source a segmented
+  control, a small Sort list, Compress's choices as wide as their words, pills hugging their
+  words, the row's × where the mock has it, scroll bars in the list's padding (the style's
+  claim that they did was only a comment; `keepScrollBarInPadding` makes it so), the preview
+  bar at its height from the start with pictures sharp on HiDPI, the recipe card's line on two
+  lines, the brand mark at 22 px.
+- Accessibility: focus rings on the borderless buttons (row ×, list or grid, links, segments)
+  and 24 px targets for the × and links; light `success` from 4.1:1 to 5.3:1 on pills.
+- Wording: photos in both modes; the quick jobs "Convert and resize" and "Compress photos" as
+  their modes; Overwrite and Skip, Original, Change..., and 16 bits per channel as Export says
+  them; JPEG XL and HEIC by name; sizes with a decimal below 10 MB; Resume with a play glyph. The
+  mocks say the same.
+- Left as they are: the 14 px panel padding and 18 px check boxes (app-wide; the mocks drift
+  between 14 and 16), the header title's 8 px (the approved editor header), "Process" (not
+  renamed "Save"), and the card's "Look, strength 72" against "Preset: ..." punctuation.
+- Drawn, not built: `batch-empty.html` and `batch-recipe-picker.html`, waiting for the owner.
+- Checks: 164 library tests (version 6), 38 app suites (overwrite, locks, waiting and the rest
+  of a stopped run, Compress failing a damaged file, plurals, recipes keeping both settings),
+  the linters; grabs of Batch ready, Compress done and the small window against the mocks, and
+  of the welcome page, the editor and Settings.
 
 ### 2026-11-06 (the large preview against its mock)
 
