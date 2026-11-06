@@ -24,6 +24,7 @@
 #include <QStackedWidget>
 #include <QUrl>
 #include <QVBoxLayout>
+#include <QtMath>
 
 using namespace Qt::StringLiterals;
 
@@ -108,18 +109,36 @@ AboutSheet::~AboutSheet() = default;
 
 namespace {
 
-// The icon on a 72 px canvas, its lens about 58 px; only the clear canvas around it is cut, so
-// the text beside it starts 70 px in.
+// The app icon, the part it draws 60 px at its widest, with the clear canvas around that part cut
+// away. The canvas margin is not even (the lens's side sits below it), so the cut follows what is
+// drawn rather than taking the same from each edge.
 QLabel* appIcon(QWidget* parent)
 {
-    constexpr int kCanvas = 72;
     constexpr int kShown = 60;
-    auto* icon = new QLabel(parent);
-    const QPixmap canvas = icons::brand().pixmap(kCanvas, kCanvas);
+    constexpr int kProbe = 256;
+    const QImage probe = icons::brand().pixmap(QSize(kProbe, kProbe), 1.0).toImage();
+    QRect drawn;
+    for (int y = 0; y < probe.height(); ++y) {
+        for (int x = 0; x < probe.width(); ++x) {
+            if (qAlpha(probe.pixel(x, y)) > 8) {
+                drawn |= QRect(x, y, 1, 1);
+            }
+        }
+    }
+    if (drawn.isEmpty()) {
+        drawn = probe.rect();
+    }
+    // The canvas size at which the drawn part is kShown px at its widest.
+    const int canvasSize = qCeil(kShown * qreal(kProbe) / qMax(drawn.width(), drawn.height()));
+    const QPixmap canvas = icons::brand().pixmap(canvasSize, canvasSize);
     const qreal ratio = canvas.devicePixelRatio();
-    const int cut = qRound((kCanvas - kShown) * ratio / 2.0);
-    QPixmap shown = canvas.copy(cut, cut, qRound(kShown * ratio), qRound(kShown * ratio));
+    const qreal scale = canvas.width() / qreal(kProbe);
+    const int side = qRound(kShown * ratio);
+    const QPointF centre = QRectF(drawn).center() * scale;
+    QPixmap shown = QPixmap::fromImage(
+        canvas.toImage().copy(qRound(centre.x() - side / 2.0), qRound(centre.y() - side / 2.0), side, side));
     shown.setDevicePixelRatio(ratio);
+    auto* icon = new QLabel(parent);
     icon->setPixmap(shown);
     icon->setFixedSize(kShown, kShown);
     return icon;
