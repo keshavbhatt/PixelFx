@@ -138,28 +138,44 @@ QString exportFileName(const QString& source, const ExportOptions& options, cons
     return fileSafeName(name, fileSafeName(base, u"photo"_s, kLongest), kLongest) + u'.' + options.extension;
 }
 
+bool NameClaims::claim(const QString& path)
+{
+    const QMutexLocker lock(&m_mutex);
+    if (m_paths.contains(path)) {
+        return false;
+    }
+    m_paths.insert(path);
+    return true;
+}
+
+bool NameClaims::contains(const QString& path)
+{
+    const QMutexLocker lock(&m_mutex);
+    return m_paths.contains(path);
+}
+
 QString exportTarget(const QString& source, const ExportOptions& options, const QSize& outputSize,
-                     const QDate& date, const NameFacts& facts)
+                     const QDate& date, const NameFacts& facts, NameClaims* claims)
 {
     const QString folder = options.folder.isEmpty() ? QFileInfo(source).absolutePath() : options.folder;
     const QString fileName = exportFileName(source, options, outputSize, date, facts);
     const QDir dir(folder);
+    const auto free = [claims](const QString& path) { return claims == nullptr || claims->claim(path); };
     QString target = dir.absoluteFilePath(fileName);
-    if (!QFileInfo::exists(target)) {
-        return target;
-    }
-    switch (options.ifExists) {
-    case ExportOptions::IfExists::Overwrite:
-        return target;
-    case ExportOptions::IfExists::Skip:
-        return {};
-    case ExportOptions::IfExists::AddNumber:
-        break;
+    // The policy is for files from before the run; one written by this run is another photo's.
+    if (claims == nullptr || !claims->contains(target)) {
+        const bool exists = QFileInfo::exists(target);
+        if (exists && options.ifExists == ExportOptions::IfExists::Skip) {
+            return {};
+        }
+        if ((!exists || options.ifExists == ExportOptions::IfExists::Overwrite) && free(target)) {
+            return target;
+        }
     }
     const QFileInfo info(fileName);
     for (int n = 2; n < 10000; ++n) {
         target = dir.absoluteFilePath(u"%1 (%2).%3"_s.arg(info.completeBaseName()).arg(n).arg(info.suffix()));
-        if (!QFileInfo::exists(target)) {
+        if (!QFileInfo::exists(target) && free(target)) {
             return target;
         }
     }

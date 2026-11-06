@@ -1,6 +1,8 @@
 #pragma once
 
 #include <QDate>
+#include <QMutex>
+#include <QSet>
 #include <QSize>
 #include <QString>
 #include <QStringList>
@@ -131,10 +133,26 @@ struct NameFacts
 [[nodiscard]] QString exportFileName(const QString& source, const ExportOptions& options,
                                      const QSize& outputSize, const QDate& date, const NameFacts& facts = {});
 
+/// The paths one run (a batch) has chosen, shared by its workers: a name one photo took is
+/// never given to another, whatever the if-exists policy says of files from before the run.
+class NameClaims
+{
+public:
+    /// Takes `path` for the run; false when another photo of the run has it.
+    bool claim(const QString& path);
+    [[nodiscard]] bool contains(const QString& path);
+
+private:
+    QMutex m_mutex;
+    QSet<QString> m_paths;
+};
+
 /// The path to write, applying the if-exists policy, or an empty string to skip. Never the
-/// source itself unless the policy is Overwrite and the template makes it so.
+/// source itself unless the policy is Overwrite and the template makes it so. With `claims`, a
+/// path another photo of the run took gets a number, and the path chosen is claimed.
 [[nodiscard]] QString exportTarget(const QString& source, const ExportOptions& options,
-                                   const QSize& outputSize, const QDate& date, const NameFacts& facts = {});
+                                   const QSize& outputSize, const QDate& date, const NameFacts& facts = {},
+                                   NameClaims* claims = nullptr);
 
 [[nodiscard]] QString ifExistsKey(ExportOptions::IfExists value);
 [[nodiscard]] ExportOptions::IfExists ifExistsFromKey(const QString& key);

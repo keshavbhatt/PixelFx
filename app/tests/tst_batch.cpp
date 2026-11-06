@@ -126,6 +126,47 @@ private Q_SLOTS:
         QVERIFY(!runner.compressed(0).beforeSpot.isEmpty());
     }
 
+    void photosOfOneNameFromTwoFoldersAreBothKept()
+    {
+        // Several at once into one folder: a.jpg from two folders must not both become
+        // a-edit.jpg, the second over the first. Many pairs, so workers run side by side.
+        QTemporaryDir dir;
+        QStringList files;
+        for (int i = 0; i < 8; ++i) {
+            for (const char* folder : {"one", "two"}) {
+                QDir().mkpath(dir.filePath(QString::fromLatin1(folder)));
+                pfx::Image img(400, 300);
+                img.fill(0.1F * static_cast<float>(i % 5), 0.3F, folder[0] == 'o' ? 0.2F : 0.8F);
+                files << dir.filePath(u"%1/photo%2.png"_s.arg(QString::fromLatin1(folder)).arg(i));
+                QVERIFY(pfx::save(img, files.last().toStdString()).ok());
+            }
+        }
+        for (const bool compress : {false, true}) {
+            BatchRecipe r;
+            const QString out = dir.filePath(compress ? u"small"_s : u"out"_s);
+            if (compress) {
+                pixelfx::core::CompressJob job;
+                job.folder = out;
+                r.compress = job;
+            } else {
+                r.output.folder = out;
+                r.output.extension = u"png"_s;
+            }
+            BatchRunner runner;
+            runner.setAtOnce(4);
+            QSignalSpy finished(&runner, &BatchRunner::finished);
+            runner.start(files, r);
+            QVERIFY(finished.wait(60000));
+            QCOMPARE(runner.failed(), 0);
+            QSet<QString> targets;
+            for (int i = 0; i < files.size(); ++i) {
+                targets.insert(runner.target(i));
+            }
+            QCOMPARE(targets.size(), files.size());
+            QCOMPARE(QDir(out).entryList(QDir::Files).size(), files.size());
+        }
+    }
+
     void runsEveryPhotoAndSaysWhyOneFailed()
     {
         QTemporaryDir dir;

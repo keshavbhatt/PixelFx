@@ -108,6 +108,11 @@ Decisions the work stopped at; everything else went ahead within the approved mo
   so in libvips' words; it says what is wrong in plain words now, tested in the library.
 - A form's name stayed lit when its field was greyed out (On open with Remember edits off,
   Quality for PNG); names now grey out and come back with their fields, in every form.
+- Batch lost photos: two photos of one name from different folders, saved into one folder,
+  both became "photo-edit.jpg", the second over the first (with Overwrite or with two workers
+  choosing at once). A run now keeps the names its photos took (`core::NameClaims`, shared by
+  its workers): a name another photo of the run has gets a number, whatever If it exists says
+  of the files from before. Compress only the same. Tested with sixteen photos, four at once.
 
 ### 2026-11-06 (a new app icon)
 

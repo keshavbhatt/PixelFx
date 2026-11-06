@@ -29,9 +29,11 @@ struct CompressJob
 /// The file to write for `source`: the name template (the tokens of exportFileName) with its own
 /// extension, in the job's folder, or the source itself when replacing the originals. A name
 /// already taken gets a number, unless it is in `ours` (written by the last run of the same
-/// list), which is replaced; the source is never written unless replacing.
+/// list), which is replaced; the source is never written unless replacing. With `claims`, a
+/// name another photo of the run took gets a number too (exportTarget).
 [[nodiscard]] QString compressTarget(const QString& source, const CompressJob& job, const QSet<QString>& ours,
-                                     const QDate& date, const NameFacts& facts = {});
+                                     const QDate& date, const NameFacts& facts = {},
+                                     NameClaims* claims = nullptr);
 /// The file name alone, as compressTarget makes it before a number is added.
 [[nodiscard]] QString compressFileName(const QString& source, const CompressJob& job, const QDate& date,
                                        const NameFacts& facts = {});

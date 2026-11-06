@@ -195,7 +195,7 @@ PreparedExport prepareExport(const QString& source,
 
 ExportOutcome exportFile(const QString& source,
                          const std::function<pfx::Settings(const pfx::Image&)>& settingsFor,
-                         const core::ExportOptions& options, core::NameFacts facts)
+                         const core::ExportOptions& options, core::NameFacts facts, core::NameClaims* claims)
 {
     ExportOutcome out{source, {}, {}, false};
     const PreparedExport prepared = prepareExport(source, settingsFor, options);
@@ -208,7 +208,7 @@ ExportOutcome exportFile(const QString& source,
     facts.taken = exif.taken;
     facts.camera = exif.camera;
     out.target = core::exportTarget(source, options, QSize(image.width(), image.height()),
-                                    QDate::currentDate(), facts);
+                                    QDate::currentDate(), facts, claims);
     if (out.target.isEmpty()) {
         out.skipped = true;
         return out;

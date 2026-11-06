@@ -66,7 +66,7 @@ QByteArray spotOf(const QString& source, const std::vector<std::uint8_t>& origin
 
 // One file of Compress only, on a worker.
 CompressOutcome compressOne(const QString& source, const core::CompressJob& job, const QSet<QString>& ours,
-                            core::NameFacts facts)
+                            core::NameFacts facts, core::NameClaims* claims)
 {
     CompressOutcome o;
     QFile in(source);
@@ -99,7 +99,7 @@ CompressOutcome compressOne(const QString& source, const core::CompressJob& job,
         facts.taken = exif.taken;
         facts.camera = exif.camera;
     }
-    o.target = core::compressTarget(source, job, ours, QDate::currentDate(), facts);
+    o.target = core::compressTarget(source, job, ours, QDate::currentDate(), facts, claims);
     if (o.target.isEmpty()) {
         o.error = BatchRunner::tr("No free file name was found in the folder.");
         return o;
@@ -241,6 +241,7 @@ void BatchRunner::start(const QStringList& files, const BatchRecipe& recipe)
         }
     }
     ++m_generation;
+    m_claims = std::make_shared<core::NameClaims>(); // a new run: its photos' names so far
     m_files = files;
     m_recipe = recipe;
     m_states.assign(static_cast<std::size_t>(files.size()), State::Waiting);
@@ -377,7 +378,7 @@ void BatchRunner::startNext()
     core::NameFacts facts;
     facts.number = index + 1;
     facts.count = total();
-    watcher->setFuture(QtConcurrent::run(m_pool, [source, recipe, options, facts] {
+    watcher->setFuture(QtConcurrent::run(m_pool, [source, recipe, options, facts, claims = m_claims] {
         pfx::Settings own;
         if (recipe.keepEdits && !recipe.sidecarFolder.isEmpty()) {
             own = core::SidecarStore(recipe.sidecarFolder)
@@ -385,7 +386,8 @@ void BatchRunner::startNext()
                       .value_or(pfx::Settings{});
         }
         return exportFile(
-            source, [&](const pfx::Image& photo) { return settingsFor(recipe, own, photo); }, options, facts);
+            source, [&](const pfx::Image& photo) { return settingsFor(recipe, own, photo); }, options, facts,
+            claims.get());
     }));
 }
 
@@ -424,8 +426,9 @@ void BatchRunner::startCompress(int index, const core::CompressJob& job)
     core::NameFacts facts;
     facts.number = index + 1;
     facts.count = total();
-    watcher->setFuture(QtConcurrent::run(
-        m_pool, [source, job, ours, facts] { return compressOne(source, job, ours, facts); }));
+    watcher->setFuture(QtConcurrent::run(m_pool, [source, job, ours, facts, claims = m_claims] {
+        return compressOne(source, job, ours, facts, claims.get());
+    }));
 }
 
 } // namespace pixelfx::services

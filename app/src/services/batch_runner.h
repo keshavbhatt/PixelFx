@@ -10,6 +10,7 @@
 #include <QStringList>
 
 #include <algorithm>
+#include <memory>
 #include <optional>
 #include <pfx/compress.h>
 #include <pfx/document.h>
@@ -146,6 +147,7 @@ private:
     int m_running = 0;
     int m_atOnce = kAtOnce;
     int m_limit = 0;
+    std::shared_ptr<core::NameClaims> m_claims; ///< the names this run's photos took, for its workers
     bool m_paused = false;
     quint64 m_generation = 0;
     QElapsedTimer m_clock;

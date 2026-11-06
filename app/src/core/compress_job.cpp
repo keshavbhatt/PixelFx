@@ -33,7 +33,7 @@ QString compressFileName(const QString& source, const CompressJob& job, const QD
 }
 
 QString compressTarget(const QString& source, const CompressJob& job, const QSet<QString>& ours,
-                       const QDate& date, const NameFacts& facts)
+                       const QDate& date, const NameFacts& facts, NameClaims* claims)
 {
     const QFileInfo info(source);
     if (job.replaceOriginals) {
@@ -42,10 +42,13 @@ QString compressTarget(const QString& source, const CompressJob& job, const QSet
     const QDir dir(job.folder.isEmpty() ? info.absolutePath() : job.folder);
     const QString fileName = compressFileName(source, job, date, facts);
     QString target = dir.absoluteFilePath(fileName);
-    const auto taken = [&info, &ours](const QString& path) {
+    const auto taken = [&info, &ours, claims](const QString& path) {
         const QFileInfo t(path);
-        return t.absoluteFilePath() == info.absoluteFilePath() ||
-               (t.exists() && !ours.contains(t.absoluteFilePath()));
+        if (t.absoluteFilePath() == info.absoluteFilePath() ||
+            (t.exists() && !ours.contains(t.absoluteFilePath()))) {
+            return true;
+        }
+        return claims != nullptr && !claims->claim(path); // another photo of this run has it
     };
     if (!taken(target)) {
         return target;
