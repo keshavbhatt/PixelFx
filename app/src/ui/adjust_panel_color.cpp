@@ -16,6 +16,7 @@
 #include <QLabel>
 #include <QPushButton>
 #include <QScrollArea>
+#include <QScrollBar>
 #include <QSignalBlocker>
 #include <QSlider>
 #include <QTimer>
@@ -236,7 +237,10 @@ void AdjustPanel::setTargeting(bool on)
     if (on) {
         // Open and in view, so a drag on the photo shows what it changes.
         m_mixerGroup->setExpanded(true);
-        QTimer::singleShot(0, this, [this] { m_scroll->ensureWidgetVisible(m_mixerGroup, 0, 0); });
+        QTimer::singleShot(0, this, [this] {
+            // Its title at the top of the panel, as much of it showing as fits.
+            m_scroll->verticalScrollBar()->setValue(m_mixerGroup->mapTo(m_scroll->widget(), QPoint()).y());
+        });
     } else {
         m_targetDrag.reset();
         m_targetAlso->hide();

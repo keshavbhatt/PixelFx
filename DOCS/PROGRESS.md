@@ -130,6 +130,10 @@ Decisions the work stopped at; everything else went ahead within the approved mo
   library now decides from the file's first bytes, the same everywhere, and an empty file says
   "The file is empty." The preview strip showed two empty boxes and a live View larger when no
   photo reads; it hides. The finish line no longer adds "0 bytes" when nothing was saved.
+- Adjusting a colour on the photo (T) opened the Color mixer below the open groups, out of
+  sight, so a drag changed sliders nobody could see; the mixer now comes to the top of the panel.
+- Comments across the app cited mocks or the reason for a UI fix (the owner's rule: comments say
+  what the code does); some 80 rewritten or dropped.
 
 ### 2026-11-06 (a new app icon)
 
