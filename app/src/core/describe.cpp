@@ -1,6 +1,7 @@
 #include "core/describe.h"
 
 #include <QCoreApplication>
+#include <QLocale>
 #include <QStringList>
 
 #include <algorithm>
@@ -80,6 +81,12 @@ void effectTraits(const pfx::Settings& s, std::vector<Trait>& out)
 }
 
 } // namespace
+
+QString sizeText(qint64 bytes)
+{
+    constexpr qint64 kWhole = 10'000'000; // from 10 MB a decimal adds nothing
+    return QLocale().formattedDataSize(bytes, bytes < kWhole ? 1 : 0, QLocale::DataSizeSIFormat);
+}
 
 QString hueName(double degrees)
 {

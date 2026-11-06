@@ -4,6 +4,7 @@
 #include "app/single_instance.h"
 #include "app/version.h"
 #include "core/log_sink.h"
+#include "core/plurals.h"
 #include "core/settings/settings.h"
 
 #include <QDir>
@@ -28,6 +29,7 @@ Application::Application(int& argc, char** argv)
     setOrganizationDomain(QString::fromLatin1(version::kOrganizationDomain));
     setDesktopFileName(QString::fromLatin1(version::kDesktopId));
     setWindowIcon(QIcon(u":/icons/pixelfx.png"_s));
+    core::installPluralForms(*this); // before any text is made
 
     const CliParseResult parsed = parseCliOptions(arguments(), QDir::currentPath());
     if (!parsed.ok()) {

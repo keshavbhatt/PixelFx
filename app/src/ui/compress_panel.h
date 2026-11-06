@@ -34,15 +34,14 @@ public:
     [[nodiscard]] class NameField* nameField() const { return m_name; }
     /// The count on the primary button; none disables it.
     void setFileCount(int count);
-    /// While running nothing starts; Run again needs a finished run of this list.
-    void setState(bool running, bool canRunAgain);
+    /// While running nothing starts; after a finished run of this list the button compresses
+    /// again ("Compress again"), replacing what that run saved.
+    void setState(bool running, bool ranBefore);
     [[nodiscard]] QPushButton* compressButton() const { return m_compress; }
-    [[nodiscard]] QPushButton* runAgainButton() const { return m_again; }
 
 Q_SIGNALS:
     void jobChanged(const pixelfx::core::CompressJob& job);
     void compressRequested();
-    void runAgainRequested();
 
 private:
     QWidget* buildCompression(QWidget* parent);
@@ -62,8 +61,10 @@ private:
     PathLabel* m_folder = nullptr;
     class NameField* m_name = nullptr;
     QCheckBox* m_keep = nullptr;
-    QPushButton* m_again = nullptr;
     QPushButton* m_compress = nullptr;
+    int m_count = 0; ///< photos to compress
+    bool m_ranBefore = false;
+    void refreshButton();
 };
 
 } // namespace pixelfx::ui

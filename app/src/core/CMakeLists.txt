@@ -26,6 +26,8 @@ qt_add_library(pixelfx_core STATIC
     looks.h
     logging.h
     photo_details.cpp
+    plurals.cpp
+    plurals.h
     photo_details.h
     presets.cpp
     presets.h
@@ -64,3 +66,18 @@ qt_add_resources(pixelfx_core "pixelfx_changelog"
     PREFIX "/"
     BASE "${PROJECT_SOURCE_DIR}"
     FILES "${PROJECT_SOURCE_DIR}/CHANGELOG.md")
+
+# English plural forms ("1 photo", "2 photos"): tr("%n photos", nullptr, n) needs a translation
+# even in the source language. Built when Qt's Linguist tools are there (ADR-014); without them
+# every count reads in the plural. Found in app/src/CMakeLists.txt.
+if(Qt6LinguistTools_FOUND)
+    qt_add_lrelease(
+        TS_FILES "${PROJECT_SOURCE_DIR}/app/i18n/pixelfx_en.ts"
+        QM_FILES_OUTPUT_VARIABLE _pixelfx_qm)
+    qt_add_resources(pixelfx_core "pixelfx_i18n"
+        PREFIX "/i18n"
+        BASE "${CMAKE_CURRENT_BINARY_DIR}"
+        FILES ${_pixelfx_qm})
+else()
+    message(WARNING "Qt Linguist tools not found: counts will read in the plural (\"1 photos\")")
+endif()

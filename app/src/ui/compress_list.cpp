@@ -1,5 +1,6 @@
 #include "ui/compress_list.h"
 
+#include "core/describe.h"
 #include "ui/file_row.h"
 #include "ui/list_row.h"
 #include "ui/status_pill.h"
@@ -27,7 +28,7 @@ constexpr int kBarWidth = 180;
 
 QString bytesText(qint64 bytes)
 {
-    return QLocale().formattedDataSize(bytes, 1, QLocale::DataSizeSIFormat);
+    return core::sizeText(bytes);
 }
 
 QString formatOf(const QString& path)
@@ -132,7 +133,7 @@ void CompressList::build()
     m_rows.clear();
     if (m_files.isEmpty()) {
         auto* empty =
-            new QLabel(tr("Drop files or folders here, or use Add photos and Add folder at the top."), this);
+            new QLabel(tr("Drop photos or folders here, or use Add photos and Add folder at the top."), this);
         empty->setObjectName(u"muted"_s);
         empty->setContentsMargins(kPanelPadding - 8, 20, 0, 0);
         m_column->addWidget(empty);

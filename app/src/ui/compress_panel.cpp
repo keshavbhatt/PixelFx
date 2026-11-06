@@ -174,11 +174,7 @@ QWidget* CompressPanel::buildSave(QWidget* parent)
 
 QWidget* CompressPanel::buildFoot(QWidget* parent)
 {
-    m_again = new IconTextButton(icons::themed(u"refresh"_s, tokens().text),
-                                 tr("Run again with these settings"), parent);
-    m_again->setToolTip(tr("Compress the same files again, replacing what the last run saved"));
-    connect(m_again, &QPushButton::clicked, this, &CompressPanel::runAgainRequested);
-    const FootButtons buttons = footButtons(parent, tr("Compress"), {m_again});
+    const FootButtons buttons = footButtons(parent, tr("Compress"));
     m_compress = buttons.primary;
     m_compress->setIcon(icons::themed(u"play"_s, Qt::white));
     connect(m_compress, &QPushButton::clicked, this, &CompressPanel::compressRequested);
@@ -238,14 +234,27 @@ void CompressPanel::setFiles(const QStringList& files)
 
 void CompressPanel::setFileCount(int count)
 {
-    m_compress->setText(count > 0 ? tr("Compress %n files", nullptr, count) : tr("Compress"));
-    m_compress->setEnabled(count > 0);
+    m_count = count;
+    refreshButton();
 }
 
-void CompressPanel::setState(bool running, bool canRunAgain)
+void CompressPanel::setState(bool running, bool ranBefore)
 {
-    m_compress->setEnabled(!running && m_compress->text() != tr("Compress"));
-    m_again->setEnabled(!running && canRunAgain);
+    m_ranBefore = ranBefore;
+    refreshButton();
+    m_compress->setEnabled(!running && m_count > 0);
+}
+
+void CompressPanel::refreshButton()
+{
+    if (m_ranBefore) {
+        m_compress->setText(tr("Compress again"));
+        m_compress->setToolTip(tr("Compress these photos again, replacing what the last run saved"));
+    } else {
+        m_compress->setText(m_count > 0 ? tr("Compress %n photos", nullptr, m_count) : tr("Compress"));
+        m_compress->setToolTip(QString());
+    }
+    m_compress->setEnabled(m_count > 0);
 }
 
 } // namespace pixelfx::ui

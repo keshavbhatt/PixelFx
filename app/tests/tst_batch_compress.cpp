@@ -1,3 +1,4 @@
+#include "core/plurals.h"
 #include "services/batch_runner.h"
 #include "ui/batch_page.h"
 #include "ui/compress_compare.h"
@@ -25,7 +26,23 @@ class TestBatchCompress : public QObject
     Q_OBJECT
 
 private Q_SLOTS:
-    void initTestCase() { pixelfx::ui::applyStyle(*qApp); }
+    void initTestCase()
+    {
+        pixelfx::ui::applyStyle(*qApp);
+        QVERIFY(pixelfx::core::installPluralForms(*qApp)); // as the app does
+    }
+
+    void oneOfACountIsSaidInTheSingular()
+    {
+        pixelfx::core::CompressJob job;
+        pixelfx::ui::BatchPage page({}, job, true);
+        page.compressPanel()->setFileCount(1);
+        QCOMPARE(page.compressPanel()->compressButton()->text(), u"Compress 1 photo"_s);
+        page.compressPanel()->setFileCount(2);
+        QCOMPARE(page.compressPanel()->compressButton()->text(), u"Compress 2 photos"_s);
+        QCOMPARE(QCoreApplication::translate("pixelfx::ui::BatchPage", "Process %n photos", nullptr, 1),
+                 u"Process 1 photo"_s);
+    }
 
     void theModeSwitchesThePanelAndTheList()
     {
@@ -36,7 +53,7 @@ private Q_SLOTS:
         page.setCompressOnly(true);
         QCOMPARE(mode.count(), 1);
         QVERIFY(page.compressPanel()->isVisibleTo(&page));
-        QCOMPARE(page.summary(), u"No files yet"_s);
+        QCOMPARE(page.summary(), u"No photos yet"_s); // one noun in both modes
         page.setCompressOnly(false);
         QCOMPARE(page.summary(), u"No photos yet"_s);
     }
@@ -97,8 +114,7 @@ private Q_SLOTS:
         page.show();
         QVERIFY(QTest::qWaitForWindowExposed(&page));
         page.addPaths(files);
-        QCOMPARE(page.compressPanel()->compressButton()->text(), u"Compress 3 files"_s);
-        QVERIFY(!page.compressPanel()->runAgainButton()->isEnabled());
+        QCOMPARE(page.compressPanel()->compressButton()->text(), u"Compress 3 photos"_s);
         QSignalSpy finished(&page.runner(), &pixelfx::services::BatchRunner::finished);
         page.process(); // Compress only: process compresses
         QVERIFY(finished.wait(20000));
@@ -110,7 +126,8 @@ private Q_SLOTS:
                      (l->isVisible() && l->text().startsWith(u"Saved "_s) && l->text().contains(u" of "_s));
         }
         QVERIFY(totals);
-        QVERIFY(page.compressPanel()->runAgainButton()->isEnabled());
+        QCOMPARE(page.compressPanel()->compressButton()->text(), u"Compress again"_s); // the one button
+        QVERIFY(page.compressPanel()->compressButton()->isEnabled());
         // The first file done is selected, and its before and after shows.
         QVERIFY(!page.compressList()->selected().isEmpty());
         QTRY_VERIFY(page.compressCompare()->isVisible());

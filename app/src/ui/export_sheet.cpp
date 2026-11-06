@@ -1,5 +1,6 @@
 #include "ui/export_sheet.h"
 
+#include "core/describe.h"
 #include "services/exporter.h"
 #include "ui/elided_label.h"
 #include "ui/frame_picker.h"
@@ -643,7 +644,7 @@ void ExportSheet::showEstimate(qint64 bytes)
         m_note->setText(remembered);
         return;
     }
-    const QString size = QLocale().formattedDataSize(bytes, 1, QLocale::DataSizeSIFormat);
+    const QString size = core::sizeText(bytes);
     //: The estimated size of the file Export writes, with one photo or with several.
     const QString about =
         m_photoCount > 1 ? tr("About %1 for this photo.").arg(size) : tr("About %1.").arg(size);

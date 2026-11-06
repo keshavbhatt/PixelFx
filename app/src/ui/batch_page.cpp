@@ -1,6 +1,7 @@
 #include "ui/batch_page.h"
 
 #include "core/batch_resources.h"
+#include "core/describe.h"
 #include "core/looks.h"
 #include "core/sidecar_store.h"
 #include "services/exporter.h"
@@ -74,7 +75,7 @@ constexpr int kPanelWidth = 380;
 QString describe(const QString& path)
 {
     const auto info = pfx::probe(path.toStdString());
-    const QString size = QLocale().formattedDataSize(QFileInfo(path).size(), 1, QLocale::DataSizeSIFormat);
+    const QString size = core::sizeText(QFileInfo(path).size());
     return info ? u"%1 x %2 · %3"_s.arg(info.value().width).arg(info.value().height).arg(size) : size;
 }
 
@@ -179,7 +180,6 @@ void BatchPage::connectCompress()
         Q_EMIT compressJobChanged(j);
     });
     connect(m_compressPanel, &CompressPanel::compressRequested, this, &BatchPage::compress);
-    connect(m_compressPanel, &CompressPanel::runAgainRequested, this, &BatchPage::compress);
     connect(m_compressList, &CompressList::selectionChanged, this, &BatchPage::showCompare);
     connect(m_compressList, &CompressList::removeRequested, this, [this](const QString& file) {
         if (!m_runner.isRunning()) {
@@ -199,7 +199,7 @@ QWidget* BatchPage::buildListHead(QWidget* parent)
     head->setAttribute(Qt::WA_StyledBackground);
     m_listTitle = new QLabel(tr("Photos"), head);
     m_listTitle->setObjectName(u"recentTitle"_s);
-    auto* hint = new QLabel(tr("Drop files or folders here"), head);
+    auto* hint = new QLabel(tr("Drop photos or folders here"), head);
     hint->setObjectName(u"muted"_s);
     // List or grid (Edit and export); the order of the files (Compress only).
     auto* views = new QFrame(head);
@@ -433,7 +433,7 @@ QWidget* BatchPage::buildMode(QWidget* parent)
                                  m_modes, box, SegmentFit::Equal));
     connect(m_modes, &QButtonGroup::idClicked, this, [this](int id) { setCompressOnly(id == 1); });
     m_modeNote =
-        new QLabel(tr("Makes files smaller without editing them. Free for any number of photos."), box);
+        new QLabel(tr("Makes photos smaller without editing them. Free for any number of photos."), box);
     m_modeNote->setObjectName(u"itemDetail"_s);
     m_modeNote->setWordWrap(true);
     column->addWidget(m_modeNote);
@@ -981,12 +981,8 @@ QString BatchPage::summary() const
     for (const QString& file : m_files) {
         bytes += QFileInfo(file).size();
     }
-    const QString size = QLocale().formattedDataSize(bytes, 0, QLocale::DataSizeSIFormat);
+    const QString size = core::sizeText(bytes);
     const auto count = static_cast<int>(m_files.size());
-    if (m_compressOnly) {
-        //: The header in Compress only: "6 files · 108 MB".
-        return m_files.isEmpty() ? tr("No files yet") : tr("%n files · %1", nullptr, count).arg(size);
-    }
     //: The header while Batch is up: "6 photos · 129 MB".
     return m_files.isEmpty() ? tr("No photos yet") : tr("%n photos · %1", nullptr, count).arg(size);
 }
@@ -1323,7 +1319,7 @@ void BatchPage::setCompressOnly(bool on)
     m_modes->button(on ? 1 : 0)->setChecked(true);
     m_modeNote->setVisible(on);
     m_panels->setCurrentIndex(on ? 1 : 0);
-    m_listTitle->setText(on ? tr("Files") : tr("Photos"));
+    m_listTitle->setText(tr("Photos"));
     m_viewBox->setVisible(!on);
     m_sortBox->setVisible(on);
     m_views->setCurrentIndex(on ? 2 : m_viewModes->checkedId());
@@ -1348,11 +1344,11 @@ void BatchPage::compress()
     const auto count = static_cast<int>(m_files.size());
     if (job.replaceOriginals) {
         QMessageBox ask(QMessageBox::Warning, tr("Replace the originals"),
-                        tr("Replace %n original files with their smaller versions? This cannot be undone.",
+                        tr("Replace %n original photos with their smaller versions? This cannot be undone.",
                            nullptr, count),
                         QMessageBox::NoButton, this);
         const QPushButton* replace =
-            ask.addButton(tr("Replace %n files", nullptr, count), QMessageBox::AcceptRole);
+            ask.addButton(tr("Replace %n photos", nullptr, count), QMessageBox::AcceptRole);
         ask.addButton(QMessageBox::Cancel);
         ask.setDefaultButton(QMessageBox::Cancel);
         ask.exec();
@@ -1380,9 +1376,7 @@ void BatchPage::showCompare(const QString& path)
     }
     const services::CompressResult c = m_runner.compressed(index);
     const QString target = m_runner.target(index).isEmpty() ? path : m_runner.target(index);
-    const auto size = [](qint64 bytes) {
-        return QLocale().formattedDataSize(bytes, 1, QLocale::DataSizeSIFormat);
-    };
+    const auto size = [](qint64 bytes) { return core::sizeText(bytes); };
     const QString beforeText = tr("%1 · %2").arg(QFileInfo(path).fileName(), size(c.before));
     const qint64 percent = c.before > 0 ? (100 * (c.before - c.after) + (c.before / 2)) / c.before : 0;
     //: Above the compressed file at 100%: "5.6 MB, saved 38%".
@@ -1533,9 +1527,8 @@ void BatchPage::showDone(int saved, int failed)
     }
     if (m_clock.isValid()) {
         //: After a batch: how long it took and how much it wrote, "in 38 s, 41 MB".
-        m_statusDetail->setText(tr("in %1 s, %2")
-                                    .arg(std::max<qint64>(1, m_clock.elapsed() / 1000))
-                                    .arg(QLocale().formattedDataSize(bytes, 0, QLocale::DataSizeSIFormat)));
+        m_statusDetail->setText(
+            tr("in %1 s, %2").arg(std::max<qint64>(1, m_clock.elapsed() / 1000)).arg(core::sizeText(bytes)));
     }
 }
 
@@ -1549,9 +1542,7 @@ void BatchPage::showCompressDone(int failed)
             after += m_runner.compressed(i).after;
         }
     }
-    const auto size = [](qint64 bytes) {
-        return QLocale().formattedDataSize(bytes, 0, QLocale::DataSizeSIFormat);
-    };
+    const auto size = [](qint64 bytes) { return core::sizeText(bytes); };
     const qint64 percent = before > 0 ? (100 * (before - after) + (before / 2)) / before : 0;
     icons::setGlyph(m_statusIcon, failed > 0 ? u"alert"_s : u"check"_s,
                     failed > 0 ? tokens().danger : tokens().success, 16);
@@ -1562,8 +1553,8 @@ void BatchPage::showCompressDone(int failed)
     }
     m_statusText->setText(text);
     if (m_clock.isValid()) {
-        //: After Compress only: how many files and how long, "6 files in 9 s".
-        m_statusDetail->setText(tr("%n files in %1 s", nullptr, m_runner.total())
+        //: After Compress only: how many photos and how long, "6 photos in 9 s".
+        m_statusDetail->setText(tr("%n photos in %1 s", nullptr, m_runner.total())
                                     .arg(std::max<qint64>(1, m_clock.elapsed() / 1000)));
     }
 }

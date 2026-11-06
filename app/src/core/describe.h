@@ -8,6 +8,10 @@
 // blacks, fine grain") and for summaries elsewhere.
 namespace pixelfx::core {
 
+/// A file size as PixelFx shows it: SI units ("118.5 kB", "1.8 MB"), one decimal below 10 MB
+/// and whole numbers above ("108 MB").
+[[nodiscard]] QString sizeText(qint64 bytes);
+
 /// The everyday name of a hue in degrees: "red", "orange", "teal" ...
 [[nodiscard]] QString hueName(double degrees);
 

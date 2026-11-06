@@ -1,6 +1,7 @@
 #include "ui/main_window.h"
 
 #include "core/crop_geometry.h"
+#include "core/describe.h"
 #include "core/links.h"
 #include "core/looks.h"
 #include "core/settings/settings.h"
@@ -145,8 +146,7 @@ QString describe(const services::DocumentInfo& info)
     } else if (info.raw) {
         format = u"RAW (%1)"_s.arg(suffix); // camera raw: say which maker's format
     }
-    const QString size =
-        QLocale().formattedDataSize(QFileInfo(info.path).size(), 1, QLocale::DataSizeSIFormat);
+    const QString size = core::sizeText(QFileInfo(info.path).size());
     return u"%1 x %2 · %3 · %4"_s.arg(info.size.width()).arg(info.size.height()).arg(format, size);
 }
 
@@ -1263,16 +1263,15 @@ QString MainWindow::ImportTally::summary(int files) const
 {
     QStringList parts;
     if (presets > 0) {
-        parts << tr("%n preset(s)", nullptr, presets);
+        parts << tr("%n presets", nullptr, presets);
     }
     if (looks > 0) {
-        parts << tr("%n look(s)", nullptr, looks);
+        parts << tr("%n looks", nullptr, looks);
     }
     QString text =
         parts.isEmpty() ? tr("Nothing was imported.") : tr("Imported %1.").arg(parts.join(tr(" and ")));
     if (!lastError.isEmpty()) {
-        text +=
-            u' ' + tr("%n file(s) could not be read, %1", nullptr, files - presets - looks).arg(lastError);
+        text += u' ' + tr("%n files could not be read, %1", nullptr, files - presets - looks).arg(lastError);
     }
     QStringList left = skipped;
     left.removeDuplicates();
@@ -2103,7 +2102,7 @@ void MainWindow::applyToSelection(const std::function<pfx::Settings(const pfx::S
             m_stripThumbnails->request(path, 2 * FilmTile::kWidth, store.folder());
         }
     }
-    showToast(tr("%1 applied to %n photo(s)", nullptr, done + 1).arg(label));
+    showToast(tr("%1 applied to %n photos", nullptr, done + 1).arg(label));
 }
 
 void MainWindow::chooseFiles()

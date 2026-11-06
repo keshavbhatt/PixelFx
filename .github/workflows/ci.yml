@@ -59,7 +59,7 @@ jobs:
         shell: pwsh
         run: |
           $prefix = python scripts/ci/fetch-qt.py --host windows_x86 --version $env:QT_VERSION `
-            --compiler msvc2022_64 --modules qtbase qtsvg qtimageformats --dest C:/Qt
+            --compiler msvc2022_64 --modules qtbase qtsvg qtimageformats qttools --dest C:/Qt
           "Qt6_DIR=$prefix/lib/cmake/Qt6" | Out-File -FilePath $env:GITHUB_ENV -Append
           "CMAKE_PREFIX_PATH=$prefix" | Out-File -FilePath $env:GITHUB_ENV -Append
           "$prefix/bin" | Out-File -FilePath $env:GITHUB_PATH -Append

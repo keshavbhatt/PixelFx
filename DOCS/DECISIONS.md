@@ -366,3 +366,24 @@ Lightroom (`LensManualDistortionAmount`, vignetting by hand) are not part of thi
 process's number locale while it searches, so searches run one at a time and each camera and
 lens is looked up once. The pixels are upright when corrected: a profile's offset of the lens
 centre (rare) is applied along the upright axes, slightly off for a photo shot turned.
+
+## ADR-014: English plural forms through Qt Linguist (2026-11-06)
+
+**Context.** Counts are written `tr("%n photos", nullptr, n)`. Qt chooses the singular or the
+plural only through a translation, also for the source language, so with none installed every
+count read in the plural: "Process 1 photos", "1 files" (the Batch audit, 2026-11-06). A
+hand-made helper ("photo" or "photos") would work for English alone and break the day the app
+is translated.
+
+**Decision.** `app/i18n/pixelfx_en.ts` holds only the plural forms (`lupdate -pluralonly`),
+filled in by hand and committed. The build compiles it with Qt's `lrelease` into a resource of
+the core layer, and `core::installPluralForms` loads it before any text is made. The
+`update_translations` target refreshes the file from the sources; new counts get their singular
+filled in before the commit. The Linguist tools are build-time only (THIRD_PARTY) and optional:
+without them the build warns and counts read in the plural, as before.
+
+**Consequences.** A new count in the code needs `update_translations` and its singular, or it
+reads "1 photos" again; the Batch and Compress tests check one count. Real translations, when
+they come, load over this file. The Windows CI fetches `qttools`; the other builds already have
+it.
+
