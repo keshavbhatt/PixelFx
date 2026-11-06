@@ -37,6 +37,8 @@ inline constexpr int kPanelPadding = 14;
 inline constexpr int kToolRowPadding = 10;
 /// Rows of a list (spots, steps, photos) sit this far in from the panel's edges.
 inline constexpr int kListInset = 8;
+/// Between the rows of a list: the mocks' rows have 1 px margins, which meet (`.list .it`).
+inline constexpr int kListRowGap = 1;
 
 /// The gaps between items, by how closely they belong together (0 is for segments that touch).
 inline constexpr int kGapTight = 2; ///< rows of one list
@@ -118,9 +120,9 @@ enum class SegmentFit
     Equal,
 };
 /// A segmented control: `names` as joined segments in a box, the one at `checked` on, each added
-/// to `group` with its index as id.
+/// to `group` with its index as id; with `glyphs`, each segment shows its icon before its name.
 QFrame* segmentBox(const QStringList& names, int checked, QButtonGroup* group, QWidget* parent,
-                   SegmentFit fit = SegmentFit::Content);
+                   SegmentFit fit = SegmentFit::Content, const QStringList& glyphs = {});
 /// Lets `list` be narrower than its longest choice, cut with "..." (a choice is shown whole when
 /// the list opens): for lists in a side panel of fixed width, whose longest choices would widen it.
 void fitToPanel(QComboBox* list);

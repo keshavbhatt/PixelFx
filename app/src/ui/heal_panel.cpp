@@ -1,7 +1,6 @@
 #include "ui/heal_panel.h"
 
 #include "ui/heal_tool.h"
-#include "ui/icon_text_button.h"
 #include "ui/icons.h"
 #include "ui/list_row.h"
 #include "ui/slider_row.h"
@@ -9,6 +8,7 @@
 
 #include <QButtonGroup>
 #include <QCheckBox>
+#include <QFrame>
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QPushButton>
@@ -71,33 +71,23 @@ HealPanel::~HealPanel() = default;
 QLayout* HealPanel::buildModes(QWidget* box)
 {
     // Spot or Brush.
-    auto* modes = new QHBoxLayout;
-    modes->setSpacing(0);
     m_modes = new QButtonGroup(this);
-    const QStringList names = {tr("Spot"), tr("Brush")};
-    const QStringList glyphs = {u"circle-dot"_s, u"brush"_s};
-    const QStringList tips = {tr("Click a blemish to heal it; a patch is picked for you"),
-                              tr("Paint along a longer mark (a wire, a scratch, a hair) to heal it")};
-    for (int i = 0; i < 2; ++i) {
-        auto* b =
-            new IconTextButton(icons::toggle(glyphs.at(i), tokens().text, tokens().accent), names.at(i), box);
-        b->setObjectName(u"segment"_s);
-        b->setCheckable(true);
-        b->setChecked(i == 0);
-        b->setToolTip(tips.at(i));
-        m_modes->addButton(b, i);
-        modes->addWidget(b, 1);
-    }
+    QFrame* modes = segmentBox({tr("Spot"), tr("Brush")}, 0, m_modes, box, SegmentFit::Equal,
+                               {u"circle-dot"_s, u"brush"_s});
+    m_modes->button(0)->setToolTip(tr("Click a blemish to heal it; a patch is picked for you"));
+    m_modes->button(1)->setToolTip(tr("Paint along a longer mark (a wire, a scratch, a hair) to heal it"));
     connect(m_modes, &QButtonGroup::idClicked, this,
             [this](int id) { m_tool->setMode(id == 0 ? HealTool::Mode::Spot : HealTool::Mode::Brush); });
-    return modes;
+    auto* row = new QHBoxLayout;
+    row->addWidget(modes);
+    return row;
 }
 
 QWidget* HealPanel::buildBrush()
 {
     auto* box = new QWidget(this);
     auto* column = new QVBoxLayout(box);
-    column->setContentsMargins(kPanelPadding, 0, kPanelPadding, 4);
+    column->setContentsMargins(kPanelPadding, 0, kPanelPadding, 0);
     column->setSpacing(kGapControls);
     column->addLayout(buildModes(box));
     m_size = new SliderRow(tr("Size"), box);
@@ -165,7 +155,7 @@ QWidget* HealPanel::buildSpots()
     listBox->setObjectName(u"panelContent"_s);
     m_list = new QVBoxLayout(listBox);
     m_list->setContentsMargins(kListInset, 0, kListInset, kListInset);
-    m_list->setSpacing(kGapTight);
+    m_list->setSpacing(kListRowGap);
     m_list->addStretch();
     auto* scroll = new QScrollArea(box);
     scroll->setObjectName(u"panelScroll"_s);

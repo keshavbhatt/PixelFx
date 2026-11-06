@@ -105,12 +105,14 @@ const QString kSheet = uR"(
         #panelTabLine { background: {{border}}; }
         #itemTitle { font-weight: 500; }
         #itemDetail { color: {{muted}}; font-size: 11px; }
+        QWidget#listRow QLabel#itemTitle { min-height: 19px; }
+        QWidget#listRow QLabel#itemDetail { min-height: 16px; }
         QLabel#itemDetail[error="true"] { color: {{danger}}; }
         QLabel#recentTitle[error="true"] { color: {{danger}}; }
         QToolButton#stripAdd { border: 1.5px dashed {{faint}}; border-radius: 6px; background: transparent; }
         QToolButton#stripAdd:hover { background: {{hover}}; }
         #accentText { color: {{accent}}; font-size: 12px; }
-        #kbd { font-size: 11px; color: {{text}}; background: {{panel}}; border: 1px solid {{border}}; border-bottom-width: 2px; border-radius: 5px; padding: 1px 6px; }
+        #kbd { font-size: 11px; color: {{text}}; background: {{panel}}; border: 1px solid {{border}}; border-bottom-width: 2px; border-radius: 5px; padding: 1px 6px; min-height: 16px; }
         #zoomBar, #zoomChip { background: {{elevated}}; border: 1px solid {{border}}; border-radius: 10px; }
         #zoomBusy { color: {{muted}}; font-size: 12px; }
         #zoomDivider { background: {{border}}; }
@@ -720,7 +722,7 @@ QString buttonText(QString text)
 }
 
 QFrame* segmentBox(const QStringList& names, int checked, QButtonGroup* group, QWidget* parent,
-                   SegmentFit fit)
+                   SegmentFit fit, const QStringList& glyphs)
 {
     auto* box = new QFrame(parent);
     box->setObjectName(QStringLiteral("segmentBox"));
@@ -728,7 +730,10 @@ QFrame* segmentBox(const QStringList& names, int checked, QButtonGroup* group, Q
     row->setContentsMargins(1, 1, 1, 1);
     row->setSpacing(0);
     for (int i = 0; i < names.size(); ++i) {
-        auto* b = new QPushButton(buttonText(names.at(i)), box);
+        QPushButton* b = glyphs.isEmpty()
+                             ? new QPushButton(buttonText(names.at(i)), box)
+                             : new IconTextButton(icons::toggle(glyphs.at(i), tokens().text, tokens().accent),
+                                                  buttonText(names.at(i)), box);
         b->setAccessibleName(names.at(i));
         b->setObjectName(QStringLiteral("segment"));
         b->setCheckable(true);
@@ -863,8 +868,17 @@ QVBoxLayout* sectionColumn(const QString& heading, QWidget* box)
 
 QHBoxLayout* sectionHeadingRow(QLabel* label, QWidget* trailing, int sides)
 {
+    // A trailing link or button is taller than the heading (its 24 px target); it reaches into
+    // the row's margins so the heading keeps its place.
+    int reach = 0;
+    if (trailing != nullptr) {
+        label->ensurePolished();
+        trailing->ensurePolished();
+        reach =
+            std::clamp((trailing->sizeHint().height() - label->sizeHint().height()) / 2, 0, kBelowSection);
+    }
     auto* row = new QHBoxLayout;
-    row->setContentsMargins(sides, kAboveSection, sides, kBelowSection);
+    row->setContentsMargins(sides, kAboveSection - reach, sides, kBelowSection - reach);
     row->setSpacing(kGapControls);
     row->addWidget(label, 1);
     if (trailing != nullptr) {
