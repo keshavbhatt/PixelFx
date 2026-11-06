@@ -34,7 +34,6 @@
 #include <QApplication>
 #include <QClipboard>
 #include <QCloseEvent>
-#include <QConicalGradient>
 #include <QDateTime>
 #include <QDesktopServices>
 #include <QDir>
@@ -90,14 +89,17 @@ const QStringList& supportedSuffixes()
     return suffixes;
 }
 
-/// The colour-wheel mark of the header.
+/// The header's mark: the app icon, whose canvas keeps 3 px clear around the lens at this size.
 class BrandMark : public QWidget
 {
 public:
+    static constexpr int kSide = 28;
+    static constexpr int kClear = 3; ///< transparent canvas on each side, at kSide
+
     explicit BrandMark(QWidget* parent)
         : QWidget(parent)
     {
-        setFixedSize(22, 22);
+        setFixedSize(kSide, kSide);
         setAccessibleName(QStringLiteral("PixelFx"));
     }
 
@@ -105,17 +107,7 @@ protected:
     void paintEvent(QPaintEvent* /*event*/) override
     {
         QPainter p(this);
-        p.setRenderHint(QPainter::Antialiasing);
-        QConicalGradient wheel(rect().center(), 90);
-        const QList<QColor> stops = {QColor(0xFF5A4E), QColor(0xE04FA0), QColor(0x8B5CF6), QColor(0x3B82F6),
-                                     QColor(0x3FC1C9), QColor(0x6CCB5F), QColor(0xF7E35A), QColor(0xFFB84D)};
-        for (qsizetype i = 0; i < stops.size(); ++i) {
-            wheel.setColorAt(static_cast<double>(i) / static_cast<double>(stops.size()), stops.at(i));
-        }
-        wheel.setColorAt(1.0, stops.first());
-        p.setPen(Qt::NoPen);
-        p.setBrush(wheel);
-        p.drawEllipse(QRectF(rect()));
+        icons::brand().paint(&p, rect());
     }
 };
 
@@ -580,12 +572,14 @@ void MainWindow::buildHeader()
     auto* header = new QHBoxLayout(m_header);
     header->setContentsMargins(8, 0, kToolRowPadding, 0);
     header->setSpacing(kGapRelated);
+    // The mark's clear canvas counts towards those gaps; the wordmark makes up the 8 px after it.
     auto* brand = new QHBoxLayout;
-    brand->setContentsMargins(4, 0, 8, 0);
-    brand->setSpacing(8);
+    brand->setContentsMargins(4 - BrandMark::kClear, 0, 8 - BrandMark::kClear, 0);
+    brand->setSpacing(8 - BrandMark::kClear);
     brand->addWidget(new BrandMark(m_header));
     m_wordmark = new QLabel(u"PixelFx"_s, m_header);
     m_wordmark->setObjectName(u"wordmark"_s);
+    m_wordmark->setContentsMargins(0, 0, BrandMark::kClear, 0);
     brand->addWidget(m_wordmark);
     header->addLayout(brand);
     header->addWidget(open);

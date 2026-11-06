@@ -18,6 +18,7 @@
 #include <QLabel>
 #include <QListWidget>
 #include <QLocale>
+#include <QPixmap>
 #include <QPlainTextEdit>
 #include <QPushButton>
 #include <QStackedWidget>
@@ -105,12 +106,31 @@ AboutSheet::AboutSheet(QWidget* parent)
 
 AboutSheet::~AboutSheet() = default;
 
+namespace {
+
+// The icon on a 72 px canvas, its lens about 58 px; only the clear canvas around it is cut, so
+// the text beside it starts 70 px in, as drawn.
+QLabel* appIcon(QWidget* parent)
+{
+    constexpr int kCanvas = 72;
+    constexpr int kShown = 60;
+    auto* icon = new QLabel(parent);
+    const QPixmap canvas = icons::brand().pixmap(kCanvas, kCanvas);
+    const qreal ratio = canvas.devicePixelRatio();
+    const int cut = qRound((kCanvas - kShown) * ratio / 2.0);
+    QPixmap shown = canvas.copy(cut, cut, qRound(kShown * ratio), qRound(kShown * ratio));
+    shown.setDevicePixelRatio(ratio);
+    icon->setPixmap(shown);
+    icon->setFixedSize(kShown, kShown);
+    return icon;
+}
+
+} // namespace
+
 QWidget* AboutSheet::buildAboutPage()
 {
     auto* page = new QWidget(this);
-    auto* icon = new QLabel(page);
-    icon->setPixmap(icons::brand().pixmap(56, 56));
-    icon->setFixedSize(56, 56);
+    QLabel* icon = appIcon(page);
     auto* name = new QLabel(tr("PixelFx %1").arg(QApplication::applicationVersion()), page);
     name->setObjectName(u"aboutName"_s);
     auto* tagline = new QLabel(tr("A quick photo editor: sliders, looks, presets and batch."), page);
@@ -125,7 +145,7 @@ QWidget* AboutSheet::buildAboutPage()
     text->addWidget(tagline);
     text->addWidget(build);
     auto* head = new QHBoxLayout;
-    head->setSpacing(kGapGroups);
+    head->setSpacing(kGapItems);
     head->addWidget(icon, 0, Qt::AlignVCenter);
     head->addLayout(text, 1);
 
