@@ -109,7 +109,7 @@ AboutSheet::~AboutSheet() = default;
 namespace {
 
 // The icon on a 72 px canvas, its lens about 58 px; only the clear canvas around it is cut, so
-// the text beside it starts 70 px in, as drawn.
+// the text beside it starts 70 px in.
 QLabel* appIcon(QWidget* parent)
 {
     constexpr int kCanvas = 72;

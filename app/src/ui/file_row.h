@@ -11,7 +11,7 @@ namespace pixelfx::ui {
 class ListRow;
 class StatusPill;
 
-/// A file in Batch's lists (batch.html, batch-compress.html): its picture, its name and a line
+/// A file in Batch's lists: its picture, its name and a line
 /// under it, then anything the list adds, a status, and a × that leaves it out. Hover and
 /// selection come from ListRow, so both lists look and behave alike.
 struct FileRow

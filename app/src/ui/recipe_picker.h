@@ -31,7 +31,7 @@ namespace pixelfx::ui {
 
 class PhotoTile;
 
-/// Choose the recipe (batch-recipe-picker.html): a batch's look or preset from a sheet of
+/// Choose the recipe: a batch's look or preset from a sheet of
 /// groups (no look or preset, the looks, Favorites, Recent, the user's own, the catalog's
 /// categories), a search through looks and presets together, and tiles of the batch's first
 /// photo with each. The same sheet with presets only adds a preset on top.

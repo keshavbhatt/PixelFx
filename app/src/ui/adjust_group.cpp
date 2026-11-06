@@ -97,8 +97,8 @@ AdjustGroup::AdjustGroup(QString id, const QString& name, const QString& glyph, 
     m_reset->setObjectName(u"flatIcon"_s);
     m_reset->setIcon(icons::themed(u"reset"_s, tokens().muted));
     setName(name);
-    // 39 px whether or not its reset shows (the mock's 10 px around a line of text); the 24 px
-    // reset fits inside instead of making a changed group's title taller.
+    // 39 px whether or not its reset shows: the 24 px reset fits inside instead of making a
+    // changed group's title taller.
     constexpr int kHeaderHeight = 39;
     header->setFixedHeight(kHeaderHeight);
     auto* row = new QHBoxLayout(header);
@@ -185,8 +185,7 @@ void AdjustGroup::addCaption(const QString& text, bool more)
 {
     auto* caption = new QLabel(text, this);
     caption->setObjectName(u"subcaption"_s);
-    // Under a check row the caption's space meets the row's own margin, as CSS margins do;
-    // under a slider it adds to the slider's.
+    // Under a check row, whose own margin already spaces it, the caption needs less room above.
     const QVBoxLayout* column = more && m_moreLayout != nullptr ? m_moreLayout : m_bodyLayout;
     if (column->count() > 0 &&
         qobject_cast<CheckRow*>(column->itemAt(column->count() - 1)->widget()) != nullptr) {

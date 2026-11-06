@@ -17,7 +17,7 @@ namespace pixelfx::ui {
 class ListRow;
 class StatusPill;
 
-/// Compress only's files (batch-compress.html): each row says the format and what was done,
+/// Compress only's files: each row says the format and what was done,
 /// the size before and after with a bar for the new size, and the saving. A click or the arrow
 /// keys select a row for the before and after.
 class CompressList : public QWidget

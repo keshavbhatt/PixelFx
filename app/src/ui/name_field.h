@@ -14,7 +14,7 @@ class QGridLayout;
 
 namespace pixelfx::ui {
 
-/// A file name template (batch-convert-rename.html): the field, a + Token menu that inserts at
+/// A file name template: the field, a + Token menu that inserts at
 /// the cursor, and under it the first three names it gives ("IMG_0412.HEIC → trip-001.jpg"),
 /// "and N more", and a line when every photo would get the same name.
 class NameField : public QWidget

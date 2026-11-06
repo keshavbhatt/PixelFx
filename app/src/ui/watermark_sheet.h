@@ -23,7 +23,7 @@ namespace pixelfx::ui {
 
 class MessageLine;
 
-/// The photo with the mark on it, as the export will lay it (watermark.html, right side).
+/// The photo with the mark on it, as the export will lay it.
 /// A press or drag places the mark freely.
 class WatermarkPreview : public QWidget
 {
@@ -87,7 +87,7 @@ public:
     [[nodiscard]] WatermarkPreview* preview() const { return m_preview; }
     /// Saves under the watermark's name and closes (Use watermark).
     bool useWatermark();
-    /// Photos of the batch for "Preview on: Batch photos" (watermark.html); none hides it.
+    /// Photos of the batch for "Preview on: Batch photos"; none hides it.
     void setBatchPhotos(const QStringList& paths);
 
 private:

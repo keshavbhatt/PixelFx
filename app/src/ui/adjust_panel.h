@@ -14,6 +14,7 @@
 
 class QButtonGroup;
 class QComboBox;
+class QScrollArea;
 class QToolButton;
 class QHBoxLayout;
 class QLabel;
@@ -53,11 +54,11 @@ public:
     /// Shows `settings` without emitting anything (open, undo, redo).
     void setSettings(const pfx::Settings& settings);
     [[nodiscard]] const pfx::Settings& settings() const { return m_settings; }
-    /// A RAW file (editor-raw.html): the Camera profile is offered, Temperature reads in Kelvin
+    /// A RAW file: the Camera profile is offered, Temperature reads in Kelvin
     /// around the as-shot white, and White balance offers the light sources.
     void setRaw(bool raw, int asShotKelvin);
     /// The photo's lens (`lens`, from its Exif) and the name of its Lensfun profile (`profile`,
-    /// empty when none is found) for Use lens profile in Optics (editor-lens-profile.html). The
+    /// empty when none is found) for Use lens profile in Optics. The
     /// rows show only when lens profiles are available.
     void setLens(const QString& lens, const QString& profile, bool profilesAvailable);
     [[nodiscard]] AdjustSlider* slider(const QString& key) const;
@@ -198,6 +199,7 @@ private:
 
     pfx::Settings m_settings;
     HistogramView* m_histogram = nullptr;
+    QScrollArea* m_scroll = nullptr; ///< the groups
     QPushButton* m_paste = nullptr;
     QPushButton* m_collapseAll = nullptr;
     bool m_solo = false;

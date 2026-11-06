@@ -19,7 +19,7 @@ class FilmTile;
 /// Every open photo along the bottom: the
 /// current one framed, edited ones marked, Ctrl or Shift click to select several (ticks show
 /// then), a + tile to add photos, and "2 of 6" or "4 selected · Select all · Clear". A tile's ×
-/// and its right-click menu close photos (close-photo.html).
+/// and its right-click menu close photos.
 class Filmstrip : public QWidget
 {
     Q_OBJECT

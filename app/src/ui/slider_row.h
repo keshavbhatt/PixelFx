@@ -43,7 +43,7 @@ public:
     void setFullName(const QString& name);
     /// What the slider does, for its tooltip in place of its name.
     void setHelp(const QString& text);
-    /// No room above the name, for a slider that is a form's field (`.adj` with padding 0).
+    /// No room above the name, for a slider that is a form's field.
     void setFlush();
     [[nodiscard]] QSlider* slider() const { return m_slider; }
     /// The field the value is typed in; hidden unless typing.

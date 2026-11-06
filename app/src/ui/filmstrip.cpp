@@ -46,7 +46,7 @@ Filmstrip::Filmstrip(QWidget* parent)
     m_row->setAutoFillBackground(false);
     m_info->setObjectName(u"muted"_s);
 
-    // "4 selected · Select all · Clear" (apply-to-selected.html).
+    // "4 selected · Select all · Clear".
     const auto link = [this](const QString& text) {
         auto* b = new QPushButton(text, m_selectionBar);
         b->setObjectName(u"link"_s);

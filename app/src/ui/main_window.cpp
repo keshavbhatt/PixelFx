@@ -117,7 +117,7 @@ QIcon headerIcon(const QString& glyph)
     return icons::toggle(glyph, tokens().text, tokens().accent, tokens().faint);
 }
 
-// A thin separator between groups of the header, 4 px clear on each side (editor.html).
+// A thin separator between groups of the header, 4 px clear on each side.
 QWidget* headerSeparator(QWidget* parent)
 {
     auto* box = new QWidget(parent);
@@ -136,7 +136,7 @@ QToolButton* headerButton(QWidget* parent, const QString& glyph, const QString& 
     b->setObjectName(u"headerButton"_s);
     b->setIcon(headerIcon(glyph));
     b->setIconSize(QSize(18, 18));
-    b->setFixedSize(32, 32); // the mocks' icon buttons
+    b->setFixedSize(32, 32);
     b->setToolTip(tip);
     b->setAccessibleName(tip);
     b->setAutoRaise(true);
@@ -567,7 +567,7 @@ void MainWindow::buildHeader()
 
     QWidget* sepHistory = headerSeparator(m_header);
     QWidget* sepView = headerSeparator(m_header);
-    // As the mocks' header: 8 px in, the mark 4 px further with 8 px after it (and the wordmark
+    // 8 px in, the mark 4 px further with 8 px after it (and the wordmark
     // 8 px after the mark on the start page), then 6 px between everything.
     auto* header = new QHBoxLayout(m_header);
     header->setContentsMargins(8, 0, kToolRowPadding, 0);
@@ -659,7 +659,7 @@ void MainWindow::buildBatch()
         if (!isBatching()) {
             showToast(tr("Batch done: %1").arg(summary));
         }
-        // Someone working elsewhere hears that the batch is done (batch-running.html).
+        // Someone working elsewhere hears that the batch is done.
         if (!isActiveWindow()) {
             m_notifier->notify(tr("Batch done"), summary);
         }
@@ -1084,7 +1084,7 @@ void MainWindow::pasteSettings()
     pfx::Settings settings = *copied;
     const auto photos = static_cast<int>(m_strip->selection().size());
     if (photos > 1) {
-        // Several photos: ask which parts (apply-to-selected.html), as a preset of those parts.
+        // Several photos: ask which parts, as a preset of those parts.
         PasteSheet sheet(settings, photos, this);
         sheet.setSource(core::clipboardSource(QGuiApplication::clipboard()->text()));
         if (sheet.exec() != QDialog::Accepted || sheet.units().isEmpty()) {
@@ -2096,8 +2096,7 @@ void MainWindow::applyToSelection(const std::function<pfx::Settings(const pfx::S
                                   const QString& label)
 {
     // The current photo through its Document (one history step); the others through their
-    // remembered edits, which is what they open with (apply-to-selected.html: nothing is written
-    // to the photos themselves).
+    // remembered edits, which is what they open with; nothing is written to the photos themselves.
     m_document.apply(change(m_document.settings()), label);
     const QList<int> selected = m_strip->selection();
     if (selected.size() < 2) {
@@ -2172,7 +2171,7 @@ void MainWindow::connectRaw()
             m_document.openPreview(m_failedRaw, previewLongEdge());
         }
     });
-    // A RAW: its JPEG at once, then the developed picture (editor-raw.html).
+    // A RAW: its JPEG at once, then the developed picture.
     connect(&m_document, &services::Document::earlyPreview, this,
             [this](const QImage& image, const QSize& size) { m_canvas->setImage(image, size); });
     connect(&m_document, &services::Document::developingChanged, this, &MainWindow::refreshBusy);
@@ -2183,7 +2182,7 @@ void MainWindow::connectRaw()
 void MainWindow::showFailed(const QString& path, const QString& message)
 {
     m_stack->setCurrentWidget(m_canvasPage);
-    // A RAW that cannot be developed may still hold a JPEG to open instead (editor-raw.html).
+    // A RAW that cannot be developed may still hold a JPEG to open instead.
     QString action;
     if (pfx::isRawFile(path.toStdString()) && pfx::loadPreview(path.toStdString(), {64})) {
         action = tr("Open its preview instead");
@@ -2207,7 +2206,7 @@ int MainWindow::previewLongEdge() const
 
 void MainWindow::closeEvent(QCloseEvent* event)
 {
-    // Closing during a batch asks once (batch-running.html); the photos written so far stay.
+    // Closing during a batch asks once; the photos written so far stay.
     if (m_batch->runner().isRunning()) {
         const auto answer = QMessageBox::question(
             this, tr("Batch still running"),
@@ -2412,7 +2411,7 @@ void MainWindow::buildMainMenu()
     buildRecentMenu(menu->addMenu(menuIcon("clock"), tr("Open recent")));
     fillMenu(menu,
              std::array{MenuEntry{"pasteImage", "paste"}, MenuEntry{"closePhoto", "close"}, kSeparator});
-    // Close photo needs a photo and no tool open (close-photo.html).
+    // Close photo needs a photo and no tool open.
     connect(menu, &QMenu::aboutToShow, this, [this] {
         namedAction(u"closePhoto"_s)->setEnabled(m_document.isOpen() && !isInTool() && !isBatching());
     });

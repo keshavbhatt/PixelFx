@@ -48,7 +48,7 @@ class SliderRow;
 /// look, or the settings of the photo open in the editor, then a preset on top, Auto enhance,
 /// the edits already made), 3. Resize (Never enlarge), 4. Watermark, 5. Save as (format and
 /// quality, More..., folder, name, beside each original), and Save as batch recipe and Process.
-/// Compress only (batch-compress.html): the files with their savings (CompressList), a before
+/// Compress only: the files with their savings (CompressList), a before
 /// and after at 100% (CompressCompare), the totals, and CompressPanel on the right.
 /// The window's header shows the count and size and Add photos and Add folder while the page is
 /// up.
@@ -152,7 +152,7 @@ private:
     QWidget* buildSortBox(QWidget* head);
     void connectCompress();
     QWidget* buildPreview(QWidget* parent);
-    /// The empty list (batch-empty.html): a drop zone with Add photos and Add folder.
+    /// The empty list: a drop zone with Add photos and Add folder.
     QWidget* buildEmpty(QWidget* parent);
     /// The list, the grid, Compress only's list, or the drop zone when there are no photos.
     void refreshView();

@@ -113,7 +113,7 @@ public:
     bool showWhatsNewIfUpdated();
     /// Opens the picture on the clipboard, if there is one (Ctrl+V).
     void pasteImage();
-    /// Tab: hides or shows the side panels and the filmstrip (menu.html, "Hide panels").
+    /// Tab: hides or shows the side panels and the filmstrip.
     void setPanelsHidden(bool hidden);
     [[nodiscard]] bool panelsHidden() const;
     /// The main menu (F10), for tests and grabs.
@@ -202,7 +202,7 @@ private:
     void deleteLook(const QString& id);
     void requestLookThumbnails();
     void connectFilmstrip();
-    /// Closes the strip's photos at `indices` (close-photo.html): the next photo opens, or the
+    /// Closes the strip's photos at `indices`: the next photo opens, or the
     /// welcome page after the last. With Remember edits off, an edit that would be lost is
     /// asked about first.
     void closePhotos(const QList<int>& indices);

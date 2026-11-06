@@ -13,7 +13,7 @@ constexpr int kQtGap = 5;
 IconTextButton::IconTextButton(const QIcon& icon, const QString& text, QWidget* parent)
     : QPushButton(icon, text, parent)
 {
-    constexpr int kIcon = 15; // the mocks' icon in a button (`.ic.s`)
+    constexpr int kIcon = 15;
     setIconSize(QSize(kIcon, kIcon));
 }
 

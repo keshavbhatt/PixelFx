@@ -13,7 +13,7 @@ namespace pixelfx::ui {
 
 class Canvas;
 
-/// The large preview (preview-viewer.html): one or more photos, each before and after, as big as
+/// The large preview: one or more photos, each before and after, as big as
 /// the window (F11 for the whole screen), with the editor's split and zoom. Batch steps through
 /// its photos with Left and Right. It edits nothing.
 class PreviewViewer : public QDialog

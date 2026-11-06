@@ -15,8 +15,10 @@
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QPushButton>
+#include <QScrollArea>
 #include <QSignalBlocker>
 #include <QSlider>
+#include <QTimer>
 #include <QToolButton>
 #include <QVBoxLayout>
 
@@ -150,7 +152,7 @@ QWidget* AdjustPanel::buildMixerSwatches(QWidget* parent)
 {
     auto* swatches = new QWidget(parent);
     auto* swatchRow = new QHBoxLayout(swatches);
-    swatchRow->setContentsMargins(0, 4, 0, 8); // `.swatches` margins
+    swatchRow->setContentsMargins(0, 4, 0, 8);
     swatchRow->setSpacing(kGapRelated);
     m_mixerBands = new QButtonGroup(this);
     const std::vector<MixerBand>& bands = mixerBands();
@@ -232,7 +234,9 @@ void AdjustPanel::setTargeting(bool on)
         on ? tr("Drag on the photo to change the colour under the pointer (T). Escape stops.")
            : tr("Pick a colour on the photo and drag up or down to change it (T)"));
     if (on) {
+        // Open and in view, so a drag on the photo shows what it changes.
         m_mixerGroup->setExpanded(true);
+        QTimer::singleShot(0, this, [this] { m_scroll->ensureWidgetVisible(m_mixerGroup, 0, 0); });
     } else {
         m_targetDrag.reset();
         m_targetAlso->hide();
@@ -412,7 +416,7 @@ void AdjustPanel::buildGradingGroup(QWidget* content, QVBoxLayout* groups)
     m_wheelValues->setTextFormat(Qt::RichText);
     auto* wheelBox = new QWidget(group);
     auto* column = new QVBoxLayout(wheelBox);
-    // 8 px from the ranges with their own 4 px (the mock's margins meet), 6 px from the luminance.
+    // 8 px from the ranges (with their own 4 px), 6 px from the luminance.
     column->setContentsMargins(0, kGapSmall, 0, kGapTight);
     column->setSpacing(kGapRelated);
     column->addWidget(m_wheel, 0, Qt::AlignHCenter);

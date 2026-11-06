@@ -31,7 +31,7 @@ ChoiceRow::ChoiceRow(const QString& name, std::vector<std::string> values, const
     m_list->addItems(texts);
     m_list->setAccessibleName(name);
     auto* row = new QHBoxLayout(this);
-    row->setContentsMargins(0, 2, 0, 2); // rows 28 px apart, as the mock's 4 px margins that meet
+    row->setContentsMargins(0, 2, 0, 2); // rows 28 px apart
     row->setSpacing(kGapRelated);
     row->addWidget(label);
     row->addStretch();
@@ -61,7 +61,7 @@ CheckRow::CheckRow(const QString& name, const QString& description, QWidget* par
 {
     auto* column = new QVBoxLayout(this);
     column->setContentsMargins(0, 6, 0, 6);
-    constexpr int kNoteGap = 5; // the description 9 px under the check's text, as drawn
+    constexpr int kNoteGap = 5; // the description 9 px under the check's text
     column->setSpacing(kNoteGap);
     column->addWidget(m_box);
     m_note->setObjectName(u"checkNote"_s);

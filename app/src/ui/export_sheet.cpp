@@ -74,7 +74,7 @@ const Format* formatFor(const QString& extension)
 
 } // namespace
 
-// A line across the form, 8 px from the rows on either side, as drawn.
+// A line across the form, 8 px from the rows on either side.
 QWidget* formDivider(QWidget* parent)
 {
     auto* line = new QFrame(parent);
@@ -148,7 +148,7 @@ ExportSheet::ExportSheet(const QString& source, const QSize& photoSize, const co
     QVBoxLayout* column = sheetLayout(this, foot);
     column->setSpacing(kGapGroups);
     addScrollingContent(column, heading, form, this);
-    form->setContentsMargins(0, kGapRelated, 0, 0); // the mock's 8 px over its first row
+    form->setContentsMargins(0, kGapRelated, 0, 0);
     updateForFormat();
     setSize(Size::Regular);
 
@@ -502,7 +502,7 @@ QWidget* ExportSheet::formatRow(const QString& current)
         names << tr("More");
     }
     const auto checked = static_cast<int>(std::max<qsizetype>(0, extensions.indexOf(current)));
-    // Across the row, each segment as wide as its name, as drawn.
+    // Across the row, each segment as wide as its name.
     layout->addWidget(segmentBox(names, checked, m_formats, row, SegmentFit::Row));
     for (qsizetype i = 0; i < extensions.size(); ++i) {
         m_formats->button(static_cast<int>(i))->setProperty("extension", extensions.at(i));

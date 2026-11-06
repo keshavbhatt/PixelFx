@@ -25,7 +25,7 @@ namespace pixelfx::ui {
 
 namespace {
 
-constexpr int kPillSlot = 76; // "Saved 38%", "No change" (batch-compress.html)
+constexpr int kPillSlot = 76; // "Saved 38%", "No change"
 
 constexpr int kBarWidth = 180;
 

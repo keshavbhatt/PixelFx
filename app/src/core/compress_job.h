@@ -10,7 +10,7 @@
 
 namespace pixelfx::core {
 
-/// Batch's Compress only (batch-compress.html): how files are made smaller and where they go.
+/// Batch's Compress only: how files are made smaller and where they go.
 struct CompressJob
 {
     pfx::CompressOptions codec;

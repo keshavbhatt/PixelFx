@@ -23,7 +23,7 @@ class LooksPanel;
 class PhotoTile;
 class SliderRow;
 
-/// The left panel's two tabs. Looks; and Presets, the catalog of `editor-presets-catalog.html`:
+/// The left panel's two tabs. Looks; and Presets, the catalog:
 /// search, the All, Favorites, Mine and Recent chips, the user's presets and the built-in
 /// categories as tiles of the photo (six per open category, "All N" for the rest), the Amount
 /// of the preset just applied, and Save current as preset. A click applies, hovering previews

@@ -81,10 +81,10 @@ namespace {
 // Lightroom's radius refers to (the importer uses the same).
 constexpr double kRadiusPixels = 6000.0;
 
-// The histogram and the buttons under it sit 12 px from the panel's sides (editor.html's .histo).
+// The histogram and the buttons under it sit 12 px from the panel's sides.
 constexpr int kHistogramSide = 12;
 
-// The panel's order and wording (DESIGN section 3, editor-develop.html), Lightroom's words for
+// The panel's order and wording (DESIGN section 3), Lightroom's words for
 // every setting. Ranges, defaults and units come from the registry; names live here (ADR-005).
 GroupSpec lightGroup()
 {
@@ -448,7 +448,7 @@ QHBoxLayout* AdjustPanel::buildTopRow()
     auto* top = new QHBoxLayout;
     top->setContentsMargins(kHistogramSide, 6, kHistogramSide, 8);
     top->setSpacing(kGapRelated);
-    autoButton->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed); // the row's width, as drawn
+    autoButton->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed); // the row's width
     top->addWidget(autoButton, 1);
     top->addWidget(copy);
     top->addWidget(m_paste);
@@ -461,7 +461,7 @@ QHBoxLayout* AdjustPanel::buildTopRow()
     top->addWidget(m_collapseAll);
     for (QPushButton* icon :
          {static_cast<QPushButton*>(resetAll), static_cast<QPushButton*>(m_collapseAll)}) {
-        icon->setFixedSize(26, 26); // the mocks' small icon buttons
+        icon->setFixedSize(26, 26); // a small icon button
     }
     return top;
 }
@@ -493,12 +493,13 @@ AdjustPanel::AdjustPanel(QWidget* parent)
     groups->addStretch();
 
     auto* scroll = new QScrollArea(this);
+    m_scroll = scroll;
     scroll->setObjectName(u"panelScroll"_s);
     scroll->setWidget(content);
     scroll->setWidgetResizable(true);
     scroll->setFrameShape(QFrame::NoFrame);
     scroll->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    overlayScrollBar(scroll); // over the panel's padding, as the mocks draw it
+    overlayScrollBar(scroll); // over the panel's padding
     auto* column = new QVBoxLayout(this);
     column->setContentsMargins(0, 0, 0, 0);
     column->setSpacing(0);

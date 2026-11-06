@@ -73,7 +73,7 @@ namespace {
 bool (*isPhotoTest)(const QString&) = nullptr;
 
 constexpr int kPanelWidth = 380;
-constexpr int kListSide = 16;    // the list's head, preview and status rows (batch.html)
+constexpr int kListSide = 16;    // the list's head, preview and status rows
 constexpr int kStatusGlyph = 18; // the status line's tick or alert
 
 QString describe(const QString& path)
@@ -151,7 +151,7 @@ BatchPage::BatchPage(core::ExportOptions output, core::CompressJob job, bool com
             return; // a picture for an older recipe
         }
         QLabel* target = key % 2 == 0 ? m_before : m_after;
-        // Rounded as the list's pictures are (batch.html).
+        // Rounded as the list's pictures are.
         QPixmap pixmap = roundedPixmap(image, target->size(), devicePixelRatioF(), 4.0);
         target->setPixmap(pixmap);
         if (target == m_after) {
@@ -381,7 +381,7 @@ void BatchPage::refreshView()
     constexpr int kCompressPage = 2;
     constexpr int kEmptyPage = 3;
     if (m_files.isEmpty()) {
-        // What to drop, in the mode's own words (batch-empty.html).
+        // What to drop, in the mode's own words.
         icons::setGlyph(m_emptyGlyph, m_compressOnly ? u"download"_s : u"images"_s, tokens().muted, 44);
         m_emptyTitle->setText(m_compressOnly ? tr("Drop photos or folders to compress")
                                              : tr("Drop photos or folders here"));
@@ -452,8 +452,8 @@ QWidget* BatchPage::buildPreview(QWidget* parent)
 
 QWidget* BatchPage::buildStatus(QWidget* parent)
 {
-    // batch-running.html: "Saving 4 of 6, about 20 s left", Pause, Stop, a progress line;
-    // batch-done.html: "5 saved, 1 not saved, in 38 s, 41 MB", Retry failed, Show in folder.
+    // "Saving 4 of 6, about 20 s left", Pause, Stop, a progress line;
+    // "5 saved, 1 not saved, in 38 s, 41 MB", Retry failed, Show in folder.
     m_status = new QWidget(parent);
     m_status->setObjectName(u"batchStatus"_s);
     m_status->setAttribute(Qt::WA_StyledBackground);
@@ -591,7 +591,7 @@ QWidget* BatchPage::buildRecipe(QWidget* parent)
     connect(m_auto, &QCheckBox::toggled, this, &BatchPage::refreshRecipeCard);
     m_keepEdits = new QCheckBox(tr("Keep edits already made in PixelFx"), box);
     m_keepEdits->setToolTip(tr("Start from each photo's remembered edits instead of the original"));
-    // The card and, close under it, its three options 25 px apart (batch.html).
+    // The card and, close under it, its three options 25 px apart.
     constexpr int kOptionRow = 25;
     auto* options = new QVBoxLayout;
     options->setSpacing(0);
@@ -968,7 +968,7 @@ void BatchPage::showRecipePicker(bool second)
 
 RecipePicker* BatchPage::newRecipePicker(bool second)
 {
-    // Choose the recipe (batch-recipe-picker.html), on the batch's first photo.
+    // Choose the recipe, on the batch's first photo.
     std::optional<RecipePicker::Opened> opened;
     if (!second && !m_loadedStack.empty()) {
         pfx::Settings steps;
@@ -1673,7 +1673,7 @@ void BatchPage::refreshRow(int index)
         pill->setStatus(K::Bad, tr("Not saved"), u"alert"_s);
         break;
     }
-    // Why a photo was not saved, in plain words, in place of its size (batch-done.html).
+    // Why a photo was not saved, in plain words, in place of its size.
     const bool explain = m_runner.state(index) == S::Failed || m_runner.state(index) == S::Skipped;
     row.row->setSubtitle(explain ? m_runner.reason(index) : describe(m_files.at(index)));
     row.row->setSubtitleError(explain);

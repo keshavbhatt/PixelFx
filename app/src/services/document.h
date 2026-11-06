@@ -57,7 +57,7 @@ public:
     void setSidecarFolder(const QString& folder);
     /// Whether a photo opens with its remembered edits (true) or as the original.
     void setOpenAsLeft(bool on) { m_openAsLeft = on; }
-    /// Opens the JPEG preview inside a RAW file instead of developing it (editor-raw.html).
+    /// Opens the JPEG preview inside a RAW file instead of developing it.
     void openPreview(const QString& path, int previewLongEdge);
     /// A RAW is being developed: its preview shows meanwhile.
     [[nodiscard]] bool isDeveloping() const { return m_developing; }
@@ -84,7 +84,7 @@ public:
     void open(const QString& path, int previewLongEdge);
 
     [[nodiscard]] bool isOpen() const { return !m_info.path.isEmpty(); }
-    /// Closes the photo (close-photo.html): its edit is written first when edits are
+    /// Closes the photo: its edit is written first when edits are
     /// remembered, then nothing is open; `closed` follows.
     void close();
     /// The settings differ from those the photo opened with: an edit that is lost on closing

@@ -65,8 +65,7 @@ SliderRow::SliderRow(const QString& label, QWidget* parent)
     top->addWidget(m_value);
     top->addWidget(m_field);
     auto* column = new QVBoxLayout(this);
-    // The track 24 px under the name's top, as `.adj` draws it; the value's 1 px hover border
-    // fills the top pixel.
+    // The track 24 px under the name's top; the value's 1 px hover border fills the top pixel.
     column->setContentsMargins(0, 6, 0, 8);
     column->setSpacing(1);
     column->addLayout(top);

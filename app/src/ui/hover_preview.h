@@ -10,7 +10,7 @@ namespace pixelfx::ui {
 
 class PhotoTile;
 
-/// The hover preview of the Looks and Presets tabs (editor-presets-catalog.html): resting on a
+/// The hover preview of the Looks and Presets tabs: resting on a
 /// tile for kWait previews it, a bar filling along the tile's picture meanwhile; once a preview
 /// shows, the next tile takes kNext; leaving the tiles ends it a moment later, so moving between
 /// neighbours does not flash back to the photo.

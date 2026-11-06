@@ -969,7 +969,7 @@ void setLabelColumn(const QFormLayout* form, int width)
         label->setObjectName(QStringLiteral("fieldLabel"));
         label->setMinimumWidth(width - std::max(0, form->horizontalSpacing()));
         // As tall as its field, with the name in the middle: a form puts a label at the top of a
-        // taller field, the mocks' `.field` centres it.
+        // taller field; here it is centred.
         if (auto* text = qobject_cast<QLabel*>(label)) {
             text->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
             text->setMinimumHeight(labelHeightFor(field));

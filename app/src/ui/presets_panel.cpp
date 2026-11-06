@@ -79,7 +79,7 @@ PresetsPanel::PresetsPanel(QWidget* parent)
     scroll->setWidgetResizable(true);
     scroll->setFrameShape(QFrame::NoFrame);
     scroll->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    overlayScrollBar(scroll); // over the panel's padding, as the mocks draw it
+    overlayScrollBar(scroll); // over the panel's padding
     m_listBox->setObjectName(u"panelContent"_s);
 
     auto* presetsPage = new QWidget(this);
@@ -145,7 +145,7 @@ QHBoxLayout* PresetsPanel::buildHead()
 {
     m_search->setObjectName(u"presetSearch"_s);
     m_search->setPlaceholderText(tr("Search presets"));
-    m_search->setProperty("search", true); // 30 px, as the mocks' search fields
+    m_search->setProperty("search", true); // 30 px
     m_search->setClearButtonEnabled(true);
     addSearchIcon(m_search);
     connect(m_search, &QLineEdit::textChanged, this, &PresetsPanel::rebuild);
@@ -247,7 +247,7 @@ QWidget* PresetsPanel::buildFoot()
     m_appliedBox->hide();
     auto* save =
         new IconTextButton(icons::themed(u"plus"_s, tokens().text), tr("Save current as preset"), foot);
-    save->setObjectName(u"small"_s); // a small button across the panel, as drawn
+    save->setObjectName(u"small"_s); // a small button across the panel
     save->setToolTip(tr("Keep this photo's settings, or some of them, as a preset"));
     connect(save, &QPushButton::clicked, this, &PresetsPanel::saveRequested);
     column->addWidget(m_appliedBox);

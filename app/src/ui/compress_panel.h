@@ -14,7 +14,7 @@ namespace pixelfx::ui {
 class PathLabel;
 class SliderRow;
 
-/// Batch's Compress only choices (batch-compress.html): 2. Compression (JPEG, PNG, the other
+/// Batch's Compress only choices: 2. Compression (JPEG, PNG, the other
 /// formats, location and previews), 3. Save (into a folder or replacing the originals, the name,
 /// keeping the original when the result is not smaller), and the foot (Run again with these
 /// settings, Compress N files).

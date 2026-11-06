@@ -51,7 +51,7 @@ public:
     ~ExportSheet() override;
 
     [[nodiscard]] core::ExportOptions options() const;
-    /// Several photos at once: the title and button say "Export 4 photos" (apply-to-selected.html).
+    /// Several photos at once: the title and button say "Export 4 photos".
     void setPhotoCount(int count);
     /// What the watermark sheet previews on (the photo as edited).
     void setPreview(const QImage& preview);

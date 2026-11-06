@@ -66,7 +66,7 @@ LooksPanel::LooksPanel(QWidget* parent)
     });
     connect(m_hover, &HoverPreview::ended, this, &LooksPanel::previewEnded);
     m_search->setPlaceholderText(tr("Search looks"));
-    m_search->setProperty("search", true); // 30 px, as the mocks' search fields
+    m_search->setProperty("search", true); // 30 px
     m_search->setClearButtonEnabled(true);
     addSearchIcon(m_search);
     connect(m_search, &QLineEdit::textChanged, this, &LooksPanel::rebuild);
@@ -103,7 +103,7 @@ LooksPanel::LooksPanel(QWidget* parent)
     scroll->setWidgetResizable(true);
     scroll->setFrameShape(QFrame::NoFrame);
     scroll->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    overlayScrollBar(scroll); // over the panel's padding, as the mocks draw it
+    overlayScrollBar(scroll); // over the panel's padding
     m_listBox->setObjectName(u"panelContent"_s);
 
     auto* column = new QVBoxLayout(this);

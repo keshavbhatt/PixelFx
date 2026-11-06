@@ -32,7 +32,7 @@
 //                                      the second's tile shows the wait half done
 //   PIXELFX_DEBUG_THEME=light|dark    switch the theme once the window is up (the live switch)
 //   PIXELFX_DEBUG_FONT_PX=<px>         the default text size, as a desktop sets it (offscreen grabs
-//                                      are otherwise a size smaller than the mocks' 13 px)
+//                                      are otherwise a size smaller)
 //   PIXELFX_DEBUG_CLOSE=1              close the photo on show once it is open (Ctrl+W); with
 //                                      GRAB, grab the next photo or the welcome page
 //   PIXELFX_DEBUG_GRAB=<file.png>      grab the window once the photo is shown (or after 2 s
@@ -562,7 +562,7 @@ int main(int argc, char** argv)
     };
     pixelfx::ui::useLightTheme(light());
     // PIXELFX_DEBUG_FONT_PX: the desktop's text size for offscreen grabs, whose platform has a
-    // smaller default font than a desktop's (KDE's 10 pt is about 13 px, the mocks' size).
+    // smaller default font than a desktop's (KDE's 10 pt is about 13 px).
     if (const int px = qEnvironmentVariableIntValue("PIXELFX_DEBUG_FONT_PX"); px > 0) {
         QFont font = QApplication::font();
         font.setPixelSize(px);

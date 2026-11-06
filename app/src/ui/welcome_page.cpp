@@ -42,7 +42,7 @@ WelcomePage::WelcomePage(QWidget* parent)
 
     auto* outer = new QVBoxLayout(this);
     outer->setContentsMargins(32, 32, 32, 32);
-    // The card and Recent together in the middle (welcome.html).
+    // The card and Recent together in the middle.
     outer->addStretch(1);
     outer->addWidget(m_dropZone, 0, Qt::AlignHCenter);
     outer->addWidget(m_recent, 0, Qt::AlignHCenter);

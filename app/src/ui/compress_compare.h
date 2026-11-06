@@ -9,7 +9,7 @@ namespace pixelfx::ui {
 
 class StatusPill;
 
-/// Compress only's before and after (batch-compress.html): the same spot of the original and the
+/// Compress only's before and after: the same spot of the original and the
 /// result side by side at 100%, so a lossy setting is judged by eye.
 class CompressCompare : public QWidget
 {

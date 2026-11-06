@@ -6,7 +6,7 @@
 
 namespace pixelfx::ui {
 
-/// What an export of another shape keeps (export-sizes.html): the photo dimmed, the part a
+/// What an export of another shape keeps: the photo dimmed, the part a
 /// Crop to fill keeps bright inside a white frame that the mouse or the arrow keys move along
 /// the free side; with Fit inside, the whole photo inside the frame with its border.
 class FramePicker : public QWidget

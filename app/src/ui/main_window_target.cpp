@@ -1,4 +1,4 @@
-// Picking a colour on the photo for the Color mixer and the B&W mix (editor-mixer-target.html).
+// Picking a colour on the photo for the Color mixer and the B&W mix.
 #include "ui/adjust_panel.h"
 #include "ui/canvas.h"
 #include "ui/color_target_tool.h"

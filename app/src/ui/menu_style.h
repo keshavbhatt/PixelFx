@@ -12,7 +12,7 @@ class QWidget;
 
 namespace pixelfx::ui::menu_style {
 
-// Menus as the mocks draw them (mock.css .menu): a rounded panel, rows with an icon column, the
+// Menus drawn by the app: a rounded panel, rows with an icon column, the
 // text, the shortcut at the right end in muted type, a chevron for a submenu, and a check for a
 // checked item. PixelFxStyle hands menu elements here; each function returns nothing (or false)
 // for anything that is not a menu's.

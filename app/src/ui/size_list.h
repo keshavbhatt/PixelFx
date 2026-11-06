@@ -6,7 +6,7 @@ class QComboBox;
 
 namespace pixelfx::ui {
 
-/// The size lists of Export and Batch (export-sizes.html): grouped under headings (Keep, Social,
+/// The size lists of Export and Batch: grouped under headings (Keep, Social,
 /// Screen, Print at 300 dpi, Mine), each row's name on the left and its pixel size on the right,
 /// a tick on the current one.
 namespace sizelist {

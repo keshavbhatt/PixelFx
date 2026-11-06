@@ -38,7 +38,7 @@ inline constexpr int kPanelPadding = 14;
 inline constexpr int kToolRowPadding = 10;
 /// Rows of a list (spots, steps, photos) sit this far in from the panel's edges.
 inline constexpr int kListInset = 8;
-/// Between the rows of a list: the mocks' rows have 1 px margins, which meet (`.list .it`).
+/// Between the rows of a list.
 inline constexpr int kListRowGap = 1;
 
 /// The gaps between items, by how closely they belong together (0 is for segments that touch).
@@ -152,13 +152,13 @@ QVBoxLayout* sectionColumn(const QString& heading, QWidget* box);
 /// layout, `edge` px), so the content keeps its width and nothing moves when the bar appears.
 void keepScrollBarInPadding(const QScrollArea* area, QLayout* content, int edge);
 /// `area`'s vertical scroll bar floats over its right edge instead of taking width: for side
-/// panels, whose 14 px padding holds it (the mocks draw no track); the content keeps its width.
+/// panels, whose 14 px padding holds it, with no track; the content keeps its width.
 void overlayScrollBar(QScrollArea* area);
 /// A heading inside a menu ("History"): Qt draws a menu section as a bare line under a style
 /// sheet, so the heading is a label of its own.
 void addMenuHeading(QMenu* menu, const QString& text);
-/// Draws the labels of `form` as the mocks' fields: muted, in one column `width` px wide, the gap
-/// to the fields included.
+/// Draws the labels of `form` muted, in one column `width` px wide (the gap to the fields
+/// included), centred on their fields and greyed out with them.
 void setLabelColumn(const QFormLayout* form, int width);
 /// `image` cut to fill `size` (the middle kept) with rounded corners, for a sharp thumbnail on a
 /// screen of `devicePixelRatio`.

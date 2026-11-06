@@ -28,7 +28,7 @@ struct ExportOptions
     int longEdge = 0; ///< 0: original size (when no size preset is chosen)
     /// A long edge never makes a smaller photo larger (Batch's "Never enlarge"; Export always).
     bool noEnlarge = true;
-    /// A size preset (export-sizes.html) by id, empty for none; it decides the size.
+    /// A size preset by id, empty for none; it decides the size.
     QString sizePreset;
     /// When the preset's shape differs from the photo: fit inside with a border, or crop to fill.
     bool fitInside = false;

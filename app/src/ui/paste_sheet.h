@@ -12,7 +12,7 @@ namespace pixelfx::ui {
 
 class PartChecklist;
 
-/// Paste to several photos (apply-to-selected.html: "Paste settings asks which groups"): the
+/// Paste to several photos: the
 /// parts the copied settings hold, with what changed in each, ticked except White balance and
 /// Crop and rotate.
 class PasteSheet : public Sheet
