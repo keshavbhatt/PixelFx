@@ -108,8 +108,24 @@ Decisions the work stopped at; everything else went ahead within the approved mo
   `packaging/vcpkg/ports` for libvips (HEIF, JPEG XL, RAW, GIF, PPM, zlib) and LibRaw (no
   JasPer); macOS moves from Homebrew to vcpkg, dynamically linked. `scripts/check-pins.py` runs
   first in Linux CI. Qt 6.11.2 everywhere.
-- Not yet proven on GitHub: the vcpkg builds (old base-library ports with current vcpkg) and the
-  snap's build through the scripts; the first runs after this push decide.
+- Proven on GitHub: CI passes on Linux, Windows and macOS (run 42362119916, commit a1d1bdc) and
+  the snap built through the scripts is on the Snap Store's edge channel (revision 19,
+  `2.0.0+gita1d1bdc`, 10.3 MB), published by the workflow after CI. Fixed on the way:
+  - vcpkg: zlib 1.3 with Xcode 16 (a port with zlib 1.3.1's one-line fix); pcre2's port names
+    the sljit commit instead of asking GitHub's API, which refuses CI runners without a login;
+    lensfun installed on ARM macOS with `--allow-unsupported`.
+  - MSVC: the style sheet in literals under 16 KB, `NOMINMAX` before `windows.h`.
+  - Windows bugs found by the tests: Compress only kept the original open while replacing it,
+    and a file libvips had read could not be written over; `pfx::closeFiles()` empties libvips'
+    cache before a save over an existing file (it first used `vips_cache_drop_all`, which frees
+    the cache for good; a test now catches that).
+  - Tests made portable: read-only folders (Windows ignores them), lensfun's SSE and plain C
+    paths compared by mean, Qt's offscreen platform pointed at the system fonts on Windows, Qt's
+    own file dialog left out of the Windows monkey run (it crashes in its file thread offscreen).
+  - The snap: PixelFx built in `build/app` (in `app/`, its sources, Qt's CMake helpers recursed
+    for ever); the workflow builds amd64 only; the unused plain libraw left out.
+- Open: snapcraft's metadata linter asks for a `contact` field (an address or URL for users;
+  the owner's choice). The stable channel still holds PixelFx 1.0 until a `v2.0.0` tag.
 
 ### 2026-11-07 (the snap, and the mocks index)
 
