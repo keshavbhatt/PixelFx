@@ -5,7 +5,8 @@
 # Edge is where a build is checked before it is tagged.
 #
 # Publishing needs the SNAPCRAFT_STORE_CREDENTIALS secret and the repository variable
-# PUBLISH_TO_STORE=true; without them the snap is only built, and kept as an artifact.
+# PUBLISH_TO_STORE=true; without them the snap is only built. Snaps go to the store, never to
+# GitHub's artifact storage.
 name: snap
 
 on:
@@ -55,13 +56,6 @@ jobs:
       - name: Build snap (${{ matrix.arch }})
         uses: snapcore/action-build@v1
         id: build
-
-      - name: Keep the snap
-        uses: actions/upload-artifact@v4
-        with:
-          name: pixelfx-${{ matrix.arch }}-snap
-          path: ${{ steps.build.outputs.snap }}
-          retention-days: 14
 
       - name: Publish to the Snap Store
         if: >-

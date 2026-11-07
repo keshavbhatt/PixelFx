@@ -107,9 +107,9 @@ Decisions the work stopped at; everything else went ahead within the approved mo
 - `snap/snapcraft.yaml`: core24, the KDE Neon 6 extension, amd64 and arm64; the codecs as parts
   at the pins of `build-deps.sh` (ADR-008 update); `home` and `removable-media`; the version from
   `project(VERSION)`, with `+git<hash>` off a tag. `.github/workflows/snap.yml` builds it on
-  GitHub for both architectures, keeps the snap as an artifact, and publishes to edge (main)
-  or stable (a `v` tag matching the version) once `SNAPCRAFT_STORE_CREDENTIALS` and
-  `PUBLISH_TO_STORE` are set. Not built here (the snap is built by GitHub Actions only):
+  GitHub for both architectures and publishes straight to the Snap Store, edge (main) or stable
+  (a `v` tag matching the version), as Omnidict does, once `SNAPCRAFT_STORE_CREDENTIALS` and
+  `PUBLISH_TO_STORE` are set; no build is kept as a GitHub artifact (owner, 2026-11-07). Not built here (the snap is built by GitHub Actions only):
   `snapcraft expand-extensions` checks the file; the first real build is the first push.
 - The app reads a lens database shipped beside it (`<prefix>/share/lensfun/version_1`).
 - `tst_changelog` now also keeps accounts and licensing out of the metainfo and the snap's
