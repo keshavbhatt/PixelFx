@@ -32,7 +32,10 @@ QStringList g_warnings;
 void collect(QtMsgType type, const QMessageLogContext& /*context*/, const QString& message)
 {
     if (type == QtWarningMsg || type == QtCriticalMsg || type == QtFatalMsg) {
-        if (!message.contains(u"This plugin does not support"_s)) {
+        // Qt's offscreen platform, not PixelFx: plugins without a feature, and its default
+        // "Sans Serif" family, which macOS does not have.
+        if (!message.contains(u"This plugin does not support"_s) &&
+            !message.contains(u"Populating font family aliases"_s)) {
             g_warnings << message;
         }
     }

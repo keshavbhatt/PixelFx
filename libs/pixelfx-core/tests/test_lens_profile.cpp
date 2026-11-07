@@ -144,6 +144,10 @@ TEST_CASE("golden image: the lens profile's output is unchanged")
     REQUIRE(pfx::save(rendered.value(), dir.path() / "actual.png", sixteen).ok());
     const auto actual = pfx::load(dir.path() / "actual.png");
     REQUIRE(actual.ok());
-    CHECK(fixtures::compare(actual.value().image, expected.value().image).max < 2e-3);
+    // The mean, not the largest difference: lensfun computes its distortion with SSE on x86 and
+    // in plain C elsewhere, and a shift of a fraction of a pixel at a sharp edge of the scene
+    // moves single pixels by up to 0.25 between them (macOS on ARM). A real change shows in the
+    // mean: distortion at 90 instead of 100 differs by 0.005, the profile off by 0.056.
+    CHECK(fixtures::compare(actual.value().image, expected.value().image).mean < 1e-3);
     pfx::setLensDatabaseFolder({});
 }
