@@ -54,7 +54,8 @@ QColor hex(const char* value)
 }
 
 // In two parts: MSVC refuses a string literal over 16 KB (error C2026).
-const QString kSheet = uR"(
+const QString kSheet =
+    uR"(
         #header { background: {{bar}}; border-bottom: 1px solid {{border}}; }
         #docName { font-weight: 600; }
         #docMeta { color: {{muted}}; font-size: 11px; }
@@ -124,7 +125,8 @@ const QString kSheet = uR"(
         QToolButton#zoomButton { border: 0; border-radius: 6px; padding: 4px; background: transparent; font-size: 12px; }
         QToolButton#zoomButton:hover { background: {{hover}}; }
         #strip { background: {{bar}}; border-top: 1px solid {{border}}; }
-    )"_s + uR"(
+    )"_s +
+    uR"(
         #panelScroll, #panelContent { background: {{panel}}; }
         #adjustGroup { border-top: 1px solid {{border}}; }
         QToolButton#groupToggle { border: 0; background: transparent; font-weight: 600; padding: 0; }
@@ -189,7 +191,8 @@ const QString kSheet = uR"(
         #toast { background: {{elevated}}; border: 1px solid {{border}}; border-radius: 9px; padding: 7px 12px; }
         #crashLine { background: {{hover}}; border-radius: 8px; }
         QLabel#crashText { font-size: 12px; }
-        #photoDetails { background: {{elevated}}; border: 1px solid {{border}}; border-radius: 10px; }
+)"_s +
+    uR"(        #photoDetails { background: {{elevated}}; border: 1px solid {{border}}; border-radius: 10px; }
         #photoDetails #footBar, #photoDetails QScrollArea, #photoDetails QScrollArea > QWidget > QWidget { background: transparent; }
         QLabel#detailsName { font-size: 14px; font-weight: 600; }
         QLabel#detailsPath, QLabel#detailsNote { color: {{muted}}; font-size: 12px; }
@@ -222,7 +225,8 @@ const QString kSheet = uR"(
 
 // The standard controls. {{glyphs}} is a folder of small SVGs made in the theme's colours at
 // start, because style sheets take images only from files.
-const QString kControls = uR"(
+const QString kControls =
+    uR"(
         QCheckBox, QRadioButton { spacing: 8px; }
         QCheckBox::indicator { width: 13px; height: 13px; border-radius: 4px; border: 1.5px solid {{faint}}; background: transparent; }
         QCheckBox::indicator:hover { border-color: {{muted}}; }
@@ -286,7 +290,8 @@ const QString kControls = uR"(
         QToolButton#iconButton:checked { background: {{accentSoft}}; border-color: transparent; }
         QToolButton#sheetClose { border: 0; border-radius: 7px; padding: 6px; background: transparent; }
         QToolButton#sheetClose:hover { background: {{hover}}; }
-        QToolButton#tileClose { border: 0; margin: 2px; border-radius: 10px; padding: 0; background: rgba(0, 0, 0, 153); }
+)"_s +
+    uR"(        QToolButton#tileClose { border: 0; margin: 2px; border-radius: 10px; padding: 0; background: rgba(0, 0, 0, 153); }
         QToolButton#tileClose:hover { background: rgba(0, 0, 0, 204); }
         #headerSep { background: {{border}}; }
         #wordmark { font-weight: 700; font-size: 14px; }
@@ -331,8 +336,8 @@ QString glyphFolder(const Tokens& t)
         if (file.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
             file.write(
                 QString(u"<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 16 16\" fill=\"none\" "
-                        "stroke=\"%1\" stroke-width=\"%2\" stroke-linecap=\"round\" "
-                        "stroke-linejoin=\"round\">%3</svg>"_s)
+                        u"stroke=\"%1\" stroke-width=\"%2\" stroke-linecap=\"round\" "
+                        u"stroke-linejoin=\"round\">%3</svg>"_s)
                     .arg(colour.name())
                     .arg(width)
                     .arg(body)
@@ -348,8 +353,8 @@ QString glyphFolder(const Tokens& t)
         QFile file(dir + u'/' + name);
         if (file.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
             file.write(QString(u"<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 34 20\">"
-                               "<rect width=\"34\" height=\"20\" rx=\"10\" fill=\"%1\"/>"
-                               "<circle cx=\"%2\" cy=\"10\" r=\"8\" fill=\"#ffffff\"/></svg>"_s)
+                               u"<rect width=\"34\" height=\"20\" rx=\"10\" fill=\"%1\"/>"
+                               u"<circle cx=\"%2\" cy=\"10\" r=\"8\" fill=\"#ffffff\"/></svg>"_s)
                            .arg(track.name())
                            .arg(x)
                            .toUtf8());

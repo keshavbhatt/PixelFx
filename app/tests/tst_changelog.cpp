@@ -10,7 +10,7 @@ using namespace pixelfx::core;
 namespace {
 const QString kDoc =
     u"# Changelog\n\nintro\n\n## [10.1.0] - unreleased\n\nNew stuff.\n\n### Added\n- **A**: one\n\n"
-    "## [10.0.0] - 2026-09-20\n\nRewrite.\n\n### Removed\n- old\n\n[10.1.0]: https://x/compare\n[10.0.0]: https://x/tag\n"_s;
+    u"## [10.0.0] - 2026-09-20\n\nRewrite.\n\n### Removed\n- old\n\n[10.1.0]: https://x/compare\n[10.0.0]: https://x/tag\n"_s;
 }
 
 class TestChangelog : public QObject

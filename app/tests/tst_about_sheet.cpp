@@ -24,8 +24,8 @@ namespace {
 
 const QString kChangelog =
     u"# Changelog\n\n## [3.1.0] - unreleased\n\nBetter.\n\nSmaller things.\n\n"
-    "### Added\n\n- **One**: 1\n- Two\n- Three\n\n### Fixed\n\n- Four\n- Five\n- Six\n\n"
-    "## [3.0.0] - 2026-01-02\n\nFirst.\n\n### Added\n\n- Only\n"_s;
+    u"### Added\n\n- **One**: 1\n- Two\n- Three\n\n### Fixed\n\n- Four\n- Five\n- Six\n\n"
+    u"## [3.0.0] - 2026-01-02\n\nFirst.\n\n### Added\n\n- Only\n"_s;
 
 // Closes the sheet that opens next, as a person would.
 void closeNextSheet()

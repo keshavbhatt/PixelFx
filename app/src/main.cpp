@@ -298,7 +298,7 @@ QDialog* appSheet(pixelfx::ui::MainWindow& window, const QString& name)
     // "report", "report-crash" and "crash": Report a bug, after a made-up crash with it.
     const pixelfx::core::crash::Report crash = pixelfx::core::crash::parse(
         u"kind: SIGSEGV\ntime: %1\nphoto: sunset-lake.jpg\nstack:\n"
-        "libpixelfx_ui.so(_ZN7pixelfx2ui6Canvas10paintEventEP11QPaintEvent+0x2c) [0x7f00]\n"_s.arg(
+        u"libpixelfx_ui.so(_ZN7pixelfx2ui6Canvas10paintEventEP11QPaintEvent+0x2c) [0x7f00]\n"_s.arg(
             QDateTime::currentSecsSinceEpoch()));
     if (name == u"report"_s || name == u"report-crash"_s) {
         auto* sheet = new pixelfx::ui::ReportBugSheet(

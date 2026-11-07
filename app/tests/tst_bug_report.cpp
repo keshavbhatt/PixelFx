@@ -90,9 +90,9 @@ private Q_SLOTS:
     {
         const crash::Report r =
             crash::parse(u"kind: SIGSEGV\ntime: 1794000000\nphoto: harbour.jpg\nstack:\n"
-                         "/opt/pixelfx/lib/"
-                         "libpixelfx_ui.so(_ZN7pixelfx2ui6Canvas10paintEventEP11QPaintEvent+0x2c) [0x7f00]\n"
-                         "/usr/lib/libc.so.6(+0x3c770) [0x7f01]\n"_s);
+                         u"/opt/pixelfx/lib/"
+                         u"libpixelfx_ui.so(_ZN7pixelfx2ui6Canvas10paintEventEP11QPaintEvent+0x2c) [0x7f00]\n"
+                         u"/usr/lib/libc.so.6(+0x3c770) [0x7f01]\n"_s);
         QCOMPARE(r.kind, u"a crash (SIGSEGV)"_s);
         QCOMPARE(r.when, QDateTime::fromSecsSinceEpoch(1794000000));
         QCOMPARE(r.photo, u"harbour.jpg"_s);

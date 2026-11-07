@@ -117,7 +117,7 @@ void WhatsNewSheet::render()
             continue;
         }
         html += u"<p style=\"color:%1; font-size:11px; font-weight:700; margin:10px 0 4px 0\">%2</p><ul "
-                "style=\"margin:0\">"_s.arg(t.muted.name(), g.title.toUpper().toHtmlEscaped());
+                u"style=\"margin:0\">"_s.arg(t.muted.name(), g.title.toUpper().toHtmlEscaped());
         for (const QString& item : g.items) {
             if (!m_all && shown >= kHighlights) {
                 break;
