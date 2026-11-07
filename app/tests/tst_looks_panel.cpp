@@ -140,11 +140,13 @@ private Q_SLOTS:
         QSignalSpy shown(&viewer, &pixelfx::ui::PreviewViewer::photoShown);
         viewer.show();
         QVERIFY(QTest::qWaitForWindowExposed(&viewer));
-        QVERIFY(shown.wait(5000));
+        // The first photo may be shown while the window is still being exposed: count, not wait.
+        QTRY_VERIFY_WITH_TIMEOUT(shown.count() >= 1, 5000);
         QCOMPARE(viewer.current(), 0);
         QCOMPARE(viewer.canvas()->image().pixelColor(0, 0).red(), 200); // after
+        qsizetype before = shown.count();
         QTest::keyClick(&viewer, Qt::Key_Right);
-        QVERIFY(shown.wait(5000));
+        QTRY_VERIFY_WITH_TIMEOUT(shown.count() > before, 5000);
         QCOMPARE(viewer.current(), 1);
         QCOMPARE(viewer.canvas()->image().pixelColor(0, 0).blue(), 201);
         // Space held shows before; \ turns the split on.
@@ -155,8 +157,9 @@ private Q_SLOTS:
         QTest::keyClick(&viewer, Qt::Key_Backslash);
         QVERIFY(viewer.canvas()->isComparing());
         // The first photo has no previous one.
+        before = shown.count();
         QTest::keyClick(&viewer, Qt::Key_Left);
-        QVERIFY(shown.wait(5000));
+        QTRY_VERIFY_WITH_TIMEOUT(shown.count() > before, 5000);
         QTest::keyClick(&viewer, Qt::Key_Left);
         QCOMPARE(viewer.current(), 0);
     }

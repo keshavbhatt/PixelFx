@@ -15,6 +15,7 @@
 #include <QFileDialog>
 #include <QFileInfo>
 #include <QFontComboBox>
+#include <QFontDatabase>
 #include <QFrame>
 #include <QFutureWatcher>
 #include <QGridLayout>
@@ -577,7 +578,8 @@ void WatermarkSheet::load(const core::Watermark& w, const QString& path)
     m_kindPages->setCurrentIndex(static_cast<int>(w.kind));
     m_text->setText(w.text);
     m_logoName->setText(w.logo.isEmpty() ? tr("No logo yet") : QFileInfo(w.logo).fileName());
-    m_font->setCurrentFont(w.font.isEmpty() ? QFont(u"Sans Serif"_s) : QFont(w.font));
+    m_font->setCurrentFont(w.font.isEmpty() ? QFontDatabase::systemFont(QFontDatabase::GeneralFont)
+                                            : QFont(w.font));
     m_colors->button(static_cast<int>(w.colorMode))->setChecked(true);
     m_size->setValue(static_cast<int>(std::lround(w.size * 100)));
     m_opacity->setValue(static_cast<int>(std::lround(w.opacity * 100)));
@@ -610,7 +612,8 @@ void WatermarkSheet::sync()
     m_mark.text = m_text->text();
     // The family as picked; the system sans is stored as empty so it follows the system.
     const QString family = m_font->currentFont().family();
-    m_mark.font = family == QFont(u"Sans Serif"_s).family() ? QString() : family;
+    m_mark.font =
+        family == QFontDatabase::systemFont(QFontDatabase::GeneralFont).family() ? QString() : family;
     m_mark.colorMode = static_cast<core::Watermark::ColorMode>(std::max(0, m_colors->checkedId()));
     m_mark.size = m_size->value() / 100.0;
     m_mark.opacity = m_opacity->value() / 100.0;

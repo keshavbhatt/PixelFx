@@ -16,6 +16,7 @@
 #include <exception>
 
 #ifdef Q_OS_WIN
+#define NOMINMAX // windows.h's min and max macros would break std::min
 #include <windows.h>
 #else
 #include <fcntl.h>

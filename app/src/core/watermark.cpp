@@ -7,6 +7,7 @@
 #include <QDir>
 #include <QFile>
 #include <QFileInfo>
+#include <QFontDatabase>
 #include <QFontMetricsF>
 #include <QImageReader>
 #include <QJsonArray>
@@ -41,7 +42,8 @@ double longEdge(const QSizeF& s)
 
 QFont markFont(const Watermark& w, double pixelHeight)
 {
-    QFont font(w.font.isEmpty() ? u"Sans Serif"_s : w.font);
+    // No family chosen: the system's general font, which every platform has.
+    QFont font = w.font.isEmpty() ? QFontDatabase::systemFont(QFontDatabase::GeneralFont) : QFont(w.font);
     if (w.font.isEmpty()) {
         font.setStyleHint(QFont::SansSerif);
     }
