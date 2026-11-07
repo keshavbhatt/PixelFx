@@ -1,9 +1,9 @@
 # PixelFx as a snap: core24 with the KDE Neon 6 extension (Qt 6 and KDE Frameworks from the
 # kf6-core24 content snap), built by GitHub Actions only (.github/workflows/snap.yml; ADR-000,
-# PLAN section 8). libvips and the codecs the runtime lacks are built here as parts, at the
-# versions and checksums scripts/build-deps.sh pins for dev builds (ADR-008); their headers and
-# the image libraries under them come from Ubuntu 24.04, the release core24 and the runtime are
-# built from.
+# PLAN section 8). It is built exactly as a dev build is (ADR-015): scripts/build-deps.sh makes
+# libvips and the codecs from the pins in scripts/deps-pins.sh against the kde-qt6-core24-sdk
+# snap, scripts/dev-build.sh builds PixelFx against the same SDK, and at run time the image
+# libraries and Qt come from the kf6-core24 runtime, as in dev runs.
 name: pixelfx
 adopt-info: pixelfx
 grade: stable
@@ -42,9 +42,9 @@ issues: https://github.com/keshavbhatt/PixelFx/issues
 source-code: https://github.com/keshavbhatt/PixelFx
 license: GPL-3.0-or-later
 
+# amd64 only: KDE publishes the kde-qt6-core24-sdk snap for amd64 only (2026-11-07).
 platforms:
   amd64:
-  arm64:
 
 apps:
   pixelfx:
@@ -54,9 +54,8 @@ apps:
     extensions:
       - kde-neon-6
     environment:
-      # libvips and the codecs built below, and the image libraries staged from Ubuntu; the
-      # runtime's launcher adds only its own folders.
-      LD_LIBRARY_PATH: $SNAP/usr/lib:$SNAP/usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR
+      # libvips and the codecs built below; the runtime's launcher adds only its own folders.
+      LD_LIBRARY_PATH: $SNAP/usr/lib
     plugs:
       - home
       - removable-media # photos on cards and external drives
@@ -68,266 +67,29 @@ apps:
       - unity7
 
 parts:
-  # SIMD for libjxl; static, linked into libjxl.
-  highway:
-    plugin: cmake
-    source: https://github.com/google/highway/archive/refs/tags/1.4.0.tar.gz
-    source-checksum: sha256/e72241ac9524bb653ae52ced768b508045d4438726a303f10181a38f764a453c
-    build-snaps: [cmake/latest/stable]
-    build-packages: [ninja-build]
-    cmake-generator: Ninja
-    cmake-parameters:
-      - -DCMAKE_BUILD_TYPE=Release
-      - -DCMAKE_INSTALL_PREFIX=/usr
-      - -DCMAKE_INSTALL_LIBDIR=lib
-      - -DBUILD_SHARED_LIBS=OFF
-      - -DCMAKE_POSITION_INDEPENDENT_CODE=ON
-      - -DBUILD_TESTING=OFF
-      - -DHWY_ENABLE_CONTRIB=OFF
-      - -DHWY_ENABLE_EXAMPLES=OFF
-      - -DHWY_ENABLE_TESTS=OFF
-      - -DHWY_ENABLE_INSTALL=ON
-    prime: [-*]
-
-  # JPEG XL, read and write.
-  libjxl:
-    after: [highway]
-    plugin: cmake
-    source: https://github.com/libjxl/libjxl/archive/refs/tags/v0.12.0.tar.gz
-    source-checksum: sha256/03e9be69a30be4011f559da75328b6d7cea8ad921fabfbd551ce10bf45cdc992
-    build-snaps: [cmake/latest/stable]
-    build-packages: [ninja-build, pkgconf, libbrotli-dev, liblcms2-dev]
-    stage-packages: [libbrotli1, liblcms2-2]
-    cmake-generator: Ninja
-    cmake-parameters:
-      - -DCMAKE_BUILD_TYPE=Release
-      - -DCMAKE_INSTALL_PREFIX=/usr
-      - -DCMAKE_INSTALL_LIBDIR=lib
-      - -DBUILD_SHARED_LIBS=ON
-      - -DBUILD_TESTING=OFF
-      - -DJPEGXL_FORCE_SYSTEM_BROTLI=ON
-      - -DJPEGXL_FORCE_SYSTEM_LCMS2=ON
-      - -DJPEGXL_FORCE_SYSTEM_HWY=ON
-      - -DJPEGXL_ENABLE_SKCMS=OFF
-      - -DJPEGXL_ENABLE_TOOLS=OFF
-      - -DJPEGXL_ENABLE_DEVTOOLS=OFF
-      - -DJPEGXL_ENABLE_FUZZERS=OFF
-      - -DJPEGXL_ENABLE_DOXYGEN=OFF
-      - -DJPEGXL_ENABLE_MANPAGES=OFF
-      - -DJPEGXL_ENABLE_BENCHMARK=OFF
-      - -DJPEGXL_ENABLE_EXAMPLES=OFF
-      - -DJPEGXL_ENABLE_JNI=OFF
-      - -DJPEGXL_ENABLE_SJPEG=OFF
-      - -DJPEGXL_ENABLE_OPENEXR=OFF
-      - -DJPEGXL_ENABLE_TCMALLOC=OFF
-      - -DJPEGXL_ENABLE_PLUGINS=OFF
-      - -DJPEGXL_ENABLE_VIEWERS=OFF
-      - -DJPEGXL_ENABLE_JPEGLI=OFF
-      - -DJPEGXL_BUNDLE_LIBPNG=OFF
-
-  # AV1 decoding for AVIF; static, linked into libheif.
-  dav1d:
-    plugin: meson
-    source: https://downloads.videolan.org/pub/videolan/dav1d/1.5.4/dav1d-1.5.4.tar.xz
-    source-checksum: sha256/686616b7c69eb88d44459391ab25cac13b6647a3b288835c5784e71c1514a5c5
-    build-packages:
-      - meson
-      - ninja-build
-      - on amd64: [nasm]
-    meson-parameters:
-      - --prefix=/usr
-      - --libdir=lib
-      - --buildtype=release
-      - --default-library=static
-      - -Denable_tools=false
-      - -Denable_examples=false
-      - -Denable_tests=false
-      - -Denable_docs=false
-      - -Dxxhash_muxer=disabled
-    prime: [-*]
-
-  # HEVC decoding for HEIC; static, linked into libheif.
-  libde265:
-    plugin: cmake
-    source: https://github.com/strukturag/libde265/releases/download/v1.1.3/libde265-1.1.3.tar.gz
-    source-checksum: sha256/554228bd17788c99a7e63b37ab5634722190e6e2bf60c1dcb01cef328e133905
-    build-snaps: [cmake/latest/stable]
-    build-packages: [ninja-build]
-    cmake-generator: Ninja
-    cmake-parameters:
-      - -DCMAKE_BUILD_TYPE=Release
-      - -DCMAKE_INSTALL_PREFIX=/usr
-      - -DCMAKE_INSTALL_LIBDIR=lib
-      - -DBUILD_SHARED_LIBS=OFF
-      - -DCMAKE_POSITION_INDEPENDENT_CODE=ON
-      - -DENABLE_SDL=OFF
-      - -DENABLE_DECODER=OFF
-      - -DENABLE_ENCODER=OFF
-    prime: [-*]
-
-  # HEIC and AVIF, read only: no HEVC encoder (x265 is GPL) and no AV1 encoder (ADR-003).
-  libheif:
-    after: [dav1d, libde265]
-    plugin: cmake
-    source: https://github.com/strukturag/libheif/releases/download/v1.23.7/libheif-1.23.7.tar.gz
-    source-checksum: sha256/f7483e818503ea6224c8863e4a56ac02c7089021a98472c811c12aa19faf2475
-    build-snaps: [cmake/latest/stable]
-    build-packages: [ninja-build, pkgconf]
-    build-environment:
-      - PKG_CONFIG_PATH: $CRAFT_STAGE/usr/lib/pkgconfig:${PKG_CONFIG_PATH:-}
-    cmake-generator: Ninja
-    cmake-parameters:
-      - -DCMAKE_BUILD_TYPE=Release
-      - -DCMAKE_INSTALL_PREFIX=/usr
-      - -DCMAKE_INSTALL_LIBDIR=lib
-      - -DBUILD_SHARED_LIBS=ON
-      - -DBUILD_TESTING=OFF
-      - -DENABLE_PLUGIN_LOADING=OFF
-      - -DWITH_LIBDE265=ON
-      - -DWITH_LIBDE265_PLUGIN=OFF
-      - -DWITH_DAV1D=ON
-      - -DWITH_DAV1D_PLUGIN=OFF
-      - -DWITH_X265=OFF
-      - -DWITH_X264=OFF
-      - -DWITH_OpenH264_DECODER=OFF
-      - -DWITH_KVAZAAR=OFF
-      - -DWITH_UVG266=OFF
-      - -DWITH_VVDEC=OFF
-      - -DWITH_VVENC=OFF
-      - -DWITH_AOM_DECODER=OFF
-      - -DWITH_AOM_ENCODER=OFF
-      - -DWITH_SvtEnc=OFF
-      - -DWITH_RAV1E=OFF
-      - -DWITH_JPEG_DECODER=OFF
-      - -DWITH_JPEG_ENCODER=OFF
-      - -DWITH_OpenJPEG_DECODER=OFF
-      - -DWITH_OpenJPEG_ENCODER=OFF
-      - -DWITH_OPENJPH_ENCODER=OFF
-      - -DWITH_FFMPEG_DECODER=OFF
-      - -DWITH_LIBSHARPYUV=OFF
-      - -DWITH_HEADER_COMPRESSION=OFF
-      - -DWITH_EXAMPLES=OFF
-      - -DWITH_EXAMPLE_HEIF_THUMB=OFF
-      - -DWITH_EXAMPLE_HEIF_VIEW=OFF
-      - -DWITH_GDK_PIXBUF=OFF
-      - -DBUILD_DOCUMENTATION=OFF
-
-  # Camera RAW; no OpenMP and no sample programs.
-  libraw:
-    plugin: autotools
-    source: https://www.libraw.org/data/LibRaw-0.22.3.tar.gz
-    source-checksum: sha256/789f3c33466210a1a0907f747a97c715d21bbf4af712f257fcbbd90111b227e4
-    build-packages: [pkgconf, libjpeg-dev, zlib1g-dev, liblcms2-dev]
-    stage-packages: [libjpeg-turbo8, liblcms2-2]
-    autotools-configure-parameters:
-      - --prefix=/usr
-      - --libdir=/usr/lib
-      - --disable-static
-      - --disable-openmp
-      - --disable-examples
-      - --enable-jpeg
-      - --enable-zlib
-      - --enable-lcms
-
-  # Lens profiles and their database (ADR-013); the app finds the database beside itself.
-  lensfun:
-    plugin: cmake
-    source: https://github.com/lensfun/lensfun/archive/refs/tags/v0.3.4.tar.gz
-    source-checksum: sha256/dafb39c08ef24a0e2abd00d05d7341b1bf1f0c38bfcd5a4c69cf5f0ecb6db112
-    build-snaps: [cmake/latest/stable]
-    build-packages: [ninja-build, pkgconf, libglib2.0-dev]
-    cmake-generator: Ninja
-    cmake-parameters:
-      - -DCMAKE_BUILD_TYPE=Release
-      - -DCMAKE_INSTALL_PREFIX=/usr
-      - -DCMAKE_INSTALL_LIBDIR=lib
-      - -DCMAKE_POLICY_VERSION_MINIMUM=3.5
-      - -DBUILD_TESTS=OFF
-      - -DBUILD_LENSTOOL=OFF
-      - -DBUILD_DOC=OFF
-      - -DINSTALL_PYTHON_MODULE=OFF
-      - -DINSTALL_HELPER_SCRIPTS=OFF
-
-  # libvips with the formats PixelFx needs; everything else off.
-  libvips:
-    after: [libjxl, libheif, libraw]
-    plugin: meson
-    source: https://github.com/libvips/libvips/releases/download/v8.18.7/vips-8.18.7.tar.xz
-    source-checksum: sha256/5baaead3b0bb20ffdb9e9ff09aa9fda08620923df77b63b436654cb5e0b3bf94
-    build-packages:
-      - meson
-      - ninja-build
-      - pkgconf
-      - libglib2.0-dev
-      - libexpat1-dev
-      - zlib1g-dev
-      - libjpeg-dev
-      - libpng-dev
-      - libtiff-dev
-      - libwebp-dev
-      - liblcms2-dev
-      - libexif-dev
-    stage-packages:
-      - libjpeg-turbo8
-      - libpng16-16t64
-      - libtiff6
-      - libwebp7
-      - libwebpmux3
-      - libwebpdemux2
-      - libsharpyuv0
-      - liblcms2-2
-      - libexif12
-    build-environment:
-      - PKG_CONFIG_PATH: $CRAFT_STAGE/usr/lib/pkgconfig:${PKG_CONFIG_PATH:-}
-    meson-parameters:
-      - --prefix=/usr
-      - --libdir=lib
-      - --buildtype=release
-      - -Dauto_features=disabled
-      - -Ddeprecated=false
-      - -Dexamples=false
-      - -Dcplusplus=true
-      - -Dmodules=disabled
-      - -Dintrospection=disabled
-      - -Ddocs=false
-      - -Dcpp-docs=false
-      - -Dvapi=false
-      - -Djpeg=enabled
-      - -Dpng=enabled
-      - -Dtiff=enabled
-      - -Dwebp=enabled
-      - -Dlcms=enabled
-      - -Dexif=enabled
-      - -Dzlib=enabled
-      - -Dnsgif=true
-      - -Dppm=true
-      - -Danalyze=false
-      - -Dradiance=false
-      - -Dheif=enabled
-      - -Djpeg-xl=enabled
-      - -Draw=enabled
-    prime:
-      - -usr/bin
-
   pixelfx:
-    after: [libvips, lensfun]
-    plugin: cmake
+    plugin: nil
     source: .
-    build-snaps: [cmake/latest/stable]
-    build-packages: [git, ninja-build, pkgconf, liblcms2-dev, libjpeg-dev, zlib1g-dev, libglib2.0-dev]
-    build-environment:
-      - PKG_CONFIG_PATH: $CRAFT_STAGE/usr/lib/pkgconfig:${PKG_CONFIG_PATH:-}
-    cmake-generator: Ninja
-    cmake-parameters:
-      - -DCMAKE_BUILD_TYPE=Release
-      - -DCMAKE_INSTALL_PREFIX=/usr
-      - -DPIXELFX_BUILD_TESTS=OFF
-      - -DPFX_WITH_LENSFUN=ON
+    build-snaps:
+      - cmake/latest/stable # the cmake dev builds use (/snap/cmake)
+      - kf6-core24 # the runtime the SDK's libraries resolve into, as in dev builds
+    build-packages: [git, curl, make, ninja-build, meson, nasm, pkgconf]
     override-build: |
-      craftctl default
+      # As on a developer's machine (ADR-015): there the SDK's tools are not first on the path, no
+      # library path points into the SDK (with it a configure script's test program does not
+      # run) and CMake gets the SDK from the build script only.
+      unset LD_LIBRARY_PATH CMAKE_PREFIX_PATH
+      export PATH="/usr/bin:/bin:${PATH}"
+      export PIXELFX_DEPS_PREFIX="${CRAFT_PART_INSTALL}/usr"
+      export PIXELFX_MESON=meson
+      export PIXELFX_BUILD_DIR="${CRAFT_PART_BUILD}/app"
+      export PIXELFX_BUILD_TYPE=Release
+      export PIXELFX_CMAKE_ARGS="-DPIXELFX_BUILD_TESTS=OFF -DPFX_WITH_LENSFUN=ON"
+      scripts/dev-build.sh # runs scripts/build-deps.sh first
+      /snap/cmake/current/bin/cmake --install "${PIXELFX_BUILD_DIR}" --prefix "${CRAFT_PART_INSTALL}/usr"
       # The version comes from the CMake project, the one source of truth. A build that is not
       # exactly a version tag (the edge channel) carries the commit: 2.0.0+git1a2b3c4.
-      VER=$(grep -m1 '^CMAKE_PROJECT_VERSION:STATIC=' "${CRAFT_PART_BUILD}/CMakeCache.txt" | cut -d= -f2 | tr -d '[:space:]')
+      VER=$(grep -m1 '^CMAKE_PROJECT_VERSION:STATIC=' "${PIXELFX_BUILD_DIR}/CMakeCache.txt" | cut -d= -f2 | tr -d '[:space:]')
       if ! git -c safe.directory="*" -C "${CRAFT_PART_SRC}" describe --exact-match --tags --match "v${VER}" >/dev/null 2>&1; then
         HASH=$(git -c safe.directory="*" -C "${CRAFT_PART_SRC}" rev-parse --short=7 HEAD 2>/dev/null || true)
         [ -n "${HASH}" ] && VER="${VER}+git${HASH}"
@@ -337,12 +99,18 @@ parts:
       mkdir -p "${CRAFT_PART_INSTALL}/meta/gui"
       cp "${CRAFT_PART_INSTALL}/usr/share/icons/hicolor/512x512/apps/com.ktechpit.pixelfx.png" \
          "${CRAFT_PART_INSTALL}/meta/gui/icon.png"
-
-  # What only building needs stays out of the snap.
-  cleanup:
-    after: [pixelfx]
-    plugin: nil
-    override-prime: |
-      craftctl default
-      rm -rf usr/include usr/lib/pkgconfig usr/lib/cmake usr/share/pkgconfig usr/share/doc usr/share/man
-      find usr/lib -name '*.a' -delete
+    prime:
+      # What only building needs stays out of the snap.
+      - -usr/include
+      - -usr/lib/pkgconfig
+      - -usr/lib/cmake
+      - -usr/lib/*.a
+      - -usr/bin/vips*
+      - -usr/bin/heif-*
+      - -usr/bin/*raw*
+      - -usr/local
+      - -usr/share/doc
+      - -usr/share/man
+      - -usr/share/gtk-doc
+      - -usr/share/pkgconfig
+      - -usr/.deps-stamp

@@ -228,17 +228,7 @@ is on the host (a build tool); without it the C paths decode the same pixels, mo
 stamp of all pinned versions in the prefix triggers a clean rebuild when any pin changes. The
 runtime's libjxl 0.7 is not used.
 
-**Update (2026-11-07), the snap.** `snap/snapcraft.yaml` builds the same pinned sources as parts
-(highway, libjxl, dav1d, libde265, libheif, LibRaw, lensfun, libvips), with the same options.
-Their build headers come from Ubuntu 24.04 packages rather than the SDK overlay: core24 and the
-`kf6-core24` runtime are built from that release, so the ABI is the one that runs, and the
-image libraries the runtime may not carry (libjpeg-turbo, libpng, libtiff, libwebp, LittleCMS,
-libexif, brotli) are staged into the snap. The app adds `$SNAP/usr/lib` to its library path
-(the runtime's launcher adds only its own folders) and reads the lens database shipped beside
-it (`<prefix>/share/lensfun`), since lensfun's own path is where it was built. The KDE Neon 6
-extension adds the `network`, `network-bind` and `audio-playback` plugs to every app; PixelFx
-uses none of them, and the snap asks for nothing else beyond the desktop set but `home` and
-`removable-media`.
+**Update (2026-11-07), the snap.** Superseded the same day by ADR-015: the snap runs `build-deps.sh` and `dev-build.sh` itself, so it is built as dev builds are.
 
 ## ADR-009: the built-in preset catalog comes from EmulsionPresets (2026-11-05)
 
@@ -399,3 +389,36 @@ reads "1 photos" again; the Batch and Compress tests check one count. Real trans
 they come, load over this file. The Windows CI fetches `qttools`; the other builds already have
 it.
 
+
+## ADR-015: the same libraries in every build (2026-11-07)
+
+**Context.** Each build took its libraries from somewhere else: dev builds from the snap SDK and
+`build-deps.sh` (libvips 8.18.7, Qt 6.11.2), Linux CI from Ubuntu's packages and aqt (libvips
+8.15, Qt 6.11.3), the snap from parts and Ubuntu's packages, Windows from vcpkg's current ports,
+macOS from Homebrew. The first CI run failed on an API difference between libvips 8.15 and 8.18,
+and every difference of that kind is a bug found only on one platform. The owner asked for the
+same libraries in every build, built from source where needed (2026-11-07).
+
+**Decision.**
+- One pins file, `scripts/deps-pins.sh`: Qt, the libraries built from source (libvips, libheif
+  with libde265 and dav1d, libjxl with highway, LibRaw, Lensfun; version, SHA-256, address) and
+  the image libraries under libvips (libjpeg-turbo, libpng, libtiff, libwebp, LittleCMS, libexif,
+  zlib, brotli, expat, GLib).
+- Linux, one way for every build: dev builds, Linux CI and the snap all run
+  `scripts/build-deps.sh` and `scripts/dev-build.sh` against the `kde-qt6-core24-sdk` snap; the
+  image libraries are the SDK's and, at run time, the `kf6-core24` runtime's. They must be: Qt
+  from the runtime loads them into the same process, so no other version can ship beside them.
+  `build-deps.sh` stops when the SDK's Qt or image libraries differ from the pins.
+- Windows and macOS build every library through vcpkg at the pinned versions (`vcpkg.json`
+  overrides, vcpkg cloned at its baseline), dynamically linked as on Linux; macOS moves from
+  Homebrew to vcpkg. vcpkg's libvips port cannot build HEIF, JPEG XL or RAW and its libraw needs
+  JasPer, so `packaging/vcpkg/ports` holds the two ports built as `build-deps.sh` builds them;
+  libheif is taken with libde265 and dav1d only (no x265, ADR-003).
+- `scripts/check-pins.py`, run first in Linux CI, fails when `ci.yml`, `vcpkg.json`, a port or
+  the snap names another version.
+
+**Consequences.** A library changes everywhere at once, by changing the pins and the ports. Windows
+and macOS get the image libraries at Ubuntu 24.04's versions, older than their current ones, and
+their first CI build compiles every library (cached afterwards). The snap builds for amd64 only
+until KDE publishes the SDK for arm64. A newer SDK snap fails the build until the pins follow it,
+on purpose. This supersedes ADR-008's "CI uses each platform's own libvips".

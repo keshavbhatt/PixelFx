@@ -93,6 +93,24 @@ Decisions the work stopped at; everything else went ahead within the approved mo
 
 ## Sessions (newest first)
 
+### 2026-11-07 (the same libraries in every build)
+
+- First pushes: CI's Linux job failed on a libvips 8.15 API difference (a test fixed); the snap
+  failed on arm64 (KDE publishes the SDK snap for amd64 only) and on amd64 in LibRaw's configure
+  (the extension's library path pointed into the SDK). The owner asked for the same libraries in
+  every build, built from source where needed: ADR-015.
+- `scripts/deps-pins.sh` holds every pin (Qt 6.11.2, the source-built libraries with their
+  checksums, the image libraries at Ubuntu 24.04's versions). Linux CI and the snap now run
+  `build-deps.sh` and `dev-build.sh` as a dev build does, on the KDE SDK and runtime snaps; the
+  snap no longer builds its own parts or stages Ubuntu packages, and is amd64 only for now.
+  `build-deps.sh` stops when the SDK's Qt or image libraries leave the pins (checked by changing
+  the Qt pin). Windows and macOS build every library through vcpkg at the pinned versions, with
+  `packaging/vcpkg/ports` for libvips (HEIF, JPEG XL, RAW, GIF, PPM, zlib) and LibRaw (no
+  JasPer); macOS moves from Homebrew to vcpkg, dynamically linked. `scripts/check-pins.py` runs
+  first in Linux CI. Qt 6.11.2 everywhere.
+- Not yet proven on GitHub: the vcpkg builds (old base-library ports with current vcpkg) and the
+  snap's build through the scripts; the first runs after this push decide.
+
 ### 2026-11-07 (the snap, and the mocks index)
 
 - The mocks index said "Approved" on screens built since; every card now says whether its screen

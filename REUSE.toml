@@ -49,3 +49,11 @@ path = "app/src/resources/presets/**"
 precedence = "override"
 SPDX-FileCopyrightText = ["2026 peva3", "2026 Keshav Bhatt (Ktechpit)"]
 SPDX-License-Identifier = "MIT"
+
+# vcpkg ports, adapted from microsoft/vcpkg (MIT): libvips with the formats PixelFx uses, LibRaw
+# without JasPer (ADR-015).
+[[annotations]]
+path = "packaging/vcpkg/ports/**"
+precedence = "override"
+SPDX-FileCopyrightText = ["Microsoft Corporation", "2026 Keshav Bhatt (Ktechpit)"]
+SPDX-License-Identifier = "MIT"

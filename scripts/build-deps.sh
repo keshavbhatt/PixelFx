@@ -18,32 +18,55 @@ CMAKE=/snap/cmake/current/bin/cmake
 PREFIX="${PIXELFX_DEPS_PREFIX:-$DIR/build/deps/prefix}"
 WORK="$DIR/build/deps/work"
 
-# Pinned sources: name, version, SHA-256 of the release archive, URL.
-GH=https://github.com
-VIPS_VERSION=8.18.7
-VIPS_SHA256=5baaead3b0bb20ffdb9e9ff09aa9fda08620923df77b63b436654cb5e0b3bf94
-VIPS_URL="$GH/libvips/libvips/releases/download/v$VIPS_VERSION/vips-$VIPS_VERSION.tar.xz"
-HWY_VERSION=1.4.0
-HWY_SHA256=e72241ac9524bb653ae52ced768b508045d4438726a303f10181a38f764a453c
-HWY_URL="$GH/google/highway/archive/refs/tags/$HWY_VERSION.tar.gz"
-JXL_VERSION=0.12.0
-JXL_SHA256=03e9be69a30be4011f559da75328b6d7cea8ad921fabfbd551ce10bf45cdc992
-JXL_URL="$GH/libjxl/libjxl/archive/refs/tags/v$JXL_VERSION.tar.gz"
-DAV1D_VERSION=1.5.4
-DAV1D_SHA256=686616b7c69eb88d44459391ab25cac13b6647a3b288835c5784e71c1514a5c5
-DAV1D_URL="https://downloads.videolan.org/pub/videolan/dav1d/$DAV1D_VERSION/dav1d-$DAV1D_VERSION.tar.xz"
-DE265_VERSION=1.1.3
-DE265_SHA256=554228bd17788c99a7e63b37ab5634722190e6e2bf60c1dcb01cef328e133905
-DE265_URL="$GH/strukturag/libde265/releases/download/v$DE265_VERSION/libde265-$DE265_VERSION.tar.gz"
-HEIF_VERSION=1.23.7
-HEIF_SHA256=f7483e818503ea6224c8863e4a56ac02c7089021a98472c811c12aa19faf2475
-HEIF_URL="$GH/strukturag/libheif/releases/download/v$HEIF_VERSION/libheif-$HEIF_VERSION.tar.gz"
-RAW_VERSION=0.22.3
-RAW_SHA256=789f3c33466210a1a0907f747a97c715d21bbf4af712f257fcbbd90111b227e4
-RAW_URL="https://www.libraw.org/data/LibRaw-$RAW_VERSION.tar.gz"
-LENSFUN_VERSION=0.3.4
-LENSFUN_SHA256=dafb39c08ef24a0e2abd00d05d7341b1bf1f0c38bfcd5a4c69cf5f0ecb6db112
-LENSFUN_URL="$GH/lensfun/lensfun/archive/refs/tags/v$LENSFUN_VERSION.tar.gz"
+# The pinned versions, checksums and addresses (ADR-015).
+# shellcheck source=scripts/deps-pins.sh
+source "$DIR/scripts/deps-pins.sh"
+
+mkdir -p "$WORK"
+# An overlay over the SDK, so the build sees only the snap's libraries:
+# - Some of the SDK's development links (libglib-2.0.so, libz.so, ...) point at libraries that
+#   live in the runtime snap or the core24 base, not in the SDK; off-snap they dangle and the
+#   build would silently take the host's. The overlay links them to the real files, runtime first
+#   (what ships).
+# - The SDK's lcms2.pc lists two plugin libraries the SDK does not contain; the overlay drops them.
+overlay="$WORK/sdk-overlay"
+rm -rf "$overlay"
+mkdir -p "$overlay/lib" "$overlay/pkgconfig"
+for so in "$SDK_LIB"/*.so; do
+    [ -e "$so" ] && continue
+    target="$(readlink "$so")"
+    for base in "$RT_LIB" "$CORE24_LIB"; do
+        if [ -e "$base/$target" ]; then
+            ln -sf "$base/$target" "$overlay/lib/$(basename "$so")"
+            break
+        fi
+    done
+done
+for pc in "$SDK_LIB"/pkgconfig/*.pc "$SDK"/usr/share/pkgconfig/*.pc; do
+    sed -e "s|-L\${libdir}|-L$overlay/lib -L\${libdir}|" \
+        -e 's/ -llcms2_fast_float -llcms2_threaded//' "$pc" > "$overlay/pkgconfig/$(basename "$pc")"
+done
+
+# Its bare include directory carries Ubuntu's libc headers, which must not shadow the host
+# compiler's: pkg-config drops that -I and the compiler gets the directory with -idirafter
+# (searched after the system headers), as SnapSdkWorkaround.cmake does for Qt. What is built
+# here comes first, then the overlay.
+# The SDK must still carry the pinned Qt and image libraries: every build uses these versions
+# (ADR-015), and a newer SDK would quietly change them here only.
+check_pin() { # <what> <found> <pinned>
+    if [ "$2" != "$3" ]; then
+        echo "The SDK has $1 $2, the pins say $3 (scripts/deps-pins.sh, ADR-015)." >&2
+        exit 1
+    fi
+}
+sdk_qt="$(sed -n 's/^set(PACKAGE_VERSION "\(.*\)")$/\1/p' "$SDK_LIB/cmake/Qt6/Qt6ConfigVersionImpl.cmake" | head -1)"
+check_pin Qt "$sdk_qt" "$QT_VERSION"
+for module_pin in libjpeg:$JPEG_VERSION libpng16:$PNG_VERSION libtiff-4:$TIFF_VERSION libwebp:$WEBP_VERSION \
+    lcms2:$LCMS_VERSION libexif:$EXIF_VERSION zlib:$ZLIB_VERSION libbrotlidec:$BROTLI_VERSION \
+    expat:$EXPAT_VERSION glib-2.0:$GLIB_VERSION; do
+    check_pin "${module_pin%%:*}" "$(PKG_CONFIG_LIBDIR="$overlay/pkgconfig" pkg-config --modversion "${module_pin%%:*}")" \
+        "${module_pin#*:}"
+done
 
 # Any change to a pin (or to this stamp's format) rebuilds the whole prefix.
 STAMP="deps-2 vips-$VIPS_VERSION hwy-$HWY_VERSION jxl-$JXL_VERSION dav1d-$DAV1D_VERSION"
@@ -51,7 +74,9 @@ STAMP="$STAMP de265-$DE265_VERSION heif-$HEIF_VERSION raw-$RAW_VERSION lensfun-$
 if [ "$(cat "$PREFIX/.deps-stamp" 2>/dev/null)" = "$STAMP" ]; then
     exit 0
 fi
-command -v uvx >/dev/null || { echo "uvx (from uv) is needed to run meson: https://docs.astral.sh/uv/" >&2; exit 1; }
+# meson: through uvx by default; PIXELFX_MESON=meson uses the one on PATH (the snap's build).
+read -r -a MESON <<< "${PIXELFX_MESON:-uvx meson}"
+command -v "${MESON[0]}" >/dev/null || { echo "${MESON[0]} is needed to run meson (uvx: https://docs.astral.sh/uv/)" >&2; exit 1; }
 command -v ninja >/dev/null || { echo "ninja is needed to build libvips" >&2; exit 1; }
 command -v make >/dev/null || { echo "make is needed to build LibRaw" >&2; exit 1; }
 [ -x "$CMAKE" ] || { echo "cmake snap missing: sudo snap install cmake --classic" >&2; exit 1; }
@@ -81,34 +106,6 @@ fetch "libheif-$HEIF_VERSION.tar.gz" "$HEIF_SHA256" "$HEIF_URL"
 fetch "LibRaw-$RAW_VERSION.tar.gz" "$RAW_SHA256" "$RAW_URL"
 fetch "lensfun-$LENSFUN_VERSION.tar.gz" "$LENSFUN_SHA256" "$LENSFUN_URL"
 
-# An overlay over the SDK, so the build sees only the snap's libraries:
-# - Some of the SDK's development links (libglib-2.0.so, libz.so, ...) point at libraries that
-#   live in the runtime snap or the core24 base, not in the SDK; off-snap they dangle and the
-#   build would silently take the host's. The overlay links them to the real files, runtime first
-#   (what ships).
-# - The SDK's lcms2.pc lists two plugin libraries the SDK does not contain; the overlay drops them.
-overlay="$WORK/sdk-overlay"
-rm -rf "$overlay"
-mkdir -p "$overlay/lib" "$overlay/pkgconfig"
-for so in "$SDK_LIB"/*.so; do
-    [ -e "$so" ] && continue
-    target="$(readlink "$so")"
-    for base in "$RT_LIB" "$CORE24_LIB"; do
-        if [ -e "$base/$target" ]; then
-            ln -sf "$base/$target" "$overlay/lib/$(basename "$so")"
-            break
-        fi
-    done
-done
-for pc in "$SDK_LIB"/pkgconfig/*.pc "$SDK"/usr/share/pkgconfig/*.pc; do
-    sed -e "s|-L\${libdir}|-L$overlay/lib -L\${libdir}|" \
-        -e 's/ -llcms2_fast_float -llcms2_threaded//' "$pc" > "$overlay/pkgconfig/$(basename "$pc")"
-done
-
-# Its bare include directory carries Ubuntu's libc headers, which must not shadow the host
-# compiler's: pkg-config drops that -I and the compiler gets the directory with -idirafter
-# (searched after the system headers), as SnapSdkWorkaround.cmake does for Qt. What is built
-# here comes first, then the overlay.
 export PKG_CONFIG_LIBDIR="$PREFIX/lib/pkgconfig:$overlay/pkgconfig"
 export PKG_CONFIG_SYSTEM_INCLUDE_PATH="$SDK/usr/include"
 export CFLAGS="-O2 -idirafter $SDK/usr/include"
@@ -161,7 +158,7 @@ cmake_build "$WORK/src/libjxl-$JXL_VERSION" -DBUILD_SHARED_LIBS=ON \
 dav1d_asm=false
 command -v nasm >/dev/null && dav1d_asm=true
 rm -rf "$WORK/build-dav1d"
-uvx meson setup "$WORK/build-dav1d" "$WORK/src/dav1d-$DAV1D_VERSION" \
+"${MESON[@]}" setup "$WORK/build-dav1d" "$WORK/src/dav1d-$DAV1D_VERSION" \
     --prefix="$PREFIX" --libdir=lib --buildtype=release --default-library=static \
     -Denable_asm=$dav1d_asm -Denable_tools=false -Denable_examples=false -Denable_tests=false \
     -Denable_docs=false -Dxxhash_muxer=disabled
@@ -202,7 +199,7 @@ cmake_build "$WORK/src/lensfun-$LENSFUN_VERSION" -DBUILD_TESTS=OFF -DBUILD_LENST
 # libvips: the formats and colour management PixelFx needs; everything else off so nothing from
 # the host leaks in.
 rm -rf "$WORK/build"
-uvx meson setup "$WORK/build" "$WORK/src/vips-$VIPS_VERSION" \
+"${MESON[@]}" setup "$WORK/build" "$WORK/src/vips-$VIPS_VERSION" \
     --prefix="$PREFIX" --libdir=lib --buildtype=release \
     -Dauto_features=disabled -Ddeprecated=false -Dexamples=false -Dcplusplus=true \
     -Dmodules=disabled -Dintrospection=disabled -Ddocs=false -Dcpp-docs=false -Dvapi=false \

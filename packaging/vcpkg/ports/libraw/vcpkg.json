@@ -1,0 +1,26 @@
+{
+  "name": "libraw",
+  "version": "0.22.3",
+  "description": "LibRaw without JasPer, with lossy DNG, as scripts/build-deps.sh builds it.",
+  "homepage": "https://www.libraw.org",
+  "license": "(LGPL-2.1-only OR CDDL-1.0) AND BSD-3-Clause",
+  "supports": "!uwp & !xbox",
+  "dependencies": [
+    "lcms",
+    {
+      "name": "vcpkg-cmake",
+      "host": true
+    },
+    {
+      "name": "vcpkg-cmake-config",
+      "host": true
+    },
+    "zlib",
+    "libjpeg-turbo"
+  ],
+  "features": {
+    "openmp": {
+      "description": "Build library with OpenMP support"
+    }
+  }
+}

@@ -1,0 +1,97 @@
+{
+  "name": "libvips",
+  "version": "8.18.7",
+  "description": "libvips with the formats PixelFx reads and writes (HEIF, JPEG XL, camera RAW too), as scripts/build-deps.sh builds it.",
+  "homepage": "https://github.com/libvips/libvips",
+  "license": "LGPL-2.1-or-later",
+  "dependencies": [
+    "expat",
+    "glib",
+    {
+      "name": "glib",
+      "host": true
+    },
+    {
+      "name": "vcpkg-tool-meson",
+      "host": true
+    }
+  ],
+  "features": {
+    "cplusplus": {
+      "description": "Build C++ API."
+    },
+    "exif": {
+      "description": "Build with exif support.",
+      "dependencies": [
+        "libexif"
+      ]
+    },
+    "jpeg": {
+      "description": "Build with jpeg support.",
+      "dependencies": [
+        "libjpeg-turbo"
+      ]
+    },
+    "lcms": {
+      "description": "Build with lcms support.",
+      "dependencies": [
+        "lcms"
+      ]
+    },
+    "png": {
+      "description": "Build with png support.",
+      "dependencies": [
+        "libpng"
+      ]
+    },
+    "tiff": {
+      "description": "Build with tiff support.",
+      "dependencies": [
+        "tiff"
+      ]
+    },
+    "webp": {
+      "description": "Build with WebP support.",
+      "dependencies": [
+        "libwebp"
+      ]
+    },
+    "zlib": {
+      "description": "Build with zlib support.",
+      "dependencies": [
+        "zlib"
+      ]
+    },
+    "heif": {
+      "description": "HEIC and AVIF through libheif.",
+      "dependencies": [
+        {
+          "name": "libheif",
+          "default-features": false,
+          "features": [
+            "libde265",
+            "dav1d"
+          ]
+        }
+      ]
+    },
+    "jpeg-xl": {
+      "description": "JPEG XL through libjxl.",
+      "dependencies": [
+        "libjxl"
+      ]
+    },
+    "raw": {
+      "description": "Camera RAW through LibRaw.",
+      "dependencies": [
+        "libraw"
+      ]
+    },
+    "nsgif": {
+      "description": "GIF reading (built in)."
+    },
+    "ppm": {
+      "description": "PPM reading and writing (built in)."
+    }
+  }
+}

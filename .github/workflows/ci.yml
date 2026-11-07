@@ -17,38 +17,42 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  QT_VERSION: "6.11.3"
+  QT_VERSION: "6.11.2" # scripts/deps-pins.sh; check-pins.py keeps them equal
 
 jobs:
   linux:
-    name: Linux (GCC, warnings as errors)
+    # Built exactly as a dev build and the snap are (ADR-015): the kde-qt6-core24-sdk and
+    # kf6-core24 snaps, the pinned libraries from scripts/build-deps.sh, scripts/dev-build.sh.
+    name: Linux (KDE SDK snap, GCC, warnings as errors)
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
+      - name: The pins in every build file agree
+        run: python3 scripts/check-pins.py
+      - name: Snaps (the Qt SDK and runtime of the snap, cmake)
+        run: |
+          sudo snap install kde-qt6-core24-sdk kf6-core24
+          sudo snap install cmake --classic
+      - name: Build tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends ninja-build nasm
+      - uses: astral-sh/setup-uv@v6 # meson through uvx, as in dev builds
+      - name: The pinned libraries, built once per set of pins
+        uses: actions/cache@v4
+        with:
+          path: |
+            build/deps/prefix
+            build/deps/work/*.tar.*
+          key: deps-linux-${{ hashFiles('scripts/deps-pins.sh', 'scripts/build-deps.sh') }}
       - uses: hendrikmuhs/ccache-action@v1.2
         with:
           key: ${{ github.job }}
           max-size: 500M
-      - name: Libraries
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends ninja-build pkgconf libvips-dev liblcms2-dev \
-            libgl-dev libegl-dev libxkbcommon-dev libfontconfig1-dev
-      - uses: jurplel/install-qt-action@v4
-        with:
-          version: ${{ env.QT_VERSION }}
-          modules: qtimageformats
-          cache: true
-      - name: Configure
-        run: >
-          cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=RelWithDebInfo -DPIXELFX_WERROR=ON
-          -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
-      - name: Build
-        run: cmake --build build
-      - name: Test
-        run: ctest --test-dir build --output-on-failure
+      - name: Build and test
         env:
-          QT_QPA_PLATFORM: offscreen
+          PIXELFX_CMAKE_ARGS: -DPIXELFX_WERROR=ON -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+        run: scripts/dev-build.sh --tests
 
   windows:
     name: Windows (MSVC, vcpkg)
@@ -63,6 +67,17 @@ jobs:
           script: |
             core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
             core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
+      # vcpkg at vcpkg.json's baseline (full history: pinned versions are read from it), the same
+      # on Windows and macOS.
+      - name: vcpkg
+        shell: pwsh
+        run: |
+          $baseline = (Get-Content vcpkg.json | ConvertFrom-Json).'builtin-baseline'
+          $root = "$env:RUNNER_TEMP/vcpkg"
+          git clone --quiet https://github.com/microsoft/vcpkg.git $root
+          git -C $root checkout --quiet $baseline
+          & "$root/bootstrap-vcpkg.bat" -disableMetrics
+          "VCPKG_ROOT=$root" | Out-File -FilePath $env:GITHUB_ENV -Append
       # aqtinstall (behind install-qt-action) cannot read Qt 6.11's per-compiler Windows
       # repository yet; scripts/ci/fetch-qt.py reads it and checks every archive's SHA-1.
       - name: Qt
@@ -84,7 +99,7 @@ jobs:
         shell: pwsh
         run: >
           cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=RelWithDebInfo
-          -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake"
+          -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake"
           -DVCPKG_TARGET_TRIPLET=x64-windows
           -DCMAKE_POLICY_DEFAULT_CMP0141=NEW -DCMAKE_MSVC_DEBUG_INFORMATION_FORMAT=Embedded
           -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
@@ -99,24 +114,42 @@ jobs:
           QT_QPA_PLATFORM: offscreen
 
   macos:
-    name: macOS (Clang, Homebrew)
+    name: macOS (Clang, vcpkg)
     runs-on: macos-15
+    env:
+      VCPKG_BINARY_SOURCES: "clear;x-gha,readwrite"
     steps:
       - uses: actions/checkout@v4
+      - name: vcpkg binary cache
+        uses: actions/github-script@v7
+        with:
+          script: |
+            core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
+            core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
+      - name: Build tools
+        run: brew install ninja pkgconf autoconf autoconf-archive automake libtool
+      - name: vcpkg
+        run: |
+          baseline=$(python3 -c "import json; print(json.load(open('vcpkg.json'))['builtin-baseline'])")
+          git clone --quiet https://github.com/microsoft/vcpkg.git "$RUNNER_TEMP/vcpkg"
+          git -C "$RUNNER_TEMP/vcpkg" checkout --quiet "$baseline"
+          "$RUNNER_TEMP/vcpkg/bootstrap-vcpkg.sh" -disableMetrics
+          echo "VCPKG_ROOT=$RUNNER_TEMP/vcpkg" >> "$GITHUB_ENV"
       - uses: hendrikmuhs/ccache-action@v1.2
         with:
           key: ${{ github.job }}
           max-size: 500M
-      - name: Libraries
-        run: brew install ninja pkgconf vips little-cms2
       - uses: jurplel/install-qt-action@v4
         with:
           version: ${{ env.QT_VERSION }}
           modules: qtimageformats
           cache: true
+      # Dynamic libraries, as on Linux and Windows.
       - name: Configure
         run: >
           cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=RelWithDebInfo
+          -DCMAKE_TOOLCHAIN_FILE="$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake"
+          -DVCPKG_TARGET_TRIPLET=arm64-osx-dynamic
           -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
       - name: Build
         run: cmake --build build
