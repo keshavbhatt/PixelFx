@@ -1,9 +1,13 @@
 {
-  "$comment": "Windows and macOS: every library at the version of scripts/deps-pins.sh (ADR-015); the ports in packaging/vcpkg/ports build libvips and LibRaw as scripts/build-deps.sh does. scripts/check-pins.py keeps the versions equal.",
+  "$comment": "Windows and macOS: every library at the version of scripts/deps-pins.sh (ADR-015); the ports in packaging/vcpkg/ports build libvips and LibRaw as scripts/build-deps.sh does. scripts/check-pins.py keeps the versions equal. pcre2 (under GLib) without its default JIT: its recipe fetches a file from GitHub's API without a token, which shared CI runners are refused.",
   "name": "pixelfx",
   "version": "2.0.0",
   "dependencies": [
     "pkgconf",
+    {
+      "name": "pcre2",
+      "default-features": false
+    },
     "lcms",
     "libjpeg-turbo",
     "zlib",
