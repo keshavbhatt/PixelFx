@@ -178,6 +178,21 @@ TEST_CASE("a file overwritten on disk is read again, not served from a cache")
     CHECK(second.value().image.pixel(0, 0)[1] == doctest::Approx(0.8F).epsilon(0.02));
 }
 
+TEST_CASE("closing the files libvips holds empties its cache and keeps it working")
+{
+    const fixtures::TempDir dir;
+    const auto path = dir.path() / "held.png";
+    REQUIRE(pfx::save(fixtures::flat(0.3F, 0.3F, 0.3F), path).ok());
+    const int max = vips_cache_get_max();
+    for (int round = 0; round < 2; ++round) {
+        REQUIRE(pfx::load(path).ok());
+        REQUIRE(vips_cache_get_size() > 0);
+        pfx::closeFiles();
+        CHECK(vips_cache_get_size() == 0);
+        CHECK(vips_cache_get_max() == max);
+    }
+}
+
 TEST_CASE("greyscale images, with and without alpha, load as neutral RGBA")
 {
     const fixtures::TempDir dir;

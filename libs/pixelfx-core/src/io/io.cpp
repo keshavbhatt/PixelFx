@@ -831,7 +831,13 @@ Result<vips::VImage> prepareForSaving(const Image& image, const std::string& ext
 void closeFiles()
 {
     ensureVips();
-    vips_cache_drop_all();
+    // Emptying the cache to no entries drops every cached loader with its file; then the old
+    // size is set back. vips_cache_drop_all would free the cache itself, for shutdown only.
+    static std::mutex lock;
+    const std::scoped_lock held(lock);
+    const int max = vips_cache_get_max();
+    vips_cache_set_max(0);
+    vips_cache_set_max(max);
 }
 
 Status save(const Image& image, const std::filesystem::path& path, const SaveOptions& options,

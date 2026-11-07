@@ -80,6 +80,7 @@ CompressOutcome compressOne(const QString& source, const core::CompressJob& job,
         return o;
     }
     const QByteArray raw = in.readAll();
+    in.close(); // the original may be replaced below, and Windows cannot replace an open file
     const std::vector<std::uint8_t> original(raw.begin(), raw.end());
     const auto c = pfx::compress(original, source.toStdString(), job.codec);
     if (!c) {

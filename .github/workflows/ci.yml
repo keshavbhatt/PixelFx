@@ -113,6 +113,9 @@ jobs:
           ctest --test-dir build --output-on-failure
         env:
           QT_QPA_PLATFORM: offscreen
+          # The offscreen platform reads fonts from a folder (Qt's own lib/fonts, which Qt no
+          # longer ships); the system's fonts give the text the sizes it has on Windows.
+          QT_QPA_FONTDIR: C:/Windows/Fonts
 
   macos:
     name: macOS (Clang, vcpkg)
