@@ -105,6 +105,7 @@ parts:
       - -usr/lib/pkgconfig
       - -usr/lib/cmake
       - -usr/lib/*.a
+      - -usr/lib/libraw.so* # libvips links the thread-safe libraw_r
       - -usr/bin/vips*
       - -usr/bin/heif-*
       - -usr/bin/*raw*
