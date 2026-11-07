@@ -1,5 +1,5 @@
-# Builds the snap on GitHub's CI for amd64 and arm64 (never on a developer machine; ADR-000,
-# PLAN section 8) and publishes it:
+# Builds the snap on GitHub's CI for amd64 (never on a developer machine; ADR-000, PLAN section
+# 8; KDE publishes its Qt SDK snap for amd64 only) and publishes it:
 #   CI passed on main   -> edge      (version 2.0.0+git<hash>), the commit CI tested
 #   version tag v2.0.0  -> stable    (version 2.0.0; the tag must match project(VERSION))
 # Edge is where a build is checked before it is tagged. A commit whose tests fail is never built
@@ -29,15 +29,7 @@ jobs:
     if: >-
       github.event_name != 'workflow_run' ||
       (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push')
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - arch: amd64
-            runner: ubuntu-24.04
-          - arch: arm64
-            runner: ubuntu-24.04-arm
-    runs-on: ${{ matrix.runner }}
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v5
         with:
@@ -55,7 +47,7 @@ jobs:
             exit 1
           fi
 
-      - name: Build snap (${{ matrix.arch }})
+      - name: Build snap
         uses: snapcore/action-build@v1
         id: build
 

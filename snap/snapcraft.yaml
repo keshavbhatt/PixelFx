@@ -82,7 +82,7 @@ parts:
       export PATH="/usr/bin:/bin:${PATH}"
       export PIXELFX_DEPS_PREFIX="${CRAFT_PART_INSTALL}/usr"
       export PIXELFX_MESON=meson
-      export PIXELFX_BUILD_DIR="${CRAFT_PART_BUILD}/app"
+      export PIXELFX_BUILD_DIR="${CRAFT_PART_BUILD}/build/app" # as in dev builds; app/ holds the sources
       export PIXELFX_BUILD_TYPE=Release
       export PIXELFX_CMAKE_ARGS="-DPIXELFX_BUILD_TESTS=OFF -DPFX_WITH_LENSFUN=ON"
       scripts/dev-build.sh # runs scripts/build-deps.sh first
