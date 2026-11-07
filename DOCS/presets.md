@@ -67,7 +67,10 @@ internal units, so a file reads like the panel.
   "effects": { "vignette": { "amount": -22, "midpoint": 50, "roundness": 0, "feather": 50, "style": "highlight", "highlights": 0 },
                "grain": { "amount": 0, "size": 25, "roughness": 50 }, "fade": 0 },
   "geometry":{ "crop": { "x": 0.04, "y": 0.03, "w": 0.88, "h": 0.87 }, "angle": 1.5, "rotate90": 0, "flipH": false, "flipV": false,
-               "perspective": { "vertical": 0, "horizontal": 0, "corners": null } },
+               "perspective": { "vertical": 0, "horizontal": 0,
+                                "corners": { "topLeft": { "x": 0, "y": 0 }, "topRight": { "x": 1, "y": 0 },
+                                             "bottomRight": { "x": 1, "y": 1 }, "bottomLeft": { "x": 0, "y": 1 } },
+                                "keep": "whole" } },
   "look":    { "id": "builtin:golden-hour", "strength": 72 },
   "heal":    { "spots": [ { "x": 0.31, "y": 0.22, "source": { "x": 0.36, "y": 0.24 }, "radius": 0.015,
                             "feather": 50, "opacity": 100 },
@@ -114,6 +117,16 @@ internal units, so a file reads like the panel.
   `colorize.amount` with `hue` (0 to 360) and `saturation`, `threshold.amount` with `level`,
   `invert.amount`, `emboss.amount` and `edges.amount` (0 to 100, 0 none), `blur.radius` and
   `pixelate.size` (shares of the long edge, 0 to 0.01).
+- `geometry.perspective.corners` and `keep` (presets version 5, recipes version 6, batch recipes
+  version 7; FEATURES G5): the four corners of something that should be a rectangle, top left
+  first, clockwise, as shares (0 to 1) of the straightened photo's width and height; each
+  defaults to the photo's own corner, which is no correction. The shape is squared after
+  straightening and before the crop, whose rectangle is then a share of the squared picture.
+  `keep` is `whole` (the whole picture turned so the shape is square, trimmed to the largest
+  rectangle of the photo's shape inside, around its middle) or `inside` (only the shape, its
+  width and height the averages of its opposite sides); `whole` falls back to `inside` when part
+  of the picture would be sent past infinity. A shape that is not convex and clockwise, or has a
+  side under 1%, is not used. While corners are set, `vertical` and `horizontal` are ignored.
   `effects.vignette` gains `feather` (0 to 100), `style` (`highlight`, `color` or `paint`) and
   `highlights` (0 to 100); `effects.grain` gains `roughness` (0 to 100, 50 one even layer).
 - `look.id` refers to a look by id: `builtin:<slug>` for shipped looks, a UUID for the user's.
@@ -183,11 +196,12 @@ internal units, so a file reads like the panel.
 }
 ```
 
-- Recipes are at **version 5**: version 2 added the `heal` group (section 2), version 3 the
+- Recipes are at **version 6**: version 2 added the `heal` group (section 2), version 3 the
   Lightroom-compatible settings (section 2), version 4 the `camera` profile, version 5
-  `detail.lensProfile` and the `creative` group. Older recipes read unchanged (nothing to migrate: an older file never
-  names either); a file above version 5 is refused as made by a newer PixelFx. Presets are at
-  **version 4** for the same settings; version 1 to 3 presets read unchanged.
+  `detail.lensProfile` and the `creative` group, version 6 the four-corner perspective. Older
+  recipes read unchanged (nothing to migrate: an older file never names them); a file above
+  version 6 is refused as made by a newer PixelFx. Presets are at **version 5** for the same
+  settings; version 1 to 4 presets read unchanged.
 - The fingerprint (size plus a hash of the first and last 64 KiB) re-attaches a sidecar to a
   photo that was moved or renamed within the library folder.
 - History entries store only the changed groups (deltas), capped at 200 steps per photo.
@@ -207,9 +221,10 @@ internal units, so a file reads like the panel.
 }
 ```
 
-Batch recipes are at **version 6** (version 3 added the Lightroom-compatible settings of
+Batch recipes are at **version 7** (version 3 added the Lightroom-compatible settings of
 section 2, version 4 the `camera` profile, version 5 `detail.lensProfile` and `creative`, version 6
-the output's `colorSpace` and `sharpen`; looks stay at version 1).
+the output's `colorSpace` and `sharpen`, version 7 the four-corner perspective; looks stay at
+version 1).
 
 - The stack is applied in order onto each photo's settings (later entries win per key). A step
   is a preset (its settings, embedded) or a look on its own (`id`, `strength` 0 to 100,
@@ -235,7 +250,7 @@ the output's `colorSpace` and `sharpen`; looks stay at version 1).
   read both as `srgb` and `none`, what they ran with; a value this version does not know reads
   as the default.
 - Version 1 batch recipes had none of these keys and read unchanged; there is nothing to
-  migrate. A file with a `version` above 6 is refused as made by a newer PixelFx.
+  migrate. A file with a `version` above 7 is refused as made by a newer PixelFx.
 
 ## 5. Pipeline order (fixed, documented here and in ADR-004)
 

@@ -31,9 +31,9 @@ enum class DocumentKind
 // and 5. Older files of
 // every kind read as they always did.
 inline constexpr int kDocumentVersion = 1;
-inline constexpr int kPresetVersion = 4;
-inline constexpr int kBatchVersion = 6;
-inline constexpr int kRecipeVersion = 5;
+inline constexpr int kPresetVersion = 5;
+inline constexpr int kBatchVersion = 7;
+inline constexpr int kRecipeVersion = 6;
 [[nodiscard]] int currentVersion(DocumentKind kind);
 
 // A step of a batch recipe's stack (DOCS/presets.md section 4): settings applied onto each

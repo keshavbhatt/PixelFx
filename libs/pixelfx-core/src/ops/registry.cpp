@@ -82,7 +82,16 @@ void addGeometry(std::vector<OpSpec>& ops)
                     number("geometry.angle", -45, 45, 0, "degrees"), fraction("geometry.crop.x", 0.0),
                     fraction("geometry.crop.y", 0.0), fraction("geometry.crop.w", 1.0),
                     fraction("geometry.crop.h", 1.0), number("geometry.perspective.vertical", -100, 100),
-                    number("geometry.perspective.horizontal", -100, 100)},
+                    number("geometry.perspective.horizontal", -100, 100),
+                    fraction("geometry.perspective.corners.topLeft.x", 0.0),
+                    fraction("geometry.perspective.corners.topLeft.y", 0.0),
+                    fraction("geometry.perspective.corners.topRight.x", 1.0),
+                    fraction("geometry.perspective.corners.topRight.y", 0.0),
+                    fraction("geometry.perspective.corners.bottomRight.x", 1.0),
+                    fraction("geometry.perspective.corners.bottomRight.y", 1.0),
+                    fraction("geometry.perspective.corners.bottomLeft.x", 0.0),
+                    fraction("geometry.perspective.corners.bottomLeft.y", 1.0),
+                    choice("geometry.perspective.keep", {"whole", "inside"})},
                    false});
 }
 

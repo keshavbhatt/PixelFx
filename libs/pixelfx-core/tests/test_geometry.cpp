@@ -3,8 +3,11 @@
 #include "pfx/geometry.h"
 #include "pfx/pipeline.h"
 
+#include <array>
 #include <cmath>
 #include <doctest/doctest.h>
+#include <string>
+#include <vector>
 
 namespace {
 
@@ -121,4 +124,152 @@ TEST_CASE("perspective: the leaning edge widens, nothing empty shows, the size s
     const pfx::Image sideways = run(img, {{"geometry.perspective.horizontal", -100.0}});
     CHECK(sideways.pixel(img.width() - 1, 0)[1] >
           img.pixel(img.width() - 1, 0)[1] + 0.1F); // right edge narrows
+}
+
+namespace {
+
+// A dark 240 x 160 picture with a white four-sided shape at `q` (pixels, top left first,
+// clockwise) and a red mark just inside its top left corner.
+pfx::Image shapeAt(const std::array<pfx::Corner, 4>& q)
+{
+    pfx::Image img(240, 160);
+    const auto inside = [&q](double x, double y) {
+        for (std::size_t i = 0; i < 4; ++i) {
+            const pfx::Corner& a = q.at(i);
+            const pfx::Corner& b = q.at((i + 1) % 4);
+            if (((b.x - a.x) * (y - a.y)) - ((b.y - a.y) * (x - a.x)) < 0.0) {
+                return false;
+            }
+        }
+        return true;
+    };
+    for (int y = 0; y < img.height(); ++y) {
+        for (int x = 0; x < img.width(); ++x) {
+            float* p = img.pixel(x, y);
+            const bool white = inside(x + 0.5, y + 0.5);
+            const bool mark = white && std::hypot(x - (q[0].x + 12), y - (q[0].y + 12)) < 6;
+            p[0] = white ? 1.0F : 0.05F;
+            p[1] = white && !mark ? 1.0F : 0.05F;
+            p[2] = white && !mark ? 1.0F : 0.05F;
+            p[3] = 1.0F;
+        }
+    }
+    return img;
+}
+
+void setCorners(pfx::Settings& s, const std::array<pfx::Corner, 4>& q, pfx::Size size)
+{
+    const std::array<std::string, 4> names = {"topLeft", "topRight", "bottomRight", "bottomLeft"};
+    for (std::size_t i = 0; i < 4; ++i) {
+        s.set("geometry.perspective.corners." + names.at(i) + ".x", q.at(i).x / size.width);
+        s.set("geometry.perspective.corners." + names.at(i) + ".y", q.at(i).y / size.height);
+    }
+}
+
+pfx::Image renderWith(const pfx::Image& img, const pfx::Settings& s)
+{
+    auto out = pfx::render(img, s);
+    REQUIRE(out.ok());
+    CHECK(pfx::outputSize(s, {img.width(), img.height()}) ==
+          pfx::Size{out.value().width(), out.value().height()});
+    return std::move(out).value();
+}
+
+bool whiteAt(const pfx::Image& img, int x, int y)
+{
+    return img.pixel(x, y)[1] > 0.5F;
+}
+
+} // namespace
+
+TEST_CASE("four corners, inside: a shape seen at an angle comes back as an upright rectangle")
+{
+    const std::array<pfx::Corner, 4> q{{{70, 30}, {190, 40}, {215, 140}, {40, 125}}};
+    const pfx::Image img = shapeAt(q);
+    pfx::Settings s;
+    setCorners(s, q, {240, 160});
+    s.set("geometry.perspective.keep", std::string("inside"));
+    const pfx::Image out = renderWith(img, s);
+    // As big as the shape's average sides.
+    CHECK(out.width() == doctest::Approx((std::hypot(120, 10) + std::hypot(175, 15)) / 2).epsilon(0.02));
+    CHECK(out.height() == doctest::Approx((std::hypot(30, 95) + std::hypot(25, 100)) / 2).epsilon(0.02));
+    // White to its edges, two pixels in (the edges blend with the dark around the shape).
+    for (int y = 2; y < out.height() - 2; ++y) {
+        for (int x = 2; x < out.width() - 2; ++x) {
+            if (std::hypot(x - 14.0, y - 13.0) > 18.0) { // the red mark, a little larger
+                CAPTURE(x);
+                CAPTURE(y);
+                REQUIRE(whiteAt(out, x, y));
+            }
+        }
+    }
+    // The red mark stays at the top left: nothing turned or mirrored.
+    CHECK(out.pixel(14, 13)[0] > 0.5F);
+    CHECK(out.pixel(14, 13)[1] < 0.5F);
+}
+
+TEST_CASE("four corners, whole photo: the shape is upright inside the whole picture, nothing empty")
+{
+    const std::array<pfx::Corner, 4> q{{{70, 30}, {190, 40}, {215, 140}, {40, 125}}};
+    const pfx::Image img = shapeAt(q);
+    pfx::Settings s;
+    setCorners(s, q, {240, 160});
+    const pfx::Image out = renderWith(img, s);
+    CHECK(static_cast<double>(out.width()) / out.height() == doctest::Approx(1.5).epsilon(0.02));
+    // The white shape's left and right edges are the same on every row it spans.
+    std::vector<int> lefts;
+    std::vector<int> rights;
+    for (int y = 0; y < out.height(); ++y) {
+        int left = -1;
+        int right = -1;
+        for (int x = 0; x < out.width(); ++x) {
+            if (whiteAt(out, x, y)) {
+                left = left < 0 ? x : left;
+                right = x;
+            }
+        }
+        if (left >= 0 && right - left > out.width() / 4) {
+            lefts.push_back(left);
+            rights.push_back(right);
+        }
+    }
+    REQUIRE(lefts.size() > 20);
+    for (std::size_t i = 3; i + 3 < lefts.size(); ++i) { // away from the blended top and bottom rows
+        CHECK(std::abs(lefts.at(i) - lefts.at(lefts.size() / 2)) <= 1);
+        CHECK(std::abs(rights.at(i) - rights.at(rights.size() / 2)) <= 1);
+    }
+    // Every pixel comes from inside the photo: the outline is trimmed, alpha stays 1.
+    for (int y = 0; y < out.height(); ++y) {
+        for (int x = 0; x < out.width(); ++x) {
+            REQUIRE(out.pixel(x, y)[3] == doctest::Approx(1.0));
+        }
+    }
+}
+
+TEST_CASE("four corners: only a convex, clockwise shape is used; the sliders give way to it")
+{
+    using C = std::array<pfx::Corner, 4>;
+    CHECK(pfx::cornersUsable(C{{{0, 0}, {1, 0}, {1, 1}, {0, 1}}}));
+    CHECK(pfx::cornersUsable(C{{{0.2, 0.1}, {0.9, 0.2}, {0.8, 0.9}, {0.1, 0.8}}}));
+    CHECK_FALSE(pfx::cornersUsable(C{{{0, 0}, {1, 1}, {1, 0}, {0, 1}}}));     // crossed
+    CHECK_FALSE(pfx::cornersUsable(C{{{0, 0}, {0, 1}, {1, 1}, {1, 0}}}));     // mirrored
+    CHECK_FALSE(pfx::cornersUsable(C{{{0, 0}, {0.005, 0}, {1, 1}, {0, 1}}})); // a side too short
+    CHECK_FALSE(pfx::cornersUsable(C{{{0, 0}, {1, 0}, {1, 1}, {0.7, 0.3}}})); // a dent
+    // A folded shape in the settings is not used: the photo comes back as it was.
+    const pfx::Image img = coordinates();
+    pfx::Settings folded;
+    setCorners(folded, C{{{0, 0}, {40, 20}, {40, 0}, {0, 20}}}, {40, 20});
+    const pfx::Image same = renderWith(img, folded);
+    CHECK(same.width() == img.width());
+    CHECK(same.pixel(5, 5)[0] == doctest::Approx(img.pixel(5, 5)[0]));
+    // With corners set the keystone sliders do nothing.
+    const C q{{{4, 2}, {36, 1}, {38, 19}, {2, 18}}};
+    pfx::Settings corners;
+    setCorners(corners, q, {40, 20});
+    pfx::Settings both = corners;
+    both.set("geometry.perspective.vertical", 80.0);
+    const pfx::Image a = renderWith(img, corners);
+    const pfx::Image b = renderWith(img, both);
+    REQUIRE(a.width() == b.width());
+    CHECK(a.pixel(10, 10)[0] == doctest::Approx(b.pixel(10, 10)[0]));
 }

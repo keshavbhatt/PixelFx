@@ -164,16 +164,16 @@ TEST_CASE("heal: spots read and write in a recipe (version 2 and later), and bad
     doc.settings.set("heal.spots", pfx::Spots{a, b});
     doc.settings.set("light.exposure", 0.5);
     const std::string text = pfx::serializeDocument(doc);
-    CHECK(text.find("\"version\": 5") != std::string::npos);
+    CHECK(text.find("\"version\": 6") != std::string::npos);
     CHECK(text.find("\"source\"") != std::string::npos);
     const auto again = pfx::parseDocument(text);
     REQUIRE(again.ok());
     CHECK(again.value().settings.spots("heal.spots") == pfx::Spots{a, b});
 
-    // A version 1 recipe reads as before; version 6 is newer.
+    // A version 1 recipe reads as before; version 7 is newer.
     CHECK(pfx::parseDocument(R"({"format":"pixelfx","kind":"recipe","version":1,"body":{"settings":{}}})")
               .ok());
-    CHECK_FALSE(pfx::parseDocument(R"({"format":"pixelfx","kind":"recipe","version":6})").ok());
+    CHECK_FALSE(pfx::parseDocument(R"({"format":"pixelfx","kind":"recipe","version":7})").ok());
 
     // Out of range values are clamped; a broken list is dropped with a warning.
     pfx::ParseReport report;

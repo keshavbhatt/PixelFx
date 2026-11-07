@@ -86,9 +86,9 @@ TEST_CASE("documents from a newer PixelFx, other formats and broken JSON are ref
     const auto look = pfx::parseDocument(R"({"format":"pixelfx","kind":"look","version":2})");
     REQUIRE_FALSE(look.ok());
     CHECK(look.error().code == pfx::ErrorCode::NewerVersion);
-    // Batch recipes are at version 6: 6 reads, 7 is newer.
-    CHECK(pfx::parseDocument(R"({"format":"pixelfx","kind":"batch","version":6})").ok());
-    const auto batch = pfx::parseDocument(R"({"format":"pixelfx","kind":"batch","version":7})");
+    // Batch recipes are at version 7: 7 reads, 8 is newer.
+    CHECK(pfx::parseDocument(R"({"format":"pixelfx","kind":"batch","version":7})").ok());
+    const auto batch = pfx::parseDocument(R"({"format":"pixelfx","kind":"batch","version":8})");
     REQUIRE_FALSE(batch.ok());
     CHECK(batch.error().code == pfx::ErrorCode::NewerVersion);
 }
@@ -184,7 +184,7 @@ TEST_CASE("batch recipes: the stack and the output round-trip")
     CHECK(again.value().settings.isEmpty());
 }
 
-TEST_CASE("batch recipes: a version 1 file reads unchanged and is written as version 6")
+TEST_CASE("batch recipes: a version 1 file reads unchanged and is written as version 7")
 {
     const std::string text = R"({"format": "pixelfx", "kind": "batch", "version": 1, "name": "x",
         "body": {"stack": [{"preset": {"embedded": {"name": "P", "settings": {"light": {"exposure": 0.5}}}}}],
@@ -194,7 +194,7 @@ TEST_CASE("batch recipes: a version 1 file reads unchanged and is written as ver
     const auto doc = pfx::parseDocument(text, &report);
     REQUIRE(doc.ok());
     CHECK(report.warnings.empty());
-    CHECK(doc.value().version == 6);
+    CHECK(doc.value().version == 7);
     const pfx::BatchBody& b = doc.value().batch;
     REQUIRE(b.stack.size() == 1);
     CHECK(b.stack.front().name == "P");
@@ -207,7 +207,7 @@ TEST_CASE("batch recipes: a version 1 file reads unchanged and is written as ver
     CHECK(b.format == "png");
     CHECK(b.ifExists == "skip");
     const std::string written = pfx::serializeDocument(doc.value());
-    CHECK(written.find("\"version\": 6") != std::string::npos);
+    CHECK(written.find("\"version\": 7") != std::string::npos);
     const auto again = pfx::parseDocument(written);
     REQUIRE(again.ok());
     CHECK(again.value().batch == b);
