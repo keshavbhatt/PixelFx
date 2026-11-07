@@ -42,6 +42,7 @@
 | `shortcuts.html`, the rows of bound keys it lacked; `export.html`, the overwrite warning line | 2026-11-06 (PROGRESS, testing every feature) | approved 2026-11-06 |
 | `photo-details.html`, `-plain`, `-location` | 2026-11-06 (`mocks/reviews/photo-details.md`) | approved 2026-11-06 (the shortcut I; a long folder path drops whole folders from its middle) |
 | `crop-corners.html`, `-done` | 2026-11-06 (`mocks/reviews/crop-corners.md`) | approved 2026-11-07 (both results, Whole photo first) |
+| `report-bug.html`, `crash-notice.html` | 2026-11-07 (`mocks/reviews/report-bug.md`) | waiting |
 
 ## Waiting for the owner (2026-11-05)
 
@@ -91,6 +92,13 @@ Decisions the work stopped at; everything else went ahead within the approved mo
 16. Next: the photo information panel (FEATURES O7); its mock approved 2026-11-06, to be built.
 
 ## Sessions (newest first)
+
+### 2026-11-07 (Report a bug and the crash notice, the mocks)
+
+- The owner's next choice: FEATURES S7, the crash handler and a Report a bug sheet.
+  `report-bug.html` (what happened, the attachments each with Show, a filled-in GitHub issue
+  opened in the browser, Copy report) and `crash-notice.html` (the next start after a crash:
+  what happened, what was kept, Report the problem), with the review. Waiting for the owner.
 
 ### 2026-11-07 (Fix by four corners, built)
 
