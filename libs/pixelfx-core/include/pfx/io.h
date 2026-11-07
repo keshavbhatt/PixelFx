@@ -126,6 +126,11 @@ struct Rgba8Image
 // The Exif, XMP and IPTC of a file, from its header, without decoding the pixels.
 [[nodiscard]] Result<Metadata> readMetadata(const std::filesystem::path& path);
 
+// Closes the files libvips still holds from earlier reads (its operation cache keeps a loader,
+// and its file, after the image is gone). Windows cannot replace a file that is open anywhere:
+// call it before writing over a file this process has read. save() does when the file exists.
+void closeFiles();
+
 // Converts to the options' colour space, embeds its profile, writes the format the extension
 // names.
 [[nodiscard]] Status save(const Image& image, const std::filesystem::path& path,

@@ -5,6 +5,7 @@
 #include "ui/style.h"
 #include "ui/watermark_sheet.h"
 
+#include <QAbstractButton>
 #include <QApplication>
 #include <QCheckBox>
 #include <QComboBox>
@@ -19,11 +20,43 @@
 #include <QTemporaryDir>
 #include <QTest>
 
+#include <algorithm>
 #include <pfx/io.h>
 
 using namespace Qt::StringLiterals;
 using pixelfx::core::ExportOptions;
 using pixelfx::ui::ExportSheet;
+
+namespace {
+
+// The widest widgets inside `root` by the width they insist on, for a failure message: what
+// pushes a panel or a form wider than its room.
+QString widestWidgets(const QWidget* root)
+{
+    QList<const QWidget*> all;
+    for (const QWidget* w : root->findChildren<QWidget*>()) {
+        if (w->isVisibleTo(root)) {
+            all << w;
+        }
+    }
+    std::ranges::sort(all, [](const QWidget* a, const QWidget* b) {
+        return a->minimumSizeHint().width() > b->minimumSizeHint().width();
+    });
+    QStringList out;
+    for (const QWidget* w : all.mid(0, 6)) {
+        const auto* label = qobject_cast<const QLabel*>(w);
+        const auto* button = qobject_cast<const QAbstractButton*>(w);
+        const QString text = label != nullptr    ? label->text()
+                             : button != nullptr ? button->text()
+                                                 : QString();
+        out << QStringLiteral("%1 %2 \"%3\" min %4")
+                   .arg(QString::fromLatin1(w->metaObject()->className()), w->objectName(), text.left(40))
+                   .arg(w->minimumSizeHint().width());
+    }
+    return out.join(QStringLiteral("; "));
+}
+
+} // namespace
 
 class TestExportSheet : public QObject
 {
@@ -152,7 +185,10 @@ private Q_SLOTS:
         QTRY_COMPARE(scroll->verticalScrollBar()->maximum(), 0);
         QCOMPARE(scroll->widget()->layout()->contentsMargins().right(), 20);
         // Nothing in the form is wider than the sheet: the fields end 20 px from its edge.
-        QCOMPARE(scroll->widget()->width(), scroll->viewport()->width());
+        QVERIFY2(scroll->widget()->width() == scroll->viewport()->width(),
+                 qPrintable(u"%1 px of form in %2 px: %3"_s.arg(scroll->widget()->width())
+                                .arg(scroll->viewport()->width())
+                                .arg(widestWidgets(scroll->widget()))));
         const QComboBox* size = sheet.sizeList();
         QCOMPARE(size->mapTo(&sheet, QPoint(size->width(), 0)).x(), sheet.width() - 1 - 20);
         QApplication::setFont(before);

@@ -828,9 +828,19 @@ Result<vips::VImage> prepareForSaving(const Image& image, const std::string& ext
 
 } // namespace
 
+void closeFiles()
+{
+    ensureVips();
+    vips_cache_drop_all();
+}
+
 Status save(const Image& image, const std::filesystem::path& path, const SaveOptions& options,
             const Metadata* metadata)
 {
+    std::error_code ignored;
+    if (std::filesystem::exists(path, ignored)) {
+        closeFiles(); // the file may still be open from reading it (Windows refuses to replace it)
+    }
     const std::string ext = lowerExtension(path);
     std::vector<std::uint8_t> bytes;
     auto prepared = prepareForSaving(image, ext, options, metadata, bytes);

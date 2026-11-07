@@ -111,6 +111,9 @@ CompressOutcome compressOne(const QString& source, const core::CompressJob& job,
         }
     }
     QDir().mkpath(QFileInfo(o.target).absolutePath());
+    if (QFileInfo::exists(o.target)) {
+        pfx::closeFiles(); // read moments ago: Windows cannot replace a file still open
+    }
     QSaveFile out(o.target);
     if (!out.open(QIODevice::WriteOnly) ||
         out.write(reinterpret_cast<const char*>(

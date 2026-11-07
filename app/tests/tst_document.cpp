@@ -190,9 +190,12 @@ private Q_SLOTS:
     {
         QTemporaryDir dir;
         const QString path = writePhoto(dir, u"photo.png"_s, 64, 48);
+        // A file where the folder should be: no system can write edits into it (a read-only
+        // folder would still take files on Windows).
         const QString edits = dir.filePath(u"edits"_s);
-        QDir().mkpath(edits);
-        QFile::setPermissions(edits, QFileDevice::ReadOwner | QFileDevice::ExeOwner); // cannot be written
+        QFile blocker(edits);
+        QVERIFY(blocker.open(QIODevice::WriteOnly));
+        blocker.close();
         Document doc;
         doc.setSidecarFolder(edits);
         QSignalSpy ready(&doc, &Document::previewReady);
@@ -205,8 +208,6 @@ private Q_SLOTS:
         doc.flush();
         QVERIFY(notRemembered.wait(5000));
         QCOMPARE(notRemembered.first().first().toString(), path);
-        QFile::setPermissions(edits,
-                              QFileDevice::ReadOwner | QFileDevice::WriteOwner | QFileDevice::ExeOwner);
     }
 
     void autoBrightensADarkPhotoAndKeepsCurves()

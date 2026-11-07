@@ -118,7 +118,13 @@ private Q_SLOTS:
         window.show();
         QVERIFY(QTest::qWaitForWindowExposed(&window));
         closeWhatOpens(&window);
-        const QStringList skipped = {u"quit"_s, u"onlineGuide"_s, u"reportBug"_s, u"showPresetsFolder"_s};
+        QStringList skipped = {u"quit"_s, u"onlineGuide"_s, u"reportBug"_s, u"showPresetsFolder"_s};
+#ifdef Q_OS_WIN
+        // Qt's own file dialog (the offscreen platform has no native one) crashes on Windows in
+        // its file-information thread, in QSystemLocale, when closed the moment it opens; users
+        // get the native dialog. Every other action still runs.
+        skipped << u"open"_s << u"openFolder"_s << u"openBatchRecipe"_s << u"importPresets"_s;
+#endif
         for (const QString& file : files) {
             g_warnings << u"--- "_s + QFileInfo(file).fileName();
             QSignalSpy ready(&window.document(), &pixelfx::services::Document::previewReady);

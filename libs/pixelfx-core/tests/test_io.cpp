@@ -533,6 +533,7 @@ TEST_CASE("a save that cannot happen fails in plain words")
     const auto missing = pfx::save(img, dir.path() / "no such folder" / "photo.jpg");
     REQUIRE_FALSE(missing.ok());
     CHECK(missing.error().message == "The folder to save in does not exist.");
+#ifndef _WIN32 // a read-only folder still takes new files on Windows
     const auto locked = dir.path() / "locked";
     std::filesystem::create_directory(locked);
     std::filesystem::permissions(locked,
@@ -541,6 +542,7 @@ TEST_CASE("a save that cannot happen fails in plain words")
     std::filesystem::permissions(locked, std::filesystem::perms::owner_all);
     REQUIRE_FALSE(refused.ok());
     CHECK(refused.error().message == "PixelFx is not allowed to save in this folder.");
+#endif
 }
 
 TEST_CASE("engine versions: libvips and Little CMS, as dotted numbers")

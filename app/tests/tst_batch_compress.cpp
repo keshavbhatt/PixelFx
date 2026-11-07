@@ -7,6 +7,7 @@
 #include "ui/name_field.h"
 #include "ui/style.h"
 
+#include <QAbstractButton>
 #include <QApplication>
 #include <QFileInfo>
 #include <QFrame>
@@ -18,10 +19,42 @@
 #include <QTemporaryDir>
 #include <QTest>
 
+#include <algorithm>
 #include <pfx/io.h>
 
 using namespace Qt::StringLiterals;
 using pixelfx::ui::BatchPage;
+
+namespace {
+
+// The widest widgets inside `root` by the width they insist on, for a failure message: what
+// pushes a panel or a form wider than its room.
+QString widestWidgets(const QWidget* root)
+{
+    QList<const QWidget*> all;
+    for (const QWidget* w : root->findChildren<QWidget*>()) {
+        if (w->isVisibleTo(root)) {
+            all << w;
+        }
+    }
+    std::ranges::sort(all, [](const QWidget* a, const QWidget* b) {
+        return a->minimumSizeHint().width() > b->minimumSizeHint().width();
+    });
+    QStringList out;
+    for (const QWidget* w : all.mid(0, 6)) {
+        const auto* label = qobject_cast<const QLabel*>(w);
+        const auto* button = qobject_cast<const QAbstractButton*>(w);
+        const QString text = label != nullptr    ? label->text()
+                             : button != nullptr ? button->text()
+                                                 : QString();
+        out << QStringLiteral("%1 %2 \"%3\" min %4")
+                   .arg(QString::fromLatin1(w->metaObject()->className()), w->objectName(), text.left(40))
+                   .arg(w->minimumSizeHint().width());
+    }
+    return out.join(QStringLiteral("; "));
+}
+
+} // namespace
 
 class TestBatchCompress : public QObject
 {
@@ -171,9 +204,11 @@ private Q_SLOTS:
                 const QWidget* content = area->widget();
                 if (content != nullptr && content->objectName() == u"batchPanelContent"_s &&
                     area->isVisible()) {
-                    QVERIFY2(content->minimumSizeHint().width() <= area->viewport()->width(),
-                             qPrintable(u"%1 px of content in %2 px"_s.arg(content->minimumSizeHint().width())
-                                            .arg(area->viewport()->width())));
+                    QVERIFY2(
+                        content->minimumSizeHint().width() <= area->viewport()->width(),
+                        qPrintable(u"%1 px of content in %2 px: %3"_s.arg(content->minimumSizeHint().width())
+                                       .arg(area->viewport()->width())
+                                       .arg(widestWidgets(content))));
                 }
             }
         }
