@@ -415,7 +415,9 @@ same libraries in every build, built from source where needed (2026-11-07).
   JasPer, so `packaging/vcpkg/ports` holds the two ports built as `build-deps.sh` builds them;
   libheif is taken with libde265 and dav1d only (no x265, ADR-003).
   zlib 1.3 (Ubuntu 24.04's) does not compile with Xcode 16's SDK, so its port carries zlib
-  1.3.1's one-line fix (classic Mac OS only defines `fdopen`); the version stays 1.3.
+  1.3.1's one-line fix (classic Mac OS only defines `fdopen`); the version stays 1.3. vcpkg's
+  pcre2 port (under GLib) asks GitHub's API which sljit commit its JIT is built from, and the
+  API refuses CI runners without a login; its port names that commit instead.
 - `scripts/check-pins.py`, run first in Linux CI, fails when `ci.yml`, `vcpkg.json`, a port or
   the snap names another version.
 
