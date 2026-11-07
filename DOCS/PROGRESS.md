@@ -111,6 +111,12 @@ Decisions the work stopped at; everything else went ahead within the approved mo
   (a `v` tag matching the version), as Omnidict does, once `SNAPCRAFT_STORE_CREDENTIALS` and
   `PUBLISH_TO_STORE` are set; no build is kept as a GitHub artifact (owner, 2026-11-07). Not built here (the snap is built by GitHub Actions only):
   `snapcraft expand-extensions` checks the file; the first real build is the first push.
+- CI made cheaper (owner, 2026-11-07): a push or pull request that changes only `DOCS/`,
+  `README.md`, `CLAUDE.md` or `LICENSING.md` starts no CI; the snap workflow no longer starts on
+  its own for main but after CI passes there (`workflow_run`, on the commit CI tested), so a
+  failing commit never reaches edge; version tags still start it directly. Every CI job keeps
+  its compiled objects in ccache (Windows with the debug information inside the objects,
+  `CMAKE_MSVC_DEBUG_INFORMATION_FORMAT=Embedded`, which ccache can cache).
 - The app reads a lens database shipped beside it (`<prefix>/share/lensfun/version_1`).
 - `tst_changelog` now also keeps accounts and licensing out of the metainfo and the snap's
   store text (checked to fail with a forbidden word in the description).

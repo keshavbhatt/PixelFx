@@ -1,8 +1,9 @@
 # Builds the snap on GitHub's CI for amd64 and arm64 (never on a developer machine; ADR-000,
 # PLAN section 8) and publishes it:
-#   push to main        -> edge      (version 2.0.0+git<hash>)
+#   CI passed on main   -> edge      (version 2.0.0+git<hash>), the commit CI tested
 #   version tag v2.0.0  -> stable    (version 2.0.0; the tag must match project(VERSION))
-# Edge is where a build is checked before it is tagged.
+# Edge is where a build is checked before it is tagged. A commit whose tests fail is never built
+# into a snap; one that changes only the documents starts no CI, so no snap either.
 #
 # Publishing needs the SNAPCRAFT_STORE_CREDENTIALS secret and the repository variable
 # PUBLISH_TO_STORE=true; without them the snap is only built. Snaps go to the store, never to
@@ -10,24 +11,24 @@
 name: snap
 
 on:
-  push:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
     branches: [main]
+  push:
     tags: ['v*']
-    paths:
-      - 'app/**'
-      - 'libs/**'
-      - 'cmake/**'
-      - 'CMakeLists.txt'
-      - 'snap/**'
-      - '.github/workflows/snap.yml'
   workflow_dispatch:
 
 concurrency:
-  group: snap-${{ github.ref }}
+  group: snap-${{ github.event.workflow_run.head_branch || github.ref }}
   cancel-in-progress: ${{ !startsWith(github.ref, 'refs/tags/') }}
 
 jobs:
   build:
+    # After CI: only a push to main that passed (not a pull request's run).
+    if: >-
+      github.event_name != 'workflow_run' ||
+      (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push')
     strategy:
       fail-fast: false
       matrix:
@@ -41,6 +42,7 @@ jobs:
       - uses: actions/checkout@v5
         with:
           fetch-depth: 0 # tags, for the version
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
 
       - name: Check that the tag matches the CMake version
         if: startsWith(github.ref, 'refs/tags/v')
@@ -59,8 +61,8 @@ jobs:
 
       - name: Publish to the Snap Store
         if: >-
-          vars.PUBLISH_TO_STORE == 'true' && github.event_name == 'push' &&
-          (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))
+          vars.PUBLISH_TO_STORE == 'true' &&
+          (github.event_name == 'workflow_run' || startsWith(github.ref, 'refs/tags/v'))
         uses: snapcore/action-publish@v1
         env:
           SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_STORE_CREDENTIALS }}

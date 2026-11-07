@@ -1,11 +1,15 @@
 # Builds and tests libpixelfx and the app on Linux, Windows and macOS for every push and pull
-# request (PLAN D19). The snap and the Flatpak have their own workflows (M7).
+# request that changes more than the documents (PLAN D19). The snap workflow runs after this one
+# succeeds on main; the Flatpak has its own (M7). ccache keeps each job's compiled objects
+# between runs.
 name: CI
 
 on:
   push:
     branches: [main]
+    paths-ignore: ['DOCS/**', 'README.md', 'CLAUDE.md', 'LICENSING.md']
   pull_request:
+    paths-ignore: ['DOCS/**', 'README.md', 'CLAUDE.md', 'LICENSING.md']
   workflow_dispatch:
 
 concurrency:
@@ -21,6 +25,10 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
+      - uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: ${{ github.job }}
+          max-size: 500M
       - name: Libraries
         run: |
           sudo apt-get update
@@ -32,7 +40,9 @@ jobs:
           modules: qtimageformats
           cache: true
       - name: Configure
-        run: cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=RelWithDebInfo -DPIXELFX_WERROR=ON
+        run: >
+          cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=RelWithDebInfo -DPIXELFX_WERROR=ON
+          -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
       - name: Build
         run: cmake --build build
       - name: Test
@@ -64,12 +74,20 @@ jobs:
           "CMAKE_PREFIX_PATH=$prefix" | Out-File -FilePath $env:GITHUB_ENV -Append
           "$prefix/bin" | Out-File -FilePath $env:GITHUB_PATH -Append
       - uses: ilammy/msvc-dev-cmd@v1
+      - uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: ${{ github.job }}
+          max-size: 500M
+      # ccache caches MSVC objects only with the debug information inside them (/Z7, the
+      # Embedded format), not in a shared .pdb (/Zi, RelWithDebInfo's default).
       - name: Configure
         shell: pwsh
         run: >
           cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=RelWithDebInfo
           -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake"
           -DVCPKG_TARGET_TRIPLET=x64-windows
+          -DCMAKE_POLICY_DEFAULT_CMP0141=NEW -DCMAKE_MSVC_DEBUG_INFORMATION_FORMAT=Embedded
+          -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
       - name: Build
         run: cmake --build build
       - name: Test
@@ -85,6 +103,10 @@ jobs:
     runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
+      - uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: ${{ github.job }}
+          max-size: 500M
       - name: Libraries
         run: brew install ninja pkgconf vips little-cms2
       - uses: jurplel/install-qt-action@v4
@@ -93,7 +115,9 @@ jobs:
           modules: qtimageformats
           cache: true
       - name: Configure
-        run: cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=RelWithDebInfo
+        run: >
+          cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=RelWithDebInfo
+          -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
       - name: Build
         run: cmake --build build
       - name: Test
