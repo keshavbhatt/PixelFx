@@ -22,7 +22,8 @@ vips::VImage sceneImage(int width = 192, int height = 128)
     pfx::detail::startVips();
     const auto rgba = pfx::toSrgb8(fixtures::scene(width, height));
     REQUIRE(rgba);
-    const pfx::Rgba8Image& img = rgba.value();
+    // A copy: libvips before 8.16 takes the pixels through a non-const pointer.
+    pfx::Rgba8Image img = rgba.value();
     vips::VImage v = vips::VImage::new_from_memory_copy(img.pixels.data(), img.pixels.size(), img.width,
                                                         img.height, 4, VIPS_FORMAT_UCHAR);
     return v.extract_band(0, vips::VImage::option()->set("n", 3))
