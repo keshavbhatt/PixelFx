@@ -228,6 +228,18 @@ is on the host (a build tool); without it the C paths decode the same pixels, mo
 stamp of all pinned versions in the prefix triggers a clean rebuild when any pin changes. The
 runtime's libjxl 0.7 is not used.
 
+**Update (2026-11-07), the snap.** `snap/snapcraft.yaml` builds the same pinned sources as parts
+(highway, libjxl, dav1d, libde265, libheif, LibRaw, lensfun, libvips), with the same options.
+Their build headers come from Ubuntu 24.04 packages rather than the SDK overlay: core24 and the
+`kf6-core24` runtime are built from that release, so the ABI is the one that runs, and the
+image libraries the runtime may not carry (libjpeg-turbo, libpng, libtiff, libwebp, LittleCMS,
+libexif, brotli) are staged into the snap. The app adds `$SNAP/usr/lib` to its library path
+(the runtime's launcher adds only its own folders) and reads the lens database shipped beside
+it (`<prefix>/share/lensfun`), since lensfun's own path is where it was built. The KDE Neon 6
+extension adds the `network`, `network-bind` and `audio-playback` plugs to every app; PixelFx
+uses none of them, and the snap asks for nothing else beyond the desktop set but `home` and
+`removable-media`.
+
 ## ADR-009: the built-in preset catalog comes from EmulsionPresets (2026-11-05)
 
 **Context.** The owner wants a large preset catalog as a selling point (FEATURES P9), in the

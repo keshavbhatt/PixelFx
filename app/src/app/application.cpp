@@ -9,8 +9,11 @@
 #include "ui/icons.h"
 
 #include <QDir>
+#include <QFile>
 #include <QJsonArray>
 #include <QTextStream>
+
+#include <pfx/lens.h>
 
 using namespace Qt::StringLiterals;
 
@@ -28,6 +31,17 @@ void Application::setIdentity()
     setOrganizationDomain(QString::fromLatin1(version::kOrganizationDomain));
     setDesktopFileName(QString::fromLatin1(version::kDesktopId));
     setWindowIcon(ui::icons::brand());
+    useShippedLensDatabase();
+}
+
+void Application::useShippedLensDatabase()
+{
+    // A package (the snap, the Flatpak) ships the lens database beside the program, in
+    // <prefix>/share/lensfun; lensfun's own places are where it was built, not where it runs.
+    const QDir shipped(applicationDirPath() + u"/../share/lensfun/version_1"_s);
+    if (shipped.exists()) {
+        pfx::setLensDatabaseFolder(QFile::encodeName(shipped.absolutePath()).toStdString());
+    }
 }
 
 Application::Application(int& argc, char** argv)

@@ -84,6 +84,45 @@ private Q_SLOTS:
         const QRegularExpressionMatch m = kForbidden.match(text);
         QVERIFY2(!m.hasMatch(), qPrintable(u"CHANGELOG.md mentions licensing: "_s + m.captured(0)));
     }
+
+    void storeTextNeverMentionsLicensing()
+    {
+        // The same rule for the store pages: the AppStream metainfo's descriptions and release
+        // notes, and the snap's summary and description (its project_license tag and the
+        // snap's license key name the software licence, which is not release text).
+        static const QRegularExpression kForbidden(
+            u"licen[cs]e|licensing|\\baccounts?\\b|checkout|evaluation|\\btrial\\b|PixelFx Pro|activation"_s,
+            QRegularExpression::CaseInsensitiveOption);
+        QFile metainfo(QString::fromLatin1(PIXELFX_METAINFO_PATH));
+        QVERIFY(metainfo.open(QIODevice::ReadOnly | QIODevice::Text));
+        QString store;
+        static const QRegularExpression kText(u"<(summary|description|p|li)>([\\s\\S]*?)</\\1>"_s);
+        auto it = kText.globalMatch(QString::fromUtf8(metainfo.readAll()));
+        while (it.hasNext()) {
+            store += it.next().captured(2) + u'\n';
+        }
+        QFile snap(QString::fromLatin1(PIXELFX_SNAPCRAFT_PATH));
+        QVERIFY(snap.open(QIODevice::ReadOnly | QIODevice::Text));
+        bool inDescription = false;
+        for (const QString& line : QString::fromUtf8(snap.readAll()).split(u'\n')) {
+            if (line.startsWith(u"summary:"_s) || line.startsWith(u"title:"_s)) {
+                store += line + u'\n';
+            }
+            if (line.startsWith(u"description:"_s)) {
+                inDescription = true;
+                continue;
+            }
+            if (inDescription && !line.isEmpty() && !line.startsWith(u' ')) {
+                inDescription = false;
+            }
+            if (inDescription) {
+                store += line + u'\n';
+            }
+        }
+        QVERIFY(store.contains(u"PixelFx is a quick photo editor"_s)); // both were read
+        const QRegularExpressionMatch m = kForbidden.match(store);
+        QVERIFY2(!m.hasMatch(), qPrintable(u"The store text mentions licensing: "_s + m.captured(0)));
+    }
 };
 
 QTEST_GUILESS_MAIN(TestChangelog)

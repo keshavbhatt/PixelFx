@@ -43,6 +43,8 @@ Q_SIGNALS:
 private:
     /// The name, version and organisation that settings, paths and the log derive from.
     void setIdentity();
+    /// The lens database a package ships beside the program, when there is one.
+    void useShippedLensDatabase();
     void setupLogging() const;
     [[nodiscard]] bool forwardToPrimary();
 

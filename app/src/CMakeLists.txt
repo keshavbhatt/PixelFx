@@ -17,6 +17,17 @@ if(UNIX AND NOT APPLE)
     set_target_properties(pixelfx PROPERTIES ENABLE_EXPORTS ON)
 endif()
 
+# Installing: the program, and on Linux its desktop file, AppStream metainfo and icons, which the
+# snap and the Flatpak take from the install tree.
+include(GNUInstallDirs)
+install(TARGETS pixelfx RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} BUNDLE DESTINATION .)
+if(UNIX AND NOT APPLE)
+    set(_pixelfx_linux "${PROJECT_SOURCE_DIR}/app/data/linux")
+    install(DIRECTORY "${PROJECT_SOURCE_DIR}/app/data/icons/hicolor" DESTINATION "${CMAKE_INSTALL_DATADIR}/icons")
+    install(FILES "${_pixelfx_linux}/com.ktechpit.pixelfx.desktop" DESTINATION "${CMAKE_INSTALL_DATADIR}/applications")
+    install(FILES "${_pixelfx_linux}/com.ktechpit.pixelfx.metainfo.xml" DESTINATION "${CMAKE_INSTALL_DATADIR}/metainfo")
+endif()
+
 # cmake --build <dir> --target update_translations: refreshes app/i18n/pixelfx_en.ts from the
 # sources (plural forms only); fill in the new forms, then commit it.
 if(Qt6LinguistTools_FOUND)

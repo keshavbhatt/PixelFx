@@ -93,6 +93,28 @@ Decisions the work stopped at; everything else went ahead within the approved mo
 
 ## Sessions (newest first)
 
+### 2026-11-07 (the snap, and the mocks index)
+
+- The mocks index said "Approved" on screens built since; every card now says whether its screen
+  is built and checked against the mock by pixel (with the kept differences named), the
+  superseded grading mock is greyed, the three state mocks it did not link are linked, and the
+  stale "Later" section (About, What's new, Report a bug, all built) is gone.
+- Packaging for Linux, from the install tree: `cmake --install` puts `bin/pixelfx`, the desktop
+  file (`Exec=pixelfx %F`, every format PixelFx reads as a MIME type, RAW makes included), the
+  AppStream metainfo (summary and keywords of PLAN Q11, branding colours of the icon, no word
+  on accounts or licensing) and the icons (PNG 16 to 512 rendered from the SVG, the scalable
+  and symbolic SVGs) into `share/`. `desktop-file-validate` and `appstreamcli validate` pass.
+- `snap/snapcraft.yaml`: core24, the KDE Neon 6 extension, amd64 and arm64; the codecs as parts
+  at the pins of `build-deps.sh` (ADR-008 update); `home` and `removable-media`; the version from
+  `project(VERSION)`, with `+git<hash>` off a tag. `.github/workflows/snap.yml` builds it on
+  GitHub for both architectures, keeps the snap as an artifact, and publishes to edge (main)
+  or stable (a `v` tag matching the version) once `SNAPCRAFT_STORE_CREDENTIALS` and
+  `PUBLISH_TO_STORE` are set. Not built here (the snap is built by GitHub Actions only):
+  `snapcraft expand-extensions` checks the file; the first real build is the first push.
+- The app reads a lens database shipped beside it (`<prefix>/share/lensfun/version_1`).
+- `tst_changelog` now also keeps accounts and licensing out of the metainfo and the snap's
+  store text (checked to fail with a forbidden word in the description).
+
 ### 2026-11-07 (Report a bug and the crash handler, built)
 
 - Approved by the owner, reports to GitHub issues only. Built:

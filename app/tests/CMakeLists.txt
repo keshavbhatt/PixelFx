@@ -28,6 +28,8 @@ pixelfx_add_test(tst_looks           tst_looks.cpp           pixelfx_core)
 pixelfx_add_test(tst_changelog       tst_changelog.cpp       pixelfx_core)
 target_compile_definitions(tst_changelog PRIVATE
     PIXELFX_CHANGELOG_PATH="${PROJECT_SOURCE_DIR}/CHANGELOG.md"
+    PIXELFX_METAINFO_PATH="${PROJECT_SOURCE_DIR}/app/data/linux/com.ktechpit.pixelfx.metainfo.xml"
+    PIXELFX_SNAPCRAFT_PATH="${PROJECT_SOURCE_DIR}/snap/snapcraft.yaml"
     PIXELFX_VERSION="${PROJECT_VERSION}")
 pixelfx_add_test(tst_plurals         tst_plurals.cpp         pixelfx_core)
 target_compile_definitions(tst_plurals PRIVATE

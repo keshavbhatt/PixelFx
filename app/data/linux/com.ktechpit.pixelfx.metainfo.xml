@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- SPDX-FileCopyrightText: 2020-2026 Keshav Bhatt (Ktechpit) -->
+<!-- SPDX-License-Identifier: CC0-1.0 -->
+<component type="desktop-application">
+  <id>com.ktechpit.pixelfx</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>GPL-3.0-or-later</project_license>
+  <name>PixelFx</name>
+  <summary>Photo editor, filters and presets</summary>
+  <developer id="com.ktechpit">
+    <name>Keshav Bhatt</name>
+  </developer>
+  <description>
+    <p>
+      PixelFx is a quick photo editor for the Linux desktop. Make a photo better while you watch
+      it: one-click looks shown on your own photo, presets, every light and colour control you
+      expect, and batch editing of many photos at once.
+    </p>
+    <ul>
+      <li>Looks: Vivid, Warm, Film, Golden hour, Teal and orange, Noir and more, each tile showing your own photo, with a strength slider. Bring your own .cube LUTs, or make your own look from steps.</li>
+      <li>Light, colour, curves, colour mixer, colour grading, detail, effects and optics, with a histogram and clipping warnings.</li>
+      <li>Presets: save the whole edit or only parts of it, apply them with one click, and bring your Lightroom and Camera Raw presets (.xmp).</li>
+      <li>Crop and rotate, straighten with a dial or a drawn line, fix leaning buildings, and square a page or a wall from its four corners.</li>
+      <li>Heal blemishes, dust and small objects with a spot or a brush.</li>
+      <li>Camera RAW, HEIC, AVIF and JPEG XL photos, with lens corrections from the Lensfun database.</li>
+      <li>Batch: process whole folders with a preset, a size, a watermark and a format, in the background.</li>
+      <li>Export to JPEG, PNG, TIFF, WebP and more, with sizes for the web and for print, and an optional watermark.</li>
+      <li>Your edits are kept for every photo, and the original file is never changed.</li>
+    </ul>
+  </description>
+  <launchable type="desktop-id">com.ktechpit.pixelfx.desktop</launchable>
+  <icon type="stock">com.ktechpit.pixelfx</icon>
+  <url type="homepage">https://github.com/keshavbhatt/PixelFx</url>
+  <url type="bugtracker">https://github.com/keshavbhatt/PixelFx/issues</url>
+  <url type="help">https://github.com/keshavbhatt/PixelFx/wiki</url>
+  <url type="vcs-browser">https://github.com/keshavbhatt/PixelFx</url>
+  <branding>
+    <color type="primary" scheme_preference="light">#99c1f1</color>
+    <color type="primary" scheme_preference="dark">#2a5a9e</color>
+  </branding>
+  <categories>
+    <category>Graphics</category>
+    <category>Photography</category>
+  </categories>
+  <keywords>
+    <keyword>photo</keyword>
+    <keyword>retouch</keyword>
+    <keyword>filter</keyword>
+    <keyword>preset</keyword>
+    <keyword>heic</keyword>
+    <keyword>raw</keyword>
+  </keywords>
+  <supports>
+    <control>pointing</control>
+    <control>keyboard</control>
+  </supports>
+  <requires>
+    <display_length compare="ge">768</display_length>
+  </requires>
+  <provides>
+    <binary>pixelfx</binary>
+    <mediatype>image/jpeg</mediatype>
+    <mediatype>image/png</mediatype>
+    <mediatype>image/tiff</mediatype>
+    <mediatype>image/webp</mediatype>
+    <mediatype>image/heic</mediatype>
+    <mediatype>image/avif</mediatype>
+    <mediatype>image/jxl</mediatype>
+    <mediatype>image/x-adobe-dng</mediatype>
+  </provides>
+  <content_rating type="oars-1.1"/>
+  <releases>
+    <release version="2.0.0" date="2026-11-07" type="development">
+      <description>
+        <p>PixelFx 2 is rebuilt from scratch: a new editor, a new image engine and a new look.</p>
+      </description>
+    </release>
+  </releases>
+</component>
