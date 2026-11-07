@@ -187,6 +187,8 @@ const QString kSheet = uR"(
         QLineEdit, QComboBox, QSpinBox { background: {{input}}; border: 1px solid {{border}}; border-radius: 7px; padding: 5px 8px; }
         QLineEdit:focus, QSpinBox:focus, QComboBox[focusVisible="true"]:focus { border-color: {{accent}}; }
         #toast { background: {{elevated}}; border: 1px solid {{border}}; border-radius: 9px; padding: 7px 12px; }
+        #crashLine { background: {{hover}}; border-radius: 8px; }
+        QLabel#crashText { font-size: 12px; }
         #photoDetails { background: {{elevated}}; border: 1px solid {{border}}; border-radius: 10px; }
         #photoDetails #footBar, #photoDetails QScrollArea, #photoDetails QScrollArea > QWidget > QWidget { background: transparent; }
         QLabel#detailsName { font-size: 14px; font-weight: 600; }

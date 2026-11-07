@@ -13,6 +13,7 @@
 #include "ui/batch_page.h"
 #include "ui/canvas.h"
 #include "ui/corner_tool.h"
+#include "ui/crash_notice.h"
 #include "ui/crop_panel.h"
 #include "ui/elided_label.h"
 #include "ui/export_sheet.h"
@@ -27,6 +28,7 @@
 #include "ui/photo_details_panel.h"
 #include "ui/preset_save_sheet.h"
 #include "ui/presets_panel.h"
+#include "ui/report_bug_sheet.h"
 #include "ui/settings_sheet.h"
 #include "ui/shortcuts_sheet.h"
 #include "ui/straighten_dial.h"
@@ -235,6 +237,7 @@ void MainWindow::connectDocument()
         m_canvas->setStatus(tr("Opening %1").arg(QFileInfo(path).fileName()));
     });
     connect(&m_document, &services::Document::opened, this, &MainWindow::showOpened);
+    connect(&m_document, &services::Document::closed, this, [] { core::crash::setCurrentPhoto({}); });
     connect(&m_document, &services::Document::opened, this,
             [this] { m_canvas->setImage(m_document.preview(), m_document.displaySize()); });
     connect(&m_document, &services::Document::previewReady, this, &MainWindow::showPreview);
@@ -392,7 +395,7 @@ void MainWindow::setupMenuActions()
         QDesktopServices::openUrl(QUrl::fromLocalFile(m_library.folder()));
     });
     add(u"onlineGuide"_s, tr("Online guide"), [] { QDesktopServices::openUrl(QUrl(core::guideUrl())); });
-    add(u"reportBug"_s, tr("Report a bug"), [] { QDesktopServices::openUrl(QUrl(core::issuesUrl())); });
+    add(u"reportBug"_s, tr("Report a bug"), [this] { reportBug(); });
 }
 
 void MainWindow::editGeometry(const std::function<void(pfx::Settings&)>& change, const QString& label)
@@ -2353,6 +2356,7 @@ void MainWindow::showOpened(const services::DocumentInfo& info)
     m_docMeta->setText(describe(info));
     setWindowTitle(name);
     m_settings.addRecentFile(info.path);
+    core::crash::setCurrentPhoto(name);
     refreshDetails();
     updateDocButton();
     m_adjust->setPhotoDetails(info.exposure, QStringList{info.camera, info.lens}.join(u'\n').trimmed());
@@ -2657,7 +2661,27 @@ void MainWindow::showAbout()
         sheet.accept();
         QTimer::singleShot(0, this, &MainWindow::showWhatsNew);
     });
+    connect(&sheet, &AboutSheet::reportBugRequested, this, [this, &sheet] {
+        sheet.accept();
+        QTimer::singleShot(0, this, [this] { reportBug(); });
+    });
     sheet.exec();
+}
+
+void MainWindow::reportBug(const std::optional<core::crash::Report>& crash)
+{
+    ReportBugSheet sheet(crash, this);
+    connect(&sheet, &ReportBugSheet::copiedForPasting, this,
+            [this] { showToast(tr("The report is on the clipboard: paste it into the new issue.")); });
+    sheet.exec();
+}
+
+void MainWindow::showCrashNotice(const core::crash::Report& crash)
+{
+    CrashNotice notice(crash, m_settings.rememberEdits(), this);
+    if (notice.exec() == QDialog::Accepted) {
+        reportBug(crash);
+    }
 }
 
 bool MainWindow::showWhatsNewIfUpdated()

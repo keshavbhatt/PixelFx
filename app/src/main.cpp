@@ -40,10 +40,13 @@
 //   PIXELFX_DEBUG_CORNERS=<x,y;x,y;x,y;x,y>[;inside][;place[=<n>]] Fix by four corners with these
 //                                      corners (fractions, top left first), Keep inside; with
 //                                      place, still placing them (corner n shown dragged)
+//   PIXELFX_DEBUG_CRASH=1              crash once the photo is open (or after 1 s), to see the
+//                                      crash file and, on the next start, the notice
 //   PIXELFX_DEBUG_GRAB=<file.png>      grab the window once the photo is shown (or after 2 s
 //                                      with nothing to show) and quit
 #include "app/application.h"
 #include "core/batch_resources.h"
+#include "core/crash_handler.h"
 #include "core/log_sink.h"
 #include "core/looks.h"
 #include "core/settings/settings.h"
@@ -56,6 +59,7 @@
 #include "ui/canvas.h"
 #include "ui/color_target_tool.h"
 #include "ui/corner_tool.h"
+#include "ui/crash_notice.h"
 #include "ui/crop_panel.h"
 #include "ui/export_sheet.h"
 #include "ui/heal_tool.h"
@@ -68,6 +72,7 @@
 #include "ui/preset_save_sheet.h"
 #include "ui/presets_panel.h"
 #include "ui/preview_viewer.h"
+#include "ui/report_bug_sheet.h"
 #include "ui/settings_sheet.h"
 #include "ui/shortcuts_sheet.h"
 #include "ui/style.h"
@@ -86,6 +91,7 @@
 #include <QTimer>
 #include <QToolButton>
 
+#include <csignal>
 #include <pfx/document.h>
 
 using namespace Qt::StringLiterals;
@@ -133,6 +139,17 @@ void applyCornersHook(pixelfx::ui::MainWindow& window)
             window.cornerTool()->showDragging(place.section(u'=', 1, 1).toInt());
         }
     });
+}
+
+void applyCrashHook(pixelfx::ui::MainWindow& window)
+{
+    if (!qEnvironmentVariableIsSet("PIXELFX_DEBUG_CRASH")) {
+        return;
+    }
+    const auto crashNow = [] { std::raise(SIGSEGV); };
+    QObject::connect(&window.document(), &pixelfx::services::Document::opened, &window,
+                     [crashNow] { QTimer::singleShot(200, crashNow); });
+    QTimer::singleShot(1000, &window, crashNow);
 }
 
 void applyDetailsHook(pixelfx::ui::MainWindow& window)
@@ -277,6 +294,20 @@ QDialog* appSheet(pixelfx::ui::MainWindow& window, const QString& name)
     if (name == u"whatsnew"_s) {
         return new pixelfx::ui::WhatsNewSheet(pixelfx::ui::WhatsNewSheet::bundledChangelog(),
                                               QApplication::applicationVersion(), true, &window);
+    }
+    // "report", "report-crash" and "crash": Report a bug, after a made-up crash with it.
+    const pixelfx::core::crash::Report crash = pixelfx::core::crash::parse(
+        u"kind: SIGSEGV\ntime: %1\nphoto: sunset-lake.jpg\nstack:\n"
+        "libpixelfx_ui.so(_ZN7pixelfx2ui6Canvas10paintEventEP11QPaintEvent+0x2c) [0x7f00]\n"_s.arg(
+            QDateTime::currentSecsSinceEpoch()));
+    if (name == u"report"_s || name == u"report-crash"_s) {
+        auto* sheet = new pixelfx::ui::ReportBugSheet(
+            name == u"report"_s ? std::nullopt : std::optional<pixelfx::core::crash::Report>(crash), &window);
+        sheet->setWhatHappened(u"I turned the photo while Heal was open, then pressed Crop."_s);
+        return sheet;
+    }
+    if (name == u"crash"_s) {
+        return new pixelfx::ui::CrashNotice(crash, true, &window);
     }
     return nullptr;
 }
@@ -510,6 +541,7 @@ void applyDebugHooks(pixelfx::ui::MainWindow& window, QStringList& files)
                          });
     }
     applyDetailsHook(window);
+    applyCrashHook(window);
     if (qEnvironmentVariableIsSet("PIXELFX_DEBUG_CLOSE")) {
         QObject::connect(
             &window.document(), &pixelfx::services::Document::opened, &window,
@@ -590,23 +622,10 @@ int runBatch(pixelfx::app::Application& app)
 
 } // namespace
 
-int main(int argc, char** argv)
+// The theme, chosen before the window exists and then followed as the setting or, for System,
+// the desktop changes; the text size of PIXELFX_DEBUG_FONT_PX; the style.
+void setupLook(pixelfx::app::Application& app)
 {
-    pixelfx::core::LogSink::install();
-    pixelfx::app::Application app(argc, argv);
-    if (app.shouldExit()) {
-        return app.exitCode();
-    }
-    if (!app.cliOptions().batch.isEmpty()) {
-        try {
-            return runBatch(app);
-        } catch (const std::exception& e) {
-            QTextStream(stderr) << "pixelfx: the batch stopped: " << e.what() << '\n';
-            return 2;
-        }
-    }
-    // The theme: chosen before the window exists, then followed as the setting or, for System,
-    // the desktop changes.
     const auto light = [&app] {
         const auto theme = app.settings().theme();
         return theme == pixelfx::core::Settings::Theme::Light ||
@@ -626,6 +645,29 @@ int main(int argc, char** argv)
                      [&app, light] { pixelfx::ui::switchTheme(app, light()); });
     QObject::connect(QGuiApplication::styleHints(), &QStyleHints::colorSchemeChanged, &app,
                      [&app, light] { pixelfx::ui::switchTheme(app, light()); });
+}
+
+int main(int argc, char** argv)
+{
+    pixelfx::core::LogSink::install();
+    pixelfx::app::Application app(argc, argv);
+    if (app.shouldExit()) {
+        return app.exitCode();
+    }
+    if (!app.cliOptions().batch.isEmpty()) {
+        try {
+            return runBatch(app);
+        } catch (const std::exception& e) {
+            QTextStream(stderr) << "pixelfx: the batch stopped: " << e.what() << '\n';
+            return 2;
+        }
+    }
+    setupLook(app);
+
+    // What the last run left if it crashed, read before this run can crash, then the handlers.
+    const std::optional<pixelfx::core::crash::Report> crashed =
+        pixelfx::core::crash::takeLastCrash(pixelfx::core::crash::defaultFolder());
+    pixelfx::core::crash::install(pixelfx::core::crash::defaultFolder());
 
     pixelfx::ui::MainWindow window(app.settings());
     QObject::connect(&app, &pixelfx::app::Application::openRequested, &window,
@@ -645,8 +687,15 @@ int main(int argc, char** argv)
         window.openFiles(files);
     }
     if (!qEnvironmentVariableIsSet("PIXELFX_DEBUG_GRAB")) {
-        // Once the window has painted, never during --batch (that returned above).
-        QTimer::singleShot(500, &window, [&window] { window.showWhatsNewIfUpdated(); });
+        // Once the window has painted, never during --batch (that returned above). After a crash
+        // the notice comes first, and What's new waits for the next start.
+        QTimer::singleShot(500, &window, [&window, crashed] {
+            if (crashed) {
+                window.showCrashNotice(*crashed);
+            } else {
+                window.showWhatsNewIfUpdated();
+            }
+        });
     }
     return QApplication::exec();
 }

@@ -21,8 +21,10 @@ qt_add_library(pixelfx_ui STATIC
     canvas.h
     crop_overlay.h
     corner_tool.cpp
+    crash_notice.cpp
     crop_panel.cpp
     corner_tool.h
+    crash_notice.h
     crop_panel.h
     color_swatch.cpp
     color_swatch.h
@@ -88,7 +90,9 @@ qt_add_library(pixelfx_ui STATIC
     photo_details_panel.h
     photo_tile.cpp
     recipe_picker.cpp
+    report_bug_sheet.cpp
     recipe_picker.h
+    report_bug_sheet.h
     photo_tile.h
     preview_viewer.cpp
     region_curve.cpp

@@ -14,6 +14,14 @@ using namespace Qt::StringLiterals;
 
 namespace pixelfx::core {
 
+QString buildRevision()
+{
+    const QString r = QCoreApplication::instance() != nullptr
+                          ? QCoreApplication::instance()->property("revision").toString()
+                          : QString();
+    return r == u"unknown"_s ? QString() : r;
+}
+
 const QList<Notice>& notices()
 {
     // Keep in step with THIRD_PARTY.md (tst_about checks every shipped row is here).

@@ -42,8 +42,7 @@ QString longDate(const QDate& date)
 
 QString revision()
 {
-    const QString r = qApp->property("revision").toString();
-    return r == u"unknown"_s ? QString() : r;
+    return core::buildRevision();
 }
 
 // "Released 5 November 2026" from the bundled changelog, or "Development build, 5 November 2026"
@@ -175,8 +174,8 @@ QWidget* AboutSheet::buildAboutPage()
     auto* source = smallButton(tr("Source code"), page);
     connect(source, &QPushButton::clicked, this, [] { QDesktopServices::openUrl(QUrl(core::sourceUrl())); });
     auto* bug = smallButton(tr("Report a bug"), page);
-    bug->setToolTip(tr("Opens the issue tracker. Diagnostics has text to paste into the report."));
-    connect(bug, &QPushButton::clicked, this, [] { QDesktopServices::openUrl(QUrl(core::issuesUrl())); });
+    bug->setToolTip(tr("Put a report together, with Diagnostics, to send from your browser"));
+    connect(bug, &QPushButton::clicked, this, &AboutSheet::reportBugRequested);
     auto* links = new QHBoxLayout;
     links->setSpacing(kGapRelated);
     links->addWidget(whatsNew);

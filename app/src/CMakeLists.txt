@@ -12,6 +12,10 @@ qt_add_executable(pixelfx WIN32 MACOSX_BUNDLE main.cpp)
 target_link_libraries(pixelfx PRIVATE pixelfx_app)
 pixelfx_set_warnings(pixelfx)
 set_target_properties(pixelfx PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/app")
+# The crash file names PixelFx's own functions only when the executable exports them (-rdynamic).
+if(UNIX AND NOT APPLE)
+    set_target_properties(pixelfx PROPERTIES ENABLE_EXPORTS ON)
+endif()
 
 # cmake --build <dir> --target update_translations: refreshes app/i18n/pixelfx_en.ts from the
 # sources (plural forms only); fill in the new forms, then commit it.

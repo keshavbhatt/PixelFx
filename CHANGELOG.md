@@ -53,6 +53,10 @@ A new editor, a new image engine, and a new look.
 - Open a photo from the window, the command line, or by dropping it on the window; it shows in
   true colour right away.
 - Opening PixelFx a second time brings the open window forward and passes it the photos.
+- Report a bug (main menu or About): say what happened, choose what to attach (Diagnostics, the
+  log with file and folder names left out), see exactly what it holds, and open a filled-in
+  report in your browser to send. If PixelFx ever closes unexpectedly, it says so on the next
+  start and can attach what it was doing.
 - Paste a picture from the clipboard (Ctrl+V) to edit it, a screenshot for example.
 - White balance: As shot, Auto, or click something grey with the picker (W).
 - Open many photos at once: they line up in a strip under the photo; Left and Right step

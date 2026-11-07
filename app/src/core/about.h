@@ -40,6 +40,8 @@ struct DiagnosticsFacts
     int threads = 0;
 };
 
+/// The revision PixelFx was built from (the application's "revision" property); empty when unknown.
+[[nodiscard]] QString buildRevision();
 /// The facts of the running build and system; the app passes its own version and revision.
 [[nodiscard]] DiagnosticsFacts collectDiagnostics(const QString& appVersion, const QString& revision);
 /// `facts` as plain text to paste into a bug report. Pure, tested.

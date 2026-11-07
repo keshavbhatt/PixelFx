@@ -1,5 +1,6 @@
 #pragma once
 
+#include "core/crash_handler.h"
 #include "core/presets.h"
 #include "services/document.h"
 #include "services/exporter.h"
@@ -120,6 +121,10 @@ public:
     /// At start: What's new once for a new version, unless turned off; a first install (no
     /// earlier version, PixelFx 1 included) only records the version. True when it was shown.
     bool showWhatsNewIfUpdated();
+    /// Report a bug; `crash`, what the last run left when it crashed, is attached when given.
+    void reportBug(const std::optional<core::crash::Report>& crash = std::nullopt);
+    /// The start after a crash: what happened, and Report the problem.
+    void showCrashNotice(const core::crash::Report& crash);
     /// Opens the picture on the clipboard, if there is one (Ctrl+V).
     void pasteImage();
     /// Tab: hides or shows the side panels and the filmstrip.

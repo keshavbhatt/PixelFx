@@ -38,6 +38,7 @@ public:
 
 Q_SIGNALS:
     void whatsNewRequested();
+    void reportBugRequested();
 
 private:
     QWidget* buildAboutPage();

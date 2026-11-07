@@ -42,7 +42,7 @@
 | `shortcuts.html`, the rows of bound keys it lacked; `export.html`, the overwrite warning line | 2026-11-06 (PROGRESS, testing every feature) | approved 2026-11-06 |
 | `photo-details.html`, `-plain`, `-location` | 2026-11-06 (`mocks/reviews/photo-details.md`) | approved 2026-11-06 (the shortcut I; a long folder path drops whole folders from its middle) |
 | `crop-corners.html`, `-done` | 2026-11-06 (`mocks/reviews/crop-corners.md`) | approved 2026-11-07 (both results, Whole photo first) |
-| `report-bug.html`, `crash-notice.html` | 2026-11-07 (`mocks/reviews/report-bug.md`) | waiting |
+| `report-bug.html`, `crash-notice.html` | 2026-11-07 (`mocks/reviews/report-bug.md`) | approved 2026-11-07 (reports go to GitHub issues only) |
 
 ## Waiting for the owner (2026-11-05)
 
@@ -92,6 +92,31 @@ Decisions the work stopped at; everything else went ahead within the approved mo
 16. Next: the photo information panel (FEATURES O7); its mock approved 2026-11-06, to be built.
 
 ## Sessions (newest first)
+
+### 2026-11-07 (Report a bug and the crash handler, built)
+
+- Approved by the owner, reports to GitHub issues only. Built:
+  - `core::crash`: on Linux and macOS, handlers for SIGSEGV, SIGBUS, SIGFPE, SIGILL and SIGABRT
+    on a stack of their own (a stack overflow still writes), writing with async-signal-safe calls
+    only into a file opened by path at start: the kind, the time, the photo's name (kept in a
+    fixed buffer when a photo opens) and `backtrace_symbols_fd`; then the default action (core
+    dump, exit code). An uncaught exception ends as an abort. Windows: an unhandled exception
+    filter writes the same without the stack (built by CI; not run here). The executable
+    exports its symbols on Linux (`ENABLE_EXPORTS`) so the stack names PixelFx's functions.
+  - The next start reads `crash.txt`, moves it to `crash-previous.txt` (shown once), and shows
+    the notice before What's new. The report's crash text has the kind, the time, the version,
+    the stack (library folders left out, names demangled) and the log lines of the run that
+    crashed, never the photo's name.
+  - `core::bug_report` (pure): file and folder names in log lines replaced by their kind, the
+    run before this one in the log, the issue's title and text, its address (encoded once: a
+    test caught the text percent-encoded twice) and the clipboard fallback past 6000
+    characters.
+  - `ReportBugSheet` and `CrashNotice` from the mocks; About's Report a bug opens the sheet.
+  - Checks: `tst_bug_report` (names left out, the run before, the issue, a crash file read,
+    a real crash: a child process installs the handlers and crashes, and its file is read and
+    moved aside, the sheet's attachments, the notice's wording); 44 app suites; the app crashed
+    on purpose with `PIXELFX_DEBUG_CRASH` wrote its file and the next start read it; grabs of
+    both sheets against the mocks. Debug: `PIXELFX_DEBUG_SHEET=report|report-crash|crash`.
 
 ### 2026-11-07 (Report a bug and the crash notice, the mocks)
 
