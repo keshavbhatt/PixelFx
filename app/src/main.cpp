@@ -37,6 +37,9 @@
 //                                      GRAB, grab the next photo or the welcome page
 //   PIXELFX_DEBUG_DETAILS=1|location  open Photo details once the photo is open (location: with
 //                                      the coordinates shown)
+//   PIXELFX_DEBUG_CORNERS=<x,y;x,y;x,y;x,y>[;inside][;place[=<n>]] Fix by four corners with these
+//                                      corners (fractions, top left first), Keep inside; with
+//                                      place, still placing them (corner n shown dragged)
 //   PIXELFX_DEBUG_GRAB=<file.png>      grab the window once the photo is shown (or after 2 s
 //                                      with nothing to show) and quit
 #include "app/application.h"
@@ -52,6 +55,7 @@
 #include "ui/batch_page.h"
 #include "ui/canvas.h"
 #include "ui/color_target_tool.h"
+#include "ui/corner_tool.h"
 #include "ui/crop_panel.h"
 #include "ui/export_sheet.h"
 #include "ui/heal_tool.h"
@@ -99,6 +103,50 @@ void applyCropHook(pixelfx::ui::MainWindow& window)
             }
         });
     }
+}
+
+// "x,y;x,y;x,y;x,y" (fractions, top left first, clockwise), then "inside" and "place" or
+// "place=<corner>" (left placing them, that corner shown dragged).
+void applyCornersHook(pixelfx::ui::MainWindow& window)
+{
+    const QString corners = qEnvironmentVariable("PIXELFX_DEBUG_CORNERS");
+    if (corners.isEmpty()) {
+        return;
+    }
+    QObject::connect(&window.document(), &pixelfx::services::Document::opened, &window, [&window, corners] {
+        const QStringList parts = corners.split(u';', Qt::SkipEmptyParts);
+        pixelfx::core::Corners c = pixelfx::core::ownCorners();
+        for (qsizetype i = 0; i < std::min<qsizetype>(4, parts.size()); ++i) {
+            c.at(static_cast<std::size_t>(i)) = {parts.at(i).section(u',', 0, 0).toDouble(),
+                                                 parts.at(i).section(u',', 1, 1).toDouble()};
+        }
+        window.enterCrop();
+        window.startCorners();
+        window.cornerTool()->setCorners(c);
+        const QString place = parts.filter(u"place"_s).value(0);
+        if (parts.contains(u"inside"_s)) {
+            window.cropPanel()->setKeepInside(true);
+        }
+        if (place.isEmpty()) {
+            window.finishCorners(true);
+        } else if (place.contains(u'=')) {
+            window.cornerTool()->showDragging(place.section(u'=', 1, 1).toInt());
+        }
+    });
+}
+
+void applyDetailsHook(pixelfx::ui::MainWindow& window)
+{
+    const QString details = qEnvironmentVariable("PIXELFX_DEBUG_DETAILS");
+    if (details.isEmpty()) {
+        return;
+    }
+    QObject::connect(&window.document(), &pixelfx::services::Document::opened, &window, [&window, details] {
+        window.namedAction(u"photoDetails"_s)->trigger();
+        if (auto* panel = window.findChild<pixelfx::ui::PhotoDetailsPanel*>()) {
+            panel->showLocation(details == u"location"_s);
+        }
+    });
 }
 
 void applyHealHook(pixelfx::ui::MainWindow& window)
@@ -461,15 +509,7 @@ void applyDebugHooks(pixelfx::ui::MainWindow& window, QStringList& files)
                              window.namedAction(u"sideBySide"_s)->setChecked(compare == u"side"_s);
                          });
     }
-    if (const QString details = qEnvironmentVariable("PIXELFX_DEBUG_DETAILS"); !details.isEmpty()) {
-        QObject::connect(&window.document(), &pixelfx::services::Document::opened, &window,
-                         [&window, details] {
-                             window.namedAction(u"photoDetails"_s)->trigger();
-                             if (auto* panel = window.findChild<pixelfx::ui::PhotoDetailsPanel*>()) {
-                                 panel->showLocation(details == u"location"_s);
-                             }
-                         });
-    }
+    applyDetailsHook(window);
     if (qEnvironmentVariableIsSet("PIXELFX_DEBUG_CLOSE")) {
         QObject::connect(
             &window.document(), &pixelfx::services::Document::opened, &window,
@@ -479,6 +519,7 @@ void applyDebugHooks(pixelfx::ui::MainWindow& window, QStringList& files)
             Qt::SingleShotConnection); // the first photo only
     }
     applyCropHook(window);
+    applyCornersHook(window);
     applyExpandHook(window);
     if (qEnvironmentVariable("PIXELFX_DEBUG_TAB") == u"presets"_s) {
         window.presetsPanel()->showTab(1);

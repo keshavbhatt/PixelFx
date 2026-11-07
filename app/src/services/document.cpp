@@ -274,6 +274,7 @@ void Document::close()
     m_beforeMixer = {};
     m_fingerprint.clear();
     m_cropEditing = false;
+    m_cornerEditing = false;
     m_healEditing = false;
     m_fullOn = false;
     m_fullLoaded = false;
@@ -349,6 +350,7 @@ void Document::deliver(const Result& result)
     m_original = result.original;
     m_originalGeometry = {};
     m_cropEditing = false;
+    m_cornerEditing = false;
     m_healEditing = false;
     m_fullOn = false;
     m_fullLoaded = false;
@@ -465,6 +467,9 @@ pfx::Settings Document::renderSettings() const
     }
     if (m_healEditing) {
         return core::withoutGeometry(m_settings);
+    }
+    if (m_cornerEditing) {
+        return core::withoutCornersOrCrop(m_settings);
     }
     return m_cropEditing ? core::withoutCrop(m_settings) : m_settings;
 }
@@ -589,6 +594,18 @@ void Document::setCropEditing(bool on)
         return;
     }
     m_cropEditing = on;
+    if (isOpen()) {
+        requestRender();
+        refreshOriginal();
+    }
+}
+
+void Document::setCornerEditing(bool on)
+{
+    if (on == m_cornerEditing) {
+        return;
+    }
+    m_cornerEditing = on;
     if (isOpen()) {
         requestRender();
         refreshOriginal();

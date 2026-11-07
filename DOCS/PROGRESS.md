@@ -41,7 +41,7 @@
 | `batch.html` and its states, without the list or grid switch | 2026-11-06 (the owner's call) | approved 2026-11-06 (the grid showed less than the list: no size, no status, no reason a photo was not saved) |
 | `shortcuts.html`, the rows of bound keys it lacked; `export.html`, the overwrite warning line | 2026-11-06 (PROGRESS, testing every feature) | approved 2026-11-06 |
 | `photo-details.html`, `-plain`, `-location` | 2026-11-06 (`mocks/reviews/photo-details.md`) | approved 2026-11-06 (the shortcut I; a long folder path drops whole folders from its middle) |
-| `crop-corners.html`, `-done` | 2026-11-06 (`mocks/reviews/crop-corners.md`) | waiting |
+| `crop-corners.html`, `-done` | 2026-11-06 (`mocks/reviews/crop-corners.md`) | approved 2026-11-07 (both results, Whole photo first) |
 
 ## Waiting for the owner (2026-11-05)
 
@@ -91,6 +91,31 @@ Decisions the work stopped at; everything else went ahead within the approved mo
 16. Next: the photo information panel (FEATURES O7); its mock approved 2026-11-06, to be built.
 
 ## Sessions (newest first)
+
+### 2026-11-07 (Fix by four corners, built)
+
+- The owner approved `crop-corners.html` with both results, Whole photo first. Built:
+  - libpixelfx: a projective warp (Heckbert's square to quadrilateral) after straightening and
+    before the crop, in the one geometry pass; Inside the corners keeps the shape at its average
+    sides, Whole photo the largest rectangle of the photo's shape around the shape's middle
+    (the page stays whole; first tried around the warped photo's middle, which cut the page),
+    falling back to Inside when part of the photo would go past infinity.
+    `pfx::cornersUsable` (convex, clockwise, sides of 1%) is shared by the library and the drag.
+    While corners are set the keystone sliders are ignored. Presets 5, recipes 6, batch recipes
+    7, documented in `DOCS/presets.md`, with tests (a shape seen at an angle comes back square
+    in both modes, folded or mirrored corners refused, the versions read and written).
+  - The app: `CornerTool` on the canvas (handles, the shape's outline and thirds, the outside
+    dimmed, a magnifier three times the photo beside the dragged corner; Tab and the arrow keys,
+    taken before the window's shortcuts), the panel's Fix by four corners / Edit the four
+    corners, Reset corners / Remove and Keep, the sliders off while corners are set, Enter and
+    Escape applying or leaving the corners while placing. Turns and flips carry the corners
+    (re-labelled so the first is still the top left). New corners start the crop again on the
+    new picture. `Document::setCornerEditing` shows the straightened photo without corners or
+    crop while they are placed.
+  - Debug: `PIXELFX_DEBUG_CORNERS`. Checks: 173 library tests, 43 app suites (the panel, the
+    canvas drag and keys, the window's Escape, Enter and Done, turns and flips); grabs of the
+    three states against the mocks. `tst_looks_panel` failed once under a parallel run and
+    passed alone and in two more full runs.
 
 ### 2026-11-06 (Fix by four corners, the mock)
 

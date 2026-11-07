@@ -7,6 +7,7 @@
 
 #include <QAccessible>
 #include <QHBoxLayout>
+#include <QKeyEvent>
 #include <QLabel>
 #include <QMouseEvent>
 #include <QPainter>
@@ -865,7 +866,7 @@ void Canvas::paintPhoto(QPainter& painter)
         }
         painter.drawImage(visible, m_clipOverlay, source);
     }
-    if (m_cropping) {
+    if (m_cropping && m_tool == nullptr) {
         paintCrop(painter, target);
         if (m_drawingLine) {
             painter.setRenderHint(QPainter::Antialiasing);
@@ -996,9 +997,28 @@ void Canvas::drawTag(QPainter& painter, const QRect& photo, const QString& text,
     painter.restore();
 }
 
+bool Canvas::event(QEvent* event)
+{
+    // A tool's keys come before the window's shortcuts and before Tab moves the focus on.
+    const bool keyEvent = event->type() == QEvent::ShortcutOverride || event->type() == QEvent::KeyPress;
+    if (keyEvent && m_tool != nullptr) {
+        const auto* key = static_cast<QKeyEvent*>(event);
+        if (m_tool->takesKey(*key)) {
+            if (event->type() == QEvent::KeyPress) {
+                m_tool->key(*key, QRectF(photoRect()));
+                update();
+            }
+            event->accept();
+            return true;
+        }
+    }
+    return QWidget::event(event);
+}
+
 void Canvas::setTool(CanvasTool* tool)
 {
     m_tool = tool;
+    setFocusPolicy(tool != nullptr ? Qt::StrongFocus : Qt::NoFocus);
     m_toolPressed = false;
     setMouseTracking(tool != nullptr || m_picking);
     setCursor(tool != nullptr ? Qt::CrossCursor : Qt::ArrowCursor);

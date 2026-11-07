@@ -20,7 +20,9 @@ qt_add_library(pixelfx_ui STATIC
     canvas.cpp
     canvas.h
     crop_overlay.h
+    corner_tool.cpp
     crop_panel.cpp
+    corner_tool.h
     crop_panel.h
     color_swatch.cpp
     color_swatch.h

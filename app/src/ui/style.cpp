@@ -143,6 +143,7 @@ const QString kSheet = uR"(
         #adjustValue[changed="true"] { color: {{accent}}; }
         QLineEdit#adjustValueField { font-size: 12px; padding: 0 4px; min-height: 0; border-radius: 4px; border-color: {{accent}}; }
         QPushButton#small { padding: 4px 9px; font-size: 12px; }
+        QPushButton#small:checked { background: {{accentSoft}}; color: {{accent}}; border-color: transparent; }
         QPushButton#flatSmall { border: 0; background: transparent; padding: 4px 6px; font-size: 12px; }
         QPushButton#flatSmall:hover { background: {{hover}}; }
         QPushButton#categoryHeading { border: 0; background: transparent; padding: 2px 0; color: {{muted}};

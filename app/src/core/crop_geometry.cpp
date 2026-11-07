@@ -18,6 +18,10 @@ constexpr const char* kCropW = "geometry.crop.w";
 constexpr const char* kCropH = "geometry.crop.h";
 constexpr const char* kVertical = "geometry.perspective.vertical";
 constexpr const char* kHorizontal = "geometry.perspective.horizontal";
+constexpr const char* kKeep = "geometry.perspective.keep";
+constexpr std::array<const char*, 4> kCorners = {
+    "geometry.perspective.corners.topLeft", "geometry.perspective.corners.topRight",
+    "geometry.perspective.corners.bottomRight", "geometry.perspective.corners.bottomLeft"};
 
 void setOrEraseNumber(pfx::Settings& settings, const char* key, double value)
 {
@@ -96,6 +100,75 @@ pfx::Settings geometryOnly(const pfx::Settings& settings)
     return settings.onlyGroups({"geometry"});
 }
 
+Corners ownCorners()
+{
+    return {{{0.0, 0.0}, {1.0, 0.0}, {1.0, 1.0}, {0.0, 1.0}}};
+}
+
+Corners cornersOf(const pfx::Settings& settings)
+{
+    Corners out = ownCorners();
+    for (std::size_t i = 0; i < 4; ++i) {
+        const std::string key = kCorners.at(i);
+        out.at(i) = {settings.number(key + ".x", out.at(i).x), settings.number(key + ".y", out.at(i).y)};
+    }
+    return out;
+}
+
+bool hasCorners(const pfx::Settings& settings)
+{
+    const Corners own = ownCorners();
+    const Corners set = cornersOf(settings);
+    for (std::size_t i = 0; i < 4; ++i) {
+        if (std::abs(set.at(i).x - own.at(i).x) > kEpsilon ||
+            std::abs(set.at(i).y - own.at(i).y) > kEpsilon) {
+            return pfx::cornersUsable(set);
+        }
+    }
+    return false;
+}
+
+void setCorners(pfx::Settings& settings, const Corners& corners)
+{
+    const Corners own = ownCorners();
+    bool same = true;
+    for (std::size_t i = 0; i < 4; ++i) {
+        same = same && std::abs(corners.at(i).x - own.at(i).x) < kEpsilon &&
+               std::abs(corners.at(i).y - own.at(i).y) < kEpsilon;
+    }
+    for (std::size_t i = 0; i < 4; ++i) {
+        const std::string key = kCorners.at(i);
+        if (same) {
+            settings.erase(key + ".x");
+            settings.erase(key + ".y");
+        } else {
+            settings.set(key + ".x", std::clamp(corners.at(i).x, 0.0, 1.0));
+            settings.set(key + ".y", std::clamp(corners.at(i).y, 0.0, 1.0));
+        }
+    }
+}
+
+pfx::Settings withoutCornersOrCrop(const pfx::Settings& settings)
+{
+    pfx::Settings s = withoutCrop(settings);
+    setCorners(s, ownCorners());
+    return s;
+}
+
+bool keepsInside(const pfx::Settings& settings)
+{
+    return settings.text(kKeep, "whole") == "inside";
+}
+
+void setKeepInside(pfx::Settings& settings, bool inside)
+{
+    if (inside) {
+        settings.set(kKeep, std::string("inside"));
+    } else {
+        settings.erase(kKeep);
+    }
+}
+
 QSize outputSize(const pfx::Settings& settings, const QSize& photo)
 {
     const pfx::Size s = pfx::outputSize(settings, {photo.width(), photo.height()});
@@ -126,6 +199,14 @@ void turn(pfx::Settings& settings, bool clockwise)
     const QRectF c = cropOf(settings);
     setCrop(settings, clockwise ? QRectF(1 - c.bottom(), c.x(), c.height(), c.width())
                                 : QRectF(c.y(), 1 - c.right(), c.height(), c.width()));
+    // The corners turn with the photo, and the one now at the top left comes first.
+    const Corners before = cornersOf(settings);
+    Corners after{};
+    for (std::size_t i = 0; i < 4; ++i) {
+        const pfx::Corner& p = before.at(clockwise ? (i + 3) % 4 : (i + 1) % 4);
+        after.at(i) = clockwise ? pfx::Corner{1.0 - p.y, p.x} : pfx::Corner{p.y, 1.0 - p.x};
+    }
+    setCorners(settings, after);
     // Perspective turns with the photo: what narrowed the top now narrows the right (clockwise).
     const double vertical = settings.number(kVertical, 0.0);
     const double horizontal = settings.number(kHorizontal, 0.0);
@@ -143,6 +224,16 @@ void flip(pfx::Settings& settings, Qt::Orientation orientation)
     const QRectF c = cropOf(settings);
     setCrop(settings, horizontal ? QRectF(1 - c.right(), c.y(), c.width(), c.height())
                                  : QRectF(c.x(), 1 - c.bottom(), c.width(), c.height()));
+    // The corners mirror with the photo; swapped in pairs, they still go round clockwise.
+    const Corners before = cornersOf(settings);
+    static constexpr std::array<std::size_t, 4> kAcross = {1, 0, 3, 2}; // left and right swap
+    static constexpr std::array<std::size_t, 4> kUpDown = {3, 2, 1, 0}; // top and bottom swap
+    Corners after{};
+    for (std::size_t i = 0; i < 4; ++i) {
+        const pfx::Corner& p = before.at(horizontal ? kAcross.at(i) : kUpDown.at(i));
+        after.at(i) = horizontal ? pfx::Corner{1.0 - p.x, p.y} : pfx::Corner{p.x, 1.0 - p.y};
+    }
+    setCorners(settings, after);
     // A mirror swaps the sides a keystone narrows.
     const char* mirrored = horizontal ? kHorizontal : kVertical;
     setOrEraseNumber(settings, mirrored, -settings.number(mirrored, 0.0));

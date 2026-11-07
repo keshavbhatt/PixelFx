@@ -97,6 +97,50 @@ private Q_SLOTS:
         QCOMPARE(s.number("geometry.perspective.vertical", 0), -40.0);
     }
 
+    void cornersTurnAndMirrorWithThePhoto()
+    {
+        using pixelfx::core::Corners;
+        const Corners placed{{{0.1, 0.2}, {0.9, 0.1}, {0.8, 0.9}, {0.2, 0.8}}};
+        const auto same = [](const Corners& a, const Corners& b) {
+            for (std::size_t i = 0; i < 4; ++i) {
+                if (std::abs(a.at(i).x - b.at(i).x) > 1e-12 || std::abs(a.at(i).y - b.at(i).y) > 1e-12) {
+                    return false;
+                }
+            }
+            return true;
+        };
+        pfx::Settings s;
+        pixelfx::core::setCorners(s, placed);
+        QVERIFY(pixelfx::core::hasCorners(s));
+        // Clockwise: what was at the bottom left is now at the top left, and first.
+        turn(s, true);
+        const Corners turned = pixelfx::core::cornersOf(s);
+        QCOMPARE(turned[0].x, 0.2);
+        QCOMPARE(turned[0].y, 0.2);
+        QVERIFY(pfx::cornersUsable(turned));
+        turn(s, true);
+        turn(s, true);
+        turn(s, true);
+        QVERIFY(same(pixelfx::core::cornersOf(s), placed));
+        // A mirror keeps them going round clockwise; twice is no change.
+        flip(s, Qt::Horizontal);
+        QVERIFY(pfx::cornersUsable(pixelfx::core::cornersOf(s)));
+        QCOMPARE(pixelfx::core::cornersOf(s)[0].x, 1.0 - 0.9);
+        flip(s, Qt::Horizontal);
+        flip(s, Qt::Vertical);
+        QVERIFY(pfx::cornersUsable(pixelfx::core::cornersOf(s)));
+        flip(s, Qt::Vertical);
+        QVERIFY(same(pixelfx::core::cornersOf(s), placed));
+        // The photo's own corners store nothing; neither does the whole photo for Keep.
+        pixelfx::core::setCorners(s, pixelfx::core::ownCorners());
+        pixelfx::core::setKeepInside(s, false);
+        QVERIFY(!pixelfx::core::hasCorners(s));
+        for (const std::string& key : s.keys()) {
+            QVERIFY2(key.find("corners") == std::string::npos && key.find("keep") == std::string::npos,
+                     key.c_str());
+        }
+    }
+
     void sizesFollowTheLibrary()
     {
         pfx::Settings s;

@@ -83,6 +83,11 @@ public:
     [[nodiscard]] static bool isImportable(const QString& path);
     /// Crop mode (C): the crop box over the whole photo and the crop panel.
     void enterCrop();
+    /// Fix by four corners, in Crop: the handles on the photo, then applied (Enter) or not
+    /// (Escape).
+    void startCorners();
+    void finishCorners(bool apply);
+    [[nodiscard]] class CornerTool* cornerTool() const { return m_cornerTool; }
     /// Leaves Crop mode, keeping the changes as one history step (`apply`) or dropping them.
     void leaveCrop(bool apply);
     [[nodiscard]] bool isCropping() const;
@@ -278,6 +283,7 @@ private:
     QToolButton* m_batchMode = nullptr;
     QToolButton* m_healMode = nullptr;
     class HealTool* m_healTool = nullptr;
+    class CornerTool* m_cornerTool = nullptr;
     class ColorTargetTool* m_colorTarget = nullptr;
     QAction* m_colorTargetStop = nullptr;
     QAction* m_endPreview = nullptr;
@@ -324,6 +330,8 @@ private:
     QLabel* m_wordmark = nullptr;
     /// The header for the page on show: start page, editor or Batch.
     void updateHeader();
+    /// What Crop's keys do, in the strip under the photo.
+    [[nodiscard]] static QString cropHint();
     /// The header's file name over its size, format and file size: the button of Photo details.
     void buildDocButton();
     /// Photo details (I) and the panel it opens.

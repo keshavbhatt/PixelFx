@@ -18,7 +18,9 @@ A new editor, a new image engine, and a new look.
   or bake it to a .cube for other apps.
 - Crop and rotate (C): crop freely or to a ratio with thirds, grid, golden or diagonal guides,
   straighten with the dial, the slider or a drawn level line, fix leaning buildings with the
-  perspective sliders, turn and flip. The crop stays editable later.
+  perspective sliders, turn and flip. Fix by four corners squares a page, a window or a wall:
+  drag four handles onto its corners, with a magnifier for the exact spot, and keep the whole
+  photo or only the shape. The crop stays editable later.
 - Presets: save the whole edit or only parts of it, apply with one click, preview by hovering,
   stack a colour preset on a light one; import and export them as files to share. A few built-in
   presets, Auto enhance among them, to start from.

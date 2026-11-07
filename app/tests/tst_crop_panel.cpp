@@ -1,11 +1,19 @@
 #include "core/crop_geometry.h"
+#include "core/settings/settings.h"
+#include "services/document.h"
+#include "ui/canvas.h"
+#include "ui/corner_tool.h"
 #include "ui/crop_panel.h"
+#include "ui/main_window.h"
 #include "ui/style.h"
 
 #include <QApplication>
 #include <QPushButton>
 #include <QSignalSpy>
+#include <QTemporaryDir>
 #include <QTest>
+
+#include <pfx/io.h>
 
 using namespace Qt::StringLiterals;
 using pixelfx::ui::CropPanel;
@@ -133,6 +141,88 @@ private Q_SLOTS:
         panel.setPerspective(u"geometry.perspective.vertical"_s, 0);
         QVERIFY(panel.settings().isEmpty());
         QCOMPARE(changed.count(), 2);
+    }
+
+    void fourCorners()
+    {
+        CropPanel panel;
+        panel.begin({}, QSize(600, 400));
+        panel.chooseRatio(u"1:1"_s);
+        QSignalSpy requested(&panel, &CropPanel::cornersRequested);
+        const auto button = [&panel](const QString& text) {
+            for (QPushButton* b : panel.findChildren<QPushButton*>()) {
+                if (b->text() == text && b->isVisibleTo(&panel)) {
+                    return b;
+                }
+            }
+            return static_cast<QPushButton*>(nullptr);
+        };
+        QPushButton* fix = button(u"Fix by four corners"_s);
+        QVERIFY(fix != nullptr);
+        QVERIFY(button(u"Remove"_s) == nullptr); // nothing to remove yet
+        fix->click();
+        QCOMPARE(requested.count(), 1);
+        QCOMPARE(requested.at(0).at(0).toBool(), true);
+        panel.setPlacingCorners(true);
+        QVERIFY(fix->isChecked());
+        QVERIFY(button(u"Reset corners"_s) != nullptr);
+        // Placed: the crop starts again on the new picture and the sliders give way.
+        const pixelfx::core::Corners placed{{{0.1, 0.1}, {0.9, 0.15}, {0.85, 0.9}, {0.15, 0.85}}};
+        panel.setPlacingCorners(false);
+        panel.setCorners(placed);
+        QVERIFY(pixelfx::core::hasCorners(panel.settings()));
+        QCOMPARE(pixelfx::core::cropOf(panel.settings()), QRectF(0, 0, 1, 1));
+        QCOMPARE(panel.ratio(), 0.0);
+        QVERIFY(button(u"Edit the four corners"_s) != nullptr);
+        for (auto* slider : panel.findChildren<QWidget*>()) {
+            if (slider->toolTip() == u"Off while four corners set the perspective"_s) {
+                QVERIFY(!slider->isEnabled());
+            }
+        }
+        // Keep, then Remove.
+        panel.setKeepInside(true);
+        QVERIFY(pixelfx::core::keepsInside(panel.settings()));
+        button(u"Remove"_s)->click();
+        QVERIFY(!pixelfx::core::hasCorners(panel.settings()));
+        QVERIFY(button(u"Fix by four corners"_s) != nullptr);
+    }
+
+    void fourCornersInTheWindow()
+    {
+        QTemporaryDir dir;
+        pfx::Image image(300, 200);
+        image.fill(0.5F, 0.4F, 0.3F);
+        const QString file = dir.filePath(u"photo.png"_s);
+        QVERIFY(pfx::save(image, file.toStdString()).ok());
+        pixelfx::core::Settings settings(dir.filePath(u"s.ini"_s));
+        pixelfx::ui::MainWindow window(settings);
+        window.resize(1280, 800);
+        window.show();
+        QVERIFY(QTest::qWaitForWindowExposed(&window));
+        QSignalSpy opened(&window.document(), &pixelfx::services::Document::opened);
+        window.openFiles({file});
+        QVERIFY(opened.wait(5000));
+        window.enterCrop();
+        window.startCorners();
+        QVERIFY(window.cropPanel()->isPlacingCorners());
+        QVERIFY(window.document().isCornerEditing());
+        const pixelfx::core::Corners placed{{{0.1, 0.1}, {0.9, 0.15}, {0.85, 0.9}, {0.15, 0.85}}};
+        window.cornerTool()->setCorners(placed);
+        // Escape leaves the corners as they were; the window stays in Crop.
+        QTest::keyClick(window.findChild<pixelfx::ui::Canvas*>(), Qt::Key_Escape);
+        QVERIFY(!window.cropPanel()->isPlacingCorners());
+        QVERIFY(window.isCropping());
+        QVERIFY(!pixelfx::core::hasCorners(window.cropPanel()->settings()));
+        // Enter applies them; Done keeps them as the edit.
+        window.startCorners();
+        window.cornerTool()->setCorners(placed);
+        QTest::keyClick(window.findChild<pixelfx::ui::Canvas*>(), Qt::Key_Return);
+        QVERIFY(!window.cropPanel()->isPlacingCorners());
+        QVERIFY(!window.document().isCornerEditing());
+        QVERIFY(window.isCropping());
+        window.leaveCrop(true);
+        QVERIFY(pixelfx::core::hasCorners(window.document().settings()));
+        QVERIFY(window.document().outputSize() != QSize(300, 200));
     }
 
     void doneAndCancel()

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "core/crop_geometry.h"
 #include "ui/crop_overlay.h"
 
 #include <QRectF>
@@ -49,6 +50,14 @@ public:
     void setAngle(double degrees);
     /// Keystone correction, -100 to 100 (`geometry.perspective.vertical` or `.horizontal`).
     void setPerspective(const QString& key, double value);
+    /// The four corners are being placed on the photo: the controls say so.
+    void setPlacingCorners(bool placing);
+    [[nodiscard]] bool isPlacingCorners() const { return m_placingCorners; }
+    /// The four-corner perspective, as placed; the crop starts again on the new picture. The
+    /// photo's own corners take the correction off.
+    void setCorners(const core::Corners& corners);
+    /// Keep only the shape (true) or the whole photo, squared.
+    void setKeepInside(bool inside);
     /// A ratio of the user's own (the Custom chip asks for it).
     void setCustomRatio(int width, int height);
     /// Straightens so that a line drawn at `lineDegrees` on the shown photo (0 is level,
@@ -65,6 +74,11 @@ Q_SIGNALS:
     void finished(bool apply);
     /// "Draw a level line": the canvas takes the next drag as the line.
     void levelLineRequested();
+    /// "Fix by four corners" or "Edit the four corners" (`start` true), or the button pressed
+    /// again while placing them (apply them).
+    void cornersRequested(bool start);
+    /// Reset corners, while placing them: back to the photo's corners.
+    void cornersResetRequested();
 
 private:
     QWidget* buildRatios();
@@ -89,6 +103,11 @@ private:
     AdjustSlider* m_angle = nullptr;
     std::vector<AdjustSlider*> m_perspective;
     QPushButton* m_customChip = nullptr;
+    QPushButton* m_cornersButton = nullptr;
+    QPushButton* m_cornersLink = nullptr;
+    QWidget* m_keep = nullptr;
+    QButtonGroup* m_keepChoice = nullptr;
+    bool m_placingCorners = false;
     int m_customWidth = 7;
     int m_customHeight = 5;
 };

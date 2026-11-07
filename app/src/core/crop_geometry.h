@@ -3,6 +3,8 @@
 #include <QRectF>
 #include <QSize>
 
+#include <array>
+#include <pfx/geometry.h>
 #include <pfx/settings.h>
 
 // The geometry settings (DOCS/presets.md, group "geometry") as the Crop mode edits them. The
@@ -20,13 +22,29 @@ void setCrop(pfx::Settings& settings, const QRectF& crop);
 /// Only the geometry group: what the original needs to line up with the edit.
 [[nodiscard]] pfx::Settings geometryOnly(const pfx::Settings& settings);
 
+/// The four-corner perspective's corners as fractions of the straightened photo, top left first,
+/// clockwise; the photo's own corners when it has none.
+using Corners = std::array<pfx::Corner, 4>;
+[[nodiscard]] Corners cornersOf(const pfx::Settings& settings);
+/// The photo's own corners: no correction.
+[[nodiscard]] Corners ownCorners();
+[[nodiscard]] bool hasCorners(const pfx::Settings& settings);
+/// Stores `corners`, or removes them when they are the photo's own.
+void setCorners(pfx::Settings& settings, const Corners& corners);
+/// Without the corners and the crop: the straightened photo the corners are placed on.
+[[nodiscard]] pfx::Settings withoutCornersOrCrop(const pfx::Settings& settings);
+/// Keep: only the shape (true) or the whole photo, squared (false, the default).
+[[nodiscard]] bool keepsInside(const pfx::Settings& settings);
+void setKeepInside(pfx::Settings& settings, bool inside);
+
 /// The size of the rendered photo for `photo` (its upright size), and the size before the crop.
 [[nodiscard]] QSize outputSize(const pfx::Settings& settings, const QSize& photo);
 [[nodiscard]] QSize uncroppedSize(const pfx::Settings& settings, const QSize& photo);
 
-/// Turns the shown photo a quarter, crop included.
+/// Turns the shown photo a quarter, crop and corners included.
 void turn(pfx::Settings& settings, bool clockwise);
-/// Mirrors the shown photo left to right (Qt::Horizontal) or top to bottom, crop included.
+/// Mirrors the shown photo left to right (Qt::Horizontal) or top to bottom, crop and corners
+/// included.
 void flip(pfx::Settings& settings, Qt::Orientation orientation);
 /// Straightening in degrees, positive turns the photo clockwise.
 void setAngle(pfx::Settings& settings, double degrees);

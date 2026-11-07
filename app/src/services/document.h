@@ -137,6 +137,10 @@ public:
     /// over it; the crop stays in the settings.
     void setCropEditing(bool on);
     [[nodiscard]] bool isCropEditing() const { return m_cropEditing; }
+    /// While four corners are placed (in Crop), the preview shows the straightened photo without
+    /// them and without the crop, the picture the corners are placed on.
+    void setCornerEditing(bool on);
+    [[nodiscard]] bool isCornerEditing() const { return m_cornerEditing; }
     /// While healing, the preview shows the upright photo with no geometry at all, the frame
     /// spots are placed in (presets.md, group "heal"); the geometry stays in the settings.
     void setHealEditing(bool on);
@@ -221,6 +225,7 @@ private:
     QImage m_plainOriginal; ///< decoded with no settings at all
     pfx::Settings m_originalGeometry;
     bool m_cropEditing = false;
+    bool m_cornerEditing = false;
     bool m_healEditing = false;
     bool m_openAsLeft = true;
     std::optional<pfx::Settings> m_hover;

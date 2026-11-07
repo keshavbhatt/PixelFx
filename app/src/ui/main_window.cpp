@@ -12,6 +12,7 @@
 #include "ui/adjust_panel.h"
 #include "ui/batch_page.h"
 #include "ui/canvas.h"
+#include "ui/corner_tool.h"
 #include "ui/crop_panel.h"
 #include "ui/elided_label.h"
 #include "ui/export_sheet.h"
@@ -1028,10 +1029,12 @@ void MainWindow::setupCropActions()
     connect(crop, &QAction::triggered, this, [this] { isCropping() ? leaveCrop(true) : enterCrop(); });
     auto* cropDone = new QAction(tr("Apply the crop"), this);
     cropDone->setShortcuts({QKeySequence(Qt::Key_Return), QKeySequence(Qt::Key_Enter)});
-    connect(cropDone, &QAction::triggered, this, [this] { leaveCrop(true); });
+    connect(cropDone, &QAction::triggered, this,
+            [this] { m_cropPanel->isPlacingCorners() ? finishCorners(true) : leaveCrop(true); });
     auto* cropCancel = new QAction(tr("Cancel the crop"), this);
     cropCancel->setShortcut(QKeySequence(Qt::Key_Escape));
-    connect(cropCancel, &QAction::triggered, this, [this] { leaveCrop(false); });
+    connect(cropCancel, &QAction::triggered, this,
+            [this] { m_cropPanel->isPlacingCorners() ? finishCorners(false) : leaveCrop(false); });
     auto* cropSwap = new QAction(tr("Swap landscape and portrait"), this);
     cropSwap->setShortcut(QKeySequence(Qt::Key_X));
     connect(cropSwap, &QAction::triggered, m_cropPanel, &CropPanel::swapOrientation);
@@ -1834,6 +1837,13 @@ void MainWindow::connectCrop()
         m_canvas->dial()->setAngle(settings.number("geometry.angle", 0.0));
     });
     connect(m_cropPanel, &CropPanel::levelLineRequested, m_canvas, &Canvas::startLevelLine);
+    connect(m_cropPanel, &CropPanel::cornersRequested, this,
+            [this](bool start) { start ? startCorners() : finishCorners(true); });
+    connect(m_cropPanel, &CropPanel::cornersResetRequested, this, [this] {
+        if (m_cornerTool != nullptr) {
+            m_cornerTool->reset();
+        }
+    });
     connect(m_canvas, &Canvas::levelLineDrawn, m_cropPanel, &CropPanel::levelTo);
 }
 
@@ -1977,8 +1987,7 @@ void MainWindow::enterCrop()
     m_canvas->setImage(m_document.preview(), m_document.displaySize());
     m_panels->setCurrentWidget(m_cropPanel);
     m_presets->hide();
-    showModeStrip(
-        tr("Enter applies, Escape cancels, X swaps orientation, Shift keeps the ratio while dragging"));
+    showModeStrip(cropHint());
     m_strip->hide();
     updateCropStrip();
     for (QAction* a : std::as_const(m_cropActions)) {
@@ -1987,11 +1996,49 @@ void MainWindow::enterCrop()
     m_cropMode->setChecked(true);
 }
 
+QString MainWindow::cropHint()
+{
+    return tr("Enter applies, Escape cancels, X swaps orientation, Shift keeps the ratio while dragging");
+}
+
+void MainWindow::startCorners()
+{
+    if (!isCropping() || m_cropPanel->isPlacingCorners()) {
+        return;
+    }
+    if (m_cornerTool == nullptr) {
+        m_cornerTool = new CornerTool(m_canvas);
+    }
+    m_cornerTool->setCorners(core::cornersOf(m_cropPanel->settings()));
+    m_document.setCornerEditing(true); // the photo the corners are placed on: no corners, no crop
+    m_cropPanel->setPlacingCorners(true);
+    m_canvas->setTool(m_cornerTool);
+    m_canvas->setFocus(Qt::OtherFocusReason);
+    showModeStrip(tr("Drag each corner onto a corner of something that should be square: a page, a window, "
+                     "a wall. Enter applies, Escape cancels."));
+}
+
+void MainWindow::finishCorners(bool apply)
+{
+    if (!m_cropPanel->isPlacingCorners()) {
+        return;
+    }
+    m_canvas->setTool(nullptr);
+    m_document.setCornerEditing(false);
+    m_cropPanel->setPlacingCorners(false);
+    if (apply) {
+        m_cropPanel->setCorners(m_cornerTool->corners());
+    }
+    showModeStrip(cropHint());
+    updateCropStrip();
+}
+
 void MainWindow::leaveCrop(bool apply)
 {
     if (!isCropping()) {
         return;
     }
+    finishCorners(apply);
     for (QAction* a : std::as_const(m_cropActions)) {
         a->setEnabled(false);
     }

@@ -9,6 +9,7 @@
 
 class QPushButton;
 class QLabel;
+class QKeyEvent;
 class QMouseEvent;
 class QPainter;
 class QToolButton;
@@ -32,6 +33,10 @@ public:
     virtual void release(const QMouseEvent& event, const QRectF& photo) = 0;
     /// The pointer left the canvas.
     virtual void leave() {}
+    /// Whether the tool takes `event`'s key, before any shortcut of the window does.
+    [[nodiscard]] virtual bool takesKey(const QKeyEvent& /*event*/) const { return false; }
+    /// A key the tool takes (takesKey).
+    virtual void key(const QKeyEvent& /*event*/, const QRectF& /*photo*/) {}
 };
 
 /// The line centred at the top of the canvas, on a card: what the canvas shows or what a drag
@@ -152,6 +157,7 @@ Q_SIGNALS:
     void fullScreenRequested();
 
 protected:
+    bool event(QEvent* event) override;
     void paintEvent(QPaintEvent* event) override;
     void mousePressEvent(QMouseEvent* event) override;
     void mouseMoveEvent(QMouseEvent* event) override;

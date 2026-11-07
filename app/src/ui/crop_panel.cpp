@@ -231,7 +231,67 @@ QLayout* CropPanel::buildPerspective()
         box->addWidget(s);
         m_perspective.push_back(s);
     }
+    m_cornersButton = smallButton(u"frame"_s, tr("Fix by four corners"),
+                                  tr("Drag four corners onto something that should be square"), this);
+    m_cornersButton->setCheckable(true);
+    connect(m_cornersButton, &QPushButton::clicked, this, [this] {
+        m_cornersButton->setChecked(m_placingCorners); // it shows the placing, not the click
+        Q_EMIT cornersRequested(!m_placingCorners);
+    });
+    m_cornersLink = new QPushButton(this);
+    m_cornersLink->setObjectName(u"link"_s);
+    connect(m_cornersLink, &QPushButton::clicked, this, [this] {
+        if (m_placingCorners) {
+            Q_EMIT cornersResetRequested();
+        } else {
+            setCorners(core::ownCorners());
+        }
+    });
+    auto* cornersRow = new QHBoxLayout;
+    cornersRow->setContentsMargins(0, kGapSmall, 0, 0);
+    cornersRow->addWidget(m_cornersButton);
+    cornersRow->addStretch();
+    cornersRow->addWidget(m_cornersLink);
+    box->addLayout(cornersRow);
+    m_keep = new QWidget(this);
+    auto* keepColumn = new QVBoxLayout(m_keep);
+    keepColumn->setContentsMargins(0, kGapItems, 0, 0);
+    keepColumn->setSpacing(kGapSmall);
+    auto* keepLabel = new QLabel(tr("Keep"), m_keep);
+    keepLabel->setObjectName(u"adjustName"_s);
+    m_keepChoice = new QButtonGroup(this);
+    QFrame* keep =
+        segmentBox({tr("Whole photo"), tr("Inside the corners")}, 0, m_keepChoice, m_keep, SegmentFit::Equal);
+    keep->setToolTip(tr("The whole photo turned so the shape is square, or only the shape"));
+    connect(m_keepChoice, &QButtonGroup::idClicked, this, [this](int id) { setKeepInside(id == 1); });
+    keepColumn->addWidget(keepLabel);
+    keepColumn->addWidget(keep);
+    box->addWidget(m_keep);
     return box;
+}
+
+void CropPanel::setKeepInside(bool inside)
+{
+    core::setKeepInside(m_settings, inside);
+    changed();
+}
+
+void CropPanel::setPlacingCorners(bool placing)
+{
+    m_placingCorners = placing;
+    refreshControls();
+}
+
+void CropPanel::setCorners(const core::Corners& corners)
+{
+    if (core::cornersOf(m_settings) == corners) {
+        return;
+    }
+    core::setCorners(m_settings, corners);
+    // The crop was a share of the picture the corners made; a new picture starts uncropped.
+    core::setCrop(m_settings, QRectF(0, 0, 1, 1));
+    setRatio(0.0);
+    changed();
 }
 
 void CropPanel::setPerspective(const QString& key, double value)
@@ -446,9 +506,23 @@ void CropPanel::changed()
 void CropPanel::refreshControls()
 {
     m_angle->setValue(m_settings.number("geometry.angle", 0.0));
+    const bool corners = core::hasCorners(m_settings);
     for (AdjustSlider* s : m_perspective) {
         s->setValue(m_settings.number(s->key().toStdString(), 0.0));
+        s->setEnabled(!corners && !m_placingCorners);
+        s->setToolTip(s->isEnabled()
+                          ? tr("Straighten lines that lean together, such as a building shot from below")
+                          : tr("Off while four corners set the perspective"));
     }
+    m_cornersButton->setChecked(m_placingCorners);
+    m_cornersButton->setText(corners && !m_placingCorners ? tr("Edit the four corners")
+                                                          : tr("Fix by four corners"));
+    m_cornersLink->setText(m_placingCorners ? tr("Reset corners") : tr("Remove"));
+    m_cornersLink->setToolTip(m_placingCorners ? tr("Put the corners back on the photo's corners")
+                                               : tr("Take the four-corner correction off"));
+    m_cornersLink->setVisible(m_placingCorners || corners);
+    m_keep->setVisible(m_placingCorners || corners);
+    m_keepChoice->button(core::keepsInside(m_settings) ? 1 : 0)->setChecked(true);
     // The chip of the current ratio; none when the ratio came from a turn of an unlisted one.
     const QSize size = uncropped();
     const double original = static_cast<double>(size.width()) / std::max(1, size.height());
