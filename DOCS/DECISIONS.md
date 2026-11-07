@@ -414,6 +414,8 @@ same libraries in every build, built from source where needed (2026-11-07).
   Homebrew to vcpkg. vcpkg's libvips port cannot build HEIF, JPEG XL or RAW and its libraw needs
   JasPer, so `packaging/vcpkg/ports` holds the two ports built as `build-deps.sh` builds them;
   libheif is taken with libde265 and dav1d only (no x265, ADR-003).
+  zlib 1.3 (Ubuntu 24.04's) does not compile with Xcode 16's SDK, so its port carries zlib
+  1.3.1's one-line fix (classic Mac OS only defines `fdopen`); the version stays 1.3.
 - `scripts/check-pins.py`, run first in Linux CI, fails when `ci.yml`, `vcpkg.json`, a port or
   the snap names another version.
 

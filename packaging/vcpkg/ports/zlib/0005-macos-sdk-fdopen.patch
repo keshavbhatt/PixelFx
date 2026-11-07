@@ -1,0 +1,15 @@
+Build zlib 1.3 with current Apple SDKs (as zlib 1.3.1 does): its classic Mac OS branch
+also matched TARGET_OS_MAC and defined fdopen() as a macro, which the macOS SDK's _stdio.h no
+longer allows. Only classic Mac OS takes that branch now.
+
+--- a/zutil.h
++++ b/zutil.h
+@@ -137,7 +137,7 @@
+ #  endif
+ #endif
+ 
+-#if defined(MACOS) || defined(TARGET_OS_MAC)
++#if defined(MACOS)
+ #  define OS_CODE  7
+ #  ifndef Z_SOLO
+ #    if defined(__MWERKS__) && __dest_os != __be_os && __dest_os != __win32_os
