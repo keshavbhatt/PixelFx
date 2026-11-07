@@ -16,7 +16,7 @@ SDK_LIB="$SDK/usr/lib/x86_64-linux-gnu"
 BUILD="${PIXELFX_BUILD_DIR:-$DIR/build/app}"
 CMAKE=/snap/cmake/current/bin/cmake
 
-# shellcheck source=snap-runtime-env.sh
+# shellcheck source=scripts/snap-runtime-env.sh
 source "$DIR/scripts/snap-runtime-env.sh"
 
 if [ ! -d "$SDK_LIB/cmake/Qt6" ]; then
@@ -53,6 +53,10 @@ export LD_LIBRARY_PATH="$sdk_path:$build_libs${LD_LIBRARY_PATH:+:$LD_LIBRARY_PAT
 # libvips and its dependencies come from the SDK overlay that build-deps.sh prepared; the SDK's
 # bare include directory goes after the host's libc headers (see build-deps.sh).
 overlay="$DIR/build/deps/work/sdk-overlay"
+# Only these: no PKG_CONFIG_PATH from the environment, and CMake does not add its prefix path
+# (PKG_CONFIG_USE_CMAKE_PREFIX_PATH below), which on Ubuntu would put the SDK's own .pc files,
+# whose libraries dangle off-snap, ahead of the overlay's.
+unset PKG_CONFIG_PATH
 export PKG_CONFIG_LIBDIR="$PIXELFX_DEPS/lib/pkgconfig:$overlay/pkgconfig"
 export PKG_CONFIG_SYSTEM_INCLUDE_PATH="$SDK/usr/include"
 link_path="$PIXELFX_DEPS/lib:$overlay/lib:$SDK_LIB:$PIXELFX_RT/usr/lib/x86_64-linux-gnu:$PIXELFX_CORE24_BASE"
@@ -70,6 +74,7 @@ read -r -a EXTRA_ARGS <<< "${PIXELFX_CMAKE_ARGS:-}"
     -DCMAKE_EXE_LINKER_FLAGS="-Wl,-rpath-link,$link_path -Wl,--allow-shlib-undefined" \
     -DCMAKE_SHARED_LINKER_FLAGS="-Wl,-rpath-link,$link_path" \
     -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
+    -DPKG_CONFIG_USE_CMAKE_PREFIX_PATH=OFF \
     -DPIXELFX_SNAP_RUNTIME="$PIXELFX_RT" \
     -DPIXELFX_SNAP_RUNTIME_LIB_PATH="$(pixelfx_runtime_lib_path "$BUILD")" \
     "${EXTRA_ARGS[@]}"
