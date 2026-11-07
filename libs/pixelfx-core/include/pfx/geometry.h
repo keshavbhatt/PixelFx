@@ -19,6 +19,7 @@ struct Corner
 {
     double x = 0.0;
     double y = 0.0;
+    bool operator==(const Corner&) const = default;
 };
 
 // Whether four corners (top left first, clockwise, as shares of an image) make a shape the

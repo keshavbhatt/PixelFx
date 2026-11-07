@@ -307,22 +307,21 @@ CornerWarp cornerWarp(const Geometry& g, Size size)
         return inside();
     }
     // The whole image squared: its outline in the rectangle's plane, then the largest rectangle of
-    // the image's own shape inside it, around the outline's middle.
+    // the image's own shape inside it, around the shape's middle: what the corners were put on
+    // stays in the picture as far as it can.
     const Projection toRect = inverse(fromRect);
     std::array<Corner, 4> outline{};
     const std::array<Corner, 4> own{{{0.0, 0.0},
                                      {static_cast<double>(size.width), 0.0},
                                      {static_cast<double>(size.width), static_cast<double>(size.height)},
                                      {0.0, static_cast<double>(size.height)}}};
-    Corner middle{};
+    const Corner middle{width / 2.0, height / 2.0};
     for (std::size_t i = 0; i < 4; ++i) {
         const Mapped m = apply(toRect, own.at(i).x, own.at(i).y);
         if (m.w <= 0.0) {
             return inside(); // part of the image would go past infinity: only the shape can be kept
         }
         outline.at(i) = {m.x, m.y};
-        middle.x += m.x / 4.0;
-        middle.y += m.y / 4.0;
     }
     const double aspect = static_cast<double>(size.width) / size.height;
     const double low = largestInside(outline, middle, aspect, 2.0 * std::max(size.width, size.height));
