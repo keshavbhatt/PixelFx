@@ -247,19 +247,25 @@ TEST_CASE("defringe: purple next to a hard edge turns grey, purple away from edg
     CHECK(chroma(out, 56, 36) == doctest::Approx(chroma(img, 56, 36)).epsilon(0.05));
 }
 
-TEST_CASE("presets version 5 and recipes version 6: older files read unchanged, new settings round-trip")
+TEST_CASE("presets version 6 and recipes version 7: older files read unchanged, new settings round-trip")
 {
     const auto old = pfx::parseDocument(
         R"({"format":"pixelfx","kind":"preset","version":1,"body":{"settings":{"light":{"exposure":0.5}}}})");
     REQUIRE(old.ok());
-    CHECK(old.value().version == 5);
+    CHECK(old.value().version == 6);
     CHECK(old.value().settings.number("light.exposure", 0) == 0.5);
     const auto recipe = pfx::parseDocument(
         R"({"format":"pixelfx","kind":"recipe","version":2,"body":{"settings":{"color":{"vibrance":10}}}})");
     REQUIRE(recipe.ok());
-    CHECK(recipe.value().version == 6);
-    CHECK(pfx::parseDocument(R"({"format":"pixelfx","kind":"preset","version":6})").error().code ==
+    CHECK(recipe.value().version == 7);
+    CHECK(pfx::parseDocument(R"({"format":"pixelfx","kind":"preset","version":7})").error().code ==
           pfx::ErrorCode::NewerVersion);
+    // Version 5 presets and version 6 recipes had no source group: they read as before.
+    const auto five = pfx::parseDocument(
+        R"({"format":"pixelfx","kind":"preset","version":5,"body":{"settings":{"light":{"contrast":12}}}})");
+    REQUIRE(five.ok());
+    CHECK(five.value().settings.number("light.contrast", 0) == 12.0);
+    CHECK_FALSE(five.value().settings.contains("source.lightroomPreset"));
     // Version 3 presets and version 4 recipes added the Camera profile of RAW files.
     const auto camera = pfx::parseDocument(
         R"({"format":"pixelfx","kind":"recipe","version":4,"body":{"settings":{"color":{"profile":"camera"}}}})");
@@ -297,8 +303,10 @@ TEST_CASE("presets version 5 and recipes version 6: older files read unchanged, 
     doc.settings.set("geometry.perspective.corners.topLeft.x", 0.1);
     doc.settings.set("geometry.perspective.corners.bottomRight.y", 0.85);
     doc.settings.set("geometry.perspective.keep", std::string("inside"));
+    // Version 6 presets and version 7 recipes added the source group.
+    doc.settings.set("source.lightroomPreset", std::string("Clean Travel"));
     const std::string text = pfx::serializeDocument(doc);
-    CHECK(text.find("\"version\": 5") != std::string::npos);
+    CHECK(text.find("\"version\": 6") != std::string::npos);
     const auto back = pfx::parseDocument(text);
     REQUIRE(back.ok());
     CHECK(back.value().settings == doc.settings);

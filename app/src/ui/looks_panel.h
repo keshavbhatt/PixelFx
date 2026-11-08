@@ -46,6 +46,8 @@ public:
     /// Look ids in Favorites (starred, and listed by the Favorites chip).
     void setFavorites(const QStringList& ids);
     [[nodiscard]] const QStringList& favorites() const { return m_favorites; }
+    /// Marks Export look as Pro in a look's menu (short of Pro).
+    void setProMarks(bool shown) { m_proMarks = shown; }
 
 Q_SIGNALS:
     /// A tile was chosen: its id (empty for Original) and the look's own strength.
@@ -87,6 +89,7 @@ private:
     class HoverPreview* m_hover = nullptr;
     std::vector<QString> m_tileIds; // the look of each tile on show, by HoverPreview index
     QStringList m_favorites;
+    bool m_proMarks = false;
     /// The look's own strength, the one a click applies.
     [[nodiscard]] int defaultStrength(const QString& id) const;
 };

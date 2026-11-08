@@ -18,6 +18,7 @@
 #include <array>
 #include <pfx/auto.h>
 #include <pfx/io.h>
+#include <utility>
 
 using namespace Qt::StringLiterals;
 
@@ -234,7 +235,7 @@ pfx::Settings BatchRunner::settingsFor(const BatchRecipe& recipe, const pfx::Set
     return s;
 }
 
-void BatchRunner::start(const QStringList& files, const BatchRecipe& recipe)
+void BatchRunner::start(const QStringList& files, const BatchRecipe& recipe, int limit)
 {
     m_ours.clear();
     if (recipe.compress && m_recipe.compress && files == m_files) {
@@ -259,7 +260,8 @@ void BatchRunner::start(const QStringList& files, const BatchRecipe& recipe)
             recipe.compress ? std::clamp(QThread::idealThreadCount() / 2, 2, kCompressAtOnce) : kAtOnce;
     }
     m_queue.clear();
-    for (int i = 0; i < files.size(); ++i) {
+    const auto queued = limit < 0 ? files.size() : std::min<qsizetype>(limit, files.size());
+    for (int i = 0; i < queued; ++i) {
         m_queue.push_back(i);
     }
     m_paused = false;
@@ -290,9 +292,9 @@ void BatchRunner::retryFailed()
     }
 }
 
-void BatchRunner::processRest()
+void BatchRunner::processRest(int limit)
 {
-    for (std::size_t i = 0; i < m_states.size(); ++i) {
+    for (std::size_t i = 0; i < m_states.size() && (limit < 0 || std::cmp_less(m_queue.size(), limit)); ++i) {
         if (m_states[i] == State::Waiting) {
             m_queue.push_back(static_cast<int>(i));
         }

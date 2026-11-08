@@ -255,7 +255,9 @@ std::optional<Error> readEnvelope(const Json& json, Document& doc)
     // recipe 2 to 3 and batch 2 to 3: the new version only added settings whose defaults are
     // no change (FEATURES P8), so an older body reads unchanged and renders as before. Preset 4
     // to 5, recipe 5 to 6 and batch 6 to 7 added the four-corner perspective, whose defaults
-    // are the photo's own corners: no change either.
+    // are the photo's own corners: no change either. Preset 5 to 6, recipe 6 to 7 and batch 7
+    // to 8 added the `source` group, which names where settings came from and renders nothing:
+    // an older file simply has none.
     doc.version = currentVersion(doc.kind);
     doc.id = stringField(json, "id");
     doc.name = stringField(json, "name");

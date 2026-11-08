@@ -22,6 +22,8 @@ qt_add_library(pixelfx_core STATIC
     file_names.h
     histogram.cpp
     histogram.h
+    licensing/pro_features.cpp
+    licensing/pro_features.h
     history.cpp
     history.h
     links.h

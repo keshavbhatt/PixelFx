@@ -80,11 +80,13 @@ public:
     explicit BatchRunner(QObject* parent = nullptr);
     ~BatchRunner() override;
 
-    void start(const QStringList& files, const BatchRecipe& recipe);
+    /// Runs `recipe` on `files`; with a `limit`, on the first that many, the rest left waiting
+    /// for processRest.
+    void start(const QStringList& files, const BatchRecipe& recipe, int limit = -1);
     /// Runs the failed photos of the last batch again.
     void retryFailed();
-    /// Runs the photos a stopped batch did not reach.
-    void processRest();
+    /// Runs the photos a stopped (or limited) batch did not reach, or the next `limit` of them.
+    void processRest(int limit = -1);
     void setPaused(bool paused);
     /// Photos worked on at once from the next run: 0 for automatic (kAtOnce, or up to
     /// kCompressAtOnce for Compress only), at most kMaxAtOnce.

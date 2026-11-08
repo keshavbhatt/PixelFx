@@ -214,6 +214,15 @@ const QString kSheet =
         #wheelValues { color: {{text}}; font-size: 12px; }
         #aboutName { font-size: 18px; font-weight: 700; }
         #credit { color: {{muted}}; font-size: 12px; }
+        QLabel#proMark { border: 1px solid {{track}}; border-radius: 4px; padding: 0 5px; color: {{muted}}; font-size: 11px; font-weight: 600; }
+        QFrame#proStatus { background: {{hover}}; border-radius: 10px; }
+        #proStatusTitle { font-weight: 600; }
+        QProgressBar#proMeter { border: 0; border-radius: 2px; background: {{border}}; }
+        QProgressBar#proMeter::chunk { border-radius: 2px; background: {{text}}; }
+        #planYes { color: {{success}}; }
+        #planNo { color: {{faint}}; }
+        QFrame#passLine { border: 1px solid {{border}}; border-radius: 8px; }
+        QLineEdit#accountId { font-family: monospace; }
         QFrame#divider { background: {{border}}; border: 0; }
         QTextBrowser#whatsNewText { background: {{panel}}; border: 0; }
         QListWidget#noticeList { background: {{input}}; border: 1px solid {{border}}; border-radius: 8px; padding: 4px; }
@@ -906,6 +915,19 @@ QVBoxLayout* sectionColumn(const QString& heading, QWidget* box)
     controls->setSpacing(kGapControls);
     outer->addLayout(controls);
     return controls;
+}
+
+QWidget* sectionHeadingMarked(const QString& text, QWidget* mark, QWidget* parent)
+{
+    auto* heading = new QWidget(parent);
+    auto* row = new QHBoxLayout(heading);
+    row->setContentsMargins(0, kAboveSection, 0, kBelowSection);
+    row->setSpacing(kGapSmall + 2);
+    row->addWidget(sectionLabel(text, heading), 0, Qt::AlignVCenter);
+    mark->setParent(heading);
+    row->addWidget(mark, 0, Qt::AlignVCenter);
+    row->addStretch();
+    return heading;
 }
 
 QHBoxLayout* sectionHeadingRow(QLabel* label, QWidget* trailing, int sides)

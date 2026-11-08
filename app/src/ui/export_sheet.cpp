@@ -2,8 +2,13 @@
 
 #include "core/describe.h"
 #include "services/exporter.h"
+#include "services/licensing/license_service.h"
 #include "ui/elided_label.h"
 #include "ui/frame_picker.h"
+#include "ui/icon_text_button.h"
+#include "ui/icons.h"
+#include "ui/pro_gate.h"
+#include "ui/pro_sheet.h"
 #include "ui/size_list.h"
 #include "ui/slider_row.h"
 #include "ui/style.h"
@@ -116,6 +121,10 @@ ExportSheet::ExportSheet(const QString& source, const QSize& photoSize, const co
     form->setHorizontalSpacing(kGapItems);
     form->setVerticalSpacing(kGapGroups);
     form->setLabelAlignment(Qt::AlignLeft | Qt::AlignVCenter);
+    m_proBox = new ProStatusBox(this);
+    m_proBox->setGlyph(u"star"_s, tokens().text);
+    m_proBox->hide();
+    form->addRow(m_proBox);
     form->addRow(tr("Format"), formatRow(options.extension));
 
     form->addRow(tr("Quality"), qualityRow(options.quality));
@@ -132,7 +141,7 @@ ExportSheet::ExportSheet(const QString& source, const QSize& photoSize, const co
     form->addRow(tr("Sharpen for"), sharpenRow(options.sharpen));
     form->addRow(tr("Color space"), colorSpaceBox(options.colorSpace));
 
-    form->addRow(tr("Watermark"), watermarkRow(options.watermark));
+    form->addRow(watermarkLabel(), watermarkRow(options.watermark));
 
     form->addRow(tr("Metadata"), metadataRow(options));
 
@@ -173,12 +182,118 @@ QHBoxLayout* ExportSheet::addFooter(QFormLayout* form)
     m_copyButton = new QPushButton(tr("Copy to clipboard"), this);
     m_copyButton->setToolTip(tr("Copy the photo at this size, with the watermark, instead of saving a file"));
     connect(m_copyButton, &QPushButton::clicked, this, [this] { done(kCopyToClipboard); });
-    const FootButtons buttons = footButtons(this, tr("Export"), {m_copyButton}, true);
+    m_whatPro = new QPushButton(tr("What Pro adds"), this);
+    m_whatPro->setObjectName(u"link"_s);
+    m_whatPro->hide();
+    connect(m_whatPro, &QPushButton::clicked, this, [this] {
+        if (m_gate != nullptr && m_gate->license() != nullptr) {
+            ProSheet sheet(*m_gate->license(), this, core::licensing::Source::Export);
+            sheet.exec();
+        }
+    });
+    const FootButtons buttons = footButtons(this, tr("Export"), {m_whatPro, m_copyButton}, true);
     m_exportButton = buttons.primary;
     connect(buttons.cancel, &QPushButton::clicked, this, &QDialog::reject);
     connect(m_exportButton, &QPushButton::clicked, this, &QDialog::accept);
+    m_choosePlan = new IconTextButton(icons::themed(u"external"_s, Qt::white), tr("Choose a plan"), this);
+    m_choosePlan->setObjectName(u"primary"_s);
+    m_choosePlan->setToolTip(
+        tr("Opens the PixelFx checkout in your browser, with the prices in your currency"));
+    m_choosePlan->hide();
+    connect(m_choosePlan, &QPushButton::clicked, this, [this] {
+        if (m_gate != nullptr) {
+            m_gate->openCheckout(core::licensing::Source::Export);
+        }
+    });
+    buttons.row->addWidget(m_choosePlan);
     form->addRow(m_note);
     return buttons.row;
+}
+
+QWidget* ExportSheet::watermarkLabel()
+{
+    auto* label = new QWidget(this);
+    auto* text = new QLabel(tr("Watermark"), label);
+    text->setObjectName(u"fieldLabel"_s);
+    m_proMark = proMark(tr("Watermarks"), label);
+    m_proMark->hide();
+    auto* row = new QHBoxLayout(label);
+    row->setContentsMargins(0, 0, 0, 0);
+    row->setSpacing(kGapSmall + 2);
+    row->addWidget(text);
+    row->addWidget(m_proMark);
+    row->addStretch();
+    return label;
+}
+
+void ExportSheet::setPro(ProGate* gate, ProUses uses)
+{
+    m_gate = gate;
+    m_uses = std::move(uses);
+    connect(m_watermark, &WatermarkPicker::changed, this, &ExportSheet::refreshPro, Qt::UniqueConnection);
+    if (m_gate != nullptr && m_gate->license() != nullptr) {
+        connect(m_gate->license(), &services::LicenseService::statusChanged, this, &ExportSheet::refreshPro,
+                Qt::UniqueConnection);
+    }
+    refreshPro();
+}
+
+void ExportSheet::refreshPro()
+{
+    const bool free = m_gate != nullptr && !m_gate->hasPro();
+    m_proMark->setVisible(m_gate != nullptr && m_gate->license() != nullptr &&
+                          m_gate->license()->tier() != services::LicenseService::Tier::Pro);
+    m_proUses = free && m_uses ? m_uses(m_watermark->path()) : QList<core::licensing::ProUse>();
+    showProUses();
+}
+
+void ExportSheet::showProUses()
+{
+    using core::licensing::ProItem;
+    const bool needsPro = !m_proUses.isEmpty();
+    QLayoutItem* old = nullptr;
+    while ((old = m_proBox->extra()->takeAt(0)) != nullptr) {
+        delete old->widget();
+        delete old;
+    }
+    const bool one = m_photoCount <= 1;
+    m_proBox->setTitle(one ? tr("This photo uses Pro") : tr("These photos use Pro"));
+    m_proBox->setText(one ? tr("Edit with them as long as you like; exporting the photo needs Pro.")
+                          : tr("Edit with them as long as you like; exporting them needs Pro."));
+    m_proBox->extra()->addSpacing(kGapSmall);
+    for (const core::licensing::ProUse& use : m_proUses) {
+        auto* row = new QLabel(m_proBox);
+        row->setObjectName(u"small"_s);
+        QString html = u"%1<span style=\"color:%2\"> \u00B7 %3</span>"_s.arg(
+            core::licensing::itemLabel(use.item).toHtmlEscaped(), tokens().muted.name(),
+            use.name.toHtmlEscaped());
+        // A RAW cannot be taken off; with several photos only the watermark is the sheet's own.
+        const bool removable = use.item == ProItem::Watermark || (one && use.item != ProItem::Raw);
+        if (removable) {
+            html += u"&nbsp;&nbsp;<a href=\"#remove\" style=\"color:%1; text-decoration:none\">%2</a>"_s.arg(
+                tokens().link.name(), tr("Remove"));
+        }
+        row->setText(html);
+        row->setAccessibleName(describeUses({use}));
+        const ProItem item = use.item;
+        connect(row, &QLabel::linkActivated, this, [this, item] {
+            if (item == ProItem::Watermark) {
+                m_watermark->setPath(QString());
+                refreshPro();
+            } else {
+                Q_EMIT removeRequested(item);
+            }
+        });
+        m_proBox->extra()->addWidget(row);
+    }
+    m_proBox->setVisible(needsPro);
+    m_whatPro->setVisible(needsPro);
+    m_copyButton->setVisible(!needsPro && m_photoCount <= 1);
+    m_exportButton->setVisible(!needsPro);
+    m_choosePlan->setVisible(needsPro);
+    m_exportButton->setDefault(!needsPro);
+    m_choosePlan->setDefault(needsPro);
+    fitHeight();
 }
 
 QWidget* ExportSheet::qualityRow(int quality)
@@ -602,7 +717,7 @@ void ExportSheet::setPhotoCount(int count)
         return;
     }
     m_photoCount = count;
-    m_copyButton->setVisible(count <= 1); // one picture fits on the clipboard
+    m_copyButton->setVisible(count <= 1 && m_proUses.isEmpty()); // one picture fits on the clipboard
     const QString text = tr("Export %n photos", nullptr, count);
     m_title->setText(text);
     m_exportButton->setText(text);

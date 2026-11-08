@@ -73,6 +73,8 @@ public:
     /// Ends the preview of either tab and any wait for one (Escape, a click elsewhere).
     void endPreview();
 
+    /// Marks Export as Pro in a preset's menu, and Export look in the Looks tab's (short of Pro).
+    void setProMarks(bool shown);
     /// The Looks tab's panel.
     [[nodiscard]] LooksPanel* looksPanel() const { return m_looks; }
     /// 0 Looks, 1 Presets.
@@ -126,6 +128,7 @@ private:
     // the next event loop pass, so their visibility cannot tell which are on show.
     std::vector<PhotoTile*> m_tiles;
     QStringList m_favorites;
+    bool m_proMarks = false;
     QStringList m_recent;
     QStringList m_closed;
     QString m_category;

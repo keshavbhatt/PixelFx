@@ -436,4 +436,14 @@ void Settings::setWhatsNewSeen(const QString& version)
     m_settings->setValue(key(keys::kWhatsNewSeen), version);
 }
 
+bool Settings::trialEndShown() const
+{
+    return m_settings->value(key(keys::kTrialEndShown), false).toBool();
+}
+
+void Settings::setTrialEndShown(bool shown)
+{
+    m_settings->setValue(key(keys::kTrialEndShown), shown);
+}
+
 } // namespace pixelfx::core

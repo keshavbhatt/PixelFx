@@ -51,6 +51,8 @@ public:
     bool saveLook();
     /// The preview as last rendered (tests).
     [[nodiscard]] const QImage& previewImage() const { return m_previewImage; }
+    /// Export look and Bake to .cube ask it first; the Pro mark shows beside Bake short of Pro.
+    void setProGate(class ProGate* gate);
 
 Q_SIGNALS:
     void previewRendered();
@@ -74,6 +76,8 @@ private:
     void importLut();
     void exportLook();
     void bakeCube();
+    class ProGate* m_gate = nullptr;
+    class QLabel* m_bakeMark = nullptr;
     void schedulePreview();
     void renderPreview();
     void openLargePreview();

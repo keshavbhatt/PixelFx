@@ -1,11 +1,13 @@
 #pragma once
 
 #include "core/export_options.h"
+#include "core/licensing/pro_features.h"
 #include "ui/sheet.h"
 
 #include <QImage>
 #include <QSize>
 
+#include <functional>
 #include <vector>
 
 class QAbstractButton;
@@ -66,7 +68,23 @@ public:
     /// The note under the choices: the estimated file size once it is known.
     [[nodiscard]] QLabel* note() const { return m_note; }
 
+    /// What the photos use of Pro for a watermark choice; with `gate` short of Pro, a box at the
+    /// top lists it with Remove where it can go, and Choose a plan takes Export's place until
+    /// nothing Pro is left. The Watermark row gets the Pro mark.
+    using ProUses = std::function<QList<core::licensing::ProUse>(const QString& watermark)>;
+    void setPro(class ProGate* gate, ProUses uses);
+    /// Asks for the uses again (after a Remove was carried out on the photo).
+    void refreshPro();
+    /// The Pro items the box lists now, empty when Export is open.
+    [[nodiscard]] const QList<core::licensing::ProUse>& proUses() const { return m_proUses; }
+
+Q_SIGNALS:
+    /// Remove was pressed for `item` on the photo (the preset or the LUT look comes off it).
+    void removeRequested(pixelfx::core::licensing::ProItem item);
+
 private:
+    [[nodiscard]] QWidget* watermarkLabel();
+    void showProUses();
     void updateForFormat();
     class QLabel* m_title = nullptr;
     class QLabel* m_file = nullptr;
@@ -148,6 +166,13 @@ private:
     QImage m_preview;
     int m_photoCount = 1;
     int m_estimates = 0; ///< estimates started, so only the latest is shown
+    class ProGate* m_gate = nullptr;
+    ProUses m_uses;
+    QList<core::licensing::ProUse> m_proUses;
+    class ProStatusBox* m_proBox = nullptr;
+    QWidget* m_proMark = nullptr;
+    class QPushButton* m_whatPro = nullptr;
+    class QPushButton* m_choosePlan = nullptr;
 };
 
 } // namespace pixelfx::ui

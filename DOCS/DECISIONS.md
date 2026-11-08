@@ -426,3 +426,34 @@ and macOS get the image libraries at Ubuntu 24.04's versions, older than their c
 their first CI build compiles every library (cached afterwards). The snap builds for amd64 only
 until KDE publishes the SDK for arm64. A newer SDK snap fails the build until the pins follow it,
 on purpose. This supersedes ADR-008's "CI uses each platform's own libvips".
+
+## ADR-016: PixelFx Pro in the app (2026-11-08)
+
+**Context.** The owner decided how PixelFx sells (private notes, `DOCS/private/business.md`, L1 to
+L7) and approved the mocks (`mocks/reviews/pro.md`): a trial for every new install, then Free
+for one photo at a time; Pro adds many photos at once and the files people already own. Saving
+is what is paid, not trying: RAW photos, imported Lightroom presets and LUTs and watermarks can
+be used on Free and are asked about when a photo with them is saved.
+
+**Decision.**
+- The shared module, `app/src/modules/AccountAndLicense`, is the kit's, copied unchanged (its
+  comments without dashes), as a static library linked by services. Its config
+  (`services/licensing/license_config.h`) names the Ktechpit server, the app code and the trial.
+- `services::LicenseService` wraps it: the Account ID, the tier (Pro, Trial, Free), the trial's
+  days, the checkout and portal links. It checks on start and weekly and keeps the last answer,
+  so PixelFx works offline. The command line batch reads the last answer without a check.
+- `core::licensing` decides from the photo alone what saving it uses of Pro (`photoUses`,
+  `batchUses`); `ui::ProGate` is the one place the UI asks, and on Free it shows a `ProPrompt`.
+  A licence of null (tests) lets everything run.
+- An imported Lightroom preset names itself in the photo's settings (`source.lightroomPreset`,
+  presets.md section 2), so the mark follows undo, copy and paste, remembered edits, presets
+  saved from the photo and batch recipes. A look is Pro when it has a LUT step.
+- Every Choose a plan sends the checkout a `source` (account, batch, paste, export, share, bake,
+  trial_end), so the sales figures say which prompt sells.
+- The snap gets the `network` plug and the Flatpak `--share=network`, for the check.
+- Licence states can be forced only in Debug builds (`PIXELFX_DEBUG_LICENSE`, R-ADR-010).
+
+**Consequences.** Presets go to version 6, recipes to 7 and batch recipes to 8; older files read
+unchanged. Changing what is Pro is a change to `core::licensing` and the Pro sheet's table. The
+mark of a Lightroom preset can be lost only by Remove (which takes the preset's settings off) or
+by setting the same values by hand.

@@ -120,6 +120,9 @@ public:
     /// The version What's new was last shown for (or recorded on a first install).
     [[nodiscard]] QString whatsNewSeen() const;
     void setWhatsNewSeen(const QString& version);
+    /// The note that the Pro trial has ended was shown (it shows once).
+    [[nodiscard]] bool trialEndShown() const;
+    void setTrialEndShown(bool shown);
 
     /// Carries the last image folder over from PixelFx 1's settings file, once. Returns true
     /// when something was migrated.

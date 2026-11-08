@@ -2,6 +2,7 @@
 
 #include "core/describe.h"
 #include "core/file_names.h"
+#include "core/licensing/pro_features.h"
 
 #include <QCoreApplication>
 #include <QDir>
@@ -184,6 +185,22 @@ bool addUnit(pfx::Settings& out, const pfx::Settings& settings, const UnitRule& 
     return any;
 }
 
+// Where the settings came from (the "source" group: the Lightroom preset they were made with)
+// goes with every preset made from them and is the photo's own when a preset is applied at 0.
+void copySource(pfx::Settings& to, const pfx::Settings& from)
+{
+    for (const std::string& key : to.keys()) {
+        if (pfx::groupOf(key) == "source") {
+            to.erase(key);
+        }
+    }
+    for (const std::string& key : from.keys()) {
+        if (pfx::groupOf(key) == "source") {
+            to.set(key, *from.find(key));
+        }
+    }
+}
+
 } // namespace
 
 pfx::Settings presetFrom(const pfx::Settings& settings, const QStringList& units)
@@ -205,6 +222,7 @@ pfx::Settings presetFrom(const pfx::Settings& settings, const QStringList& units
             out.set("curves.rgb", pfx::Curve{{0, 0}, {1, 1}}); // an included, straight curve
         }
     }
+    copySource(out, settings);
     return out;
 }
 
@@ -285,6 +303,9 @@ pfx::Settings blendPreset(const pfx::Settings& base, const pfx::Settings& preset
             const pfx::Value* own = base.find(key);
             own != nullptr ? out.set(key, *own) : out.erase(key);
         }
+    }
+    if (t <= 0.0) {
+        copySource(out, base);
     }
     return out;
 }
@@ -409,8 +430,10 @@ PresetLibrary::Imported PresetLibrary::importFile(const QString& file) const
             return out;
         }
         const QString name = QString::fromStdString(xmp.value().document.name);
-        out.path = save(QCoreApplication::translate(kContext, "Lightroom: %1").arg(name), imported,
-                        xmp.value().document.settings);
+        // The preset names itself on every photo it is applied to (presets.md section 2).
+        pfx::Settings settings = xmp.value().document.settings;
+        settings.set(licensing::kLightroomPresetKey, name.toStdString());
+        out.path = save(QCoreApplication::translate(kContext, "Lightroom: %1").arg(name), imported, settings);
         for (const std::string& key : xmp.value().skipped) {
             out.skipped << QString::fromStdString(key);
         }

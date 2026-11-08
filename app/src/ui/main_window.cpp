@@ -28,6 +28,7 @@
 #include "ui/photo_details_panel.h"
 #include "ui/preset_save_sheet.h"
 #include "ui/presets_panel.h"
+#include "ui/pro_gate.h"
 #include "ui/report_bug_sheet.h"
 #include "ui/settings_sheet.h"
 #include "ui/shortcuts_sheet.h"
@@ -187,6 +188,7 @@ MainWindow::MainWindow(core::Settings& settings, QWidget* parent)
     : QMainWindow(parent)
     , m_settings(settings)
 {
+    m_pro = new ProGate(nullptr, this);
     setupUi();
     setupActions();
     setAcceptDrops(true);
@@ -292,6 +294,13 @@ ExportSheet* MainWindow::newExportSheet()
         new ExportSheet(m_document.info().path, m_document.outputSize(), m_settings.exportOptions(), this);
     sheet->setPreview(m_document.preview());
     sheet->setCustomSizes(m_settings.customSizes());
+    sheet->setPro(m_pro, [this, open = m_document.info().path](const QString& watermark) {
+        return exportUses({open}, watermark);
+    });
+    connect(sheet, &ExportSheet::removeRequested, this, [this, sheet](core::licensing::ProItem item) {
+        removeFromPhoto(item);
+        sheet->refreshPro();
+    });
     return sheet;
 }
 
@@ -319,10 +328,30 @@ void MainWindow::exportPhoto()
     if (jobs.isEmpty()) {
         jobs.append({m_document.info().path, m_document.settings()});
     }
+    if (jobs.size() > 1) {
+        const int admitted = m_pro->admitPhotos(ProGate::Count::Export, static_cast<int>(jobs.size()));
+        if (admitted == 0) {
+            return;
+        }
+        jobs = jobs.mid(0, admitted);
+    }
     const std::unique_ptr<ExportSheet> owned(newExportSheet());
     ExportSheet& sheet = *owned;
     sheet.setPhotoCount(static_cast<int>(jobs.size()));
+    if (jobs.size() > 1) {
+        QStringList paths;
+        for (const ExportJob& job : jobs) {
+            paths << job.path;
+        }
+        sheet.setPro(m_pro, [this, paths](const QString& watermark) { return exportUses(paths, watermark); });
+    }
     const int result = sheet.exec();
+    // A Remove changed the open photo while the sheet was up.
+    for (ExportJob& job : jobs) {
+        if (job.path == m_document.info().path) {
+            job.settings = m_document.settings();
+        }
+    }
     if (sheet.customSizesChanged()) {
         m_settings.setCustomSizes(sheet.customSizes());
     }
@@ -346,6 +375,10 @@ void MainWindow::exportPhoto()
 void MainWindow::copyToClipboard(const core::ExportOptions& options)
 {
     if (!m_document.isOpen() || m_exporter.isBusy()) {
+        return;
+    }
+    if (!m_pro->admitUses(core::licensing::Source::Export, tr("Copy this photo with Pro"),
+                          exportUses({m_document.info().path}, options.watermark))) {
         return;
     }
     m_copying = true;
@@ -846,7 +879,11 @@ void MainWindow::setupActions()
     about->setObjectName(u"about"_s);
     about->setMenuRole(QAction::AboutRole);
     connect(about, &QAction::triggered, this, &MainWindow::showAbout);
-    addActions({whatsNew, about});
+    auto* pro = new QAction(tr("PixelFx Pro"), this);
+    pro->setObjectName(u"pixelfxPro"_s);
+    pro->setVisible(false); // until there is a licence (setLicense)
+    connect(pro, &QAction::triggered, this, &MainWindow::showPro);
+    addActions({whatsNew, about, pro});
     auto* openFolder = new QAction(tr("Open folder..."), this);
     openFolder->setObjectName(u"openFolder"_s);
     openFolder->setShortcut(QKeySequence(u"Ctrl+Shift+O"_s));
@@ -1432,6 +1469,11 @@ void MainWindow::connectPresetActions()
         }
     });
     connect(m_presets, &PresetsPanel::exportRequested, this, [this](const core::PresetEntry& e) {
+        if (!m_pro->admit(core::licensing::Source::Share, tr("Share this preset as a file with Pro"),
+                          tr("Free makes and uses presets of your own as much as you like. With Pro, a "
+                             "preset goes out as a file to share or keep."))) {
+            return;
+        }
         const QString file = QFileDialog::getSaveFileName(this, tr("Export preset"), e.name + u".pfxpreset"_s,
                                                           tr("PixelFx presets (*.pfxpreset)"));
         if (!file.isEmpty()) {
@@ -1486,7 +1528,7 @@ void MainWindow::connectLooks()
             }
         }
         applyToSelection([id, strength](const pfx::Settings& s) { return core::withLook(s, id, strength); },
-                         name);
+                         name, name);
     });
     connect(looks, &LooksPanel::strengthMoved, this, [this, looks](int strength) {
         m_document.setSettings(core::withLook(m_document.settings(), looks->current(), strength));
@@ -1525,6 +1567,12 @@ void MainWindow::connectLooks()
 
 void MainWindow::exportLook(const QString& id)
 {
+    if (!m_pro->admit(
+            core::licensing::Source::Share, tr("Share this look as a file with Pro"),
+            tr("Free makes and uses looks of your own as much as you like. With Pro, a look goes out "
+               "as a file to share or keep."))) {
+        return;
+    }
     for (const core::LookEntry& e : m_presets->looksPanel()->entries()) {
         if (e.id != id) {
             continue;
@@ -1571,6 +1619,7 @@ void MainWindow::editLook(const QString& id)
     }
     LookEditor editor(m_document.previewSource(), m_document.settings(), entry,
                       core::LookLibrary::defaultFolder(), this);
+    editor.setProGate(m_pro);
     if (editor.exec() != QDialog::Accepted) {
         return;
     }
@@ -1674,8 +1723,10 @@ void MainWindow::applyPreset(const core::PresetEntry& entry)
     }
     const pfx::Settings before = m_document.settings();
     const pfx::Settings preset = entry.settings;
-    applyToSelection([preset](const pfx::Settings& s) { return core::applyPreset(s, preset); },
-                     tr("Preset %1").arg(entry.name));
+    if (!applyToSelection([preset](const pfx::Settings& s) { return core::applyPreset(s, preset); },
+                          tr("Preset %1").arg(entry.name), tr("Preset %1").arg(entry.name))) {
+        return;
+    }
     m_appliedPreset = AppliedPreset{entry, before, m_document.settings()};
     m_presets->setApplied(entry.id, entry.name, 100.0);
     m_settings.notePresetUsed(entry.id);
@@ -1752,7 +1803,10 @@ void MainWindow::savePreset()
         showToast(tr("Not saved: the preset folder is not writable."));
         return;
     }
-    if (!sheet.fileCopy().isEmpty()) {
+    if (!sheet.fileCopy().isEmpty() &&
+        m_pro->admit(core::licensing::Source::Share, tr("Share this preset as a file with Pro"),
+                     tr("The preset is saved in PixelFx. With Pro, a copy also goes out as a file to share "
+                        "or keep."))) {
         core::PresetEntry entry;
         entry.name = sheet.name();
         entry.settings = preset;
@@ -2298,19 +2352,31 @@ void MainWindow::showNoPhoto()
     updateHeader();
 }
 
-void MainWindow::applyToSelection(const std::function<pfx::Settings(const pfx::Settings&)>& change,
-                                  const QString& label)
+bool MainWindow::applyToSelection(const std::function<pfx::Settings(const pfx::Settings&)>& change,
+                                  const QString& label, const QString& what)
 {
+    QList<int> selected = m_strip->selection();
+    if (selected.size() > 1 && m_settings.rememberEdits()) {
+        const int admitted =
+            m_pro->admitPhotos(ProGate::Count::Paste, static_cast<int>(selected.size()), what);
+        if (admitted == 0) {
+            return false;
+        }
+        // The photo on show first, then the others in order.
+        const int current = m_strip->current();
+        selected.removeOne(current);
+        selected.prepend(current);
+        selected = selected.mid(0, admitted);
+    }
     // The current photo through its Document (one history step); the others through their
     // remembered edits, which is what they open with; nothing is written to the photos themselves.
     m_document.apply(change(m_document.settings()), label);
-    const QList<int> selected = m_strip->selection();
     if (selected.size() < 2) {
-        return;
+        return true;
     }
     if (!m_settings.rememberEdits()) {
         showToast(tr("Applied to this photo only: turn on Remember edits in Settings to edit several."));
-        return;
+        return true;
     }
     const core::SidecarStore store(core::SidecarStore::defaultFolder());
     int done = 0;
@@ -2330,6 +2396,7 @@ void MainWindow::applyToSelection(const std::function<pfx::Settings(const pfx::S
         }
     }
     showToast(tr("%1 applied to %n photos", nullptr, done + 1).arg(label));
+    return true;
 }
 
 void MainWindow::chooseFiles()
@@ -2594,6 +2661,7 @@ constexpr std::array kFileEntries{kSeparator,
                                   MenuEntry{"onlineGuide", "external"},
                                   MenuEntry{"reportBug", "bug"},
                                   MenuEntry{"about", "info"},
+                                  MenuEntry{"pixelfxPro", "star"},
                                   kSeparator,
                                   MenuEntry{"quit", "power"}};
 

@@ -3,6 +3,8 @@
 # Qt's Linguist tools build the English plural forms (ADR-014); optional.
 find_package(Qt6 ${PIXELFX_QT_MIN_VERSION} QUIET COMPONENTS LinguistTools)
 
+# The Ktechpit licensing module (its own licence, LICENSING.md), used by services.
+add_subdirectory(modules/AccountAndLicense)
 add_subdirectory(core)
 add_subdirectory(services)
 add_subdirectory(ui)

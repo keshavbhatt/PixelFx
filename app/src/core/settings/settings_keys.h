@@ -50,6 +50,7 @@ inline constexpr auto kClosedPresetCategories = "presets/closedCategories";
 inline constexpr auto kClippingWarnings = "display/clippingWarnings";
 inline constexpr auto kShowWhatsNew = "whatsNew/show";
 inline constexpr auto kWhatsNewSeen = "whatsNew/seenVersion";
+inline constexpr auto kTrialEndShown = "pro/trialEndShown";
 
 // PixelFx 1 (org.keshavnrj.ubuntu/pixelFx.conf): the only key worth carrying over.
 inline constexpr auto kLegacyLastFolder = "last_image_dir_path";

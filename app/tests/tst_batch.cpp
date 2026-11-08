@@ -241,6 +241,33 @@ private Q_SLOTS:
         QCOMPARE(runner.waiting(), 0);
     }
 
+    void aLimitedRunLeavesTheRestWaitingAndTheNextRunTakesTheNextOnes()
+    {
+        QTemporaryDir dir;
+        QStringList files;
+        for (int i = 0; i < 5; ++i) {
+            pfx::Image img(40, 30);
+            img.fill(0.2F, 0.3F, 0.4F);
+            files << dir.filePath(u"l%1.png"_s.arg(i));
+            QVERIFY(pfx::save(img, files.last().toStdString()).ok());
+        }
+        BatchRecipe r;
+        r.output.folder = dir.filePath(u"out"_s);
+        r.output.extension = u"jpg"_s;
+        BatchRunner runner;
+        QSignalSpy finished(&runner, &BatchRunner::finished);
+        runner.start(files, r, 2);
+        QVERIFY(finished.wait(20000));
+        QCOMPARE(runner.saved(), 2);
+        QCOMPARE(runner.waiting(), 3);
+        QCOMPARE(runner.state(2), BatchRunner::State::Waiting);
+        finished.clear();
+        runner.processRest(2);
+        QVERIFY(finished.wait(20000));
+        QCOMPARE(runner.saved(), 4);
+        QCOMPARE(runner.state(4), BatchRunner::State::Waiting);
+    }
+
     void aRecipeKeepsItsSharpeningAndColourSpace()
     {
         BatchRecipe r;

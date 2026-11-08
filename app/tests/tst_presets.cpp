@@ -1,5 +1,6 @@
 #include "core/describe.h"
 #include "core/file_names.h"
+#include "core/licensing/pro_features.h"
 #include "core/presets.h"
 
 #include <QFile>
@@ -293,6 +294,8 @@ private Q_SLOTS:
         const auto entries = library.entries();
         QCOMPARE(entries.front().name, u"Lightroom: Clean"_s);
         QCOMPARE(entries.front().settings.number("light.exposure", 0), 0.5);
+        // The preset names itself on the photos it is applied to.
+        QCOMPARE(pixelfx::core::licensing::lightroomPreset(entries.front().settings), u"Clean"_s);
     }
 
     void builtInsAreThere()

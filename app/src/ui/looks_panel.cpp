@@ -381,7 +381,9 @@ void LooksPanel::showMenu(const core::LookEntry& e, const QPoint& where)
     if (e.isMine()) {
         menu.addSeparator();
         menu.addAction(tr("Edit look..."), this, [this, id = e.id] { Q_EMIT editLookRequested(id); });
-        menu.addAction(tr("Export look..."), this, [this, id = e.id] { Q_EMIT exportLookRequested(id); });
+        // Sharing a look as a file is Pro: the quiet mark where a shortcut would be.
+        menu.addAction(tr("Export look...") + (m_proMarks ? u"\t"_s + tr("Pro") : QString()), this,
+                       [this, id = e.id] { Q_EMIT exportLookRequested(id); });
         menu.addSeparator();
         menu.addAction(tr("Delete"), this, [this, id = e.id] { Q_EMIT deleteLookRequested(id); });
     }

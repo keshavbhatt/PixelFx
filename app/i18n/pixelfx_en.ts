@@ -108,6 +108,13 @@
 <context>
     <name>pixelfx::ui::MainWindow</name>
     <message numerus="yes">
+        <source>%n days left</source>
+        <translation>
+            <numerusform>%n day left</numerusform>
+            <numerusform>%n days left</numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
         <source>%n saved</source>
         <translation>
             <numerusform>%n saved</numerusform>
@@ -247,6 +254,61 @@
         <translation>
             <numerusform>%n found</numerusform>
             <numerusform>%n found</numerusform>
+        </translation>
+    </message>
+</context>
+<context>
+    <name>pixelfx::ui::ProGate</name>
+    <message numerus="yes">
+        <source>Batch %n photos with Pro</source>
+        <translation>
+            <numerusform>Batch %n photo with Pro</numerusform>
+            <numerusform>Batch %n photos with Pro</numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>Export %n photos with Pro</source>
+        <translation>
+            <numerusform>Export %n photo with Pro</numerusform>
+            <numerusform>Export %n photos with Pro</numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>Paste settings to %n photos with Pro</source>
+        <translation>
+            <numerusform>Paste settings to %n photo with Pro</numerusform>
+            <numerusform>Paste settings to %n photos with Pro</numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>%1 on %n photos with Pro</source>
+        <translation>
+            <numerusform>%1 on %n photo with Pro</numerusform>
+            <numerusform>%1 on %n photos with Pro</numerusform>
+        </translation>
+    </message>
+</context>
+<context>
+    <name>pixelfx::ui::ProSheet</name>
+    <message numerus="yes">
+        <source>%n minutes ago</source>
+        <translation>
+            <numerusform>%n minute ago</numerusform>
+            <numerusform>%n minutes ago</numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>%n hours ago</source>
+        <translation>
+            <numerusform>%n hour ago</numerusform>
+            <numerusform>%n hours ago</numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>Pro trial: %n days left</source>
+        <translation>
+            <numerusform>Pro trial: %n day left</numerusform>
+            <numerusform>Pro trial: %n days left</numerusform>
         </translation>
     </message>
 </context>

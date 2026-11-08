@@ -107,6 +107,9 @@ public:
     /// user's own; the reason when it cannot be read, or what could not be added.
     [[nodiscard]] QString loadRecipe(const QString& path);
     [[nodiscard]] services::BatchRunner& runner() { return m_runner; }
+    /// Process and Process the rest ask it first (photos above the free number, Pro items in
+    /// the recipe); the Watermark heading gets the Pro mark short of Pro.
+    void setProGate(class ProGate* gate);
 
     /// Whether `path` is a photo PixelFx opens (set by the window: the library's formats).
     static void setPhotoTest(bool (*isPhoto)(const QString&));
@@ -249,6 +252,12 @@ private:
     QPushButton* m_process = nullptr;
     QPushButton* m_clear = nullptr;
     bool m_wasRunning = false;
+    bool m_stopped = false; ///< the last run was stopped (rather than limited to the free number)
+    class ProGate* m_gate = nullptr;
+    QWidget* m_watermarkMark = nullptr;
+    /// Whether the recipe's Pro items (RAW photos, a Lightroom preset, a LUT look, a watermark)
+    /// may be saved: always with Pro, otherwise after a prompt.
+    [[nodiscard]] bool admitRecipe(const services::BatchRecipe& recipe);
     /// Locks what would change the list or the mode while a batch runs, and what has nothing to
     /// act on while the list is empty.
     void refreshLocks();

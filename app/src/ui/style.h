@@ -147,6 +147,8 @@ QLabel* sectionHeading(const QString& text, QWidget* parent, int sides = 0);
 /// A section heading with a control at its right end ("SPOTS (3)  Remove all", "MY LOOKS  New
 /// look"), spaced as sectionHeading.
 QHBoxLayout* sectionHeadingRow(QLabel* label, QWidget* trailing, int sides = 0);
+/// A section heading with `mark` (the Pro mark) right after its text, spaced as sectionHeading.
+QWidget* sectionHeadingMarked(const QString& text, QWidget* mark, QWidget* parent);
 /// A numbered section of a side panel laid in `box`: its heading, spaced only by its own
 /// margins, and the column returned for the section's controls, kGapControls apart.
 QVBoxLayout* sectionColumn(const QString& heading, QWidget* box);

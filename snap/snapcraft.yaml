@@ -103,6 +103,7 @@ apps:
     plugs:
       - home
       - removable-media # photos on cards and external drives
+      - network # the account check with ktechpit.com
       - desktop
       - desktop-legacy
       - opengl

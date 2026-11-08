@@ -102,6 +102,24 @@ Decisions the work stopped at; everything else went ahead within the approved mo
   the app keeps Pro quiet (no prompt at start, no banner, nothing on a free export).
 - The owner approved them: Batch and paste stay free for 10 photos per run, and the trial
   recap is dropped, so PixelFx counts nothing about how the trial was used.
+- Built (ADR-016): the shared AccountAndLicense module, `services::LicenseService` (Account ID,
+  14-day trial, the server's last answer, checkout links with `source`), `core::licensing`
+  (what a photo or a batch uses of Pro), `ui::ProGate` and `ProPrompt`, the PixelFx Pro sheet,
+  the main menu entry, Export's "This photo uses Pro" box with Remove, the trial's end note, the
+  Pro mark (Export and Batch Watermark, Bake to .cube, the Export items of the preset and look
+  menus). Gated: Batch, Process the rest, Export of several photos and paste or apply to the
+  selection above 10 photos (the first 10 free), saving a RAW, an imported Lightroom preset, a
+  LUT look or a watermark (Export, Copy to clipboard, Batch), sharing looks and presets as
+  files, Bake to .cube, and `pixelfx --batch` (one line, exit code 3).
+- An imported Lightroom preset now names itself in the settings (`source.lightroomPreset`):
+  presets version 6, recipes 7, batch recipes 8 (presets.md); older files read unchanged.
+- The snap has the `network` plug; the Flathub draft (not pushed) has `--share=network`.
+- Verified headlessly in a scratch profile: the Pro sheet in its three states, the prompt, the
+  menu, Export on Free, the trial's end and the Batch page (Debug build for Free and Pro);
+  `tst_pro` and the runner's limit in `tst_batch`; library 174 and app 45 tests pass.
+- Left for the owner: the Pro mark on the preset and look tiles themselves is not drawn (the
+  approved note names "the Presets panel", but the panel is tiles now, not the list in the mock);
+  a small mock first if it is wanted.
 
 ### 2026-11-07 (the same libraries in every build)
 

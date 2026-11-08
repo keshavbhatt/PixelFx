@@ -188,6 +188,7 @@ preview and export use resolution-independent parameters so they match (v1 defec
 
 | # | Feature | v1 | Decision | Status / class |
 |---|---|---|---|---|
-| K1 | Shared AccountAndLicense module under its own licence (Model B), path reserved | none | KEEP (module) | wip: path reserved (`app/src/modules/AccountAndLicense`, `LICENSING.md`); the module todo |
-| K2 | What the module gates: decided by the owner, recorded in the private notes (`DOCS/private/business.md`) | none | KEEP | |
+| K1 | Shared AccountAndLicense module under its own licence (Model B) | none | KEEP (module) | done 2026-11-08: the kit's module in `app/src/modules/AccountAndLicense`, wrapped by `services::LicenseService` (ADR-016) |
+| K2 | What the module gates: decided by the owner (`DOCS/private/business.md`, L1 to L7) | none | KEEP | done 2026-11-08: a 14-day trial, then Free; `ui::ProGate` asks before Batch or paste above 10 photos (the first 10 free), saving a RAW, a Lightroom preset, a LUT look or a watermark, sharing looks and presets as files, Bake to .cube, and `--batch` (exit code 3) |
+| K4 | PixelFx Pro sheet, Pro prompts, the Pro mark, the trial's end (mocks `pro-*.html`) | none | KEEP | done 2026-11-08: the main menu's PixelFx Pro entry with the state at its right; the mark on Watermark (Export, Batch), Bake to .cube and the Export items of the preset and look menus |
 | K3 | Old users: no account existed in v1, nothing to migrate | none | DROP | |

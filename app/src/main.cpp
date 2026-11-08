@@ -11,7 +11,11 @@
 //   PIXELFX_DEBUG_SHEET=<name>         with GRAB, grab the window with that sheet open: export,
 //                                      settings, preset, shortcuts, watermark, look, newlook, preview,
 //                                      lookpreview (the large preview opened from the look editor),
-//                                      about, notices, diagnostics, whatsnew, paste
+//                                      about, notices, diagnostics, whatsnew, paste, pro (PixelFx
+//                                      Pro), progate (the prompt for a batch of 47 photos)
+//   PIXELFX_DEBUG_LICENSE=pro|trial|free|neterr  Debug builds only: the server's answer, so every
+//                                      Pro state can be seen
+//   PIXELFX_DEBUG_TRIAL_END=1          with GRAB, show the note that the trial has ended (on Free)
 //   PIXELFX_DEBUG_TAB=presets          show the Presets tab of the left panel
 //   PIXELFX_DEBUG_MENU=<submenu>       with GRAB, grab the main menu open ("-" for the menu
 //                                      itself, a submenu's title such as View, or History)
@@ -53,6 +57,7 @@
 #include "core/sidecar_store.h"
 #include "core/watermark.h"
 #include "services/batch_runner.h"
+#include "services/licensing/license_service.h"
 #include "ui/about_sheet.h"
 #include "ui/adjust_group.h"
 #include "ui/batch_page.h"
@@ -72,6 +77,8 @@
 #include "ui/preset_save_sheet.h"
 #include "ui/presets_panel.h"
 #include "ui/preview_viewer.h"
+#include "ui/pro_gate.h"
+#include "ui/pro_sheet.h"
 #include "ui/report_bug_sheet.h"
 #include "ui/settings_sheet.h"
 #include "ui/shortcuts_sheet.h"
@@ -290,6 +297,14 @@ QDialog* appSheet(pixelfx::ui::MainWindow& window, const QString& name)
         }
         about->showPage(page);
         return about;
+    }
+    if (pixelfx::services::LicenseService* license = window.proGate()->license(); license != nullptr) {
+        if (name == u"pro"_s) {
+            return new pixelfx::ui::ProSheet(*license, &window);
+        }
+        if (name == u"progate"_s) {
+            return window.proGate()->newCountPrompt(pixelfx::ui::ProGate::Count::Batch, 47);
+        }
     }
     if (name == u"whatsnew"_s) {
         return new pixelfx::ui::WhatsNewSheet(pixelfx::ui::WhatsNewSheet::bundledChangelog(),
@@ -568,6 +583,14 @@ int runBatch(pixelfx::app::Application& app)
 {
     QTextStream out(stdout);
     QTextStream err(stderr);
+    // Batch from the command line is Pro (FEATURES K2): the last answer of the server, no wait.
+    pixelfx::services::LicenseService license;
+    license.start(false);
+    if (!license.hasPro()) {
+        err << "Batch from the command line is part of PixelFx Pro: "
+            << pixelfx::services::LicenseService::productUrl().toString() << '\n';
+        return 3;
+    }
     const auto doc = pfx::loadDocument(app.cliOptions().batch.toStdString());
     if (!doc || doc.value().kind != pfx::DocumentKind::Batch) {
         err << "pixelfx: "
@@ -669,7 +692,10 @@ int main(int argc, char** argv)
         pixelfx::core::crash::takeLastCrash(pixelfx::core::crash::defaultFolder());
     pixelfx::core::crash::install(pixelfx::core::crash::defaultFolder());
 
+    pixelfx::services::LicenseService license;
+    license.start();
     pixelfx::ui::MainWindow window(app.settings());
+    window.setLicense(&license);
     QObject::connect(&app, &pixelfx::app::Application::openRequested, &window,
                      &pixelfx::ui::MainWindow::openFiles);
     QObject::connect(&app, &pixelfx::app::Application::quitRequested, &window,
@@ -683,6 +709,9 @@ int main(int argc, char** argv)
     QStringList files = app.cliOptions().files;
     applyDebugHooks(window, files);
     window.show();
+    if (qEnvironmentVariableIsSet("PIXELFX_DEBUG_TRIAL_END")) {
+        window.showTrialEndIfDue();
+    }
     if (!files.isEmpty()) {
         window.openFiles(files);
     }
@@ -695,6 +724,7 @@ int main(int argc, char** argv)
             } else {
                 window.showWhatsNewIfUpdated();
             }
+            window.showTrialEndIfDue();
         });
     }
     return QApplication::exec();

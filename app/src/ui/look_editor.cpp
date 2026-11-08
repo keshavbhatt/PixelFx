@@ -1,12 +1,15 @@
 #include "ui/look_editor.h"
 
 #include "core/describe.h"
+#include "services/licensing/license_service.h"
 #include "services/qt_image_bridge.h"
 #include "ui/curve_editor.h"
 #include "ui/icon_text_button.h"
 #include "ui/icons.h"
 #include "ui/message_line.h"
 #include "ui/preview_viewer.h"
+#include "ui/pro_gate.h"
+#include "ui/pro_sheet.h"
 #include "ui/slider_row.h"
 #include "ui/step_list.h"
 #include "ui/style.h"
@@ -579,7 +582,10 @@ void LookEditor::buildFooter(QVBoxLayout* column)
     m_bake = new QPushButton(tr("Bake to .cube..."), this);
     connect(m_bake, &QPushButton::clicked, this, &LookEditor::bakeCube);
     m_message = new MessageLine(this);
-    const FootButtons buttons = footButtons(this, tr("Save look"), {m_export, m_bake, m_message}, true);
+    m_bakeMark = proMark(tr("Sharing looks as files and baking them to .cube"), this);
+    m_bakeMark->hide();
+    const FootButtons buttons =
+        footButtons(this, tr("Save look"), {m_export, m_bake, m_bakeMark, m_message}, true);
     connect(buttons.cancel, &QPushButton::clicked, this, &QDialog::reject);
     m_save = buttons.primary;
     connect(m_save, &QPushButton::clicked, this, &LookEditor::saveLook);
@@ -741,8 +747,22 @@ void LookEditor::importLut()
     schedulePreview();
 }
 
+void LookEditor::setProGate(ProGate* gate)
+{
+    m_gate = gate;
+    m_bakeMark->setVisible(gate != nullptr && gate->license() != nullptr &&
+                           gate->license()->tier() != services::LicenseService::Tier::Pro);
+}
+
 void LookEditor::exportLook()
 {
+    if (m_gate != nullptr &&
+        !m_gate->admit(
+            core::licensing::Source::Share, tr("Share this look as a file with Pro"),
+            tr("Free makes and uses looks of your own as much as you like. With Pro, a look goes out "
+               "as a file to share or keep."))) {
+        return;
+    }
     const QString target = QFileDialog::getSaveFileName(
         this, tr("Export look"), m_name->text() + u".pfxlook"_s, tr("PixelFx looks (*.pfxlook)"));
     if (target.isEmpty()) {
@@ -765,6 +785,12 @@ void LookEditor::exportLook()
 
 void LookEditor::bakeCube()
 {
+    if (m_gate != nullptr &&
+        !m_gate->admit(core::licensing::Source::Bake, tr("Bake to .cube with Pro"),
+                       tr("Free makes and uses looks of your own as much as you like. With Pro, a look's "
+                          "colours go out as a .cube LUT for other apps."))) {
+        return;
+    }
     const QString target = QFileDialog::getSaveFileName(
         this, tr("Bake to .cube"), m_name->text() + u".cube"_s, tr("Cube LUTs (*.cube)"));
     if (target.isEmpty()) {

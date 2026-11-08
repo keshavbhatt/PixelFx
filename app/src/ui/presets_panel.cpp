@@ -645,7 +645,9 @@ void PresetsPanel::showMenu(std::size_t index, const QPoint& where)
         menu.addAction(icons::themed(u"copy"_s, tokens().text),
                        e.isBuiltIn() ? tr("Copy to My presets") : tr("Duplicate"), this,
                        [this, e] { Q_EMIT duplicateRequested(e); });
-        menu.addAction(icons::themed(u"share"_s, tokens().text), tr("Export..."), this,
+        // Sharing a preset as a file is Pro: the quiet mark where a shortcut would be.
+        menu.addAction(icons::themed(u"share"_s, tokens().text),
+                       tr("Export...") + (m_proMarks ? u"\t"_s + tr("Pro") : QString()), this,
                        [this, e] { Q_EMIT exportRequested(e); });
     }
     if (!e.isBuiltIn()) {
@@ -661,6 +663,12 @@ void PresetsPanel::showMenu(std::size_t index, const QPoint& where)
     QAction* info = menu.addAction(about);
     info->setEnabled(false);
     menu.exec(where);
+}
+
+void PresetsPanel::setProMarks(bool shown)
+{
+    m_proMarks = shown;
+    m_looks->setProMarks(shown);
 }
 
 } // namespace pixelfx::ui

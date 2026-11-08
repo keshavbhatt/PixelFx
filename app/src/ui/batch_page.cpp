@@ -5,6 +5,7 @@
 #include "core/looks.h"
 #include "core/sidecar_store.h"
 #include "services/exporter.h"
+#include "services/licensing/license_service.h"
 #include "services/qt_image_bridge.h"
 #include "ui/compress_compare.h"
 #include "ui/compress_list.h"
@@ -17,6 +18,8 @@
 #include "ui/list_row.h"
 #include "ui/name_field.h"
 #include "ui/preview_viewer.h"
+#include "ui/pro_gate.h"
+#include "ui/pro_sheet.h"
 #include "ui/sheet.h"
 #include "ui/size_list.h"
 #include "ui/slider_row.h"
@@ -435,14 +438,23 @@ QWidget* BatchPage::buildStatus(QWidget* parent)
         m_runner.setPaused(!m_runner.isPaused());
         refreshStatus();
     });
-    connect(m_stop, &QPushButton::clicked, this, [this] { m_runner.stop(); });
+    connect(m_stop, &QPushButton::clicked, this, [this] {
+        m_stopped = true;
+        m_runner.stop();
+    });
     connect(m_retry, &QPushButton::clicked, this, [this] {
         m_clock.start();
         m_runner.retryFailed();
     });
     connect(m_rest, &QPushButton::clicked, this, [this] {
+        const int admitted =
+            m_gate != nullptr ? m_gate->admitPhotos(ProGate::Count::BatchRest, m_runner.waiting()) : -1;
+        if (admitted == 0) {
+            return;
+        }
+        m_stopped = false;
         m_clock.start();
-        m_runner.processRest();
+        m_runner.processRest(admitted);
         refreshStatus();
     });
     connect(m_showFolder, &QPushButton::clicked, this, [this] {
@@ -522,7 +534,9 @@ QWidget* BatchPage::buildEditPanel(QWidget* parent)
     sections->setSpacing(0); // each section's heading spaces it
     sections->addWidget(buildRecipe(content));
     sections->addWidget(buildResize(content));
-    sections->addWidget(sectionHeading(tr("4. Watermark"), content));
+    m_watermarkMark = proMark(tr("Watermarks"), content);
+    m_watermarkMark->hide();
+    sections->addWidget(sectionHeadingMarked(tr("4. Watermark"), m_watermarkMark, content));
     m_watermark = new WatermarkPicker(m_output.watermark, content);
     connect(m_watermark, &WatermarkPicker::changed, this, &BatchPage::outputEdited);
     sections->addWidget(m_watermark);
@@ -1288,10 +1302,53 @@ void BatchPage::process()
         return;
     }
     const services::BatchRecipe r = recipe();
+    if (!admitRecipe(r)) {
+        return;
+    }
+    const int admitted = m_gate != nullptr
+                             ? m_gate->admitPhotos(ProGate::Count::Batch, static_cast<int>(m_files.size()))
+                             : static_cast<int>(m_files.size());
+    if (admitted == 0) {
+        return;
+    }
     Q_EMIT outputChanged(r.output);
+    m_stopped = false;
     m_clock.start();
-    m_runner.start(m_files, r);
+    m_runner.start(m_files, r, admitted);
     refreshStatus();
+}
+
+void BatchPage::setProGate(ProGate* gate)
+{
+    m_gate = gate;
+    const auto refresh = [this] {
+        m_watermarkMark->setVisible(m_gate != nullptr && m_gate->license() != nullptr &&
+                                    m_gate->license()->tier() != services::LicenseService::Tier::Pro);
+    };
+    if (gate != nullptr && gate->license() != nullptr) {
+        connect(gate->license(), &services::LicenseService::statusChanged, this, refresh);
+    }
+    refresh();
+}
+
+bool BatchPage::admitRecipe(const services::BatchRecipe& recipe)
+{
+    if (m_gate == nullptr || m_gate->hasPro()) {
+        return true;
+    }
+    // The edits kept from earlier sessions may carry a Lightroom preset or a LUT look too.
+    std::vector<pfx::Settings> edits;
+    if (recipe.keepEdits && !recipe.sidecarFolder.isEmpty()) {
+        const core::SidecarStore store(recipe.sidecarFolder);
+        for (const QString& file : m_files) {
+            if (auto own = store.read(core::fileFingerprint(file))) {
+                edits.push_back(*own);
+            }
+        }
+    }
+    return m_gate->admitUses(
+        core::licensing::Source::Batch, tr("Batch these photos with Pro"),
+        core::licensing::batchUses(recipe.presets, m_files, edits, recipe.output.watermark));
 }
 
 QStringList BatchPage::overwrittenOriginals() const
@@ -1763,10 +1820,14 @@ void BatchPage::showDone(int saved, int failed)
                     failed > 0 ? tokens().danger : tokens().success, kStatusGlyph);
     QString text =
         failed > 0 ? tr("%1 saved, %2 not saved").arg(saved).arg(failed) : tr("%n saved", nullptr, saved);
-    if (m_runner.waiting() > 0) {
+    if (m_runner.waiting() > 0 && m_stopped) {
         //: After Stop: "Stopped: 3 of 30 saved".
         text = failed > 0 ? tr("Stopped: %1 of %2 saved, %3 not saved").arg(saved).arg(total).arg(failed)
                           : tr("Stopped: %1 of %2 saved").arg(saved).arg(total);
+    } else if (m_runner.waiting() > 0) {
+        //: After a run of the free number of photos: "10 of 47 saved".
+        text = failed > 0 ? tr("%1 of %2 saved, %3 not saved").arg(saved).arg(total).arg(failed)
+                          : tr("%1 of %2 saved").arg(saved).arg(total);
     }
     m_statusText->setText(text);
     qint64 bytes = 0;

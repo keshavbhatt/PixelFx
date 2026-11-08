@@ -129,6 +129,12 @@ internal units, so a file reads like the panel.
   side under 1%, is not used. While corners are set, `vertical` and `horizontal` are ignored.
   `effects.vignette` gains `feather` (0 to 100), `style` (`highlight`, `color` or `paint`) and
   `highlights` (0 to 100); `effects.grain` gains `roughness` (0 to 100, 50 one even layer).
+- `source` (presets version 6, recipes version 7, batch recipes version 8) says where settings
+  came from and renders nothing: `source.lightroomPreset` is the name of the Lightroom or Camera
+  Raw preset (`.xmp`) they were imported from. The import writes it into the preset; applying
+  the preset puts it on the photo, a preset saved from the photo keeps it, and applying a preset
+  at Amount 0 keeps the photo's own. PixelFx uses it to know which photos carry an imported
+  Lightroom preset.
 - `look.id` refers to a look by id: `builtin:<slug>` for shipped looks, a UUID for the user's.
   A file that must stand alone (export, sharing) embeds the look instead:
   `"look": { "embedded": { ...look body with its id and name... }, "strength": 72 }`; a batch
@@ -198,10 +204,10 @@ internal units, so a file reads like the panel.
 
 - Recipes are at **version 6**: version 2 added the `heal` group (section 2), version 3 the
   Lightroom-compatible settings (section 2), version 4 the `camera` profile, version 5
-  `detail.lensProfile` and the `creative` group, version 6 the four-corner perspective. Older
-  recipes read unchanged (nothing to migrate: an older file never names them); a file above
-  version 6 is refused as made by a newer PixelFx. Presets are at **version 5** for the same
-  settings; version 1 to 4 presets read unchanged.
+  `detail.lensProfile` and the `creative` group, version 6 the four-corner perspective, version 7
+  the `source` group. Older recipes read unchanged (nothing to migrate: an older file never
+  names them); a file above version 7 is refused as made by a newer PixelFx. Presets are at
+  **version 6** for the same settings; version 1 to 5 presets read unchanged.
 - The fingerprint (size plus a hash of the first and last 64 KiB) re-attaches a sidecar to a
   photo that was moved or renamed within the library folder.
 - History entries store only the changed groups (deltas), capped at 200 steps per photo.
@@ -223,8 +229,8 @@ internal units, so a file reads like the panel.
 
 Batch recipes are at **version 7** (version 3 added the Lightroom-compatible settings of
 section 2, version 4 the `camera` profile, version 5 `detail.lensProfile` and `creative`, version 6
-the output's `colorSpace` and `sharpen`, version 7 the four-corner perspective; looks stay at
-version 1).
+the output's `colorSpace` and `sharpen`, version 7 the four-corner perspective, version 8 the
+`source` group; looks stay at version 1).
 
 - The stack is applied in order onto each photo's settings (later entries win per key). A step
   is a preset (its settings, embedded) or a look on its own (`id`, `strength` 0 to 100,
@@ -250,7 +256,7 @@ version 1).
   read both as `srgb` and `none`, what they ran with; a value this version does not know reads
   as the default.
 - Version 1 batch recipes had none of these keys and read unchanged; there is nothing to
-  migrate. A file with a `version` above 7 is refused as made by a newer PixelFx.
+  migrate. A file with a `version` above 8 is refused as made by a newer PixelFx.
 
 ## 5. Pipeline order (fixed, documented here and in ADR-004)
 

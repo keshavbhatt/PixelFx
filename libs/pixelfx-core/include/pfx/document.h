@@ -28,12 +28,12 @@ enum class DocumentKind
 // embedded, size presets and the watermark, version 3 the same settings as presets. Recipes
 // (sidecars) are at 3: version 2 added healed spots, version 3 the same settings. The Camera
 // profile raised presets to 3 and the others to 4, lens profiles and the creative group to 4
-// and 5. Older files of
-// every kind read as they always did.
+// and 5, the four-corner perspective to 5, 7 and 6, and the `source` group (the Lightroom preset
+// the settings came from) to 6, 8 and 7. Older files of every kind read as they always did.
 inline constexpr int kDocumentVersion = 1;
-inline constexpr int kPresetVersion = 5;
-inline constexpr int kBatchVersion = 7;
-inline constexpr int kRecipeVersion = 6;
+inline constexpr int kPresetVersion = 6;
+inline constexpr int kBatchVersion = 8;
+inline constexpr int kRecipeVersion = 7;
 [[nodiscard]] int currentVersion(DocumentKind kind);
 
 // A step of a batch recipe's stack (DOCS/presets.md section 4): settings applied onto each

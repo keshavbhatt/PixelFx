@@ -74,6 +74,7 @@ qt_add_library(pixelfx_ui STATIC
     looks_panel.h
     main_window.cpp
     main_window_heal.cpp
+    main_window_pro.cpp
     main_window_target.cpp
     main_window.h
     menu_style.cpp
@@ -99,6 +100,10 @@ qt_add_library(pixelfx_ui STATIC
     region_curve.h
     preview_viewer.h
     presets_panel.cpp
+    pro_gate.cpp
+    pro_gate.h
+    pro_sheet.cpp
+    pro_sheet.h
     presets_panel.h
     preset_save_sheet.cpp
     preset_save_sheet.h

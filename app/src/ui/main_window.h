@@ -1,6 +1,7 @@
 #pragma once
 
 #include "core/crash_handler.h"
+#include "core/licensing/pro_features.h"
 #include "core/presets.h"
 #include "services/document.h"
 #include "services/exporter.h"
@@ -23,6 +24,7 @@ class Settings;
 } // namespace pixelfx::core
 
 namespace pixelfx::services {
+class LicenseService;
 class Notifier;
 } // namespace pixelfx::services
 
@@ -35,6 +37,7 @@ class BatchPage;
 class CropPanel;
 class Filmstrip;
 class PresetsPanel;
+class ProGate;
 class WelcomePage;
 
 /// The main window (DESIGN section 2). M2: the header bar, the welcome page, and the canvas
@@ -138,6 +141,17 @@ public:
     /// Whether `path` has an extension PixelFx opens.
     [[nodiscard]] static bool isSupported(const QString& path);
 
+    /// The account and its Pro state; without one (tests) every feature runs and the main menu
+    /// has no PixelFx Pro entry.
+    void setLicense(services::LicenseService* license);
+    /// Where every Pro feature asks first.
+    [[nodiscard]] ProGate* proGate() const { return m_pro; }
+    /// The PixelFx Pro sheet (main menu).
+    void showPro();
+    /// Once, on Free after the trial: a line over the photo that the trial has ended. True when
+    /// it was shown.
+    bool showTrialEndIfDue();
+
 protected:
     void closeEvent(QCloseEvent* event) override;
     void dragEnterEvent(QDragEnterEvent* event) override;
@@ -225,9 +239,18 @@ private:
     /// Back to the welcome page with nothing open.
     void showNoPhoto();
     /// `change` on the current photo as one step, and on every other selected photo's
-    /// remembered edits.
-    void applyToSelection(const std::function<pfx::Settings(const pfx::Settings&)>& change,
-                          const QString& label);
+    /// remembered edits; on Free, more photos than the free number ask first. False when nothing
+    /// was changed. `what` names it for that question ("Preset Warm"), empty for pasted settings.
+    bool applyToSelection(const std::function<pfx::Settings(const pfx::Settings&)>& change,
+                          const QString& label, const QString& what = {});
+    /// The main menu's PixelFx Pro entry, with where things stand at its right.
+    void refreshProAction();
+    /// What exporting the photos at `paths` (the open one as edited, the others with their
+    /// remembered edits) with the watermark at `watermark` uses of Pro.
+    [[nodiscard]] QList<core::licensing::ProUse> exportUses(const QStringList& paths,
+                                                            const QString& watermark);
+    /// Takes `item` (a Lightroom preset, a LUT look) off the photo, as one history step.
+    void removeFromPhoto(core::licensing::ProItem item);
     void connectPresetActions();
     void requestPresetThumbnails();
     void applyPreset(const core::PresetEntry& entry);
@@ -293,6 +316,8 @@ private:
     QAction* m_colorTargetStop = nullptr;
     QAction* m_endPreview = nullptr;
     services::Notifier* m_notifier = nullptr;
+    services::LicenseService* m_license = nullptr;
+    ProGate* m_pro = nullptr;
     QString m_failedRaw; ///< a RAW that could not be developed, for Open its preview instead
     // The name of the preview asked for; the photo shows it once its picture is on the photo.
     QString m_previewName;
