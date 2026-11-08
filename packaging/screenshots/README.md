@@ -13,6 +13,8 @@
   quality guidelines ask. The metainfo links to them by commit.
 - `snapstore/`: 3840x2160 JPEGs with a background and the caption, each under the store's 2 MB,
   uploaded by hand on the snap's listing page.
+- `snapstore-banner.jpg`: the listing's featured banner, 4320x1440 (3:1, the largest the store
+  takes), with the icon, the name, the summary and two of the screenshots' windows.
 
 Captured from a dev build in a nested `kwin_wayland --virtual` session with default Breeze
 settings and a scratch profile, through the `PIXELFX_DEBUG_*` hooks (`app/src/main.cpp`).
