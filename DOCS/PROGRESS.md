@@ -124,8 +124,9 @@ Decisions the work stopped at; everything else went ahead within the approved mo
     own file dialog left out of the Windows monkey run (it crashes in its file thread offscreen).
   - The snap: PixelFx built in `build/app` (in `app/`, its sources, Qt's CMake helpers recursed
     for ever); the workflow builds amd64 only; the unused plain libraw left out.
-- Open: snapcraft's metadata linter asks for a `contact` field (an address or URL for users;
-  the owner's choice). The stable channel still holds PixelFx 1.0 until a `v2.0.0` tag.
+- The snap's `contact` is connect@ktechpit.com and its `donation` the PayPal link with 11 filled
+  in (the owner's choice, 2026-11-08). The stable channel still holds PixelFx 1.0 until a
+  `v2.0.0` tag.
 
 ### 2026-11-07 (the snap, and the mocks index)
 
