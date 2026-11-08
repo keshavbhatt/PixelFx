@@ -3,7 +3,7 @@
 All notable changes to PixelFx. The format follows Keep a Changelog; the What's new sheet shows
 the section of the running version.
 
-## [2.0.0] - unreleased
+## [2.0.0] - 2026-11-08
 
 PixelFx 2 is rebuilt from scratch
 
@@ -22,8 +22,8 @@ A new editor, a new image engine, and a new look.
   drag four handles onto its corners, with a magnifier for the exact spot, and keep the whole
   photo or only the shape. The crop stays editable later.
 - Presets: save the whole edit or only parts of it, apply with one click, preview by hovering,
-  stack a colour preset on a light one; import and export them as files to share. A few built-in
-  presets, Auto enhance among them, to start from.
+  stack a colour preset on a light one; import and export them as files to share. Essentials,
+  Auto enhance among them, to start from.
 - Batch (B): add photos or whole folders, pick a preset (and a second on top), Auto enhance if
   you like, a size and a format, and process them all in the background; each photo says whether
   it was saved, and why not when it was not. Save the page as a batch recipe to run it again, here
