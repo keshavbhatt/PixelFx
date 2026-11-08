@@ -74,8 +74,8 @@ is Pro and lets a Free user remove it.
   photos, Remove the preset or watermark, Make files smaller).
 - After paying, Check again asks the server at once; the module also checks on start and
   weekly, and PixelFx keeps working offline with the last answer.
-- The trial's end is one dismissible line in the window, on the first start after it; the next
-  prompt says what the trial was used for, from counts kept on the computer.
+- The trial's end is one dismissible line in the window, on the first start after it. PixelFx
+  keeps no count of what the trial was used for.
 
 ## Writing
 
@@ -90,11 +90,10 @@ Removed: prices in the app. They live on the checkout, in the buyer's currency a
 sale, so the app never shows a stale or wrong price; the sheet says what Pro adds and Choose a
 plan shows the price.
 
-## Questions for the owner
+## Owner's review (2026-11-08)
 
-- Approve the four mocks.
-- The free limit for Batch and paste: 10 photos at a time, per run (as decided). A Free user can
-  run the next 10 afterwards; keep it per run (simple, generous), or count a day's photos as Red
-  does?
-- The trial-end recap ("In your trial you batched 312 photos") needs PixelFx to count what Pro
-  was used for, on the computer only. Keep it, or drop the recap?
+- The four mocks approved.
+- The free limit for Batch and paste stays 10 photos per run; a Free user can run the next 10
+  afterwards.
+- No trial recap: the first prompt after the trial is the ordinary one, and PixelFx counts
+  nothing about its use.

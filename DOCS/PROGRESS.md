@@ -43,6 +43,7 @@
 | `photo-details.html`, `-plain`, `-location` | 2026-11-06 (`mocks/reviews/photo-details.md`) | approved 2026-11-06 (the shortcut I; a long folder path drops whole folders from its middle) |
 | `crop-corners.html`, `-done` | 2026-11-06 (`mocks/reviews/crop-corners.md`) | approved 2026-11-07 (both results, Whole photo first) |
 | `report-bug.html`, `crash-notice.html` | 2026-11-07 (`mocks/reviews/report-bug.md`) | approved 2026-11-07 (reports go to GitHub issues only) |
+| `pro-sheet.html`, `pro-gate.html`, `pro-export.html`, `pro-trial-end.html` | 2026-11-08 (`mocks/reviews/pro.md`) | approved 2026-11-08 (the free limit of 10 photos per run; no trial recap) |
 
 ## Waiting for the owner (2026-11-05)
 
@@ -92,6 +93,15 @@ Decisions the work stopped at; everything else went ahead within the approved mo
 16. Next: the photo information panel (FEATURES O7); its mock approved 2026-11-06, to be built.
 
 ## Sessions (newest first)
+
+### 2026-11-08 (PixelFx Pro, the mocks)
+
+- Four mocks for Pro, reviewed in `mocks/reviews/pro.md`: the PixelFx Pro sheet from the main
+  menu (trial, Free, Pro), the prompt when a paid feature is used, try freely and pay to save in
+  Export, and the trial's end. DESIGN section 4: release text never mentions Pro or licensing;
+  the app keeps Pro quiet (no prompt at start, no banner, nothing on a free export).
+- The owner approved them: Batch and paste stay free for 10 photos per run, and the trial
+  recap is dropped, so PixelFx counts nothing about how the trial was used.
 
 ### 2026-11-07 (the same libraries in every build)
 
