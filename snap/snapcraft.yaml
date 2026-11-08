@@ -14,29 +14,71 @@ compression: lzo
 title: PixelFx
 summary: Photo editor, filters and presets
 description: |
-  PixelFx is a quick photo editor for the Linux desktop. Make a photo better while you watch it: one-click looks shown on your own photo, presets, every light and colour control you expect, and batch editing of many photos at once.
+  PixelFx is a fast, friendly photo editor for the Linux desktop. Make every photo better while you watch: pick a look and see it on your own photo, fine-tune light and colour with the controls photographers expect, and finish a whole folder of photos in one go. Your originals are never changed.
 
-  **Looks and presets**
+  **Looks: one click, shown on your own photo**
 
-  * Looks: Vivid, Warm, Film, Golden hour, Teal and orange, Noir and more, each tile showing your own photo, with a strength slider.
-  * Bring your own .cube LUTs as looks, or make your own look from steps.
-  * Presets: save the whole edit or only parts of it, apply them with one click, preview them by resting on them.
-  * Bring your Lightroom and Camera Raw presets (.xmp).
+  * **Built-in looks** such as Vivid, Warm, Cool, Film, Faded, Golden hour, Teal and orange and Noir, each tile previewing your photo.
+  * **A strength slider** for every look, live while you drag.
+  * **Make your own looks** from steps, or bring your **.cube and HaldCLUT LUTs**. Export a look to share it, or bake it to a .cube.
+
+  **Presets: hundreds ready to go**
+
+  * **More than 400 built-in presets** in 12 categories: film, black and white, cinematic, portrait, landscape, seasons, places, vintage and more.
+  * **Preview by resting** on a preset, with an amount from 0 to 200, favourites and recent ones.
+  * **Bring your Lightroom and Camera Raw presets** (.xmp), with a list of anything left out.
+  * **Save your own** from the whole edit or only the parts you choose.
 
   **Every control you expect**
 
-  * Light, colour, curves, colour mixer, colour grading, detail, effects and optics, with a histogram and clipping warnings.
-  * Crop and rotate, straighten with a dial or a drawn line, fix leaning buildings, and square a page or a wall from its four corners.
-  * Heal blemishes, dust and small objects with a spot or a brush.
-  * Camera RAW, HEIC, AVIF and JPEG XL photos, with lens corrections from the Lensfun database.
+  * **Light:** exposure, contrast, highlights, shadows, whites and blacks, plus **one-click Auto**.
+  * **Colour:** white balance (as shot, auto, picker, temperature and tint), vibrance and saturation.
+  * **Colour mixer** for eight colour bands, with a picker that adjusts the colour you click on the photo.
+  * **Curves**, **colour grading**, **detail** (clarity, texture, sharpening, noise reduction, dehaze) and **effects** (vignette, grain, fade).
+  * **Lens corrections** from the Lensfun database.
+  * **Live histogram** with clipping warnings.
 
-  **Many photos at once**
+  **Crop, straighten and fix**
 
-  * Batch: process whole folders with a preset, a size, a watermark and a format, in the background.
-  * Export to JPEG, PNG, TIFF, WebP and more, with sizes for the web and for print.
-  * Your edits are kept for every photo, and the original file is never changed.
+  * **Crop** with common ratios, rotate and flip.
+  * **Straighten** with a dial or a drawn level line.
+  * **Fix leaning buildings**, or square a page or a wall from its **four corners**.
+  * **Heal** blemishes, dust and small objects with a spot or a brush.
 
-  Bugs and requests: https://github.com/keshavbhatt/PixelFx/issues
+  **Compare and undo with confidence**
+
+  * **Before and after** with a draggable divider, side by side, or hold Space for the original.
+  * **Undo, history and named snapshots** for every photo.
+  * **Copy and paste settings** across many photos at once.
+  * **Non-destructive:** edits are remembered for every photo, even after renames and moves.
+
+  **Batch: many photos at once**
+
+  * **Process whole folders** with stacked presets and looks, Auto, a size, a watermark and a format, in the background.
+  * **Convert and resize only**, for jobs like HEIC to JPEG or shrinking photos for email.
+  * **Make files smaller** with a report of the space saved for each photo.
+  * **Rename with tokens** such as {name}, {date} and {camera}, with a live preview.
+  * **Pause, stop and retry**, and a notification when a batch finishes.
+  * **Save batch recipes** and run them again, even from the command line.
+
+  **Export the way you need**
+
+  * **JPEG, PNG, TIFF, WebP, JPEG XL and more**, with quality and 16-bit options.
+  * **Size presets** for Instagram, stories, the web and print, with output sharpening.
+  * **Colour spaces:** sRGB, Display P3 and Adobe RGB.
+  * **Keep or strip metadata**, with location removed by default.
+  * **Watermark** with text or a logo, and an estimated file size before you save.
+
+  **Opens what you shoot**
+
+  * **Camera RAW, HEIC, AVIF, JPEG XL**, JPEG, PNG, TIFF and WebP, with embedded colour profiles honoured.
+  * **Drag and drop** photos and folders, or paste an image from the clipboard.
+
+  **Made for the desktop**
+
+  * **Dark, light or follow the system** theme.
+  * **Full screen** and a distraction-free view.
+  * **Keyboard shortcuts** for everything, listed with F1.
 website: https://ktechpit.com/USS/public/product.php?slug=pixelfx
 issues: https://github.com/keshavbhatt/PixelFx/issues
 contact: mailto:connect@ktechpit.com
