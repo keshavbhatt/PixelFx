@@ -4,6 +4,7 @@ Everything about the rewrite lives here. If it is not in `DOCS/`, it did not hap
 
 | File | What it is |
 |---|---|
+| `BUILDING.md` | How to build, run and test PixelFx on Linux, Windows and macOS. |
 | `PLAN.md` | Architecture and scope; OPEN questions for the owner in section 9. |
 | `FEATURES.md` | Feature list with the decision per row. The scope contract. |
 | `DECISIONS.md` | Architecture Decision Records, append-only. |
