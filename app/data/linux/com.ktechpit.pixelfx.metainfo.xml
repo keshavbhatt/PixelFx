@@ -30,6 +30,28 @@
   </description>
   <launchable type="desktop-id">com.ktechpit.pixelfx.desktop</launchable>
   <icon type="stock">com.ktechpit.pixelfx</icon>
+  <screenshots>
+    <screenshot type="default">
+      <caption>One-click looks shown on your own photo, with a strength slider</caption>
+      <image type="source" width="2308" height="1716">https://raw.githubusercontent.com/keshavbhatt/PixelFx/72c9e93504fd43745864e26906abf0602f03374f/packaging/screenshots/flathub/1-looks.png</image>
+    </screenshot>
+    <screenshot>
+      <caption>Every light and colour control you expect, with a live histogram</caption>
+      <image type="source" width="2308" height="1716">https://raw.githubusercontent.com/keshavbhatt/PixelFx/72c9e93504fd43745864e26906abf0602f03374f/packaging/screenshots/flathub/2-controls.png</image>
+    </screenshot>
+    <screenshot>
+      <caption>Before and after on one photo, with a divider you can drag</caption>
+      <image type="source" width="2308" height="1716">https://raw.githubusercontent.com/keshavbhatt/PixelFx/72c9e93504fd43745864e26906abf0602f03374f/packaging/screenshots/flathub/3-compare.png</image>
+    </screenshot>
+    <screenshot>
+      <caption>Edit a whole folder of photos at once, in the background</caption>
+      <image type="source" width="2308" height="1716">https://raw.githubusercontent.com/keshavbhatt/PixelFx/72c9e93504fd43745864e26906abf0602f03374f/packaging/screenshots/flathub/4-batch.png</image>
+    </screenshot>
+    <screenshot>
+      <caption>Hundreds of presets, including your Lightroom and Camera Raw presets</caption>
+      <image type="source" width="2308" height="1716">https://raw.githubusercontent.com/keshavbhatt/PixelFx/72c9e93504fd43745864e26906abf0602f03374f/packaging/screenshots/flathub/5-presets.png</image>
+    </screenshot>
+  </screenshots>
   <url type="homepage">https://github.com/keshavbhatt/PixelFx</url>
   <url type="bugtracker">https://github.com/keshavbhatt/PixelFx/issues</url>
   <url type="help">https://github.com/keshavbhatt/PixelFx/wiki</url>
