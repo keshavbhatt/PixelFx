@@ -123,7 +123,12 @@ narrow 440, regular 560, wide 820, and editor 980 by 640 for controls beside a p
   Escape cancels Crop and closes sheets; the focus ring is the accent with a soft halo.
 - Every hover-only action (preset row menu, filmstrip remove) has a right-click twin.
 - Colour is never the only signal: changed values also turn bold labels, states carry words.
-- Nothing in the UI mentions accounts or app licensing (CLAUDE.md).
+- Release text (the changelog, metainfo release notes, What's new, the README's store copy)
+  never mentions Pro, plans, prices, accounts or licensing (CLAUDE.md); the app itself may.
+- Pro stays quiet in the app (proposed with the licensing mocks, 2026-11-08): the PixelFx Pro
+  sheet from the main menu, a "Pro" mark on paid controls, and a prompt at the moment a paid
+  feature is used. No prompt at start, no banner or countdown, nothing on a free export. Words:
+  "Pro", "plan", "Account ID" (the checkout's and the self-service portal's word).
 - Slider ranges, units and defaults follow the established editors, not the mocks' sample
   numbers (the mocks' values were never checked; owner, 2026-11-05). Reference: Lightroom
   and Camera Raw first, then darktable and Snapseed. Exposure is in stops, -5 to +5, shown

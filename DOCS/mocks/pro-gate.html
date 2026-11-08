@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>PixelFx mock: Pro prompt, Batch</title><link rel="stylesheet" href="mock.css"><script src="mock.js"></script></head>
+<body>
+<div class="window">
+  <div class="titlebar"><div class="lights"><i></i><i></i><i></i></div><div class="title">Batch - PixelFx</div><div class="wc"><span>&#x2212;</span><span>&#x25A1;</span><span>&#x2715;</span></div></div>
+  <div class="menubar"><b>PixelFx</b><span>File</span><span>Edit</span><span>Image</span><span>View</span><span>Window</span><span>Help</span></div>
+  <div class="header"><div class="brand"><span class="mark"></span></div><div class="doc"><b>Batch</b><span>47 photos &middot; 1.1 GB</span></div><span class="grow"></span><button class="btn"><svg class="ic s"><use href="#i-plus"/></svg>Add photos</button><button class="btn"><svg class="ic s"><use href="#i-folder"/></svg>Add folder</button><button class="btn flat icon" title="Main menu (F10)"><svg class="ic "><use href="#i-menu"/></svg></button></div>
+  <div class="body" style="grid-template-columns:var(--rail-w) 1fr 380px">
+    <div class="rail">
+      <div class="r" title="Edit"><svg class="ic "><use href="#i-sliders"/></svg><span>Edit</span></div><div class="r" title="Crop"><svg class="ic "><use href="#i-crop"/></svg><span>Crop</span></div><div class="r" title="Heal"><svg class="ic "><use href="#i-bandage"/></svg><span>Heal</span></div><div class="r on" title="Batch"><svg class="ic "><use href="#i-stack"/></svg><span>Batch</span></div>
+      <span class="spacer"></span>
+      <div class="r" title="Settings (Ctrl+,)"><svg class="ic "><use href="#i-settings"/></svg></div>
+    </div>
+    <div class="center" style="background:var(--panel)">
+      <div class="row" style="padding:10px 16px;border-bottom:1px solid var(--border)"><b>Photos</b><span class="muted">Drop photos or folders here</span><span class="grow"></span><button class="btn sm">Clear</button></div>
+      <div class="list" style="flex:1;overflow:auto;padding:6px 0"><div class="it"><div class="thumb" style="width:72px;height:48px"><img src="sample-1.svg" data-look="original"></div><div class="t"><b>DSC_0412.jpg</b><span>6000 x 4000 &middot; 8.4 MB</span></div><span class="act"><svg class="ic s"><use href="#i-x"/></svg></span></div><div class="it"><div class="thumb" style="width:72px;height:48px"><img src="sample-2.svg" data-look="original"></div><div class="t"><b>DSC_0413.jpg</b><span>6000 x 4000 &middot; 9.1 MB</span></div><span class="act"><svg class="ic s"><use href="#i-x"/></svg></span></div><div class="it"><div class="thumb" style="width:72px;height:48px"><img src="sample-3.svg" data-look="original"></div><div class="t"><b>IMG_2210.heic</b><span>3024 x 4032 &middot; 2.2 MB</span></div><span class="act"><svg class="ic s"><use href="#i-x"/></svg></span></div><div class="it"><div class="thumb" style="width:72px;height:48px"><img src="sample-2.svg" data-look="original"></div><div class="t"><b>IMG_2214.heic</b><span>4032 x 3024 &middot; 2.6 MB</span></div><span class="act"><svg class="ic s"><use href="#i-x"/></svg></span></div><div class="it"><div class="thumb" style="width:72px;height:48px"><img src="sample-1.svg" data-look="original"></div><div class="t"><b>beach-raw.dng</b><span>6048 x 4024 &middot; 25 MB</span></div><span class="act"><svg class="ic s"><use href="#i-x"/></svg></span></div><div class="it"><div class="thumb" style="width:72px;height:48px"><img src="sample-3.svg" data-look="original"></div><div class="t"><b>scan_007.tiff</b><span>4800 x 6000 &middot; 82 MB</span></div><span class="act"><svg class="ic s"><use href="#i-x"/></svg></span></div></div>
+      <div class="row" style="padding:10px 16px;border-top:1px solid var(--border)"><span class="muted">Preview</span><img src="sample-1.svg" style="height:56px;border-radius:4px"><span class="muted"><svg class="ic s"><use href="#i-right"/></svg></span><img src="sample-1.svg" data-look="golden" style="height:56px;border-radius:4px"><span class="small muted">The first photo, before and after the recipe</span><span class="grow"></span><a class="small" title="Every photo of the batch with the recipe, larger (preview-viewer.html)" href="preview-viewer.html">View larger</a></div>
+      
+    </div>
+    <div class="side right" style="width:auto">
+      <div class="sec">1. Recipe</div>
+      <div style="padding:0 14px" class="stack">
+        <div class="seg full"><span class="on">Preset or look</span><span>Settings from a photo</span></div>
+        <div class="card row" style="padding:8px"><img src="sample-1.svg" data-look="golden" style="width:54px;height:36px;object-fit:cover;border-radius:4px"><div class="grow"><b>Golden hour</b><div class="small muted">Look, strength 72</div></div><button class="btn sm">Change</button></div>
+        <div class="row small"><span class="check on"></span>Then add preset <b>Product white</b><span class="grow"></span><a>Change</a></div>
+        <div class="row small"><span class="check"></span>Auto enhance each photo first</div>
+        <div class="row small"><span class="check"></span>Keep edits already made in PixelFx</div>
+      </div>
+      <div class="sec">2. Resize</div>
+      <div style="padding:0 14px" class="stack"><button class="btn" style="justify-content:space-between">Web &middot; 2048 long edge<svg class="ic s"><use href="#i-down"/></svg></button><span class="row small"><span class="check on"></span>Never enlarge</span></div>
+      <div class="sec">3. Watermark<span class="pro" title="Watermarks are part of PixelFx Pro">Pro</span></div>
+      <div style="padding:0 14px" class="row"><select class="input" style="flex:1"><option>None</option><option>Studio signature</option></select><button class="btn sm">Edit...</button></div>
+      <div class="sec">4. Save as</div>
+      <div style="padding:0 14px" class="stack">
+        <div class="row"><select class="input"><option>JPEG, quality 90</option></select><button class="btn sm">More...</button></div>
+        <div class="row"><span class="mono small grow">~/Pictures/PixelFx/Batch</span><button class="btn sm">Change...</button></div>
+        <div class="row"><input class="input mono" value="{name}-{preset}"></div>
+        <div class="row small"><span class="check"></span>Next to each original, in a subfolder</div>
+      </div>
+      <div class="foot" style="margin-top:auto"><button class="btn"><svg class="ic s"><use href="#i-save"/></svg>Save as batch recipe</button><span class="grow"></span><button class="btn primary"><svg class="ic s"><use href="#i-play"/></svg>Process 47 photos</button></div>
+    </div>
+  </div>
+<div class="scrim"><div class="sheet narrow">
+  <div class="sh"><h2>Batch 47 photos with Pro</h2><button class="btn flat icon x" title="Close (Esc)"><svg class="ic "><use href="#i-x"/></svg></button></div>
+  <div class="sb">
+    <p style="margin:0 0 8px">Free batches up to 10 photos at a time. With Pro, all 47 go in one run.</p>
+    <p class="small muted" style="margin:0">Making files smaller stays free for any number of photos. Bought already? <a href="#">Check again</a>.</p>
+  </div>
+  <div class="sf"><a class="small" href="pro-sheet.html">What Pro adds</a><span class="grow"></span><button class="btn">Process the first 10</button><button class="btn primary"><svg class="ic s"><use href="#i-external"/></svg>Choose a plan</button></div>
+</div></div>
+  <span class="pin" style="left:calc(50% - 240px);top:41%">1</span><span class="pin" style="left:calc(50% - 240px);top:50%">2</span><span class="pin" style="left:calc(50% + 230px);top:58%">3</span><span class="pin" style="left:calc(100% - 330px);top:47%">4</span>
+</div>
+<ol class="notes"><li><b>A Pro prompt</b> appears only at the moment a paid feature is used, never at start. Here: Process with 47 photos on Free. It names what was asked ("Batch 47 photos"), what Free allows, and what Pro adds for this job. During the trial and with Pro there is no prompt. Pin 1.</li><li>The free way out comes first in words: "Make files smaller" (Compress only) stays free and unlimited. "Check again" is for someone who has just paid. Pin 2.</li><li>Process the first 10 does exactly that, with the rest left on the list; Choose a plan opens the checkout with source=batch; Escape or the close button does nothing. What Pro adds opens the PixelFx Pro sheet. Pin 3.</li><li>The Pro mark: a quiet outline beside a paid control (Watermark here), with a tooltip. Not the accent: the accent means selection, focus and "changed". The other prompts use the same sheet with their own words: "Paste settings to 23 photos with Pro" (Paste the first 10), "Share looks as files with Pro", "Bake to .cube with Pro". Exports of a RAW, an imported preset or LUT, or a watermark are in pro-export.html. On the command line, pixelfx --batch prints one line: "Batch from the command line is part of PixelFx Pro: https://ktechpit.com/USS/public/product.php?slug=pixelfx" and exits with 3. Pin 4.</li></ol>
+</body></html>
