@@ -1,5 +1,13 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>PixelFx mock: What's new</title><link rel="stylesheet" href="mock.css"><script src="mock.js"></script></head>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>PixelFx mock: What's new</title><link rel="stylesheet" href="mock.css"><script src="mock.js"></script><style>
+  /* Mock only: the two states, switched from the yellow control above the sheet. */
+  [hidden] { display: none !important; }
+  .statebar { position: absolute; left: 50%; transform: translateX(-50%); top: 3.5%; z-index: 30; display: flex; gap: 4px; padding: 4px; border-radius: 8px; background: #FFE58A; color: #3A2E00; font-size: 12px; }
+  .statebar button { border: 0; background: transparent; padding: 3px 10px; border-radius: 6px; font: inherit; color: inherit; cursor: pointer; }
+  .statebar button.on { background: #3A2E00; color: #FFE58A; }
+  body.clean .statebar { display: none; }
+  .grip { position: absolute; right: 3px; bottom: 3px; width: 12px; height: 12px; color: var(--faint); }
+</style></head>
 <body>
 <div class="window">
   <div class="titlebar"><div class="lights"><i></i><i></i><i></i></div><div class="title">sunset-lake.jpg - PixelFx</div><div class="wc"><span>&#x2212;</span><span>&#x25A1;</span><span>&#x2715;</span></div></div>
@@ -65,7 +73,8 @@
       </div>
     </div>
   </div>
-<div class="scrim"><div class="sheet">
+<div class="statebar" role="group" aria-label="Mock state"><span style="padding:3px 6px">State</span><button class="on" data-set="highlights">Highlights</button><button data-set="all">Full list</button></div>
+<div class="scrim"><div class="sheet" data-state="highlights" style="position:relative">
   <div class="sh"><h2>What's new</h2><select class="input" style="margin-left:8px;width:150px" title="Version"><option>2.0.0</option></select><button class="btn flat icon x" title="Close (Escape)"><svg class="ic "><use href="#i-x"/></svg></button></div>
   <div class="sb stack" style="gap:8px;overflow:auto">
     <b style="font-size:15px">PixelFx 2 is rebuilt from scratch</b>
@@ -81,8 +90,43 @@
     <a class="small" href="#">The full list of changes</a>
   </div>
   <div class="sf"><label class="row small"><span class="check on"></span>Show this after each update</label><span class="grow"></span><button class="btn primary">Close</button></div>
+  <svg class="grip" viewBox="0 0 12 12" aria-hidden="true"><path d="M11 3 3 11M11 7 7 11" stroke="currentColor" stroke-width="1.2" fill="none"/></svg>
+</div><div class="sheet" data-state="all" style="position:relative;height:calc(100% - 48px)">
+  <div class="sh"><h2>What's new</h2><select class="input" style="margin-left:8px;width:150px" title="Version"><option>2.0.0</option></select><button class="btn flat icon x" title="Close (Escape)"><svg class="ic "><use href="#i-x"/></svg></button></div>
+  <div class="sb stack" style="gap:8px;overflow:auto">
+    <b style="font-size:15px">PixelFx 2 is rebuilt from scratch</b>
+    <span class="muted">A new editor, a new image engine, and a new look.</span>
+    <div class="sec" style="padding-left:0">Added</div>
+    <ul style="margin:0;padding-left:18px;line-height:1.55">
+      <li>Looks: one click styles your photo, each tile showing your own photo, with a strength slider. Bring your own .cube LUTs, or make your own look.</li>
+      <li>Crop and rotate (C): ratios, guides, straighten with the dial or a drawn level line, perspective.</li>
+      <li>Presets: save the whole edit or only parts of it, and bring your Lightroom presets along.</li>
+      <li>Batch (B): one recipe for hundreds of photos, in the background, with a watermark if you like.</li>
+      <li>Watermarks on export: your name, the year or the camera, or a logo, sized to each photo.</li>
+      <li>Compress only, in Batch: make a pile of JPEG, PNG, GIF, TIFF and WebP files smaller without editing them, each with its size before and after.</li>
+      <li>Quick jobs on the welcome page: Convert and resize, and Compress photos, each one click into Batch ready for the job.</li>
+      <li>Spot heal (H): paint over a blemish, dust or a small object and PixelFx fills it from the photo around it.</li>
+      <li>Camera RAW: open the files of most cameras, developed on the camera's own look, with white balance in Kelvin.</li>
+      <li>Lens profiles: Optics corrects distortion and vignetting for the lens the photo was taken with.</li>
+      <li>Photo details (I): size, format, colour profile, camera, lens, exposure and date; the location only when you ask.</li>
+      <li>Copy a photo's settings and paste them onto another (Ctrl+Shift+C, Ctrl+Shift+V); each photo keeps its own crop.</li>
+      <li>Zoom in to check detail: the scroll wheel, the zoom bar, Ctrl+0 to fit and Ctrl+1 for 100%, drag to look around.</li>
+    </ul>
+    
+  </div>
+  <div class="sf"><label class="row small"><span class="check on"></span>Show this after each update</label><span class="grow"></span><button class="btn primary">Close</button></div>
+  <svg class="grip" viewBox="0 0 12 12" aria-hidden="true"><path d="M11 3 3 11M11 7 7 11" stroke="currentColor" stroke-width="1.2" fill="none"/></svg>
 </div></div>
-<span class="pin" style="left:46%;top:16%">1</span><span class="pin" style="left:30%;top:66%">2</span>
+<script>
+  // Mock only: show one state of the sheet.
+  function showState(state) {
+    document.querySelectorAll('.statebar button').forEach((x) => x.classList.toggle('on', x.dataset.set === state));
+    document.querySelectorAll('.scrim [data-state]').forEach((el) => { el.hidden = el.dataset.state !== state; });
+  }
+  document.querySelectorAll('.statebar button').forEach((b) => b.addEventListener('click', () => showState(b.dataset.set)));
+  showState(new URLSearchParams(location.search).get('state') || 'highlights');
+</script>
+<span class="pin" style="left:46%;top:16%">1</span><span class="pin" style="left:30%;top:66%">2</span><span class="pin" style="left:calc(50% + 290px);top:88%">3</span>
 </div>
-<ol class="notes"><li><b>What's new</b> opens once, at the first start of a new version, over the window (no separate splash), and any time from the main menu or About. It shows the changelog section of the running version, written for people; the Version list reads the older sections from the same bundled changelog.</li><li>The check box turns the automatic showing off; the menu item always works. Nothing about accounts or licensing appears here (CLAUDE.md rule, enforced by tst_changelog).</li></ol>
+<ol class="notes"><li><b>What's new</b> opens once, at the first start of a new version, over the window (no separate splash), and any time from the main menu or About. It shows the changelog section of the running version, written for people; the Version list reads the older sections from the same bundled changelog.</li><li>The check box turns the automatic showing off; the menu item always works. Nothing about accounts or licensing appears here (CLAUDE.md rule, enforced by tst_changelog).</li><li>Size (2026-11-10): the sheet opens as tall as its notes, up to the window less a margin above and below; the notes no longer stop at 480 px. The full list of changes grows it to the window's height. Drag any edge or the corner to make it larger or smaller (at least 560 by 360 px); it opens at its own size again next time. Pin 3.</li></ol>
 </body></html>

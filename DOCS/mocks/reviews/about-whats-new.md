@@ -34,3 +34,20 @@ the 32 px `sm` size (24 px minimum met); the tab segments are 32 px tall.
   links in a paragraph.
 - The credit line names both licences in plain words and points to the full notices.
 - What's new can be turned off with one check box and is always in the main menu.
+
+## Revision 2026-11-10: What's new opens at a useful size and can be resized (whats-new.html, pin 3)
+
+The owner noticed What's new opens small.
+
+- Cause: the notes stopped at 480 px and scrolled inside the sheet, even in a tall window, and the
+  sheet could not be made larger.
+- Change: the notes are as tall as they need, up to the window less the sheets' 24 px margin above
+  and below (`Sheet::heightLimit`), so the highlights show whole and The full list of changes grows
+  the sheet to the window's height. The sheet can be resized from any edge or corner, at least
+  560 by 360 px, like the Editor and Picker sheets; it opens at its own size again next time.
+- Measurements: unchanged inside (15 px semibold lead, 11 px capitals for the groups, 13 px items,
+  1.55 line height); a 12 px grip in `--faint` in the bottom right corner, which is decoration;
+  the edges show the resize cursor.
+- Accessibility: resizing is for the mouse; the keyboard scrolls the notes as before, and nothing
+  needs a larger sheet to be read.
+
