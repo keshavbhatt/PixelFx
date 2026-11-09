@@ -97,3 +97,40 @@ plan shows the price.
   afterwards.
 - No trial recap: the first prompt after the trial is the ordinary one, and PixelFx counts
   nothing about its use.
+
+## Revision 2026-11-10: the Ktechpit Pass line (pro-sheet.html, pin 4)
+
+The owner's suggestion: instead of asking people to add PixelFx to a pass they mostly do not
+have, say that PixelFx is included in Ktechpit Pass and take them to the Pass checkout with
+this Account ID.
+
+- What changes: the line under the Account ID (Trial and Free; hidden with Pro). Before: "A
+  Ktechpit Pass unlocks PixelFx and every other Ktechpit app." with the link "Add PixelFx to
+  it", which opened the portal for people who own a pass. Now: "PixelFx is included in Ktechpit
+  Pass" and "One purchase unlocks every Ktechpit app.", with Get the Pass, which opens the Pass
+  checkout in the browser with this Account ID and `source=in_app_pixelfx`. Buying the pass
+  with this Account ID unlocks PixelFx at once, with nothing to link afterwards. "Have one
+  already? Add PixelFx to it." stays as a third line for the few who own a pass bought with
+  another app's Account ID; it opens the portal page as before.
+- Measurements: the same box as before (10 by 12 px padding, 1 px `--border`, radius 8) on the
+  sheet's `--panel`, the 16 px layers glyph in `--muted` at the top. Three 12 px lines: the first
+  semibold in `--text`, the other two in `--muted`, the link in `--link`. Get the Pass is a small
+  button (26 px, 12 px text, the external glyph), the same kind as Copy above it, vertically
+  centred on the box.
+- Contrast on `--panel`: `--text` 14.1:1 dark, 16.0:1 light; `--muted` 7.0:1 and 6.8:1; `--link`
+  8.2:1 and 5.3:1.
+- Hierarchy: Choose a plan stays the one primary button. Get the Pass is a secondary button
+  inside the box, smaller than the footer buttons, so the PixelFx plans come first and the Pass
+  is the alternative for people who use more than one Ktechpit app.
+- Accessibility: Get the Pass is a real button with a tooltip ("Opens the Ktechpit Pass checkout
+  in your browser, with this Account ID") and is in the tab order after Copy and Check again;
+  the link keeps its own tooltip.
+- Writing: "included in" says what PixelFx is to the pass without selling; no price in the app,
+  as before (the checkout shows it in the buyer's currency and with any sale). No "licence" or
+  "activate".
+- Server: the website counts Pass visits and sales per link (`source`); it learns the place
+  `in_app` (KtechpitPass::PLACEMENTS), so the dashboard shows "Inside an app · PixelFx".
+- Remove one thing: removed the portal link as the line's main action; it is now the small last
+  line for pass owners.
+- Owner's review (2026-11-10): approved as is, the "Have one already?" line included. Built the
+  same day.

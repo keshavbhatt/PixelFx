@@ -62,8 +62,11 @@ public:
     [[nodiscard]] QUrl checkoutUrl(core::licensing::Source source) const;
     /// The self-service portal (purchases, receipts, the Ktechpit Pass).
     [[nodiscard]] QUrl portalUrl() const;
-    /// The portal's Ktechpit Pass page with PixelFx and this Account ID filled in.
+    /// The portal's Ktechpit Pass page with PixelFx and this Account ID filled in, for a pass the
+    /// owner already has.
     [[nodiscard]] QUrl passUrl() const;
+    /// The Ktechpit Pass checkout with this Account ID: a pass bought with it unlocks PixelFx.
+    [[nodiscard]] QUrl passCheckoutUrl() const;
     /// The PixelFx page on ktechpit.com, for the command line.
     [[nodiscard]] static QUrl productUrl();
 

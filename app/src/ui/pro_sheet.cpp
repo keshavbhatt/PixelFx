@@ -244,21 +244,35 @@ ProSheet::ProSheet(services::LicenseService& license, QWidget* parent, Source so
 
     m_pass = new QFrame(this);
     m_pass->setObjectName(u"passLine"_s);
-    auto* passText =
-        new QLabel(tr("A <b>Ktechpit Pass</b> unlocks PixelFx and every other Ktechpit app."), m_pass);
-    passText->setObjectName(u"small"_s);
+    auto* passTitle = new QLabel(u"<b>%1</b>"_s.arg(tr("PixelFx is included in Ktechpit Pass")), m_pass);
+    passTitle->setObjectName(u"small"_s);
+    passTitle->setWordWrap(true);
+    auto* passText = new QLabel(tr("One purchase unlocks every Ktechpit app."), m_pass);
+    passText->setObjectName(u"credit"_s);
     passText->setWordWrap(true);
-    auto* passLink = new QLabel(link(u"#pass"_s, tr("Add PixelFx to it")), m_pass);
-    passLink->setObjectName(u"small"_s);
-    passLink->setToolTip(tr("Opens your Ktechpit Pass on ktechpit.com with PixelFx filled in"));
-    connect(passLink, &QLabel::linkActivated, this,
+    auto* passOwner =
+        new QLabel(tr("Have one already? %1.").arg(link(u"#pass"_s, tr("Add PixelFx to it"))), m_pass);
+    passOwner->setObjectName(u"credit"_s);
+    passOwner->setWordWrap(true);
+    passOwner->setToolTip(tr("Opens your Ktechpit Pass on ktechpit.com with PixelFx filled in"));
+    connect(passOwner, &QLabel::linkActivated, this,
             [this] { QDesktopServices::openUrl(m_license.passUrl()); });
+    auto* getPass = new QPushButton(icons::themed(u"external"_s, tokens().text), tr("Get the Pass"), m_pass);
+    getPass->setObjectName(u"small"_s);
+    getPass->setToolTip(tr("Opens the Ktechpit Pass checkout in your browser, with this Account ID"));
+    connect(getPass, &QPushButton::clicked, this,
+            [this] { QDesktopServices::openUrl(m_license.passCheckoutUrl()); });
+    auto* passLines = new QVBoxLayout;
+    passLines->setSpacing(2);
+    passLines->addWidget(passTitle);
+    passLines->addWidget(passText);
+    passLines->addWidget(passOwner);
     auto* passRow = new QHBoxLayout(m_pass);
     passRow->setContentsMargins(12, 10, 12, 10);
     passRow->setSpacing(kGapItems);
-    passRow->addWidget(glyphLabel(u"layers"_s, tokens().muted, 14, m_pass), 0, Qt::AlignVCenter);
-    passRow->addWidget(passText, 1);
-    passRow->addWidget(passLink);
+    passRow->addWidget(glyphLabel(u"layers"_s, tokens().muted, 14, m_pass), 0, Qt::AlignTop);
+    passRow->addLayout(passLines, 1);
+    passRow->addWidget(getPass, 0, Qt::AlignVCenter);
 
     auto* manage = new QPushButton(tr("Manage purchases"), this);
     manage->setObjectName(u"link"_s);

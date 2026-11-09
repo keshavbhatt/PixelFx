@@ -152,6 +152,18 @@ QUrl LicenseService::passUrl() const
     return url;
 }
 
+QUrl LicenseService::passCheckoutUrl() const
+{
+    QUrl url(QString::fromLatin1(kKtechpitServer) + u"checkout.php"_s);
+    QUrlQuery query;
+    query.addQueryItem(u"slug"_s, u"ktechpit-pass"_s);
+    query.addQueryItem(u"accountId"_s, m_accountId);
+    // The website counts pass visits and sales by the link they came from.
+    query.addQueryItem(u"source"_s, u"in_app_pixelfx"_s);
+    url.setQuery(query);
+    return url;
+}
+
 QUrl LicenseService::productUrl()
 {
     return QUrl(QString::fromLatin1(kKtechpitServer) + u"product.php?slug=pixelfx"_s);

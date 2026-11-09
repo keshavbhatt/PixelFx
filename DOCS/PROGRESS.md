@@ -94,6 +94,19 @@ Decisions the work stopped at; everything else went ahead within the approved mo
 
 ## Sessions (newest first)
 
+### 2026-11-10 (the Ktechpit Pass line in PixelFx Pro)
+
+- The owner asked for the Pass line in the PixelFx Pro sheet to offer the pass rather than ask
+  people to add PixelFx to one. Mock `pro-sheet.html` (pin 4) and its review
+  (`mocks/reviews/pro.md`, revision 2026-11-10); the owner approved it as is.
+- Built: "PixelFx is included in Ktechpit Pass" with Get the Pass, which opens the Pass checkout
+  with this Account ID and `source=in_app_pixelfx` (`LicenseService::passCheckoutUrl`), so a pass
+  bought from it unlocks PixelFx at once; "Have one already? Add PixelFx to it" still opens the
+  portal for a pass bought with another app's Account ID. `tst_pro` checks the link.
+- Verified: dev build with -Werror, 45 of 45 tests, `make lint`; the sheet grabbed offscreen in
+  both themes on a large virtual screen. On screens under about 830 px the sheet scrolls by a
+  line, as sheets do.
+
 ### 2026-11-08 (PixelFx Pro, the mocks)
 
 - Four mocks for Pro, reviewed in `mocks/reviews/pro.md`: the PixelFx Pro sheet from the main

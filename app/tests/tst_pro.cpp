@@ -140,6 +140,11 @@ private Q_SLOTS:
         QCOMPARE(query.queryItemValue(u"slug"_s), u"pixelfx"_s);
         QCOMPARE(query.queryItemValue(u"source"_s), u"batch"_s);
         QCOMPARE(QUrlQuery(license.passUrl()).queryItemValue(u"app"_s), u"pixelfx"_s);
+        // The Ktechpit Pass is bought with this Account ID, so it unlocks PixelFx at once.
+        const QUrlQuery pass(license.passCheckoutUrl());
+        QCOMPARE(pass.queryItemValue(u"slug"_s), u"ktechpit-pass"_s);
+        QCOMPARE(pass.queryItemValue(u"accountId"_s), license.accountId());
+        QCOMPARE(pass.queryItemValue(u"source"_s), u"in_app_pixelfx"_s);
         QCOMPARE(licensing::sourceName(licensing::Source::TrialEnd), u"trial_end"_s);
     }
 
