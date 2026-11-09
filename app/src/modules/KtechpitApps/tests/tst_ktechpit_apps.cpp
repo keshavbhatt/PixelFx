@@ -171,13 +171,17 @@ private Q_SLOTS:
     void stripCardsShareTheWidth()
     {
         AppCatalog::init({}); // the bundled catalog
-        ktechpit::AppStrip strip(u"test"_s, 2, ktechpit::AppStrip::Orientation::Horizontal);
-        strip.resize(640, strip.sizeHint().height());
-        strip.show();
-        QVERIFY(QTest::qWaitForWindowExposed(&strip));
-        const QList<QFrame*> cards = strip.findChildren<QFrame*>(u"ktechpitAppCard"_s);
-        QCOMPARE(cards.size(), 2);
-        QVERIFY(qAbs(cards.at(0)->width() - cards.at(1)->width()) <= 1);
+        // The cards are drawn at random: enough strips that long names come up every run.
+        for (int i = 0; i < 30; ++i) {
+            ktechpit::AppStrip strip(u"test"_s, 2, ktechpit::AppStrip::Orientation::Horizontal);
+            strip.resize(640, strip.sizeHint().height());
+            strip.show();
+            QVERIFY(QTest::qWaitForWindowExposed(&strip));
+            const QList<QFrame*> cards = strip.findChildren<QFrame*>(u"ktechpitAppCard"_s);
+            QCOMPARE(cards.size(), 2);
+            const QString names = cards.at(0)->accessibleName() + u", "_s + cards.at(1)->accessibleName();
+            QVERIFY2(qAbs(cards.at(0)->width() - cards.at(1)->width()) <= 1, qPrintable(names));
+        }
     }
 
     void seeAllOpensTheHostsList()
