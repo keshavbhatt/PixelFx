@@ -106,6 +106,10 @@ Decisions the work stopped at; everything else went ahead within the approved mo
 - Verified: dev build with -Werror, 45 of 45 tests, `make lint`; the sheet grabbed offscreen in
   both themes on a large virtual screen. On screens under about 830 px the sheet scrolls by a
   line, as sheets do.
+- PixelFx 2.0.1 prepared: the changelog section dated 2026-11-10 (links in windows work again),
+  the metainfo release, `project(VERSION 2.0.1)`; the snap description is unchanged, as nothing
+  new is offered. The release text names only the link fix (`tst_changelog` passes); the Pass
+  line is in this log and the commit messages only.
 
 ### 2026-11-08 (PixelFx Pro, the mocks)
 

@@ -3,6 +3,15 @@
 All notable changes to PixelFx. The format follows Keep a Changelog; the What's new sheet shows
 the section of the running version.
 
+## [2.0.1] - 2026-11-10
+
+Links in windows work again.
+
+### Fixed
+
+- A link inside a window, such as "The full list of changes" in What's new, does what it says
+  again: a click on it was taken for the start of moving the window.
+
 ## [2.0.0] - 2026-11-08
 
 PixelFx 2 is rebuilt from scratch
