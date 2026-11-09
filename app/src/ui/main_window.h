@@ -119,6 +119,9 @@ public:
     void openSettings();
     /// What's new for the running version (main menu, About).
     void showWhatsNew();
+    /// More apps from Ktechpit, opened from `place` ("menu", "about"). From a sheet (See all in
+    /// About), that sheet closes first.
+    void showMoreApps(const QString& place, QWidget* from);
     /// About PixelFx (main menu).
     void showAbout();
     /// At start: What's new once for a new version, unless turned off; a first install (no

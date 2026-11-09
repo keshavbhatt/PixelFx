@@ -24,6 +24,7 @@
 #include "ui/icons.h"
 #include "ui/look_editor.h"
 #include "ui/looks_panel.h"
+#include "ui/more_apps_sheet.h"
 #include "ui/paste_sheet.h"
 #include "ui/photo_details_panel.h"
 #include "ui/preset_save_sheet.h"
@@ -883,7 +884,10 @@ void MainWindow::setupActions()
     pro->setObjectName(u"pixelfxPro"_s);
     pro->setVisible(false); // until there is a licence (setLicense)
     connect(pro, &QAction::triggered, this, &MainWindow::showPro);
-    addActions({whatsNew, about, pro});
+    auto* moreApps = new QAction(tr("More apps from Ktechpit"), this);
+    moreApps->setObjectName(u"moreApps"_s);
+    connect(moreApps, &QAction::triggered, this, [this] { showMoreApps(u"menu"_s, this); });
+    addActions({whatsNew, about, moreApps, pro});
     auto* openFolder = new QAction(tr("Open folder..."), this);
     openFolder->setObjectName(u"openFolder"_s);
     openFolder->setShortcut(QKeySequence(u"Ctrl+Shift+O"_s));
@@ -2661,6 +2665,7 @@ constexpr std::array kFileEntries{kSeparator,
                                   MenuEntry{"onlineGuide", "external"},
                                   MenuEntry{"reportBug", "bug"},
                                   MenuEntry{"about", "info"},
+                                  MenuEntry{"moreApps", "grid"},
                                   MenuEntry{"pixelfxPro", "star"},
                                   kSeparator,
                                   MenuEntry{"quit", "power"}};
@@ -2733,6 +2738,17 @@ void MainWindow::showAbout()
         sheet.accept();
         QTimer::singleShot(0, this, [this] { reportBug(); });
     });
+    sheet.exec();
+}
+
+void MainWindow::showMoreApps(const QString& place, QWidget* from)
+{
+    if (auto* sheet = qobject_cast<QDialog*>(from); sheet != nullptr) {
+        sheet->accept();
+        QTimer::singleShot(0, this, [this, place] { showMoreApps(place, this); });
+        return;
+    }
+    MoreAppsSheet sheet(place, this);
     sheet.exec();
 }
 

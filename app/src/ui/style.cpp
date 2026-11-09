@@ -222,6 +222,13 @@ const QString kSheet =
         #planYes { color: {{success}}; }
         #planNo { color: {{faint}}; }
         QFrame#passLine { border: 1px solid {{border}}; border-radius: 8px; }
+        QFrame#ktechpitAppCard { border: 1px solid {{border}}; border-radius: 8px; background: transparent; }
+        QFrame#ktechpitAppCard:hover { background: {{hover}}; }
+        QFrame#ktechpitAppCard:focus { border-color: {{accent}}; }
+        QLabel#ktechpitAppName, QLabel#ktechpitAppStripTitle { font-size: 12px; font-weight: 600; }
+        QLabel#ktechpitAppSummary, QLabel#ktechpitMoreAppsIntro { color: {{muted}}; font-size: 12px; }
+        QLabel#ktechpitAppStripSeeAll { font-size: 12px; }
+        QPushButton#ktechpitAppGet, QPushButton#ktechpitMoreAppsRefresh { padding: 4px 9px; font-size: 12px; }
         QLineEdit#accountId { font-family: monospace; }
         QFrame#divider { background: {{border}}; border: 0; }
         QTextBrowser#whatsNewText { background: {{panel}}; border: 0; }

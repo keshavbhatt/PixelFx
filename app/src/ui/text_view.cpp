@@ -1,5 +1,6 @@
 #include "ui/text_view.h"
 
+#include <QEvent>
 #include <QTextDocument>
 
 #include <algorithm>
@@ -13,6 +14,8 @@ TextView::TextView(int maximumTextHeight, QWidget* parent)
     , m_maximum(maximumTextHeight)
 {
     setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
+    // The layout keeps the height it last measured until told otherwise: new text is a new height.
+    connect(document(), &QTextDocument::contentsChanged, this, [this] { updateGeometry(); });
 }
 
 TextView::~TextView() = default;
@@ -29,6 +32,15 @@ int TextView::heightForWidth(int width) const
     laidOut->setTextWidth(width - frame.left() - frame.right());
     const int text = static_cast<int>(std::ceil(laidOut->size().height()));
     return std::min(text, m_maximum) + frame.top() + frame.bottom();
+}
+
+void TextView::changeEvent(QEvent* event)
+{
+    // A style sheet or font applied after the text was measured changes its height too.
+    if (event->type() == QEvent::FontChange || event->type() == QEvent::StyleChange) {
+        updateGeometry();
+    }
+    QTextBrowser::changeEvent(event);
 }
 
 QSize TextView::sizeHint() const

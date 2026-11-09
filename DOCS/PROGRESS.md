@@ -94,6 +94,24 @@ Decisions the work stopped at; everything else went ahead within the approved mo
 
 ## Sessions (newest first)
 
+### 2026-11-10 (More apps from Ktechpit, What's new resizable)
+
+- Mocks for More apps from Ktechpit (`more-apps.html`, About, the main menu) and What's new at a
+  useful size, reviewed in `mocks/reviews/more-apps.md` and `about-whats-new.md`; the owner
+  approved them, dropped the setting that would hide the cards, and asked for one line of text
+  per card with an ellipsis. The mocks index now lists mocks waiting for approval at its top.
+- KtechpitApps 1.1.0 (pushed and tagged in its repository): `MoreAppsView`, a host hook for See
+  all, keyboard access, style names and `oneLineText`. In PixelFx as a squashed subtree
+  (ADR-017, THIRD_PARTY, an Open-source notice): two cards at the end of About, `MoreAppsSheet`
+  from the main menu and See all, Get through the store PixelFx came from.
+- What's new: the notes are as tall as their text, the sheet as tall as the window allows, and
+  resizable from its edges (`Sheet::setResizable`). It opened small because `TextView` never told
+  its layout that new text made it taller; it does now. Sheets measure themselves again when
+  shown, once their style is applied.
+- Verified: -Werror build, 45 of 45 tests (new: the About cards, More apps from the menu and
+  from About, What's new's size), the About test 15 times in a row with random cards, grabs of
+  About, More apps and What's new.
+
 ### 2026-11-10 (the Ktechpit Pass line in PixelFx Pro)
 
 - The owner asked for the Pass line in the PixelFx Pro sheet to offer the pass rather than ask

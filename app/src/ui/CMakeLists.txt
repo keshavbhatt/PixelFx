@@ -81,6 +81,8 @@ qt_add_library(pixelfx_ui STATIC
     menu_style.h
     message_line.cpp
     message_line.h
+    more_apps_sheet.cpp
+    more_apps_sheet.h
     panel_slider.cpp
     panel_slider.h
     part_checklist.cpp
@@ -133,7 +135,7 @@ qt_add_library(pixelfx_ui STATIC
     welcome_page.h
 )
 pixelfx_set_warnings(pixelfx_ui)
-target_link_libraries(pixelfx_ui PUBLIC pixelfx_services Qt6::Widgets Qt6::Svg)
+target_link_libraries(pixelfx_ui PUBLIC pixelfx_services Qt6::Widgets Qt6::Svg ktechpit_apps)
 
 set(_pixelfx_resources "${CMAKE_CURRENT_SOURCE_DIR}/../resources")
 file(GLOB _pixelfx_ui_glyphs "${_pixelfx_resources}/icons/ui/*.svg")

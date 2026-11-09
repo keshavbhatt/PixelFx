@@ -34,9 +34,13 @@ public:
         Editor,  ///< 980 by 640 px at least, resizable from its edges: controls beside a preview
         Picker,  ///< 900 by 640 px at least, resizable: groups beside tiles to choose from
     };
-    /// Gives the sheet its size; call once its content is built. Sheets other than Editor then
-    /// follow their content's height as it changes, no taller than the window they cover.
+    /// Gives the sheet its size; call once its content is built. Sheets other than Editor and
+    /// Picker then follow their content's height as it changes, no taller than the window they
+    /// cover.
     void setSize(Size size);
+    /// Lets a sheet that follows its content be resized from its edges, no smaller than `least`;
+    /// call after setSize(). Once resized, it keeps the size given to it.
+    void setResizable(const QSize& least);
     /// Makes the sheet as tall as its content at its width, within the window it covers.
     void fitHeight();
     /// The tallest the sheet may be: the window under it, less a margin.

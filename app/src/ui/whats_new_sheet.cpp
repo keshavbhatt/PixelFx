@@ -18,16 +18,12 @@ using namespace Qt::StringLiterals;
 
 namespace pixelfx::ui {
 
-namespace {
-constexpr int kTextHeight = 480; // the notes scroll past this
-} // namespace
-
 WhatsNewSheet::WhatsNewSheet(const QString& markdown, const QString& version, bool showAfterUpdates,
                              QWidget* parent)
     : Sheet(parent)
     , m_markdown(markdown)
     , m_versions(new QComboBox(this))
-    , m_text(new TextView(kTextHeight, this))
+    , m_text(new TextView(QWIDGETSIZE_MAX, this)) // as tall as the notes; the sheet stops at the window
     , m_more(new QLabel(this))
     , m_show(new QCheckBox(tr("Show this after each update"), this))
 {
@@ -62,6 +58,7 @@ WhatsNewSheet::WhatsNewSheet(const QString& markdown, const QString& version, bo
     layout->addWidget(m_more);
     showVersion(version);
     setSize(Size::Regular);
+    setResizable(QSize(560, 240));
 }
 
 WhatsNewSheet::~WhatsNewSheet() = default;

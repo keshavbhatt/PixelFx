@@ -18,6 +18,9 @@ public:
     [[nodiscard]] int heightForWidth(int width) const override;
     [[nodiscard]] QSize sizeHint() const override;
 
+protected:
+    void changeEvent(QEvent* event) override;
+
 private:
     int m_maximum;
 };

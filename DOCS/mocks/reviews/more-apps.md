@@ -27,7 +27,8 @@ at the end of About, drawn afresh each time, and the full list one click away.
   "More apps from Ktechpit" with See all (12 px `--link`) at its right, 6 px, then two cards side
   by side with 10 px between, each half of the sheet's 520 px content width. A card: 10 px
   padding, 1 px `--border`, radius 8, a 40 px icon, 10 px, the name 12 px semibold in `--text` and
-  up to two lines of 12 px `--muted`, then Get, a small button (26 px). The About sheet grows by
+  the description in 12 px `--muted`, one line each with an ellipsis (the card's tooltip has both
+  whole; owner, 2026-11-10, so every card is one fixed height), then Get, a small button (26 px). The About sheet grows by
   about 96 px.
 - More apps from Ktechpit: the Wide sheet (820 px), resizable from its edges like the Picker
   sheets; a 12 px `--muted` intro line, the search field with Refresh (small button) beside it, a
@@ -82,3 +83,9 @@ at the end of About, drawn afresh each time, and the full list one click away.
 
 Removed: the module's "More apps..." button under the strip; See all in the heading does the
 same, and one way to the list is enough in a sheet this size.
+
+## Owner's review (2026-11-10)
+
+- Approved, with the strip always shown (no setting). Built the same day. One line per name and
+  description, with an ellipsis (owner), after two-line descriptions left the About cards cut
+  off when the page measured them before their style was applied.

@@ -49,6 +49,7 @@
 //   PIXELFX_DEBUG_GRAB=<file.png>      grab the window once the photo is shown (or after 2 s
 //                                      with nothing to show) and quit
 #include "app/application.h"
+#include "core/about.h"
 #include "core/batch_resources.h"
 #include "core/crash_handler.h"
 #include "core/log_sink.h"
@@ -71,6 +72,7 @@
 #include "ui/look_editor.h"
 #include "ui/looks_panel.h"
 #include "ui/main_window.h"
+#include "ui/more_apps_sheet.h"
 #include "ui/paste_sheet.h"
 #include "ui/photo_details_panel.h"
 #include "ui/photo_tile.h"
@@ -98,6 +100,7 @@
 #include <QTimer>
 #include <QToolButton>
 
+#include <AppCatalog.h>
 #include <csignal>
 #include <pfx/document.h>
 
@@ -305,6 +308,9 @@ QDialog* appSheet(pixelfx::ui::MainWindow& window, const QString& name)
         if (name == u"progate"_s) {
             return window.proGate()->newCountPrompt(pixelfx::ui::ProGate::Count::Batch, 47);
         }
+    }
+    if (name == u"moreapps"_s) {
+        return new pixelfx::ui::MoreAppsSheet(u"menu"_s, &window);
     }
     if (name == u"whatsnew"_s) {
         return new pixelfx::ui::WhatsNewSheet(pixelfx::ui::WhatsNewSheet::bundledChangelog(),
@@ -645,6 +651,26 @@ int runBatch(pixelfx::app::Application& app)
 
 } // namespace
 
+// More apps from Ktechpit (the KtechpitApps module): never PixelFx itself, and Get through the
+// store this copy came from.
+void setupMoreApps()
+{
+    const QString packaging = pixelfx::core::packagingName();
+    ktechpit::CatalogConfig config;
+    config.hostAppId = u"pixelfx"_s;
+    config.source = u"pixelfx"_s;
+    config.oneLineText = true; // cards of one fixed height: About's page stack keeps its first measure
+#ifdef Q_OS_WIN
+    config.package = ktechpit::Package::Windows;
+#else
+    config.package = packaging == u"snap"_s       ? ktechpit::Package::Snap
+                     : packaging == u"Flatpak"_s  ? ktechpit::Package::Flatpak
+                     : packaging == u"AppImage"_s ? ktechpit::Package::AppImage
+                                                  : ktechpit::Package::Native;
+#endif
+    ktechpit::AppCatalog::init(config);
+}
+
 // The theme, chosen before the window exists and then followed as the setting or, for System,
 // the desktop changes; the text size of PIXELFX_DEBUG_FONT_PX; the style.
 void setupLook(pixelfx::app::Application& app)
@@ -694,7 +720,10 @@ int main(int argc, char** argv)
 
     pixelfx::services::LicenseService license;
     license.start();
+    setupMoreApps();
     pixelfx::ui::MainWindow window(app.settings());
+    ktechpit::AppCatalog::instance()->setShowAll(
+        [&window](const QString& place, QWidget* from) { window.showMoreApps(place, from); });
     window.setLicense(&license);
     QObject::connect(&app, &pixelfx::app::Application::openRequested, &window,
                      &pixelfx::ui::MainWindow::openFiles);

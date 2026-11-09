@@ -457,3 +457,29 @@ be used on Free and are asked about when a photo with them is saved.
 unchanged. Changing what is Pro is a change to `core::licensing` and the Pro sheet's table. The
 mark of a Lightroom preset can be lost only by Remove (which takes the preset's settings off) or
 by setting the same values by hand.
+
+## ADR-017: More apps from Ktechpit (2026-11-10)
+
+**Context.** The owner wants people who use PixelFx to find the other Ktechpit apps. The
+KtechpitApps module (MIT, the owner's) does this for the Ktechpit Qt apps: a catalog from
+ktechpit.com with a copy built in, cards with Get, and a full list. The mocks were approved on
+2026-11-10 (`mocks/reviews/more-apps.md`).
+
+**Decision.**
+- The module lives in `app/src/modules/KtechpitApps` as a squashed `git subtree` of its own
+  repository, so an update is one `git subtree pull`; it is linked by ui.
+- Two cards at the end of About, drawn at random each time, always shown (owner: no setting to
+  hide them); the full list as a PixelFx sheet (`MoreAppsSheet`, a `MoreAppsView` inside) from the
+  main menu and from See all. Never at start, in What's new or on the welcome page.
+- Get opens the software centre for the way PixelFx was installed (`core::packagingName`): the
+  Snap Store, the Flathub page, or the product page on Windows; web links carry
+  `?ref=pixelfx-about` or `pixelfx-menu`.
+- Module 1.1.0 was made for this: the list as a widget for a host's own sheet, a host hook for
+  See all, keyboard access and style names on the cards, and `oneLineText`, which PixelFx turns
+  on: one line per name and description with an ellipsis, so every card is one fixed height
+  (About's stack of pages keeps the height it measured before its style was applied).
+
+**Consequences.** One GET of the catalog and its icons at most weekly, 20 seconds after start,
+sending nothing about the user; the snap's `network` plug and the Flatpak's `--share=network`
+already allow it. The descriptions come from the site's catalog and are fixed there.
+

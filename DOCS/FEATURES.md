@@ -37,6 +37,7 @@ look; a **batch recipe** is a preset plus resize and save options.
 | S12 | Full screen (F11) and a distraction-free view (Tab hides the panels) | none | KEEP | done: F11, Tab while the photo has the focus, both in the View menu |
 | S13 | Translations | none | LATER | |
 | S14 | Native macOS menu bar; header menu elsewhere | none | KEEP (macOS with M7) | todo |
+| S15 | More apps from Ktechpit: two cards in About, the full list from the main menu (KtechpitApps, ADR-017) | none | KEEP | done 2026-11-10: `MoreAppsSheet`, the About strip, the main menu entry |
 
 ## B. Opening photos
 

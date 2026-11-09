@@ -102,6 +102,13 @@ void Sheet::setSize(Size size)
     fitHeight();
 }
 
+void Sheet::setResizable(const QSize& least)
+{
+    setMinimumSize(least);
+    setMaximumWidth(QWIDGETSIZE_MAX); // setSize() fixed the width
+    m_resizable = true;
+}
+
 int Sheet::heightLimit() const
 {
     constexpr int kMargin = 24; // the window shows above and below the sheet
@@ -238,6 +245,7 @@ bool Sheet::eventFilter(QObject* watched, QEvent* event)
         } else if (type == QEvent::MouseButtonPress && mouse->button() == Qt::LeftButton &&
                    edges != Qt::Edges() && windowHandle() != nullptr &&
                    windowHandle()->startSystemResize(edges)) {
+            m_followsContent = false; // the size is the user's now
             return true;
         }
     }
@@ -247,6 +255,9 @@ bool Sheet::eventFilter(QObject* watched, QEvent* event)
 void Sheet::showEvent(QShowEvent* event)
 {
     QDialog::showEvent(event);
+    if (m_followsContent) {
+        fitHeight(); // measured again now that every part has its style and size, before it is drawn
+    }
     if (m_resizable) {
         qApp->installEventFilter(this);
     }

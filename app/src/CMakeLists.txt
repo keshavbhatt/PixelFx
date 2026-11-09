@@ -5,6 +5,9 @@ find_package(Qt6 ${PIXELFX_QT_MIN_VERSION} QUIET COMPONENTS LinguistTools)
 
 # The Ktechpit licensing module (its own licence, LICENSING.md), used by services.
 add_subdirectory(modules/AccountAndLicense)
+# More apps from Ktechpit (KtechpitApps, MIT, a subtree of github.com/keshavbhatt/ktechpit-apps),
+# used by ui.
+add_subdirectory(modules/KtechpitApps)
 add_subdirectory(core)
 add_subdirectory(services)
 add_subdirectory(ui)

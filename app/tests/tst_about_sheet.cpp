@@ -2,6 +2,7 @@
 #include "core/settings/settings.h"
 #include "ui/about_sheet.h"
 #include "ui/main_window.h"
+#include "ui/more_apps_sheet.h"
 #include "ui/style.h"
 #include "ui/whats_new_sheet.h"
 
@@ -9,12 +10,16 @@
 #include <QCheckBox>
 #include <QClipboard>
 #include <QComboBox>
+#include <QFrame>
 #include <QLabel>
 #include <QListWidget>
 #include <QStandardPaths>
 #include <QTemporaryDir>
 #include <QTest>
+#include <QTextBrowser>
 #include <QTimer>
+
+#include <AppCatalog.h>
 
 using namespace Qt::StringLiterals;
 using pixelfx::ui::AboutSheet;
@@ -49,6 +54,69 @@ private Q_SLOTS:
         QStandardPaths::setTestModeEnabled(true);
         QApplication::setApplicationVersion(QString::fromLatin1(PIXELFX_VERSION)); // as Application does
         pixelfx::ui::applyStyle(*qApp);
+        ktechpit::CatalogConfig apps; // as main does, with the list built into PixelFx
+        apps.hostAppId = u"pixelfx"_s;
+        apps.oneLineText = true;
+        ktechpit::AppCatalog::init(apps);
+    }
+
+    void aboutSuggestsTwoOtherApps()
+    {
+        AboutSheet sheet;
+        const QList<QFrame*> cards = sheet.findChildren<QFrame*>(u"ktechpitAppCard"_s);
+        QCOMPARE(cards.size(), 2);
+        sheet.show();
+        QVERIFY(QTest::qWaitForWindowExposed(&sheet));
+        for (const QFrame* card : cards) {
+            QTRY_VERIFY(card->height() >= card->minimumSizeHint().height()); // two whole lines of text
+        }
+        for (const QFrame* card : cards) {
+            QVERIFY(card->accessibleName() != u"PixelFx"_s); // never PixelFx itself
+        }
+    }
+
+    void moreAppsOpensAsASheetFromTheMenuAndFromAbout()
+    {
+        pixelfx::core::Settings settings;
+        pixelfx::ui::MainWindow window(settings);
+        QStringList opened;
+        // Waits for the next sheet to open, notes its kind and closes it, as a person would.
+        const auto recordNextSheet = [&opened] {
+            auto* poll = new QTimer(qApp);
+            QObject::connect(poll, &QTimer::timeout, qApp, [poll, &opened] {
+                if (QWidget* w = QApplication::activeModalWidget()) {
+                    opened << QString::fromLatin1(w->metaObject()->className());
+                    w->close();
+                    poll->deleteLater();
+                }
+            });
+            poll->start(10);
+        };
+        recordNextSheet();
+        window.showMoreApps(u"menu"_s, &window);
+        // See all in About: About closes, then the list opens over the window.
+        AboutSheet about(&window);
+        recordNextSheet();
+        window.showMoreApps(u"about"_s, &about);
+        QTRY_COMPARE(opened.size(), 2);
+        QCOMPARE(opened, QStringList(2, u"pixelfx::ui::MoreAppsSheet"_s));
+        QVERIFY(about.result() == QDialog::Accepted);
+    }
+
+    void whatsNewIsAsTallAsItsNotesAndResizable()
+    {
+        WhatsNewSheet sheet(WhatsNewSheet::bundledChangelog(), u"2.0.0"_s, true);
+        QCOMPARE(sheet.minimumWidth(), 560);
+        QVERIFY(sheet.maximumWidth() > 560);
+        sheet.show();
+        QVERIFY(QTest::qWaitForWindowExposed(&sheet));
+        sheet.showAll();
+        QCoreApplication::processEvents();
+        auto* notes = sheet.findChild<QTextBrowser*>(u"whatsNewText"_s);
+        // The full list is as tall as its text (it once stopped at 480 px); the sheet takes all
+        // the height it may have and the notes scroll inside it.
+        QVERIFY(notes->heightForWidth(notes->width()) > 480);
+        QCOMPARE(sheet.height(), sheet.heightLimit());
     }
 
     void noticeRowsAreSpacedSoTheirHighlightsDoNotTouch()

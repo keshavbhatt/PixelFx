@@ -26,6 +26,8 @@
 #include <QVBoxLayout>
 #include <QtMath>
 
+#include <AppStrip.h>
+
 using namespace Qt::StringLiterals;
 
 namespace pixelfx::ui {
@@ -202,6 +204,13 @@ QWidget* AboutSheet::buildAboutPage()
     column->addLayout(links);
     column->addWidget(divider);
     column->addWidget(credit);
+    // The developer's other apps, two drawn afresh each time About opens.
+    auto* moreDivider = new QFrame(page);
+    moreDivider->setObjectName(u"divider"_s);
+    moreDivider->setFixedHeight(1);
+    column->addWidget(moreDivider);
+    column->addWidget(
+        new ktechpit::AppStrip(u"about"_s, 2, ktechpit::AppStrip::Orientation::Horizontal, page));
     column->addStretch();
     return page;
 }

@@ -53,6 +53,7 @@ const QList<Notice>& notices()
          u"nlohmann-json.txt"_s},
         {u"Lucide icons"_s, u"ISC"_s, QObject::tr("The icons"), u"lucide.txt"_s},
         {u"EmulsionPresets"_s, u"MIT"_s, QObject::tr("The built-in presets"), u"emulsion-presets.txt"_s},
+        {u"KtechpitApps"_s, u"MIT"_s, QObject::tr("More apps from Ktechpit"), u"ktechpit-apps.txt"_s},
     };
     return list;
 }
@@ -95,6 +96,8 @@ QString desktopName()
     return parts.join(u", "_s);
 }
 
+} // namespace
+
 QString packagingName()
 {
     if (qEnvironmentVariableIsSet("SNAP")) {
@@ -108,8 +111,6 @@ QString packagingName()
     }
     return {};
 }
-
-} // namespace
 
 DiagnosticsFacts collectDiagnostics(const QString& appVersion, const QString& revision)
 {
