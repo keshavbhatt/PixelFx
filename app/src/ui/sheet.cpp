@@ -155,13 +155,36 @@ void Sheet::paintEvent(QPaintEvent* /*event*/)
     painter.drawRoundedRect(QRectF(rect()).adjusted(0.5, 0.5, -0.5, -0.5), kRadius - 0.5, kRadius - 0.5);
 }
 
+// The sheet moves once a press on its background drags past the drag distance. A press alone
+// starts nothing, so a click on a link in a label (which passes the press on) still reaches it.
 void Sheet::mousePressEvent(QMouseEvent* event)
 {
-    if (event->button() == Qt::LeftButton && windowHandle() != nullptr && windowHandle()->startSystemMove()) {
+    if (event->button() == Qt::LeftButton) {
+        m_movePress = event->globalPosition().toPoint();
         event->accept();
         return;
     }
     QDialog::mousePressEvent(event);
+}
+
+void Sheet::mouseMoveEvent(QMouseEvent* event)
+{
+    if (m_movePress && event->buttons().testFlag(Qt::LeftButton) &&
+        (event->globalPosition().toPoint() - *m_movePress).manhattanLength() >=
+            QApplication::startDragDistance()) {
+        m_movePress.reset();
+        if (windowHandle() != nullptr && windowHandle()->startSystemMove()) {
+            event->accept();
+            return;
+        }
+    }
+    QDialog::mouseMoveEvent(event);
+}
+
+void Sheet::mouseReleaseEvent(QMouseEvent* event)
+{
+    m_movePress.reset();
+    QDialog::mouseReleaseEvent(event);
 }
 
 Qt::Edges Sheet::edgesAt(const QPoint& global) const

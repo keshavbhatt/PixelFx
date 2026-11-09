@@ -5,6 +5,7 @@
 #include "ui/export_sheet.h"
 #include "ui/pro_gate.h"
 #include "ui/pro_sheet.h"
+#include "ui/sheet.h"
 #include "ui/style.h"
 
 #include <QApplication>
@@ -17,6 +18,7 @@
 #include <QTest>
 #include <QTimer>
 #include <QUrlQuery>
+#include <QVBoxLayout>
 
 #include <pfx/settings.h>
 
@@ -198,6 +200,23 @@ private Q_SLOTS:
         license.become(LicenseService::Tier::Trial);
         QVERIFY(sheet.statusTitle().startsWith(u"Pro trial: "_s));
         QVERIFY(sheet.showsPlans());
+    }
+
+    void aClickOnALinkInASheetReachesIt()
+    {
+        // A sheet moves when its background is dragged; a click on a link it passes on must not.
+        pixelfx::ui::Sheet sheet;
+        auto* label = new QLabel(u"<a href=\"#check\">Check again</a>"_s, &sheet);
+        auto* layout = new QVBoxLayout(&sheet);
+        layout->setContentsMargins(40, 40, 40, 40);
+        layout->addWidget(label);
+        QSignalSpy activated(label, &QLabel::linkActivated);
+        sheet.show();
+        QVERIFY(QTest::qWaitForWindowExposed(&sheet));
+        const QPoint onLink(label->fontMetrics().horizontalAdvance(u"Check"_s) / 2, label->height() / 2);
+        QTest::mouseClick(label, Qt::LeftButton, {}, onLink);
+        QCOMPARE(activated.size(), 1);
+        QCOMPARE(activated.front().front().toString(), u"#check"_s);
     }
 
     void exportOnFreeListsTheProItemsAndOffersAPlan()

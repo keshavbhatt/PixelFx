@@ -4,6 +4,8 @@
 #include <QPointer>
 #include <QScrollArea>
 
+#include <optional>
+
 class QVBoxLayout;
 
 namespace pixelfx::ui {
@@ -45,6 +47,8 @@ protected:
     bool eventFilter(QObject* watched, QEvent* event) override;
     void paintEvent(QPaintEvent* event) override;
     void mousePressEvent(QMouseEvent* event) override;
+    void mouseMoveEvent(QMouseEvent* event) override;
+    void mouseReleaseEvent(QMouseEvent* event) override;
     void showEvent(QShowEvent* event) override;
     void hideEvent(QHideEvent* event) override;
 
@@ -58,6 +62,8 @@ private:
     bool m_followsContent = false;
     bool m_fitting = false;
     Qt::Edges m_cursorEdges;
+    /// Where a press that may become a move began, on the screen; unset when there is none.
+    std::optional<QPoint> m_movePress;
 };
 
 /// The part of a sheet that scrolls when the sheet is held shorter than its content (a short
