@@ -5,6 +5,7 @@
 #   pixelfx_prepare_runtime_farm <build-dir>
 #   pixelfx_runtime_lib_path     <build-dir>
 #   pixelfx_export_runtime_env   <build-dir>
+#   pixelfx_runtime_export       <name> <value>
 #
 # The dev build links against the kde-qt6-core24-sdk snap and runs against the kf6-core24 content
 # snap: the libraries the shipped snap uses (adapted from the rewrite kit). Host glibc stays
@@ -41,22 +42,42 @@ pixelfx_runtime_lib_path() {
     echo "$PIXELFX_DEPS/lib:$rt:$rt/libproxy:$build/core24-libs"
 }
 
+# Exports a variable for the app and keeps the host's value of it, so that the programs the app
+# starts (scripts/host-tools) get the host environment back: the runtime's libraries would break
+# host programs (its older readline breaks bash, its Qt breaks kde-open).
+pixelfx_runtime_export() {
+    local name="$1" value="$2"
+    case " ${PIXELFX_RUNTIME_VARS:-} " in
+        *" $name "*) ;;
+        *)
+            if [ -n "${!name+x}" ]; then
+                export "PIXELFX_HOST_$name=${!name}"
+            fi
+            export PIXELFX_RUNTIME_VARS="${PIXELFX_RUNTIME_VARS:+$PIXELFX_RUNTIME_VARS }$name"
+            ;;
+    esac
+    export "$name=$value"
+}
+
 pixelfx_export_runtime_env() {
     local build="$1"
     local runtime_path
     runtime_path="$(pixelfx_runtime_lib_path "$build")"
-    export LD_LIBRARY_PATH="$runtime_path${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
-    export QT_PLUGIN_PATH="$PIXELFX_RT/usr/lib/x86_64-linux-gnu/qt6/plugins"
+    pixelfx_runtime_export LD_LIBRARY_PATH "$runtime_path${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+    pixelfx_runtime_export QT_PLUGIN_PATH "$PIXELFX_RT/usr/lib/x86_64-linux-gnu/qt6/plugins"
     # The runtime snap ships only stub Mesa; the shipped snap gets real Mesa from the mesa-2404
     # content snap through the kde-neon-6 extension. Wire the same provider here.
     local mesa=/snap/mesa-2404/current
     if [ -d "$mesa/usr/lib/x86_64-linux-gnu/dri" ]; then
-        export LD_LIBRARY_PATH="$mesa/usr/lib/x86_64-linux-gnu:$mesa/usr/lib/x86_64-linux-gnu/dri:$LD_LIBRARY_PATH"
-        export LIBGL_DRIVERS_PATH="$mesa/usr/lib/x86_64-linux-gnu/dri"
-        export GBM_BACKENDS_PATH="$mesa/usr/lib/x86_64-linux-gnu/gbm"
-        export __EGL_VENDOR_LIBRARY_DIRS="$mesa/usr/share/glvnd/egl_vendor.d"
-        export DRIRC_CONFIGDIR="$mesa/drirc.d"
+        pixelfx_runtime_export LD_LIBRARY_PATH \
+            "$mesa/usr/lib/x86_64-linux-gnu:$mesa/usr/lib/x86_64-linux-gnu/dri:$LD_LIBRARY_PATH"
+        pixelfx_runtime_export LIBGL_DRIVERS_PATH "$mesa/usr/lib/x86_64-linux-gnu/dri"
+        pixelfx_runtime_export GBM_BACKENDS_PATH "$mesa/usr/lib/x86_64-linux-gnu/gbm"
+        pixelfx_runtime_export __EGL_VENDOR_LIBRARY_DIRS "$mesa/usr/share/glvnd/egl_vendor.d"
+        pixelfx_runtime_export DRIRC_CONFIGDIR "$mesa/drirc.d"
     fi
     # This Qt build logs to journald when stderr is not a TTY; dev runs want plain stderr.
-    export QT_FORCE_STDERR_LOGGING=1
+    pixelfx_runtime_export QT_FORCE_STDERR_LOGGING 1
+    # Links and folders the app opens go through xdg-open, found on PATH.
+    pixelfx_runtime_export PATH "$DIR/scripts/host-tools:$PATH"
 }

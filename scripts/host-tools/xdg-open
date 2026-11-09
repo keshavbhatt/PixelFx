@@ -1,0 +1,19 @@
+#!/usr/bin/env -S -u LD_LIBRARY_PATH bash
+# shellcheck shell=bash
+# xdg-open for dev runs (scripts/dev-run.sh): opens links and folders with the host's own
+# environment instead of the runtime snap's, which the app needs and host programs break on.
+# The shipped packages open them through the desktop portal instead.
+set -euo pipefail
+
+for name in ${PIXELFX_RUNTIME_VARS:-}; do
+    host="PIXELFX_HOST_$name"
+    if [ -n "${!host+x}" ]; then
+        export "$name=${!host}"
+        unset "$host"
+    else
+        unset "$name"
+    fi
+done
+unset PIXELFX_RUNTIME_VARS
+
+exec xdg-open "$@"

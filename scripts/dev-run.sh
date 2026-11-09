@@ -26,8 +26,8 @@ fi
 pixelfx_prepare_runtime_farm "$BUILD"
 pixelfx_export_runtime_env "$BUILD"
 # File dialogs and file opening go through xdg-desktop-portal, as in the shipped packages.
-export QT_QPA_PLATFORMTHEME="${QT_QPA_PLATFORMTHEME_OVERRIDE:-xdgdesktopportal}"
-export QT_LOGGING_RULES="${QT_LOGGING_RULES:-pixelfx.*.debug=true}"
+pixelfx_runtime_export QT_QPA_PLATFORMTHEME "${QT_QPA_PLATFORMTHEME_OVERRIDE:-xdgdesktopportal}"
+pixelfx_runtime_export QT_LOGGING_RULES "${QT_LOGGING_RULES:-pixelfx.*.debug=true}"
 
 [ "${1:-}" = "--" ] && shift
 cd "$DIR"
