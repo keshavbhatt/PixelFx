@@ -3,6 +3,12 @@
 Versions follow [Semantic Versioning](https://semver.org/): a new catalog field or widget option
 is a minor version, a change that needs the host app to change its code is a major version.
 
+## [1.1.1] - 2026-11-10
+
+- `AppCard`: a long name wraps instead of making its card wider than the one beside it, so
+  side-by-side cards share the width equally with any two apps (the strip test now draws 30
+  strips, so it meets long names every run).
+
 ## [1.1.0] - 2026-11-10
 
 - `MoreAppsView`: the full list as a widget, for a host that shows it in a window of its own,

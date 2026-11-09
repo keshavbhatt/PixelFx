@@ -103,6 +103,8 @@ AppCard::AppCard(const AppInfo& app, const QString& place, QWidget* parent)
 
     const bool oneLine = AppCatalog::instance()->config().oneLineText;
     QLabel* name = oneLine ? new OneLineLabel(app.name, this) : new QLabel(app.name, this);
+    // A long name wraps rather than making its card wider than the others beside it.
+    name->setWordWrap(!oneLine);
     name->setObjectName(u"ktechpitAppName"_s); // object names for the host's style sheet
     QFont bold = name->font();
     bold.setBold(true);
