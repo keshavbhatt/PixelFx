@@ -3,6 +3,19 @@
 All notable changes to PixelFx. The format follows Keep a Changelog; the What's new sheet shows
 the section of the running version.
 
+## [2.0.2] - 2026-11-10
+
+Discover more apps, and a roomier What's new.
+
+### Added
+
+- More apps from Ktechpit: About suggests two other apps by the developer of PixelFx, and the
+  main menu and See all open the full list, with a search. Get opens your software centre.
+
+### Fixed
+
+- What's new opens as tall as its notes allow, and you can resize it from its edges.
+
 ## [2.0.1] - 2026-11-10
 
 Links in windows work again.

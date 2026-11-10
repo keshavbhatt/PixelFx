@@ -92,6 +92,11 @@
   </provides>
   <content_rating type="oars-1.1"/>
   <releases>
+    <release version="2.0.2" date="2026-11-10" type="stable">
+      <description>
+        <p>Discover more apps by the developer of PixelFx from About and the main menu. What's new opens at a useful size and can be resized.</p>
+      </description>
+    </release>
     <release version="2.0.1" date="2026-11-10" type="stable">
       <description>
         <p>Links inside windows, such as the full list of changes in What's new, work again.</p>

@@ -111,6 +111,9 @@ Decisions the work stopped at; everything else went ahead within the approved mo
 - Verified: -Werror build, 45 of 45 tests (new: the About cards, More apps from the menu and
   from About, What's new's size), the About test 15 times in a row with random cards, grabs of
   About, More apps and What's new.
+- PixelFx 2.0.2 prepared: the changelog section dated 2026-11-10 (More apps from Ktechpit, What's
+  new at a useful size and resizable), the metainfo release, `project(VERSION 2.0.2)`; 2.1 stays
+  the GPU preview (D14). The snap description is unchanged, as it lists the editing features.
 
 ### 2026-11-10 (the Ktechpit Pass line in PixelFx Pro)
 
