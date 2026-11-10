@@ -36,6 +36,7 @@ Every dependency, why it is here, and its licence. A new dependency needs an ADR
 | libexif | Ubuntu 24.04's, in every build | LGPL-2.1-or-later, linked dynamically | Exif metadata through libvips | The `kde-qt6-core24-sdk` and `kf6-core24` snaps on Linux, vcpkg at the same version on Windows and macOS | ADR-015 |
 | LibRaw | 0.22.3 in every build | LGPL-2.1-only or CDDL-1.0, linked dynamically | Camera RAW reading in dev libvips | `scripts/build-deps.sh` on Linux, vcpkg on Windows and macOS (pinned in `scripts/deps-pins.sh`, ADR-015) | ADR-003, ADR-008 |
 | KtechpitApps | 1.1.1 | MIT (the owner's) | More apps from Ktechpit: the cards in About and the full list (`app/src/modules/KtechpitApps`); its catalog and icons from ktechpit.com, a copy built in | `git subtree` of github.com/keshavbhatt/ktechpit-apps, squashed | ADR-017 |
+| Microsoft Visual C++ runtime | The one of the CI build's Visual Studio (14.x) | Microsoft Visual C++ Redistributable terms (redistributable files; no notice required) | The C++ runtime of the Windows build, inside its MSIX | Copied from Visual Studio's `VCToolsRedistDir` by `scripts/ci/package-windows.ps1` | ADR-018 |
 
 ## Mocks (`DOCS/mocks`, not shipped)
 

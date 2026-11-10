@@ -7,6 +7,15 @@
 #include <QThread>
 
 #include <array>
+#ifdef Q_OS_WIN
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+// clang-format off
+#include <windows.h> // before appmodel.h, which needs it
+#include <appmodel.h>
+// clang-format on
+#endif
 #include <pfx/io.h>
 #include <pfx/log.h>
 
@@ -109,6 +118,12 @@ QString packagingName()
     if (qEnvironmentVariableIsSet("APPIMAGE")) {
         return u"AppImage"_s;
     }
+#ifdef Q_OS_WIN
+    UINT32 length = 0;
+    if (GetCurrentPackageFullName(&length, nullptr) != APPMODEL_ERROR_NO_PACKAGE) {
+        return u"Microsoft Store"_s; // runs from its MSIX package
+    }
+#endif
     return {};
 }
 

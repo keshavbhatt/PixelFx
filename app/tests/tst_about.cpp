@@ -36,7 +36,7 @@ private Q_SLOTS:
             QVERIFY2(noticeText(n).size() > 500, qPrintable(n.name));
         }
         // Table rows of the libpixelfx and app sections; doctest (tests only) and the mocks are
-        // not shipped.
+        // not shipped, and a row that says "no notice required" needs none.
         bool shipped = false;
         int rows = 0;
         for (const QString& line : QString::fromUtf8(file.readAll()).split(u'\n')) {
@@ -48,7 +48,8 @@ private Q_SLOTS:
                 continue;
             }
             const QString name = line.section(u'|', 1, 1);
-            if (name.contains(u"doctest"_s) || line.contains(u"not shipped"_s)) {
+            if (name.contains(u"doctest"_s) || line.contains(u"not shipped"_s) ||
+                line.contains(u"no notice required"_s)) {
                 continue;
             }
             ++rows;

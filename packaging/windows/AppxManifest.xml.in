@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- SPDX-FileCopyrightText: 2020-2026 Keshav Bhatt (Ktechpit) -->
+<!-- SPDX-License-Identifier: CC0-1.0 -->
+<!-- The MSIX manifest; scripts/ci/package-windows.ps1 writes @VERSION@. The identity is the one
+     Partner Center assigned to PixelFx (Store ID 9P568SPSKG2C). -->
+<Package
+  xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
+  xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
+  xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
+  IgnorableNamespaces="uap rescap">
+
+  <Identity Name="12809keshavnrj.PixelFx"
+            Publisher="CN=4537E417-5797-495B-9457-854BBCC482B6"
+            Version="@VERSION@"
+            ProcessorArchitecture="x64" />
+
+  <Properties>
+    <DisplayName>PixelFx</DisplayName>
+    <PublisherDisplayName>keshavnrj</PublisherDisplayName>
+    <Logo>Assets\StoreLogo.png</Logo>
+  </Properties>
+
+  <Dependencies>
+    <TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.17763.0" MaxVersionTested="10.0.26100.0" />
+  </Dependencies>
+
+  <Resources>
+    <Resource Language="en-us" />
+  </Resources>
+
+  <Applications>
+    <Application Id="PixelFx" Executable="bin\pixelfx.exe" EntryPoint="Windows.FullTrustApplication">
+      <uap:VisualElements DisplayName="PixelFx"
+                          Description="Photo editor, filters and presets"
+                          BackgroundColor="transparent"
+                          Square150x150Logo="Assets\Square150x150Logo.png"
+                          Square44x44Logo="Assets\Square44x44Logo.png">
+        <uap:DefaultTile Wide310x150Logo="Assets\Wide310x150Logo.png" ShortName="PixelFx" />
+      </uap:VisualElements>
+      <Extensions>
+        <uap:Extension Category="windows.fileTypeAssociation">
+          <uap:FileTypeAssociation Name="photos">
+            <uap:DisplayName>Photo</uap:DisplayName>
+            <uap:SupportedFileTypes>
+              <uap:FileType>.jpg</uap:FileType>
+              <uap:FileType>.jpeg</uap:FileType>
+              <uap:FileType>.jpe</uap:FileType>
+              <uap:FileType>.png</uap:FileType>
+              <uap:FileType>.tif</uap:FileType>
+              <uap:FileType>.tiff</uap:FileType>
+              <uap:FileType>.webp</uap:FileType>
+              <uap:FileType>.gif</uap:FileType>
+              <uap:FileType>.bmp</uap:FileType>
+              <uap:FileType>.heic</uap:FileType>
+              <uap:FileType>.heif</uap:FileType>
+              <uap:FileType>.avif</uap:FileType>
+              <uap:FileType>.jxl</uap:FileType>
+            </uap:SupportedFileTypes>
+          </uap:FileTypeAssociation>
+        </uap:Extension>
+        <uap:Extension Category="windows.fileTypeAssociation">
+          <uap:FileTypeAssociation Name="raw">
+            <uap:DisplayName>Camera RAW photo</uap:DisplayName>
+            <uap:SupportedFileTypes>
+              <uap:FileType>.dng</uap:FileType>
+              <uap:FileType>.cr2</uap:FileType>
+              <uap:FileType>.cr3</uap:FileType>
+              <uap:FileType>.crw</uap:FileType>
+              <uap:FileType>.erf</uap:FileType>
+              <uap:FileType>.raf</uap:FileType>
+              <uap:FileType>.3fr</uap:FileType>
+              <uap:FileType>.fff</uap:FileType>
+              <uap:FileType>.dcr</uap:FileType>
+              <uap:FileType>.k25</uap:FileType>
+              <uap:FileType>.kdc</uap:FileType>
+              <uap:FileType>.mos</uap:FileType>
+              <uap:FileType>.mdc</uap:FileType>
+              <uap:FileType>.mrw</uap:FileType>
+              <uap:FileType>.nef</uap:FileType>
+              <uap:FileType>.nrw</uap:FileType>
+              <uap:FileType>.orf</uap:FileType>
+              <uap:FileType>.rw2</uap:FileType>
+              <uap:FileType>.raw</uap:FileType>
+              <uap:FileType>.pef</uap:FileType>
+              <uap:FileType>.iiq</uap:FileType>
+              <uap:FileType>.srw</uap:FileType>
+              <uap:FileType>.x3f</uap:FileType>
+              <uap:FileType>.arw</uap:FileType>
+              <uap:FileType>.sr2</uap:FileType>
+              <uap:FileType>.srf</uap:FileType>
+            </uap:SupportedFileTypes>
+          </uap:FileTypeAssociation>
+        </uap:Extension>
+      </Extensions>
+    </Application>
+  </Applications>
+
+  <Capabilities>
+    <rescap:Capability Name="runFullTrust" />
+  </Capabilities>
+</Package>

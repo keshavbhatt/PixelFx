@@ -94,6 +94,17 @@ Decisions the work stopped at; everything else went ahead within the approved mo
 
 ## Sessions (newest first)
 
+### 2026-11-10 (the Microsoft Store)
+
+- The owner reserved "PixelFx" in Partner Center (Store ID 9P568SPSKG2C, to be submitted by
+  2027-02-10). ADR-018: an MSIX built by CI's Windows job, with the identity Partner Center
+  assigned, logos drawn from the app icon, file associations for photos and RAW files, and a
+  signed copy with its certificate to try out on the owner's Windows PC.
+- `core::packagingName` says "Microsoft Store" inside the package.
+- 2.0.2's CI found two tests that only failed on GitHub's runners: the monkey test met the app
+  list's network fetch (20 s after start), and About has no cards on macOS, where the list has no
+  apps yet. Tests now keep the list off the network and expect as many cards as the list has.
+
 ### 2026-11-10 (More apps from Ktechpit, What's new resizable)
 
 - Mocks for More apps from Ktechpit (`more-apps.html`, About, the main menu) and What's new at a

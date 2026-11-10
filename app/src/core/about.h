@@ -43,8 +43,8 @@ struct DiagnosticsFacts
 /// The revision PixelFx was built from (the application's "revision" property); empty when unknown.
 [[nodiscard]] QString buildRevision();
 /// The facts of the running build and system; the app passes its own version and revision.
-/// How this copy was installed: "snap", "Flatpak" or "AppImage"; empty for a distro package or a
-/// build from source.
+/// How this copy was installed: "snap", "Flatpak", "AppImage" or "Microsoft Store"; empty for a
+/// distro package or a build from source.
 [[nodiscard]] QString packagingName();
 [[nodiscard]] DiagnosticsFacts collectDiagnostics(const QString& appVersion, const QString& revision);
 /// `facts` as plain text to paste into a bug report. Pure, tested.

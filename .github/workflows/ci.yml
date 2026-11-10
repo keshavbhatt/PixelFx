@@ -116,6 +116,15 @@ jobs:
           # The offscreen platform reads fonts from a folder (Qt's own lib/fonts, which Qt no
           # longer ships); the system's fonts give the text the sizes it has on Windows.
           QT_QPA_FONTDIR: C:/Windows/Fonts
+      # The Microsoft Store packages, and a signed copy to try out (ADR-018).
+      - name: Package (MSIX)
+        shell: pwsh
+        run: scripts/ci/package-windows.ps1 -Build build -Out dist
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pixelfx-windows-msix
+          path: dist/
+          retention-days: 30
 
   macos:
     name: macOS (Clang, vcpkg)

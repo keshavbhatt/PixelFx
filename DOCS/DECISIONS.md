@@ -483,3 +483,34 @@ ktechpit.com with a copy built in, cards with Get, and a full list. The mocks we
 sending nothing about the user; the snap's `network` plug and the Flatpak's `--share=network`
 already allow it. The descriptions come from the site's catalog and are fixed there.
 
+
+## ADR-018: PixelFx on the Microsoft Store as an MSIX (2026-11-10)
+
+**Context.** After the Linux 2.0 the owner wants PixelFx on the Microsoft Store (Q8, D19). The
+Windows build already compiles and passes its tests in CI on every push (MSVC, vcpkg, Qt 6.11).
+PLAN section 8 left the installer open: MSIX or Inno. The owner reserved the name "PixelFx" in
+Partner Center on 2026-11-10 (Store ID 9P568SPSKG2C); a package must be submitted within three
+months or the name is released.
+
+**Decision.**
+- An MSIX, a full-trust desktop app, built by CI's Windows job after its tests
+  (`scripts/ci/package-windows.ps1`): the installed program, Qt by `windeployqt`, the vcpkg
+  libraries, the MSVC runtime inside the package, the lens database in `share/lensfun`. The Store
+  signs what it is given, so no code-signing certificate is bought.
+- The identity in `packaging/windows/AppxManifest.xml.in` is the one Partner Center assigned:
+  `12809keshavnrj.PixelFx`, publisher `CN=4537E417-5797-495B-9457-854BBCC482B6`, display name
+  `keshavnrj`. The package version is `project(VERSION)` with a fourth number of 0, as the Store
+  asks.
+- The logos are drawn from the app icon by `scripts/windows-store-assets.py` and committed.
+- File associations for the photo and RAW types the Linux desktop file lists.
+- CI also signs a copy with a certificate made for that run, under the Store publisher's name,
+  and keeps it with the certificate as the `pixelfx-windows-msix` artifact, so the owner can
+  install and try the exact package before it is submitted.
+- `core::packagingName` says "Microsoft Store" inside the package (`GetCurrentPackageFullName`).
+- PixelFx Pro keeps its own purchase: Store policy 10.8.7 lets apps that are not games use their
+  own payment for digital goods.
+
+**Consequences.** Each Windows CI run takes a few minutes more and keeps the packages for 30
+days. A release for the Store is the CI artifact of the tagged commit, uploaded in Partner
+Center by the owner. The Store listing text follows the rule for release text: no accounts or
+licensing.
