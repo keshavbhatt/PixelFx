@@ -38,11 +38,23 @@ $vcpkg = Join-Path $Build 'vcpkg_installed/x64-windows'
 Copy-Item "$vcpkg/bin/*.dll" $bin
 Copy-Item "$env:VCToolsRedistDir/x64/Microsoft.VC143.CRT/*.dll" $bin
 
-# The lens database, where Application::useShippedLensDatabase looks for it.
-$lenses = Join-Path $vcpkg 'share/lensfun'
-if (-not (Test-Path "$lenses/version_1")) { throw "No lens database in $lenses" }
-New-Item -ItemType Directory -Force "$stage/share" | Out-Null
-Copy-Item -Recurse $lenses "$stage/share/lensfun"
+# The lens database, where Application::useShippedLensDatabase looks for it, from the pinned
+# lensfun source (lensfun's own install puts it in the build machine's ProgramData).
+$pins = Get-Content "$root/scripts/deps-pins.sh" -Raw
+$url = [regex]::Match($pins, 'LENSFUN_URL=(\S+)').Groups[1].Value
+$sha = [regex]::Match($pins, 'LENSFUN_SHA256=(\S+)').Groups[1].Value
+$archive = Join-Path $env:RUNNER_TEMP 'lensfun.tar.gz'
+Invoke-WebRequest -Uri $url -OutFile $archive
+if ((Get-FileHash -Algorithm SHA256 $archive).Hash -ne $sha.ToUpper()) { throw 'lensfun archive hash differs' }
+$unpacked = Join-Path $env:RUNNER_TEMP 'lensfun-src'
+New-Item -ItemType Directory -Force $unpacked | Out-Null
+tar -xzf $archive -C $unpacked
+if ($LASTEXITCODE -ne 0) { throw 'tar failed' }
+$db = Get-ChildItem -Directory -Recurse $unpacked | Where-Object { $_.FullName -match '[\\/]data[\\/]db$' } | Select-Object -First 1
+if (-not $db) { throw 'No data/db in the lensfun archive' }
+$lenses = "$stage/share/lensfun/version_1"
+New-Item -ItemType Directory -Force $lenses | Out-Null
+Copy-Item "$($db.FullName)/*.xml" $lenses
 
 Get-ChildItem $stage -Recurse -Include *.pdb, *.lib, *.exp, *.ilk | Remove-Item -Force
 
@@ -59,7 +71,15 @@ function Find-SdkTool([string]$name) {
     throw "$name not found"
 }
 $makeappx = Find-SdkTool 'makeappx.exe'
+$makepri = Find-SdkTool 'makepri.exe'
 $signtool = Find-SdkTool 'signtool.exe'
+
+# The resource index, through which Windows picks a logo of the right scale and size.
+$priConfig = Join-Path $env:RUNNER_TEMP 'priconfig.xml'
+& $makepri createconfig /cf $priConfig /dq en-US /pv 10.0.0 /o
+if ($LASTEXITCODE -ne 0) { throw 'makepri createconfig failed' }
+& $makepri new /pr $stage /cf $priConfig /mn "$stage/AppxManifest.xml" /of "$stage/resources.pri" /o
+if ($LASTEXITCODE -ne 0) { throw 'makepri new failed' }
 
 $store = Join-Path $Out "PixelFx-$version-x64.msix"
 & $makeappx pack /o /d $stage /p $store
