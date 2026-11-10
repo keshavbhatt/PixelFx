@@ -20,7 +20,9 @@
 #include <QTest>
 #include <QTimer>
 
+#include <AppCatalog.h>
 #include <cstdio>
+#include <limits>
 #include <pfx/io.h>
 
 using namespace Qt::StringLiterals;
@@ -71,6 +73,10 @@ private Q_SLOTS:
     {
         QStandardPaths::setTestModeEnabled(true);
         pixelfx::ui::applyStyle(*qApp);
+        ktechpit::CatalogConfig apps; // the list built into PixelFx, never fetched while testing
+        apps.hostAppId = u"pixelfx"_s;
+        apps.refreshDelayMs = std::numeric_limits<int>::max();
+        ktechpit::AppCatalog::init(apps);
         qInstallMessageHandler(collect);
     }
 

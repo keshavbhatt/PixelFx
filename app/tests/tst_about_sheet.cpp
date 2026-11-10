@@ -20,6 +20,8 @@
 #include <QTimer>
 
 #include <AppCatalog.h>
+#include <algorithm>
+#include <limits>
 
 using namespace Qt::StringLiterals;
 using pixelfx::ui::AboutSheet;
@@ -57,6 +59,7 @@ private Q_SLOTS:
         ktechpit::CatalogConfig apps; // as main does, with the list built into PixelFx
         apps.hostAppId = u"pixelfx"_s;
         apps.oneLineText = true;
+        apps.refreshDelayMs = std::numeric_limits<int>::max(); // never fetched while testing
         ktechpit::AppCatalog::init(apps);
     }
 
@@ -64,7 +67,8 @@ private Q_SLOTS:
     {
         AboutSheet sheet;
         const QList<QFrame*> cards = sheet.findChildren<QFrame*>(u"ktechpitAppCard"_s);
-        QCOMPARE(cards.size(), 2);
+        // Two, or fewer where the list has fewer apps for this system.
+        QCOMPARE(cards.size(), std::min<qsizetype>(2, ktechpit::AppCatalog::instance()->apps().size()));
         sheet.show();
         QVERIFY(QTest::qWaitForWindowExposed(&sheet));
         for (const QFrame* card : cards) {
