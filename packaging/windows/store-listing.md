@@ -13,11 +13,11 @@ PixelFx
 
 ## Short description (up to 1000 characters; the first lines show on the product page)
 
-A quick, friendly photo editor. Pick a look and see it on your own photo, fine-tune light and colour with the controls photographers expect, and finish a whole folder of photos in one go. Your originals are never changed.
+Photo editor with one-click filters, 400+ presets and RAW support. Edit light and colour like a pro, bring your Lightroom presets and LUTs, and batch edit, resize or convert whole folders of photos. Your originals are never changed.
 
 ## Description (up to 10000 characters)
 
-PixelFx is a quick, friendly photo editor. Make every photo better while you watch: pick a look and see it on your own photo, fine-tune light and colour with the controls photographers expect, and finish a whole folder of photos in one go. Your originals are never changed.
+PixelFx is a fast photo editor with one-click filters, more than 400 presets and Camera RAW support. Pick a look and see it on your own photo, fine-tune light and colour with the controls photographers expect, bring your Lightroom presets and LUTs, and batch edit, resize or convert a whole folder of photos in one go. Your originals are never changed.
 
 Edit and save one photo at a time for free. Batch editing of many photos at once, and saving photos that use RAW files, imported presets, LUTs or watermarks, is a paid upgrade, with a free try first.
 
@@ -85,28 +85,36 @@ Discover more apps by the developer of PixelFx from About and the main menu. Wha
 
 ## Product features (up to 20, each up to 200 characters)
 
-1. One-click looks, each previewed on your own photo, with a strength slider
-2. More than 400 built-in presets in 12 categories
-3. Bring your Lightroom and Camera Raw presets (.xmp) and your .cube LUTs
-4. Light, colour, curves, colour mixer, colour grading, detail and effects
-5. One-click Auto and a live histogram with clipping warnings
-6. Crop, straighten, fix leaning buildings and square a page from its four corners
-7. Heal blemishes, dust and small objects with a spot or a brush
-8. Before and after with a draggable divider, history and named snapshots
-9. Batch: process whole folders in the background with presets, a size, a watermark and a format
-10. Rename many photos at once with tokens such as {name}, {date} and {camera}
-11. Export to JPEG, PNG, TIFF, WebP, JPEG XL and more, with sizes for the web and print
-12. Camera RAW, HEIC, AVIF and JPEG XL photos, with lens corrections from Lensfun
-13. Non-destructive: your original files are never changed
-14. Dark and light themes, full screen, and keyboard shortcuts for everything
+1. One-click photo filters (looks), each previewed on your own photo, with a strength slider
+2. More than 400 built-in presets: film, black and white, cinematic, portrait, landscape, vintage
+3. Use your Lightroom and Camera Raw presets (.xmp) and your .cube and HaldCLUT LUTs
+4. Camera RAW editor: CR2, CR3, NEF, ARW, RAF, ORF, RW2, DNG and more, plus HEIC, AVIF and JPEG XL
+5. Exposure, contrast, highlights, shadows, white balance, vibrance, curves and colour grading
+6. Colour mixer (HSL), clarity, texture, sharpening, noise reduction, dehaze, vignette and grain
+7. One-click Auto enhance and a live histogram with clipping warnings
+8. Crop, rotate, straighten, fix perspective and square a document from its four corners
+9. Heal and remove blemishes, dust and small objects with a spot or a brush
+10. Batch photo editor: apply presets to whole folders in the background
+11. Batch resize, convert (HEIC to JPG and more), compress and rename photos
+12. Add a text or logo watermark to one photo or many
+13. Export to JPEG, PNG, TIFF, WebP and JPEG XL, with sizes for Instagram, the web and print
+14. Before and after view, undo history and named snapshots
+15. Non-destructive editing: your original files are never changed
+16. Dark and light themes, full screen, and keyboard shortcuts for everything
 
 ## Search terms (up to 7, each up to 30 characters)
 
-photo editor, filters, presets, batch photo editor, raw editor, lightroom presets, lut
+photo editor, image editor, photo filters, raw photo editor, lightroom presets, batch photo editor, heic to jpg
 
 ## Screenshots (PNG, at least 1366x768, up to 10)
 
-Captions as in `packaging/screenshots/README.md`.
+Captions (up to 200 characters each):
+
+1. 1-looks: One-click photo filters, each previewed on your own photo, with a strength slider
+2. 2-controls: Light and colour controls photographers expect, with a live histogram
+3. 3-compare: Before and after on one photo, with a divider you can drag
+4. 4-batch: Batch edit, resize and convert whole folders of photos in the background
+5. 5-presets: More than 400 presets, and your own Lightroom and Camera Raw presets
 
 ## Other fields
 
