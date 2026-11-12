@@ -5,13 +5,13 @@
 | Milestone | Status |
 |---|---|
 | M0 Analysis and contract | done |
-| M1 Library core | done (2026-11-04), performance carried into M3 |
-| M2 App skeleton | done locally (2026-11-04); Windows and macOS CI written, first run after the next push |
-| M3 Editor | wip (live editing, undo, before and after started 2026-11-05) |
-| M4 Looks and presets | wip (presets, Lightroom import, looks, the look editor, LUTs: 2026-11-05) |
-| M5 Batch | wip (Batch page, runner, recipes, watermark: 2026-11-05) |
-| M6 Polish and text | todo |
-| M7 Packaging and release | todo |
+| M1 Library core | done (2026-11-04) |
+| M2 App skeleton | done; Windows and macOS build and test in CI on every push (macOS skips one test, item 4 below) |
+| M3 Editor | released in 2.0.0 (2026-11-08): a 24 MP edit renders and saves in 1.1 s, the fuzzers run clean. Left: the monitor profile (T4); the GPU preview is 2.1 (E18) |
+| M4 Looks and presets | released in 2.0.0. Left: 13 built-in looks of the planned 30 (L3); a second real Lightroom preset set for the 95% target (P5) |
+| M5 Batch | released in 2.0.0. Left: the batch engine moves from the app into the library (C6); a 500-photo run within the memory budget is not recorded yet |
+| M6 Polish and text | released in 2.0.0. Left: the Settings sheet's other pages (T1); the panel widths and last mode remembered (S2) |
+| M7 Packaging and release | Snap Store stable since 2.0.0 (now 2.0.2), amd64 only (ADR-015); Microsoft Store live 2026-11-12; Flathub submitted 2026-11-12 (flathub/flathub#11145). Left: the arm64 snap, macOS |
 
 ## Mock approvals
 
@@ -45,7 +45,7 @@
 | `report-bug.html`, `crash-notice.html` | 2026-11-07 (`mocks/reviews/report-bug.md`) | approved 2026-11-07 (reports go to GitHub issues only) |
 | `pro-sheet.html`, `pro-gate.html`, `pro-export.html`, `pro-trial-end.html` | 2026-11-08 (`mocks/reviews/pro.md`) | approved 2026-11-08 (the free limit of 10 photos per run; no trial recap) |
 
-## Waiting for the owner (2026-11-05)
+## Waiting for the owner (2026-11-05, updated 2026-11-12)
 
 Decisions the work stopped at; everything else went ahead within the approved mocks.
 
@@ -89,8 +89,8 @@ Decisions the work stopped at; everything else went ahead within the approved mo
     `mocks/reviews/drift-2026-11-06.md`): AVIF only where the build writes it, auto straighten
     and the four-corner keystone not built yet, the grading wheels in true hues, the curve line
     1.6 px, the Effects Style list 3 px and Heal's switches 2 px taller than drawn.
-15. Pushing: not yet (owner, 2026-11-06); commits stay local until the owner pushes.
-16. Next: the photo information panel (FEATURES O7); its mock approved 2026-11-06, to be built.
+15. Pushing: with the owner's consent for each push; a `v*` tag publishes the snap to stable.
+16. The photo information panel (FEATURES O7): built 2026-11-06.
 
 ## Sessions (newest first)
 
@@ -101,6 +101,15 @@ Decisions the work stopped at; everything else went ahead within the approved mo
   `packaging/windows/store-listing.md`, written for Store search). The README links it.
 - A Windows release from here: the `pixelfx-windows-msix` artifact of the tagged commit's CI run,
   uploaded by the owner as a new submission in Partner Center with its What's new.
+- A 25-second trailer (looks, presets, before and after, batch) and the 16:9 Super hero art the
+  Store needs to play it at the top of the page: added in a listing update, now certified and
+  live. The Store page fades the trailer's sides and lower part, so a second cut with the window
+  centred and the captions at the top waits in `DOCS/private/store-trailer/` for the next update.
+- README: the Snap Store and Microsoft Store badges at the same height.
+- Flathub: the owner submitted com.ktechpit.pixelfx at 2.0.2 (flathub/flathub#11145); the test
+  build's store preview matches the metainfo.
+- The old local clones of PixelFx 1 and `pixel` were removed; PixelFx 1 stays on `legacy-v1`
+  and the tag `v1-final`.
 
 ### 2026-11-10 (the Microsoft Store)
 
