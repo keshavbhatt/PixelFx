@@ -27,6 +27,8 @@ struct LookEntry
 
 /// The looks that ship with PixelFx, in display order ("Original" is no look and not here).
 [[nodiscard]] const std::vector<LookEntry>& builtInLooks();
+/// The built-in look `id` names ("builtin:film"), or null.
+[[nodiscard]] const LookEntry* builtInLook(const QString& id);
 
 class LookLibrary
 {

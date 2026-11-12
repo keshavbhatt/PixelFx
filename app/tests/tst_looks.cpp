@@ -3,6 +3,7 @@
 #include <QFile>
 #include <QFileInfo>
 #include <QSet>
+#include <QStringList>
 #include <QTemporaryDir>
 #include <QTest>
 
@@ -13,10 +14,10 @@ class TestLooks : public QObject
     Q_OBJECT
 
 private Q_SLOTS:
-    void builtInLooksAreTheMocksAndRender()
+    void builtInLooksRender()
     {
         const auto& looks = pixelfx::core::builtInLooks();
-        QCOMPARE(looks.size(), std::size_t{13}); // editor.html's tiles, Original aside
+        QCOMPARE(looks.size(), std::size_t{31}); // Original aside
         QSet<QString> ids;
         pfx::Image photo(32, 24);
         photo.fill(0.3F, 0.2F, 0.1F);
@@ -31,6 +32,19 @@ private Q_SLOTS:
             QVERIFY2(!(out.value() == photo), qPrintable(e.id)); // each look changes something
         }
         QCOMPARE(ids.size(), static_cast<qsizetype>(looks.size()));
+    }
+
+    void builtInLooksShowByCategory()
+    {
+        const QStringList order{u"color"_s, u"film"_s, u"bw"_s};
+        qsizetype last = 0;
+        for (const auto& e : pixelfx::core::builtInLooks()) {
+            const qsizetype at = order.indexOf(e.category);
+            QVERIFY2(at >= last, qPrintable(e.id)); // colour, then film, then black and white
+            last = at;
+        }
+        QCOMPARE(pixelfx::core::builtInLook(u"builtin:golden-hour"_s)->name, u"Golden hour"_s);
+        QVERIFY(pixelfx::core::builtInLook(u"builtin:gone"_s) == nullptr);
     }
 
     void strengthAndNoLook()

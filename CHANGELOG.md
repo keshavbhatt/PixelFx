@@ -3,6 +3,22 @@
 All notable changes to PixelFx. The format follows Keep a Changelog; the What's new sheet shows
 the section of the running version.
 
+## [2.0.3] - unreleased
+
+Eighteen new looks.
+
+### Added
+
+- 18 new looks, 31 in all. Color: Bright and airy, Moody, Lush, Autumn, Dusk, Neon and Crisp.
+  Film: Warm film, Cross process, Vintage, Instant, Chrome and Bleach bypass. B&W: Silver, Dark
+  sky, Infrared, Street and Cyanotype.
+
+### Changed
+
+- Looks are listed by kind: Color first, then Film, then B&W.
+- Four looks retuned: Cool is cooler, Pastel is softer, Matte keeps the photo's colour, and Teal
+  and orange leaves dark hair its own colour.
+
 ## [2.0.2] - 2026-11-10
 
 Discover more apps, and a roomier What's new.

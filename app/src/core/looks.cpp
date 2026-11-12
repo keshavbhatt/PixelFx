@@ -11,6 +11,7 @@
 #include <QStandardPaths>
 #include <QUuid>
 
+#include <algorithm>
 #include <pfx/document.h>
 #include <pfx/io.h>
 #include <pfx/lut.h>
@@ -54,9 +55,15 @@ pfx::Settings values(std::initializer_list<std::pair<const char*, double>> list)
     return s;
 }
 
-pfx::Settings withCurve(pfx::Settings s, pfx::Curve curve)
+pfx::Settings withCurve(pfx::Settings s, const char* key, pfx::Curve curve)
 {
-    s.set("curves.rgb", std::move(curve));
+    s.set(key, std::move(curve));
+    return s;
+}
+
+pfx::Settings blackAndWhite(pfx::Settings s)
+{
+    s.set("bw.enabled", true);
     return s;
 }
 
@@ -83,7 +90,8 @@ struct LookDef
     pfx::Settings settings;
 };
 
-// Draft values: a starting point for the owner to tune (PROGRESS, decisions).
+// Draft values: a starting point for the owner to tune (PROGRESS, decisions). Each list is a
+// category; together they are the display order.
 std::vector<LookDef> colourLooks()
 {
     return {
@@ -92,17 +100,11 @@ std::vector<LookDef> colourLooks()
         {"warm", QT_TRANSLATE_NOOP("Looks", "Warm"), "color", 80,
          values({{"color.wb.temperature", 20}, {"color.vibrance", 8}})},
         {"cool", QT_TRANSLATE_NOOP("Looks", "Cool"), "color", 80,
-         values({{"color.wb.temperature", -18}, {"light.highlights", -5}})},
-        {"film", QT_TRANSLATE_NOOP("Looks", "Film"), "film", 80,
-         withCurve(values({{"color.saturation", -10},
-                           {"grading.shadows.hue", 200},
-                           {"grading.shadows.amount", 10},
-                           {"grading.highlights.hue", 40},
-                           {"grading.highlights.amount", 10},
-                           {"effects.grain.amount", 20}}),
-                   {{0.0, 0.05}, {0.25, 0.22}, {0.75, 0.8}, {1.0, 0.96}})},
-        {"faded", QT_TRANSLATE_NOOP("Looks", "Faded"), "film", 80,
-         values({{"light.contrast", -15}, {"color.saturation", -15}, {"effects.fade", 35}})},
+         values({{"color.wb.temperature", -25},
+                 {"color.wb.tint", -3},
+                 {"light.highlights", -8},
+                 {"grading.shadows.hue", 205},
+                 {"grading.shadows.amount", 8}})},
         {"golden-hour", QT_TRANSLATE_NOOP("Looks", "Golden hour"), "color", 72,
          values({{"color.wb.temperature", 28},
                  {"light.highlights", -15},
@@ -115,18 +117,13 @@ std::vector<LookDef> colourLooks()
          values({{"light.contrast", 10},
                  {"color.vibrance", 10},
                  {"grading.shadows.hue", 190},
-                 {"grading.shadows.amount", 30},
+                 {"grading.shadows.amount", 22},
+                 {"grading.shadows.luminance", 5},
                  {"grading.highlights.hue", 30},
-                 {"grading.highlights.amount", 25}})},
-    };
-}
-
-std::vector<LookDef> moreLooks()
-{
-    return {
-        {"matte", QT_TRANSLATE_NOOP("Looks", "Matte"), "film", 80,
-         withCurve(values({{"light.contrast", -10}, {"color.saturation", -8}}),
-                   {{0.0, 0.08}, {0.5, 0.5}, {1.0, 0.94}})},
+                 {"grading.highlights.amount", 25},
+                 {"mixer.hue.blue", -15},
+                 {"mixer.hue.green", 15},
+                 {"mixer.saturation.orange", 10}})},
         {"dramatic", QT_TRANSLATE_NOOP("Looks", "Dramatic"), "color", 70,
          values({{"light.contrast", 35},
                  {"light.highlights", -30},
@@ -134,6 +131,175 @@ std::vector<LookDef> moreLooks()
                  {"detail.clarity", 30},
                  {"color.saturation", -10},
                  {"effects.vignette.amount", -25}})},
+        {"pastel", QT_TRANSLATE_NOOP("Looks", "Pastel"), "color", 80,
+         values({{"light.exposure", 0.2},
+                 {"light.contrast", -10},
+                 {"light.highlights", -25},
+                 {"light.shadows", 30},
+                 {"color.vibrance", -25},
+                 {"grading.shadows.hue", 200},
+                 {"grading.shadows.amount", 8},
+                 {"grading.highlights.hue", 330},
+                 {"grading.highlights.amount", 14},
+                 {"effects.fade", 30}})},
+        {"airy", QT_TRANSLATE_NOOP("Looks", "Bright and airy"), "color", 80,
+         withCurve(values({{"light.exposure", 0.4},
+                           {"light.contrast", -15},
+                           {"light.highlights", -35},
+                           {"light.shadows", 45},
+                           {"light.whites", 12},
+                           {"color.wb.temperature", -5},
+                           {"color.saturation", -10},
+                           {"mixer.luminance.orange", 12}}),
+                   "curves.rgb", {{0.0, 0.06}, {0.5, 0.57}, {1.0, 1.0}})},
+        {"moody", QT_TRANSLATE_NOOP("Looks", "Moody"), "color", 80,
+         values({{"light.exposure", -0.3},
+                 {"light.contrast", 18},
+                 {"light.highlights", -40},
+                 {"light.shadows", -10},
+                 {"color.saturation", -25},
+                 {"mixer.saturation.green", -40},
+                 {"mixer.saturation.blue", -20},
+                 {"mixer.luminance.green", -15},
+                 {"grading.shadows.hue", 210},
+                 {"grading.shadows.amount", 20},
+                 {"effects.vignette.amount", -25}})},
+        {"lush", QT_TRANSLATE_NOOP("Looks", "Lush"), "color", 80,
+         values({{"light.contrast", 10},
+                 {"color.vibrance", 15},
+                 {"mixer.hue.yellow", 25},
+                 {"mixer.hue.green", 10},
+                 {"mixer.saturation.green", 55},
+                 {"mixer.saturation.yellow", 30},
+                 {"mixer.saturation.aqua", 25},
+                 {"mixer.luminance.green", -15},
+                 {"mixer.luminance.yellow", -5}})},
+        {"autumn", QT_TRANSLATE_NOOP("Looks", "Autumn"), "color", 80,
+         values({{"color.wb.temperature", 18},
+                 {"light.contrast", 8},
+                 {"mixer.hue.green", -70},
+                 {"mixer.hue.yellow", -25},
+                 {"mixer.hue.orange", -10},
+                 {"mixer.saturation.orange", 40},
+                 {"mixer.saturation.yellow", 20},
+                 {"mixer.saturation.red", 15},
+                 {"mixer.saturation.green", -15},
+                 {"mixer.luminance.orange", -5},
+                 {"grading.highlights.hue", 35},
+                 {"grading.highlights.amount", 15}})},
+        {"dusk", QT_TRANSLATE_NOOP("Looks", "Dusk"), "color", 75,
+         values({{"color.wb.temperature", 8},
+                 {"color.wb.tint", 12},
+                 {"light.highlights", -15},
+                 {"grading.shadows.hue", 250},
+                 {"grading.shadows.amount", 25},
+                 {"grading.highlights.hue", 25},
+                 {"grading.highlights.amount", 25},
+                 {"color.vibrance", 10}})},
+        {"neon", QT_TRANSLATE_NOOP("Looks", "Neon"), "color", 75,
+         values({{"light.contrast", 20},
+                 {"light.blacks", -10},
+                 {"color.vibrance", 30},
+                 {"color.wb.tint", 15},
+                 {"grading.shadows.hue", 195},
+                 {"grading.shadows.amount", 35},
+                 {"grading.highlights.hue", 310},
+                 {"grading.highlights.amount", 25},
+                 {"mixer.hue.yellow", -15},
+                 {"mixer.saturation.purple", 20},
+                 {"mixer.saturation.magenta", 20}})},
+        {"crisp", QT_TRANSLATE_NOOP("Looks", "Crisp"), "color", 80,
+         values({{"light.contrast", 12},
+                 {"light.whites", 10},
+                 {"light.blacks", -10},
+                 {"detail.clarity", 20},
+                 {"detail.texture", 15},
+                 {"color.vibrance", 15},
+                 {"detail.dehaze", 10}})},
+    };
+}
+
+std::vector<LookDef> filmLooks()
+{
+    return {
+        {"film", QT_TRANSLATE_NOOP("Looks", "Film"), "film", 80,
+         withCurve(values({{"color.saturation", -10},
+                           {"grading.shadows.hue", 200},
+                           {"grading.shadows.amount", 10},
+                           {"grading.highlights.hue", 40},
+                           {"grading.highlights.amount", 10},
+                           {"effects.grain.amount", 20}}),
+                   "curves.rgb", {{0.0, 0.05}, {0.25, 0.22}, {0.75, 0.8}, {1.0, 0.96}})},
+        {"faded", QT_TRANSLATE_NOOP("Looks", "Faded"), "film", 80,
+         values({{"light.contrast", -15}, {"color.saturation", -15}, {"effects.fade", 35}})},
+        {"matte", QT_TRANSLATE_NOOP("Looks", "Matte"), "film", 80,
+         withCurve(values({{"light.contrast", 5}, {"color.saturation", -5}}), "curves.rgb",
+                   {{0.0, 0.13}, {0.25, 0.29}, {0.75, 0.77}, {1.0, 0.94}})},
+        {"warm-film", QT_TRANSLATE_NOOP("Looks", "Warm film"), "film", 80,
+         withCurve(values({{"light.contrast", -12},
+                           {"color.wb.temperature", 22},
+                           {"color.wb.tint", 5},
+                           {"color.saturation", -8},
+                           {"mixer.luminance.orange", 10},
+                           {"grading.shadows.hue", 35},
+                           {"grading.shadows.amount", 12},
+                           {"grading.highlights.hue", 45},
+                           {"grading.highlights.amount", 25},
+                           {"effects.fade", 15},
+                           {"effects.grain.amount", 15}}),
+                   "curves.rgb", {{0.0, 0.06}, {0.25, 0.27}, {0.75, 0.78}, {1.0, 0.95}})},
+        {"cross-process", QT_TRANSLATE_NOOP("Looks", "Cross process"), "film", 70,
+         withCurve(withCurve(withCurve(values({{"light.contrast", 10}, {"color.saturation", 15}}), "curves.r",
+                                       {{0.0, 0.0}, {0.25, 0.18}, {0.75, 0.85}, {1.0, 1.0}}),
+                             "curves.g", {{0.0, 0.0}, {0.25, 0.22}, {0.75, 0.8}, {1.0, 1.0}}),
+                   "curves.b", {{0.0, 0.15}, {0.5, 0.5}, {1.0, 0.82}})},
+        {"vintage", QT_TRANSLATE_NOOP("Looks", "Vintage"), "film", 80,
+         values({{"light.contrast", -8},
+                 {"color.saturation", -25},
+                 {"color.wb.temperature", 12},
+                 {"grading.highlights.hue", 50},
+                 {"grading.highlights.amount", 20},
+                 {"grading.shadows.hue", 30},
+                 {"grading.shadows.amount", 10},
+                 {"effects.fade", 30},
+                 {"effects.grain.amount", 25},
+                 {"effects.vignette.amount", -20}})},
+        {"instant", QT_TRANSLATE_NOOP("Looks", "Instant"), "film", 80,
+         withCurve(values({{"light.contrast", -15},
+                           {"light.highlights", -20},
+                           {"color.saturation", -10},
+                           {"grading.shadows.hue", 185},
+                           {"grading.shadows.amount", 20},
+                           {"grading.highlights.hue", 45},
+                           {"grading.highlights.amount", 18},
+                           {"effects.fade", 20},
+                           {"effects.vignette.amount", -15}}),
+                   "curves.rgb", {{0.0, 0.07}, {0.5, 0.52}, {1.0, 0.95}})},
+        {"chrome", QT_TRANSLATE_NOOP("Looks", "Chrome"), "film", 80,
+         values({{"light.contrast", 35},
+                 {"light.blacks", -25},
+                 {"light.highlights", -10},
+                 {"color.saturation", 18},
+                 {"mixer.saturation.red", 20},
+                 {"mixer.saturation.blue", 25},
+                 {"mixer.luminance.blue", -20},
+                 {"mixer.luminance.red", -5},
+                 {"grading.shadows.hue", 220},
+                 {"grading.shadows.amount", 12},
+                 {"effects.vignette.amount", -12},
+                 {"effects.grain.amount", 10}})},
+        {"bleach-bypass", QT_TRANSLATE_NOOP("Looks", "Bleach bypass"), "film", 75,
+         values({{"light.contrast", 30},
+                 {"light.highlights", -15},
+                 {"color.saturation", -45},
+                 {"detail.clarity", 15},
+                 {"effects.vignette.amount", -15}})},
+    };
+}
+
+std::vector<LookDef> blackAndWhiteLooks()
+{
+    return {
         {"mono", QT_TRANSLATE_NOOP("Looks", "Mono"), "bw", 100,
          values({{"color.saturation", -100}, {"light.contrast", 10}})},
         {"noir", QT_TRANSLATE_NOOP("Looks", "Noir"), "bw", 100,
@@ -149,14 +315,40 @@ std::vector<LookDef> moreLooks()
                  {"grading.highlights.hue", 40},
                  {"grading.highlights.amount", 20},
                  {"effects.fade", 10}})},
-        {"pastel", QT_TRANSLATE_NOOP("Looks", "Pastel"), "color", 80,
-         values({{"light.exposure", 0.15},
-                 {"light.highlights", -20},
-                 {"light.shadows", 25},
-                 {"color.vibrance", -15},
-                 {"grading.highlights.hue", 330},
-                 {"grading.highlights.amount", 8},
-                 {"effects.fade", 25}})},
+        {"silver", QT_TRANSLATE_NOOP("Looks", "Silver"), "bw", 100,
+         blackAndWhite(values({{"light.contrast", -10},
+                               {"light.highlights", -15},
+                               {"light.shadows", 20},
+                               {"effects.fade", 15}}))},
+        {"dark-sky", QT_TRANSLATE_NOOP("Looks", "Dark sky"), "bw", 100,
+         blackAndWhite(values({{"bw.mix.red", 45},
+                               {"bw.mix.orange", 35},
+                               {"bw.mix.yellow", 20},
+                               {"bw.mix.blue", -85},
+                               {"bw.mix.aqua", -60},
+                               {"bw.mix.purple", -30},
+                               {"light.contrast", 25},
+                               {"light.highlights", -10}}))},
+        {"infrared", QT_TRANSLATE_NOOP("Looks", "Infrared"), "bw", 100,
+         blackAndWhite(values({{"bw.mix.green", 100},
+                               {"bw.mix.yellow", 70},
+                               {"bw.mix.blue", -80},
+                               {"bw.mix.aqua", -60},
+                               {"light.contrast", 20},
+                               {"light.whites", 15},
+                               {"light.highlights", -10}}))},
+        {"street", QT_TRANSLATE_NOOP("Looks", "Street"), "bw", 100,
+         blackAndWhite(values({{"light.contrast", 30},
+                               {"light.blacks", -15},
+                               {"detail.clarity", 20},
+                               {"effects.grain.amount", 35},
+                               {"effects.vignette.amount", -20}}))},
+        {"cyanotype", QT_TRANSLATE_NOOP("Looks", "Cyanotype"), "bw", 90,
+         blackAndWhite(values({{"light.contrast", 10},
+                               {"grading.global.hue", 215},
+                               {"grading.global.amount", 40},
+                               {"grading.shadows.hue", 225},
+                               {"grading.shadows.amount", 30}}))},
     };
 }
 
@@ -165,9 +357,11 @@ std::vector<LookDef> moreLooks()
 const std::vector<LookEntry>& builtInLooks()
 {
     static const std::vector<LookEntry> looks = [] {
-        std::vector<LookDef> defs = colourLooks();
-        for (LookDef& d : moreLooks()) {
-            defs.push_back(std::move(d));
+        std::vector<LookDef> defs;
+        for (auto* list : {&colourLooks, &filmLooks, &blackAndWhiteLooks}) {
+            for (LookDef& d : list()) {
+                defs.push_back(std::move(d));
+            }
         }
         std::vector<LookEntry> out;
         out.reserve(defs.size());
@@ -179,6 +373,13 @@ const std::vector<LookEntry>& builtInLooks()
         return out;
     }();
     return looks;
+}
+
+const LookEntry* builtInLook(const QString& id)
+{
+    const auto& looks = builtInLooks();
+    const auto it = std::ranges::find(looks, id, &LookEntry::id);
+    return it == looks.end() ? nullptr : &*it;
 }
 
 LookLibrary::LookLibrary(QString folder)

@@ -8,7 +8,7 @@
 | M1 Library core | done (2026-11-04) |
 | M2 App skeleton | done; Windows and macOS build and test in CI on every push (macOS skips one test, item 4 below) |
 | M3 Editor | released in 2.0.0 (2026-11-08): a 24 MP edit renders and saves in 1.1 s, the fuzzers run clean. Left: the monitor profile (T4); the GPU preview is 2.1 (E18) |
-| M4 Looks and presets | released in 2.0.0. Left: 13 built-in looks of the planned 30 (L3); a second real Lightroom preset set for the 95% target (P5) |
+| M4 Looks and presets | released in 2.0.0. Left: the built-in looks shipped as files (L3); a second real Lightroom preset set for the 95% target (P5) |
 | M5 Batch | released in 2.0.0. Left: the batch engine moves from the app into the library (C6); a 500-photo run within the memory budget is not recorded yet |
 | M6 Polish and text | released in 2.0.0. Left: the Settings sheet's other pages (T1); the panel widths and last mode remembered (S2) |
 | M7 Packaging and release | Snap Store stable since 2.0.0 (now 2.0.2), amd64 only (ADR-015); Microsoft Store live 2026-11-12; Flathub submitted 2026-11-12 (flathub/flathub#11145). Left: the arm64 snap, macOS |
@@ -44,12 +44,13 @@
 | `crop-corners.html`, `-done` | 2026-11-06 (`mocks/reviews/crop-corners.md`) | approved 2026-11-07 (both results, Whole photo first) |
 | `report-bug.html`, `crash-notice.html` | 2026-11-07 (`mocks/reviews/report-bug.md`) | approved 2026-11-07 (reports go to GitHub issues only) |
 | `pro-sheet.html`, `pro-gate.html`, `pro-export.html`, `pro-trial-end.html` | 2026-11-08 (`mocks/reviews/pro.md`) | approved 2026-11-08 (the free limit of 10 photos per run; no trial recap) |
+| 18 new looks and four retuned, as contact sheets rendered by the library (not in the repository: the test photos are not ours) | 2026-11-12 (PROGRESS, the looks) | approved 2026-11-12 (the panel's layout is unchanged; the looks listed colour, film, black and white) |
 
 ## Waiting for the owner (2026-11-05, updated 2026-11-12)
 
 Decisions the work stopped at; everything else went ahead within the approved mocks.
 
-1. Built-in looks (13) and presets (4): the values are drafts by eye. Decided 2026-11-06
+1. Built-in looks (31 since 2026-11-12) and presets (4): the values are drafts by eye. Decided 2026-11-06
    (owner): keep them, the owner tunes them before the release.
 2. Kelvin white balance presets: decided 2026-11-06 (owner), RAW only, as now and as
    Lightroom. A JPEG or PNG has its white balance baked in, so a named light source cannot be
@@ -93,6 +94,26 @@ Decisions the work stopped at; everything else went ahead within the approved mo
 16. The photo information panel (FEATURES O7): built 2026-11-06.
 
 ## Sessions (newest first)
+
+### 2026-11-12 (31 looks)
+
+- 18 new looks, toward FEATURES L3's 30: Bright and airy, Moody, Lush, Autumn, Dusk, Neon and
+  Crisp (Color); Warm film, Cross process, Vintage, Instant, Chrome and Bleach bypass (Film);
+  Silver, Dark sky, Infrared, Street and Cyanotype (B&W). Made from registry steps like the
+  first 13: tone, curves (per channel for Cross process), the colour mixer, grading, the black
+  and white mix, grain, fade and vignette. No new operation and no file format change.
+- Drafted as .pfxlook files, rendered with `pfx apply --look` on six photos (portraits, a
+  forest, a flower, a street at night, a sea cliff) and compared as contact sheets at tile size;
+  Lush, Autumn, Chrome, Warm film, Dark sky, Bright and airy and Infrared were made stronger
+  until each stood apart. The owner approved them, and asked for the first 13 to be tuned where
+  needed: Cool is cooler, Pastel softer, Matte keeps its colour (it matched Faded), and Teal and
+  orange tints the shadows less, so dark hair stays dark rather than teal. Photos edited with
+  those four looks show the new values when opened again.
+- `core::builtInLooks` lists colour, then film, then black and white; `core::builtInLook(id)`
+  replaces the places that picked a look by its position (a debug hook and two tests).
+- Checks: 45 app suites (the look count, the category order, the lookup, each look renders and
+  changes a photo), the linters, and an offscreen grab of the Looks panel with all 31 tiles.
+- CHANGELOG: an unreleased 2.0.3 section with the new looks.
 
 ### 2026-11-12 (PixelFx on the Microsoft Store)
 

@@ -358,7 +358,7 @@ QDialog* photoSheet(pixelfx::ui::MainWindow& window, const QString& name)
     if (name == u"look"_s || name == u"newlook"_s) { // a built-in look's steps, unsaved, or a new look
         pixelfx::core::LookEntry entry;
         if (name == u"look"_s) {
-            entry = pixelfx::core::builtInLooks().at(3); // Film: curve, grading, grain
+            entry = *pixelfx::core::builtInLook(u"builtin:film"_s); // a curve, grading and grain
             entry.path.clear();
         }
         return new pixelfx::ui::LookEditor(doc.previewSource(), doc.settings(), entry,

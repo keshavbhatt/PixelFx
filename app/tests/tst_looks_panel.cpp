@@ -47,10 +47,10 @@ private Q_SLOTS:
         LooksPanel panel;
         panel.resize(272, 700);
         panel.setEntries(pixelfx::core::builtInLooks());
-        QCOMPARE(panel.visibleTiles().size(), std::size_t{14}); // Original and the 13 looks
+        QCOMPARE(panel.visibleTiles().size(), pixelfx::core::builtInLooks().size() + 1); // and Original
         QVERIFY(chip(panel, u"B&&W"_s));
         QTest::mouseClick(chip(panel, u"B&&W"_s), Qt::LeftButton);
-        QCOMPARE(panel.visibleTiles().size(), std::size_t{3}); // Mono, Noir, Sepia
+        QCOMPARE(panel.visibleTiles().size(), std::size_t{8}); // Mono to Cyanotype
         QTest::mouseClick(chip(panel, u"All"_s), Qt::LeftButton);
         auto* search = panel.findChild<QLineEdit*>();
         search->setText(u"gold"_s);
@@ -282,7 +282,7 @@ private Q_SLOTS:
     {
         LooksPanel panel;
         panel.setEntries(pixelfx::core::builtInLooks());
-        const pixelfx::core::LookEntry golden = pixelfx::core::builtInLooks().at(5);
+        const pixelfx::core::LookEntry golden = *pixelfx::core::builtInLook(u"builtin:golden-hour"_s);
         panel.setCurrent(pixelfx::core::builtInLooks().front().id, 72);
         QSignalSpy preview(&panel, &LooksPanel::previewRequested);
         QSignalSpy ended(&panel, &LooksPanel::previewEnded);
