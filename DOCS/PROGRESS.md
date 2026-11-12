@@ -94,6 +94,14 @@ Decisions the work stopped at; everything else went ahead within the approved mo
 
 ## Sessions (newest first)
 
+### 2026-11-12 (PixelFx on the Microsoft Store)
+
+- PixelFx 2.0.2 passed certification and is live: https://apps.microsoft.com/detail/9P568SPSKG2C
+  (submitted 2026-11-11: free, all markets, Photo + video, rated 3+ / Everyone; the listing in
+  `packaging/windows/store-listing.md`, written for Store search). The README links it.
+- A Windows release from here: the `pixelfx-windows-msix` artifact of the tagged commit's CI run,
+  uploaded by the owner as a new submission in Partner Center with its What's new.
+
 ### 2026-11-10 (the Microsoft Store)
 
 - The owner reserved "PixelFx" in Partner Center (Store ID 9P568SPSKG2C, to be submitted by

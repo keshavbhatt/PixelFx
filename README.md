@@ -10,6 +10,7 @@
 
 <p align="center">
   <a href="https://snapcraft.io/pixelfx"><img src="https://snapcraft.io/pixelfx/badge.svg" alt="Snap Store"></a>
+  <a href="https://apps.microsoft.com/detail/9P568SPSKG2C?mode=direct"><img src="https://img.shields.io/badge/Microsoft%20Store-PixelFx-0078D4" alt="Microsoft Store"></a>
   <a href="https://github.com/keshavbhatt/PixelFx/actions/workflows/ci.yml"><img src="https://github.com/keshavbhatt/PixelFx/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
   <a href="LICENSING.md"><img src="https://img.shields.io/badge/license-GPL--3.0--or--later-blue" alt="License: GPL-3.0-or-later"></a>
 </p>
@@ -74,14 +75,16 @@
 ## Install
 
 <a href="https://snapcraft.io/pixelfx"><img src="https://snapcraft.io/static/images/badges/en/snap-store-black.svg" alt="Get it from the Snap Store" height="56"></a>
+<a href="https://apps.microsoft.com/detail/9P568SPSKG2C?mode=direct"><img src="https://get.microsoft.com/images/en-us%20dark.svg" alt="Get it from Microsoft" height="56"></a>
 
-PixelFx 2 is in the Snap Store's edge channel until its release:
+On Linux:
 
 ```sh
-sudo snap install pixelfx --edge
+sudo snap install pixelfx
 ```
 
-Flathub is on its way. Windows and macOS builds will follow the Linux release.
+On Windows 10 and 11, get it from the Microsoft Store. Flathub is on its way, and macOS will
+follow.
 
 ## Build from source
 
