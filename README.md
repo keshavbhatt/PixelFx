@@ -74,8 +74,8 @@
 
 ## Install
 
-<a href="https://snapcraft.io/pixelfx"><img src="https://snapcraft.io/static/images/badges/en/snap-store-black.svg" alt="Get it from the Snap Store" height="56"></a>
-<a href="https://apps.microsoft.com/detail/9P568SPSKG2C?mode=direct"><img src="https://get.microsoft.com/images/en-us%20dark.svg" alt="Get it from Microsoft" height="56"></a>
+<a href="https://snapcraft.io/pixelfx"><img src="https://snapcraft.io/static/images/badges/en/snap-store-black.svg" alt="Get it from the Snap Store" width="182"></a>
+<a href="https://apps.microsoft.com/detail/9P568SPSKG2C?mode=direct"><img src="https://get.microsoft.com/images/en-us%20dark.svg" alt="Get it from Microsoft" width="205"></a>
 
 On Linux:
 
