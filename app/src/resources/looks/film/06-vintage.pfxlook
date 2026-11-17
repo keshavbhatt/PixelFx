@@ -1,0 +1,84 @@
+{
+  "format": "pixelfx",
+  "kind": "look",
+  "version": 1,
+  "id": "builtin:vintage",
+  "name": "Vintage",
+  "workingSpace": "rec2020-linear",
+  "body": {
+    "category": "film",
+    "defaultStrength": 80,
+    "steps": [
+      {
+        "op": "white_balance",
+        "v": 1,
+        "enabled": true,
+        "params": {
+          "wb": {
+            "temperature": 12.0
+          }
+        }
+      },
+      {
+        "op": "tone",
+        "v": 1,
+        "enabled": true,
+        "params": {
+          "contrast": -8.0
+        }
+      },
+      {
+        "op": "vibrance_saturation",
+        "v": 1,
+        "enabled": true,
+        "params": {
+          "saturation": -25.0
+        }
+      },
+      {
+        "op": "grading",
+        "v": 1,
+        "enabled": true,
+        "params": {
+          "highlights": {
+            "amount": 20.0,
+            "hue": 50.0
+          },
+          "shadows": {
+            "amount": 10.0,
+            "hue": 30.0
+          }
+        }
+      },
+      {
+        "op": "vignette",
+        "v": 1,
+        "enabled": true,
+        "params": {
+          "vignette": {
+            "amount": -20.0
+          }
+        }
+      },
+      {
+        "op": "grain",
+        "v": 1,
+        "enabled": true,
+        "params": {
+          "grain": {
+            "amount": 25.0
+          }
+        }
+      },
+      {
+        "op": "fade",
+        "v": 1,
+        "enabled": true,
+        "params": {
+          "fade": 30.0
+        }
+      }
+    ],
+    "resources": {}
+  }
+}

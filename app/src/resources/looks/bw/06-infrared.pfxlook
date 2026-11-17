@@ -1,0 +1,39 @@
+{
+  "format": "pixelfx",
+  "kind": "look",
+  "version": 1,
+  "id": "builtin:infrared",
+  "name": "Infrared",
+  "workingSpace": "rec2020-linear",
+  "body": {
+    "category": "bw",
+    "defaultStrength": 100,
+    "steps": [
+      {
+        "op": "tone",
+        "v": 1,
+        "enabled": true,
+        "params": {
+          "contrast": 20.0,
+          "highlights": -10.0,
+          "whites": 15.0
+        }
+      },
+      {
+        "op": "bw",
+        "v": 1,
+        "enabled": true,
+        "params": {
+          "enabled": true,
+          "mix": {
+            "aqua": -60.0,
+            "blue": -80.0,
+            "green": 100.0,
+            "yellow": 70.0
+          }
+        }
+      }
+    ],
+    "resources": {}
+  }
+}

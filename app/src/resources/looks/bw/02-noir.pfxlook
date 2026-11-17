@@ -1,0 +1,50 @@
+{
+  "format": "pixelfx",
+  "kind": "look",
+  "version": 1,
+  "id": "builtin:noir",
+  "name": "Noir",
+  "workingSpace": "rec2020-linear",
+  "body": {
+    "category": "bw",
+    "defaultStrength": 100,
+    "steps": [
+      {
+        "op": "tone",
+        "v": 1,
+        "enabled": true,
+        "params": {
+          "blacks": -20.0,
+          "contrast": 45.0
+        }
+      },
+      {
+        "op": "clarity",
+        "v": 1,
+        "enabled": true,
+        "params": {
+          "clarity": 20.0
+        }
+      },
+      {
+        "op": "vibrance_saturation",
+        "v": 1,
+        "enabled": true,
+        "params": {
+          "saturation": -100.0
+        }
+      },
+      {
+        "op": "vignette",
+        "v": 1,
+        "enabled": true,
+        "params": {
+          "vignette": {
+            "amount": -30.0
+          }
+        }
+      }
+    ],
+    "resources": {}
+  }
+}

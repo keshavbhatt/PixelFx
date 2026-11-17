@@ -1,0 +1,64 @@
+{
+  "format": "pixelfx",
+  "kind": "look",
+  "version": 1,
+  "id": "builtin:pastel",
+  "name": "Pastel",
+  "workingSpace": "rec2020-linear",
+  "body": {
+    "category": "color",
+    "defaultStrength": 80,
+    "steps": [
+      {
+        "op": "exposure",
+        "v": 1,
+        "enabled": true,
+        "params": {
+          "exposure": 0.2
+        }
+      },
+      {
+        "op": "tone",
+        "v": 1,
+        "enabled": true,
+        "params": {
+          "contrast": -10.0,
+          "highlights": -25.0,
+          "shadows": 30.0
+        }
+      },
+      {
+        "op": "vibrance_saturation",
+        "v": 1,
+        "enabled": true,
+        "params": {
+          "vibrance": -25.0
+        }
+      },
+      {
+        "op": "grading",
+        "v": 1,
+        "enabled": true,
+        "params": {
+          "highlights": {
+            "amount": 14.0,
+            "hue": 330.0
+          },
+          "shadows": {
+            "amount": 8.0,
+            "hue": 200.0
+          }
+        }
+      },
+      {
+        "op": "fade",
+        "v": 1,
+        "enabled": true,
+        "params": {
+          "fade": 30.0
+        }
+      }
+    ],
+    "resources": {}
+  }
+}

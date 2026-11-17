@@ -8,7 +8,7 @@
 | M1 Library core | done (2026-11-04) |
 | M2 App skeleton | done; Windows and macOS build and test in CI on every push (macOS skips one test, item 4 below) |
 | M3 Editor | released in 2.0.0 (2026-11-08): a 24 MP edit renders and saves in 1.1 s, the fuzzers run clean. Left: the monitor profile (T4); the GPU preview is 2.1 (E18) |
-| M4 Looks and presets | released in 2.0.0. Left: the built-in looks shipped as files (L3); a second real Lightroom preset set for the 95% target (P5) |
+| M4 Looks and presets | released in 2.0.0; the built-in looks ship as files since 2026-11-17 (L3). Left: a second real Lightroom preset set for the 95% target (P5) |
 | M5 Batch | released in 2.0.0. Left: the batch engine moves from the app into the library (C6); a 500-photo run within the memory budget is not recorded yet |
 | M6 Polish and text | released in 2.0.0. Left: the Settings sheet's other pages (T1); the panel widths and last mode remembered (S2) |
 | M7 Packaging and release | Snap Store stable since 2.0.0 (now 2.0.2), amd64 only (ADR-015); Microsoft Store live 2026-11-12; Flathub submitted 2026-11-12 (flathub/flathub#11145). Left: the arm64 snap, macOS |
@@ -94,6 +94,22 @@ Decisions the work stopped at; everything else went ahead within the approved mo
 16. The photo information panel (FEATURES O7): built 2026-11-06.
 
 ## Sessions (newest first)
+
+### 2026-11-17 (built-in looks as files)
+
+- The 31 built-in looks moved out of `core/looks.cpp` into one `.pfxlook` each,
+  `app/src/resources/looks/<category>/<NN>-<slug>.pfxlook`, compiled in like the preset catalog.
+  The file's `id` is the look's `builtin:<slug>`, so photos edited with a built-in look open as
+  before; NN keeps the approved order. The files were written from the code tables and compared
+  with them step by step before the tables were removed: all 31 identical.
+- A look file that does not load would drop out of the panel unnoticed, so `tst_looks` checks
+  that every shipped file loads, under the folder of its category.
+- Names come from the files, as the catalog presets' do; `i18n` holds plural forms only
+  (ADR-014), so no translation is lost.
+- Tuning a look is now editing its file; the private preview tools render the sheets straight
+  from these files.
+- Checks: dev-build with WERROR, 45/45 suites, clang-format on the changed files, an offscreen
+  grab of the Looks panel (tiles in order, hover preview).
 
 ### 2026-11-12 (31 looks)
 

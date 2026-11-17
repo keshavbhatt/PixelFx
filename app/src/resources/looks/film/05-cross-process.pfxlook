@@ -1,0 +1,88 @@
+{
+  "format": "pixelfx",
+  "kind": "look",
+  "version": 1,
+  "id": "builtin:cross-process",
+  "name": "Cross process",
+  "workingSpace": "rec2020-linear",
+  "body": {
+    "category": "film",
+    "defaultStrength": 70,
+    "steps": [
+      {
+        "op": "tone",
+        "v": 1,
+        "enabled": true,
+        "params": {
+          "contrast": 10.0
+        }
+      },
+      {
+        "op": "curves",
+        "v": 1,
+        "enabled": true,
+        "params": {
+          "b": [
+            [
+              0.0,
+              0.15
+            ],
+            [
+              0.5,
+              0.5
+            ],
+            [
+              1.0,
+              0.82
+            ]
+          ],
+          "g": [
+            [
+              0.0,
+              0.0
+            ],
+            [
+              0.25,
+              0.22
+            ],
+            [
+              0.75,
+              0.8
+            ],
+            [
+              1.0,
+              1.0
+            ]
+          ],
+          "r": [
+            [
+              0.0,
+              0.0
+            ],
+            [
+              0.25,
+              0.18
+            ],
+            [
+              0.75,
+              0.85
+            ],
+            [
+              1.0,
+              1.0
+            ]
+          ]
+        }
+      },
+      {
+        "op": "vibrance_saturation",
+        "v": 1,
+        "enabled": true,
+        "params": {
+          "saturation": 15.0
+        }
+      }
+    ],
+    "resources": {}
+  }
+}

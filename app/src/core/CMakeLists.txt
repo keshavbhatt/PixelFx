@@ -70,6 +70,12 @@ if(_pixelfx_catalog)
         BASE "${_pixelfx_resources}"
         FILES ${_pixelfx_catalog})
 endif()
+# The built-in looks (FEATURES L3): :/looks/<category>/<NN>-<slug>.pfxlook, numbered in display order.
+file(GLOB_RECURSE _pixelfx_looks CONFIGURE_DEPENDS "${_pixelfx_resources}/looks/*.pfxlook")
+qt_add_resources(pixelfx_core "pixelfx_looks"
+    PREFIX "/"
+    BASE "${_pixelfx_resources}"
+    FILES ${_pixelfx_looks})
 qt_add_resources(pixelfx_core "pixelfx_changelog"
     PREFIX "/"
     BASE "${PROJECT_SOURCE_DIR}"

@@ -1,0 +1,73 @@
+{
+  "format": "pixelfx",
+  "kind": "look",
+  "version": 1,
+  "id": "builtin:film",
+  "name": "Film",
+  "workingSpace": "rec2020-linear",
+  "body": {
+    "category": "film",
+    "defaultStrength": 80,
+    "steps": [
+      {
+        "op": "curves",
+        "v": 1,
+        "enabled": true,
+        "params": {
+          "rgb": [
+            [
+              0.0,
+              0.05
+            ],
+            [
+              0.25,
+              0.22
+            ],
+            [
+              0.75,
+              0.8
+            ],
+            [
+              1.0,
+              0.96
+            ]
+          ]
+        }
+      },
+      {
+        "op": "vibrance_saturation",
+        "v": 1,
+        "enabled": true,
+        "params": {
+          "saturation": -10.0
+        }
+      },
+      {
+        "op": "grading",
+        "v": 1,
+        "enabled": true,
+        "params": {
+          "highlights": {
+            "amount": 10.0,
+            "hue": 40.0
+          },
+          "shadows": {
+            "amount": 10.0,
+            "hue": 200.0
+          }
+        }
+      },
+      {
+        "op": "grain",
+        "v": 1,
+        "enabled": true,
+        "params": {
+          "grain": {
+            "amount": 20.0
+          }
+        }
+      }
+    ],
+    "resources": {}
+  }
+}

@@ -1,0 +1,65 @@
+{
+  "format": "pixelfx",
+  "kind": "look",
+  "version": 1,
+  "id": "builtin:autumn",
+  "name": "Autumn",
+  "workingSpace": "rec2020-linear",
+  "body": {
+    "category": "color",
+    "defaultStrength": 80,
+    "steps": [
+      {
+        "op": "white_balance",
+        "v": 1,
+        "enabled": true,
+        "params": {
+          "wb": {
+            "temperature": 18.0
+          }
+        }
+      },
+      {
+        "op": "tone",
+        "v": 1,
+        "enabled": true,
+        "params": {
+          "contrast": 8.0
+        }
+      },
+      {
+        "op": "mixer",
+        "v": 1,
+        "enabled": true,
+        "params": {
+          "hue": {
+            "green": -70.0,
+            "orange": -10.0,
+            "yellow": -25.0
+          },
+          "luminance": {
+            "orange": -5.0
+          },
+          "saturation": {
+            "green": -15.0,
+            "orange": 40.0,
+            "red": 15.0,
+            "yellow": 20.0
+          }
+        }
+      },
+      {
+        "op": "grading",
+        "v": 1,
+        "enabled": true,
+        "params": {
+          "highlights": {
+            "amount": 15.0,
+            "hue": 35.0
+          }
+        }
+      }
+    ],
+    "resources": {}
+  }
+}

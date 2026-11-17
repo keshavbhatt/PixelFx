@@ -136,6 +136,9 @@ internal units, so a file reads like the panel.
   at Amount 0 keeps the photo's own. PixelFx uses it to know which photos carry an imported
   Lightroom preset.
 - `look.id` refers to a look by id: `builtin:<slug>` for shipped looks, a UUID for the user's.
+  The shipped looks are ordinary `.pfxlook` files (section 3) whose `id` is that `builtin:<slug>`,
+  compiled into the app from `app/src/resources/looks/<category>/<NN>-<slug>.pfxlook`, NN the
+  display order.
   A file that must stand alone (export, sharing) embeds the look instead:
   `"look": { "embedded": { ...look body with its id and name... }, "strength": 72 }`; a batch
   recipe keeps its embedded looks once each in its `looks` list (section 4).

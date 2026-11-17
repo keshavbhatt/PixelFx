@@ -1,0 +1,57 @@
+{
+  "format": "pixelfx",
+  "kind": "look",
+  "version": 1,
+  "id": "builtin:dusk",
+  "name": "Dusk",
+  "workingSpace": "rec2020-linear",
+  "body": {
+    "category": "color",
+    "defaultStrength": 75,
+    "steps": [
+      {
+        "op": "white_balance",
+        "v": 1,
+        "enabled": true,
+        "params": {
+          "wb": {
+            "temperature": 8.0,
+            "tint": 12.0
+          }
+        }
+      },
+      {
+        "op": "tone",
+        "v": 1,
+        "enabled": true,
+        "params": {
+          "highlights": -15.0
+        }
+      },
+      {
+        "op": "vibrance_saturation",
+        "v": 1,
+        "enabled": true,
+        "params": {
+          "vibrance": 10.0
+        }
+      },
+      {
+        "op": "grading",
+        "v": 1,
+        "enabled": true,
+        "params": {
+          "highlights": {
+            "amount": 25.0,
+            "hue": 25.0
+          },
+          "shadows": {
+            "amount": 25.0,
+            "hue": 250.0
+          }
+        }
+      }
+    ],
+    "resources": {}
+  }
+}

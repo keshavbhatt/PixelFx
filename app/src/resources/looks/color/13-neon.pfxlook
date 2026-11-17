@@ -1,0 +1,71 @@
+{
+  "format": "pixelfx",
+  "kind": "look",
+  "version": 1,
+  "id": "builtin:neon",
+  "name": "Neon",
+  "workingSpace": "rec2020-linear",
+  "body": {
+    "category": "color",
+    "defaultStrength": 75,
+    "steps": [
+      {
+        "op": "white_balance",
+        "v": 1,
+        "enabled": true,
+        "params": {
+          "wb": {
+            "tint": 15.0
+          }
+        }
+      },
+      {
+        "op": "tone",
+        "v": 1,
+        "enabled": true,
+        "params": {
+          "blacks": -10.0,
+          "contrast": 20.0
+        }
+      },
+      {
+        "op": "mixer",
+        "v": 1,
+        "enabled": true,
+        "params": {
+          "hue": {
+            "yellow": -15.0
+          },
+          "saturation": {
+            "magenta": 20.0,
+            "purple": 20.0
+          }
+        }
+      },
+      {
+        "op": "vibrance_saturation",
+        "v": 1,
+        "enabled": true,
+        "params": {
+          "vibrance": 30.0
+        }
+      },
+      {
+        "op": "grading",
+        "v": 1,
+        "enabled": true,
+        "params": {
+          "highlights": {
+            "amount": 25.0,
+            "hue": 310.0
+          },
+          "shadows": {
+            "amount": 35.0,
+            "hue": 195.0
+          }
+        }
+      }
+    ],
+    "resources": {}
+  }
+}

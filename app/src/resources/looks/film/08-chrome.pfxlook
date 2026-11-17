@@ -1,0 +1,79 @@
+{
+  "format": "pixelfx",
+  "kind": "look",
+  "version": 1,
+  "id": "builtin:chrome",
+  "name": "Chrome",
+  "workingSpace": "rec2020-linear",
+  "body": {
+    "category": "film",
+    "defaultStrength": 80,
+    "steps": [
+      {
+        "op": "tone",
+        "v": 1,
+        "enabled": true,
+        "params": {
+          "blacks": -25.0,
+          "contrast": 35.0,
+          "highlights": -10.0
+        }
+      },
+      {
+        "op": "mixer",
+        "v": 1,
+        "enabled": true,
+        "params": {
+          "luminance": {
+            "blue": -20.0,
+            "red": -5.0
+          },
+          "saturation": {
+            "blue": 25.0,
+            "red": 20.0
+          }
+        }
+      },
+      {
+        "op": "vibrance_saturation",
+        "v": 1,
+        "enabled": true,
+        "params": {
+          "saturation": 18.0
+        }
+      },
+      {
+        "op": "grading",
+        "v": 1,
+        "enabled": true,
+        "params": {
+          "shadows": {
+            "amount": 12.0,
+            "hue": 220.0
+          }
+        }
+      },
+      {
+        "op": "vignette",
+        "v": 1,
+        "enabled": true,
+        "params": {
+          "vignette": {
+            "amount": -12.0
+          }
+        }
+      },
+      {
+        "op": "grain",
+        "v": 1,
+        "enabled": true,
+        "params": {
+          "grain": {
+            "amount": 10.0
+          }
+        }
+      }
+    ],
+    "resources": {}
+  }
+}

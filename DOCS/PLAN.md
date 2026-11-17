@@ -76,7 +76,7 @@ pixelfx/
     CMakeLists.txt           add_subdirectory(../libs/pixelfx-core)
     src/{app,core,services,platform,models,ui,modules/AccountAndLicense}/
     tests/
-  presets/                   built-in looks and presets (.pfxlook, .pfxpreset)
+    src/resources/           built-in looks and presets (looks/*.pfxlook, presets/*.pfxpreset)
   scripts/                   dev-build.sh, dev-run.sh, snap-runtime-env.sh, screenshots.py
   snap/snapcraft.yaml  packaging/ (desktop, metainfo, flatpak)  .github/workflows/
 ```

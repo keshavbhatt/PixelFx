@@ -1,0 +1,56 @@
+{
+  "format": "pixelfx",
+  "kind": "look",
+  "version": 1,
+  "id": "builtin:matte",
+  "name": "Matte",
+  "workingSpace": "rec2020-linear",
+  "body": {
+    "category": "film",
+    "defaultStrength": 80,
+    "steps": [
+      {
+        "op": "tone",
+        "v": 1,
+        "enabled": true,
+        "params": {
+          "contrast": 5.0
+        }
+      },
+      {
+        "op": "curves",
+        "v": 1,
+        "enabled": true,
+        "params": {
+          "rgb": [
+            [
+              0.0,
+              0.13
+            ],
+            [
+              0.25,
+              0.29
+            ],
+            [
+              0.75,
+              0.77
+            ],
+            [
+              1.0,
+              0.94
+            ]
+          ]
+        }
+      },
+      {
+        "op": "vibrance_saturation",
+        "v": 1,
+        "enabled": true,
+        "params": {
+          "saturation": -5.0
+        }
+      }
+    ],
+    "resources": {}
+  }
+}

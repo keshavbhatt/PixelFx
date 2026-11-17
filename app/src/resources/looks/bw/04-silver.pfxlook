@@ -1,0 +1,41 @@
+{
+  "format": "pixelfx",
+  "kind": "look",
+  "version": 1,
+  "id": "builtin:silver",
+  "name": "Silver",
+  "workingSpace": "rec2020-linear",
+  "body": {
+    "category": "bw",
+    "defaultStrength": 100,
+    "steps": [
+      {
+        "op": "tone",
+        "v": 1,
+        "enabled": true,
+        "params": {
+          "contrast": -10.0,
+          "highlights": -15.0,
+          "shadows": 20.0
+        }
+      },
+      {
+        "op": "bw",
+        "v": 1,
+        "enabled": true,
+        "params": {
+          "enabled": true
+        }
+      },
+      {
+        "op": "fade",
+        "v": 1,
+        "enabled": true,
+        "params": {
+          "fade": 15.0
+        }
+      }
+    ],
+    "resources": {}
+  }
+}

@@ -1,0 +1,39 @@
+{
+  "format": "pixelfx",
+  "kind": "look",
+  "version": 1,
+  "id": "builtin:faded",
+  "name": "Faded",
+  "workingSpace": "rec2020-linear",
+  "body": {
+    "category": "film",
+    "defaultStrength": 80,
+    "steps": [
+      {
+        "op": "tone",
+        "v": 1,
+        "enabled": true,
+        "params": {
+          "contrast": -15.0
+        }
+      },
+      {
+        "op": "vibrance_saturation",
+        "v": 1,
+        "enabled": true,
+        "params": {
+          "saturation": -15.0
+        }
+      },
+      {
+        "op": "fade",
+        "v": 1,
+        "enabled": true,
+        "params": {
+          "fade": 35.0
+        }
+      }
+    ],
+    "resources": {}
+  }
+}

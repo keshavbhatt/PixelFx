@@ -1,0 +1,61 @@
+{
+  "format": "pixelfx",
+  "kind": "look",
+  "version": 1,
+  "id": "builtin:teal-and-orange",
+  "name": "Teal and orange",
+  "workingSpace": "rec2020-linear",
+  "body": {
+    "category": "color",
+    "defaultStrength": 75,
+    "steps": [
+      {
+        "op": "tone",
+        "v": 1,
+        "enabled": true,
+        "params": {
+          "contrast": 10.0
+        }
+      },
+      {
+        "op": "mixer",
+        "v": 1,
+        "enabled": true,
+        "params": {
+          "hue": {
+            "blue": -15.0,
+            "green": 15.0
+          },
+          "saturation": {
+            "orange": 10.0
+          }
+        }
+      },
+      {
+        "op": "vibrance_saturation",
+        "v": 1,
+        "enabled": true,
+        "params": {
+          "vibrance": 10.0
+        }
+      },
+      {
+        "op": "grading",
+        "v": 1,
+        "enabled": true,
+        "params": {
+          "highlights": {
+            "amount": 25.0,
+            "hue": 30.0
+          },
+          "shadows": {
+            "amount": 22.0,
+            "hue": 190.0,
+            "luminance": 5.0
+          }
+        }
+      }
+    ],
+    "resources": {}
+  }
+}

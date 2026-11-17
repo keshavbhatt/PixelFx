@@ -1,0 +1,51 @@
+{
+  "format": "pixelfx",
+  "kind": "look",
+  "version": 1,
+  "id": "builtin:lush",
+  "name": "Lush",
+  "workingSpace": "rec2020-linear",
+  "body": {
+    "category": "color",
+    "defaultStrength": 80,
+    "steps": [
+      {
+        "op": "tone",
+        "v": 1,
+        "enabled": true,
+        "params": {
+          "contrast": 10.0
+        }
+      },
+      {
+        "op": "mixer",
+        "v": 1,
+        "enabled": true,
+        "params": {
+          "hue": {
+            "green": 10.0,
+            "yellow": 25.0
+          },
+          "luminance": {
+            "green": -15.0,
+            "yellow": -5.0
+          },
+          "saturation": {
+            "aqua": 25.0,
+            "green": 55.0,
+            "yellow": 30.0
+          }
+        }
+      },
+      {
+        "op": "vibrance_saturation",
+        "v": 1,
+        "enabled": true,
+        "params": {
+          "vibrance": 15.0
+        }
+      }
+    ],
+    "resources": {}
+  }
+}

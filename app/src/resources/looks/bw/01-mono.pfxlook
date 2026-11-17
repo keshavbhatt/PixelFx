@@ -1,0 +1,31 @@
+{
+  "format": "pixelfx",
+  "kind": "look",
+  "version": 1,
+  "id": "builtin:mono",
+  "name": "Mono",
+  "workingSpace": "rec2020-linear",
+  "body": {
+    "category": "bw",
+    "defaultStrength": 100,
+    "steps": [
+      {
+        "op": "tone",
+        "v": 1,
+        "enabled": true,
+        "params": {
+          "contrast": 10.0
+        }
+      },
+      {
+        "op": "vibrance_saturation",
+        "v": 1,
+        "enabled": true,
+        "params": {
+          "saturation": -100.0
+        }
+      }
+    ],
+    "resources": {}
+  }
+}

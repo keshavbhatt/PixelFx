@@ -1,0 +1,46 @@
+{
+  "format": "pixelfx",
+  "kind": "look",
+  "version": 1,
+  "id": "builtin:sepia",
+  "name": "Sepia",
+  "workingSpace": "rec2020-linear",
+  "body": {
+    "category": "bw",
+    "defaultStrength": 90,
+    "steps": [
+      {
+        "op": "vibrance_saturation",
+        "v": 1,
+        "enabled": true,
+        "params": {
+          "saturation": -100.0
+        }
+      },
+      {
+        "op": "grading",
+        "v": 1,
+        "enabled": true,
+        "params": {
+          "highlights": {
+            "amount": 20.0,
+            "hue": 40.0
+          },
+          "shadows": {
+            "amount": 30.0,
+            "hue": 30.0
+          }
+        }
+      },
+      {
+        "op": "fade",
+        "v": 1,
+        "enabled": true,
+        "params": {
+          "fade": 10.0
+        }
+      }
+    ],
+    "resources": {}
+  }
+}

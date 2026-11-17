@@ -1,5 +1,7 @@
 #include "core/looks.h"
 
+#include <QDir>
+#include <QDirIterator>
 #include <QFile>
 #include <QFileInfo>
 #include <QSet>
@@ -14,6 +16,25 @@ class TestLooks : public QObject
     Q_OBJECT
 
 private Q_SLOTS:
+    void builtInLooksComeFromFiles()
+    {
+        // Every shipped file loads: one that does not would drop out of the panel unnoticed.
+        const auto& looks = pixelfx::core::builtInLooks();
+        QStringList files;
+        QDirIterator it(u":/looks"_s, {u"*.pfxlook"_s}, QDir::Files, QDirIterator::Subdirectories);
+        while (it.hasNext()) {
+            files << it.next();
+        }
+        QCOMPARE(files.size(), static_cast<qsizetype>(looks.size()));
+        for (const QString& file : files) {
+            const QFileInfo info(file);
+            const QString slug = info.completeBaseName().section(u'-', 1);
+            const auto* entry = pixelfx::core::builtInLook(u"builtin:"_s + slug);
+            QVERIFY2(entry != nullptr, qPrintable(file));
+            QCOMPARE(entry->category, info.dir().dirName()); // the folder is the category
+        }
+    }
+
     void builtInLooksRender()
     {
         const auto& looks = pixelfx::core::builtInLooks();

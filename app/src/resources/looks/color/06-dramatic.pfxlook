@@ -1,0 +1,51 @@
+{
+  "format": "pixelfx",
+  "kind": "look",
+  "version": 1,
+  "id": "builtin:dramatic",
+  "name": "Dramatic",
+  "workingSpace": "rec2020-linear",
+  "body": {
+    "category": "color",
+    "defaultStrength": 70,
+    "steps": [
+      {
+        "op": "tone",
+        "v": 1,
+        "enabled": true,
+        "params": {
+          "contrast": 35.0,
+          "highlights": -30.0,
+          "shadows": 15.0
+        }
+      },
+      {
+        "op": "clarity",
+        "v": 1,
+        "enabled": true,
+        "params": {
+          "clarity": 30.0
+        }
+      },
+      {
+        "op": "vibrance_saturation",
+        "v": 1,
+        "enabled": true,
+        "params": {
+          "saturation": -10.0
+        }
+      },
+      {
+        "op": "vignette",
+        "v": 1,
+        "enabled": true,
+        "params": {
+          "vignette": {
+            "amount": -25.0
+          }
+        }
+      }
+    ],
+    "resources": {}
+  }
+}

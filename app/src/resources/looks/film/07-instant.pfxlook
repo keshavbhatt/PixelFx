@@ -1,0 +1,86 @@
+{
+  "format": "pixelfx",
+  "kind": "look",
+  "version": 1,
+  "id": "builtin:instant",
+  "name": "Instant",
+  "workingSpace": "rec2020-linear",
+  "body": {
+    "category": "film",
+    "defaultStrength": 80,
+    "steps": [
+      {
+        "op": "tone",
+        "v": 1,
+        "enabled": true,
+        "params": {
+          "contrast": -15.0,
+          "highlights": -20.0
+        }
+      },
+      {
+        "op": "curves",
+        "v": 1,
+        "enabled": true,
+        "params": {
+          "rgb": [
+            [
+              0.0,
+              0.07
+            ],
+            [
+              0.5,
+              0.52
+            ],
+            [
+              1.0,
+              0.95
+            ]
+          ]
+        }
+      },
+      {
+        "op": "vibrance_saturation",
+        "v": 1,
+        "enabled": true,
+        "params": {
+          "saturation": -10.0
+        }
+      },
+      {
+        "op": "grading",
+        "v": 1,
+        "enabled": true,
+        "params": {
+          "highlights": {
+            "amount": 18.0,
+            "hue": 45.0
+          },
+          "shadows": {
+            "amount": 20.0,
+            "hue": 185.0
+          }
+        }
+      },
+      {
+        "op": "vignette",
+        "v": 1,
+        "enabled": true,
+        "params": {
+          "vignette": {
+            "amount": -15.0
+          }
+        }
+      },
+      {
+        "op": "fade",
+        "v": 1,
+        "enabled": true,
+        "params": {
+          "fade": 20.0
+        }
+      }
+    ],
+    "resources": {}
+  }
+}

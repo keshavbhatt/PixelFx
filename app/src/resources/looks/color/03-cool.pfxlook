@@ -1,0 +1,45 @@
+{
+  "format": "pixelfx",
+  "kind": "look",
+  "version": 1,
+  "id": "builtin:cool",
+  "name": "Cool",
+  "workingSpace": "rec2020-linear",
+  "body": {
+    "category": "color",
+    "defaultStrength": 80,
+    "steps": [
+      {
+        "op": "white_balance",
+        "v": 1,
+        "enabled": true,
+        "params": {
+          "wb": {
+            "temperature": -25.0,
+            "tint": -3.0
+          }
+        }
+      },
+      {
+        "op": "tone",
+        "v": 1,
+        "enabled": true,
+        "params": {
+          "highlights": -8.0
+        }
+      },
+      {
+        "op": "grading",
+        "v": 1,
+        "enabled": true,
+        "params": {
+          "shadows": {
+            "amount": 8.0,
+            "hue": 205.0
+          }
+        }
+      }
+    ],
+    "resources": {}
+  }
+}

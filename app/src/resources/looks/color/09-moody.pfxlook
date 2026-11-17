@@ -1,0 +1,76 @@
+{
+  "format": "pixelfx",
+  "kind": "look",
+  "version": 1,
+  "id": "builtin:moody",
+  "name": "Moody",
+  "workingSpace": "rec2020-linear",
+  "body": {
+    "category": "color",
+    "defaultStrength": 80,
+    "steps": [
+      {
+        "op": "exposure",
+        "v": 1,
+        "enabled": true,
+        "params": {
+          "exposure": -0.3
+        }
+      },
+      {
+        "op": "tone",
+        "v": 1,
+        "enabled": true,
+        "params": {
+          "contrast": 18.0,
+          "highlights": -40.0,
+          "shadows": -10.0
+        }
+      },
+      {
+        "op": "mixer",
+        "v": 1,
+        "enabled": true,
+        "params": {
+          "luminance": {
+            "green": -15.0
+          },
+          "saturation": {
+            "blue": -20.0,
+            "green": -40.0
+          }
+        }
+      },
+      {
+        "op": "vibrance_saturation",
+        "v": 1,
+        "enabled": true,
+        "params": {
+          "saturation": -25.0
+        }
+      },
+      {
+        "op": "grading",
+        "v": 1,
+        "enabled": true,
+        "params": {
+          "shadows": {
+            "amount": 20.0,
+            "hue": 210.0
+          }
+        }
+      },
+      {
+        "op": "vignette",
+        "v": 1,
+        "enabled": true,
+        "params": {
+          "vignette": {
+            "amount": -25.0
+          }
+        }
+      }
+    ],
+    "resources": {}
+  }
+}

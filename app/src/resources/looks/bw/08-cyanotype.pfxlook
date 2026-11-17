@@ -1,0 +1,46 @@
+{
+  "format": "pixelfx",
+  "kind": "look",
+  "version": 1,
+  "id": "builtin:cyanotype",
+  "name": "Cyanotype",
+  "workingSpace": "rec2020-linear",
+  "body": {
+    "category": "bw",
+    "defaultStrength": 90,
+    "steps": [
+      {
+        "op": "tone",
+        "v": 1,
+        "enabled": true,
+        "params": {
+          "contrast": 10.0
+        }
+      },
+      {
+        "op": "bw",
+        "v": 1,
+        "enabled": true,
+        "params": {
+          "enabled": true
+        }
+      },
+      {
+        "op": "grading",
+        "v": 1,
+        "enabled": true,
+        "params": {
+          "global": {
+            "amount": 40.0,
+            "hue": 215.0
+          },
+          "shadows": {
+            "amount": 30.0,
+            "hue": 225.0
+          }
+        }
+      }
+    ],
+    "resources": {}
+  }
+}
