@@ -203,7 +203,8 @@ private:
     void scheduleSave();
     /// What the preview renders: the settings, without the crop while cropping.
     [[nodiscard]] pfx::Settings renderSettings() const;
-    void requestRender();
+    /// `live`: a step of a change still being made (setSettings), which may render at half size.
+    void requestRender(bool live = false);
     /// Renders the original again when the geometry it needs changed.
     void refreshOriginal();
     void scheduleFull();

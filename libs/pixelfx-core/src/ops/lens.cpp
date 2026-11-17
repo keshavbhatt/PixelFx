@@ -7,6 +7,7 @@
 #include "image/filters.h"
 #include "ops/hue_bands.h"
 #include "ops/ops.h"
+#include "ops/value_table.h"
 #include "pfx/resample.h"
 
 #include <array>
@@ -26,7 +27,7 @@ Plane channel(const Image& image, int c)
     for (int y = 0; y < image.height(); ++y) {
         const float* p = image.row(y);
         for (int x = 0; x < image.width(); ++x, p += 4) {
-            out.at(x, y) = static_cast<float>(color::perceptualEncode(std::max(0.0, double{p[c]})));
+            out.at(x, y) = static_cast<float>(perceptualEncodeFast(std::max(0.0, double{p[c]})));
         }
     }
     return out;
@@ -168,7 +169,7 @@ Plane edgeStrength(const Image& image)
         const float* p = image.row(y);
         for (int x = 0; x < image.width(); ++x, p += 4) {
             luma.at(x, y) = static_cast<float>(
-                color::perceptualEncode(std::max(0.0, color::luminance(p[0], p[1], p[2]))));
+                perceptualEncodeFast(std::max(0.0, color::luminance(p[0], p[1], p[2]))));
         }
     }
     Plane edges(image.width(), image.height());
@@ -211,7 +212,7 @@ void defringeApply(Image& image, const Settings& s, const OpContext& ctx)
                 }
                 std::array<double, 3> e{};
                 for (std::size_t c = 0; c < 3; ++c) {
-                    e.at(c) = color::perceptualEncode(std::max(0.0, double{p[c]}));
+                    e.at(c) = perceptualEncodeFast(std::max(0.0, double{p[c]}));
                 }
                 const Hsv hsv = toHsv(e);
                 const double grey = edge * std::max(purple.amount * inRange(purple, hsv.hue),

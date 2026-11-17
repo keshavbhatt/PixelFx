@@ -43,6 +43,7 @@ pixelfx_add_test(tst_qt_image_bridge tst_qt_image_bridge.cpp pixelfx_services)
 pixelfx_add_test(tst_exporter        tst_exporter.cpp        pixelfx_services GUI)
 pixelfx_add_test(tst_batch           tst_batch.cpp           pixelfx_services GUI)
 pixelfx_add_test(tst_document        tst_document.cpp        pixelfx_services GUI)
+pixelfx_add_test(tst_render_scheduler tst_render_scheduler.cpp pixelfx_services GUI)
 # app and ui
 pixelfx_add_test(tst_cli_options     tst_cli_options.cpp     pixelfx_app)
 pixelfx_add_test(tst_single_instance tst_single_instance.cpp pixelfx_app)

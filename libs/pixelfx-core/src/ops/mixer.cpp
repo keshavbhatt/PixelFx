@@ -4,6 +4,7 @@
 // hue lies between, and fades out toward grey so neutral tones never shift.
 #include "ops/hue_bands.h"
 #include "ops/ops.h"
+#include "ops/value_table.h"
 
 #include <algorithm>
 #include <array>
@@ -47,11 +48,12 @@ Band blend(const std::array<Band, 8>& bands, double hue)
             a.luminance + (t * (b.luminance - a.luminance))};
 }
 
+/// `h` in degrees from 0 up to 360.
 void hsvToRgb(double h, double s, double v, double* rgb)
 {
     const double c = v * s;
-    const double hp = std::fmod(h, 360.0) / 60.0;
-    const double x = c * (1.0 - std::abs(std::fmod(hp, 2.0) - 1.0));
+    const double hp = h / 60.0;
+    const double x = c * (1.0 - std::abs(hp - (2.0 * std::floor(hp / 2.0)) - 1.0));
     double r = 0;
     double g = 0;
     double b = 0;
@@ -108,7 +110,7 @@ void mixerApply(Image& image, const Settings& s, const OpContext& ctx)
             for (int x = 0; x < image.width(); ++x, p += 4) {
                 std::array<double, 3> e{};
                 for (std::size_t c = 0; c < 3; ++c) {
-                    e.at(c) = color::perceptualEncode(std::max(0.0, double{p[c]}));
+                    e.at(c) = perceptualEncodeFast(std::max(0.0, double{p[c]}));
                 }
                 const Hsv hsv = toHsv(e);
                 if (hsv.saturation <= 0.0) {
@@ -119,13 +121,14 @@ void mixerApply(Image& image, const Settings& s, const OpContext& ctx)
                 const double v = hsv.value;
                 const Band change = blend(bands, hue);
                 const double weight = smoothstep(0.0, 0.2, sat); // near-grey pixels barely move
-                const double newHue = std::fmod(hue + (change.hue * kHueReach * weight) + 360.0, 360.0);
+                double newHue = hue + (change.hue * kHueReach * weight); // within 30 degrees of 0 to 360
+                newHue = newHue < 0.0 ? newHue + 360.0 : (newHue >= 360.0 ? newHue - 360.0 : newHue);
                 const double newSat = std::clamp(sat * (1.0 + (change.saturation * weight)), 0.0, 1.0);
                 const double newV = v * (1.0 + (change.luminance * kLuminanceReach * weight));
                 std::array<double, 3> out{};
                 hsvToRgb(newHue, newSat, std::max(0.0, newV), out.data());
                 for (std::size_t c = 0; c < 3; ++c) {
-                    p[c] = static_cast<float>(color::perceptualDecode(out.at(c)));
+                    p[c] = static_cast<float>(perceptualDecodeFast(out.at(c)));
                 }
             }
         }

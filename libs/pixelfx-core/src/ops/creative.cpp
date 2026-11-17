@@ -4,6 +4,7 @@
 // size; sizes are shares of the long edge, so a preview and the export agree.
 #include "image/filters.h"
 #include "ops/ops.h"
+#include "ops/value_table.h"
 #include "pfx/color.h"
 
 #include <algorithm>
@@ -62,7 +63,7 @@ Plane perceptualPlane(const Image& image, int threads)
         for (int y = y0; y < y1; ++y) {
             const float* p = image.row(y);
             for (int x = 0; x < image.width(); ++x, p += 4) {
-                out.at(x, y) = static_cast<float>(color::perceptualEncode(lumaOf(p)));
+                out.at(x, y) = static_cast<float>(perceptualEncodeFast(lumaOf(p)));
             }
         }
     });
@@ -77,7 +78,7 @@ void blendToGrey(Image& image, double amount, int threads, const Grey& grey)
         for (int y = y0; y < y1; ++y) {
             float* p = image.row(y);
             for (int x = 0; x < image.width(); ++x, p += 4) {
-                const double v = color::perceptualDecode(std::clamp(grey(x, y), 0.0, 1.0));
+                const double v = perceptualDecodeFast(std::clamp(grey(x, y), 0.0, 1.0));
                 blendTo(p, {v, v, v}, amount);
             }
         }
@@ -149,7 +150,7 @@ void thresholdApply(Image& image, const Settings& s, const OpContext& ctx)
     const double amount = amountOf(s, "creative.threshold.amount");
     const double level = std::clamp(s.number("creative.threshold.level", 50.0), 0.0, 100.0) / 100.0;
     forEachPixel(image, ctx.threads, [&](float* p) {
-        const double light = color::perceptualEncode(lumaOf(p));
+        const double light = perceptualEncodeFast(lumaOf(p));
         const double t = std::clamp((light - level + kSoft) / (2.0 * kSoft), 0.0, 1.0);
         const double v = t * t * (3.0 - (2.0 * t));
         blendTo(p, {v, v, v}, amount);
@@ -168,8 +169,8 @@ void invertApply(Image& image, const Settings& s, const OpContext& ctx)
     forEachPixel(image, ctx.threads, [&](float* p) {
         color::Vec3 target{};
         for (std::size_t c = 0; c < 3; ++c) {
-            const double e = color::perceptualEncode(std::clamp(double{p[c]}, 0.0, 1.0));
-            target.at(c) = color::perceptualDecode(1.0 - e);
+            const double e = perceptualEncodeFast(std::clamp(double{p[c]}, 0.0, 1.0));
+            target.at(c) = perceptualDecodeFast(1.0 - e);
         }
         blendTo(p, target, amount);
     });

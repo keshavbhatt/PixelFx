@@ -60,7 +60,8 @@ struct Hsv
     }
     double hue = 0;
     if (v == e[0]) {
-        hue = 60.0 * std::fmod(((e[1] - e[2]) / chroma) + 6.0, 6.0);
+        const double sector = (e[1] - e[2]) / chroma; // -1 to 1
+        hue = 60.0 * (sector < 0.0 ? sector + 6.0 : sector);
     } else if (v == e[1]) {
         hue = 60.0 * (((e[2] - e[0]) / chroma) + 2.0);
     } else {

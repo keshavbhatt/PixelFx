@@ -399,7 +399,7 @@ void Document::setSettings(const pfx::Settings& settings)
     const pfx::Settings before = renderSettings();
     m_settings = settings;
     if (renderSettings() != before) { // moving the crop box while cropping needs no render
-        requestRender();
+        requestRender(true);
     }
     followRawTone();
 }
@@ -511,9 +511,9 @@ void Document::setFullState(FullState state)
     }
 }
 
-void Document::requestRender()
+void Document::requestRender(bool live)
 {
-    m_scheduler->request(renderSettings());
+    m_scheduler->request(renderSettings(), live);
     scheduleFull();
 }
 

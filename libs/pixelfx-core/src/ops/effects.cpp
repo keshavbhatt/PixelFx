@@ -132,18 +132,18 @@ void vignettePixel(float* p, double f, VignetteStyle style, double highlights)
     if (style == VignetteStyle::Paint) {
         const double target = f < 0.0 ? 0.0 : 1.0;
         for (int c = 0; c < 3; ++c) {
-            const double e = color::perceptualEncode(std::max(0.0, double{p[c]}));
-            p[c] = static_cast<float>(color::perceptualDecode(e + ((target - e) * std::abs(f))));
+            const double e = perceptualEncodeFast(std::max(0.0, double{p[c]}));
+            p[c] = static_cast<float>(perceptualDecodeFast(e + ((target - e) * std::abs(f))));
         }
         return;
     }
     const double luma = std::max(0.0, color::luminance(p[0], p[1], p[2]));
     if (f < 0.0 && highlights > 0.0) {
-        f *= 1.0 - (highlights * smoothstep(0.55, 0.95, color::perceptualEncode(luma)));
+        f *= 1.0 - (highlights * smoothstep(0.55, 0.95, perceptualEncodeFast(luma)));
     }
     if (style == VignetteStyle::Color && luma > 0.0) {
-        const double e = color::perceptualEncode(luma);
-        const double target = color::perceptualDecode(f < 0.0 ? e * (1.0 + f) : e + ((1.0 - e) * f));
+        const double e = perceptualEncodeFast(luma);
+        const double target = perceptualDecodeFast(f < 0.0 ? e * (1.0 + f) : e + ((1.0 - e) * f));
         for (int c = 0; c < 3; ++c) {
             p[c] = static_cast<float>(double{p[c]} * (target / luma));
         }
@@ -206,12 +206,12 @@ void grainApply(Image& image, const Settings& s, const OpContext& ctx)
             float* p = image.row(y);
             for (int x = 0; x < image.width(); ++x, p += 4) {
                 const double luma = std::max(0.0, color::luminance(p[0], p[1], p[2]));
-                const double e = color::perceptualEncode(luma);
+                const double e = perceptualEncodeFast(luma);
                 const double n = rough.noise((x + 0.5) / cell, (y + 0.5) / cell);
                 // Strongest in the midtones, as film grain shows.
                 const double shifted =
                     std::max(0.0, e + (strength * n * (0.35 + (2.6 * e * (1.0 - std::min(e, 1.0))))));
-                const double mapped = color::perceptualDecode(shifted);
+                const double mapped = perceptualDecodeFast(shifted);
                 for (int c = 0; c < 3; ++c) {
                     p[c] = static_cast<float>(luma > kTiny ? double{p[c]} * (mapped / luma)
                                                            : double{p[c]} + mapped - luma);

@@ -5,6 +5,7 @@
 // the overlap between the ranges. Tints add colour without changing a pixel's lightness; the
 // luminance of a range lightens or darkens it.
 #include "ops/ops.h"
+#include "ops/value_table.h"
 
 #include <algorithm>
 #include <array>
@@ -94,7 +95,7 @@ void gradingApply(Image& image, const Settings& s, const OpContext& ctx)
             float* p = image.row(y);
             for (int x = 0; x < image.width(); ++x, p += 4) {
                 const double lightness =
-                    color::perceptualEncode(std::max(0.0, color::luminance(p[0], p[1], p[2])));
+                    perceptualEncodeFast(std::max(0.0, color::luminance(p[0], p[1], p[2])));
                 const double high = smoothstep(pivot - reach, pivot + reach, lightness);
                 const double mid = 4.0 * high * (1.0 - high); // 1 where shadows meet highlights
                 // Tints fade out at pure black and pure white, where colour would look like a cast.
@@ -112,8 +113,8 @@ void gradingApply(Image& image, const Settings& s, const OpContext& ctx)
                     lift += weight * tint->luminance * kLuminanceReach;
                 }
                 for (std::size_t c = 0; c < 3; ++c) {
-                    const double e = color::perceptualEncode(std::max(0.0, double{p[c]}));
-                    p[c] = static_cast<float>(color::perceptualDecode(std::max(0.0, e + shift.at(c) + lift)));
+                    const double e = perceptualEncodeFast(std::max(0.0, double{p[c]}));
+                    p[c] = static_cast<float>(perceptualDecodeFast(std::max(0.0, e + shift.at(c) + lift)));
                 }
             }
         }

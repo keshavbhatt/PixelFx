@@ -6,6 +6,8 @@
 #include <functional>
 #include <vector>
 
+#include <pfx/color.h>
+
 namespace pfx::detail {
 
 // A smooth function of a linear-light value (0 and up), tabulated once and read with a square
@@ -43,5 +45,19 @@ private:
     std::function<double(double)> m_function;
     std::vector<double> m_table;
 };
+
+/// color::perceptualEncode and color::perceptualDecode through tables built once: the per-pixel
+/// forms, within 3e-5 of the exact ones.
+[[nodiscard]] inline double perceptualEncodeFast(double linear)
+{
+    static const ValueTable table([](double v) { return color::perceptualEncode(v); });
+    return table(linear);
+}
+
+[[nodiscard]] inline double perceptualDecodeFast(double encoded)
+{
+    static const ValueTable table([](double v) { return color::perceptualDecode(v); });
+    return table(encoded);
+}
 
 } // namespace pfx::detail

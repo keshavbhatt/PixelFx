@@ -24,27 +24,14 @@ void forEachValue(const Plane& plane, int threads, const Body& body)
     });
 }
 
-const ValueTable& encodeTable()
-{
-    static const ValueTable table([](double v) { return color::perceptualEncode(v); });
-    return table;
-}
-
-const ValueTable& decodeTable()
-{
-    static const ValueTable table([](double v) { return color::perceptualDecode(v); });
-    return table;
-}
-
 Plane perceptualLuma(const Image& image, int threads)
 {
-    const ValueTable& encode = encodeTable();
     Plane out(image.width(), image.height());
     parallelFor(image.height(), threads, [&](int y0, int y1) {
         for (int y = y0; y < y1; ++y) {
             const float* p = image.row(y);
             for (int x = 0; x < image.width(); ++x, p += 4) {
-                out.at(x, y) = static_cast<float>(encode(std::max(0.0, color::luminance(p[0], p[1], p[2]))));
+                out.at(x, y) = static_cast<float>(perceptualEncodeFast(std::max(0.0, color::luminance(p[0], p[1], p[2]))));
             }
         }
     });
@@ -55,13 +42,12 @@ Plane perceptualLuma(const Image& image, int threads)
 void setPerceptualLuma(Image& image, const Plane& encoded, int threads)
 {
     constexpr double kTiny = 1e-5;
-    const ValueTable& decode = decodeTable();
     parallelFor(image.height(), threads, [&](int y0, int y1) {
         for (int y = y0; y < y1; ++y) {
             float* p = image.row(y);
             for (int x = 0; x < image.width(); ++x, p += 4) {
                 const double luma = std::max(0.0, color::luminance(p[0], p[1], p[2]));
-                const double target = decode(std::max(0.0, double{encoded.at(x, y)}));
+                const double target = perceptualDecodeFast(std::max(0.0, double{encoded.at(x, y)}));
                 if (luma > kTiny) {
                     const double ratio = target / luma;
                     for (int c = 0; c < 3; ++c) {

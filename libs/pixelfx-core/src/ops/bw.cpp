@@ -4,6 +4,7 @@
 // would. A band's change follows how saturated the pixel is, so greys keep their tone.
 #include "ops/hue_bands.h"
 #include "ops/ops.h"
+#include "ops/value_table.h"
 
 #include <array>
 #include <cmath>
@@ -43,11 +44,11 @@ void blackAndWhiteApply(Image& image, const Settings& s, const OpContext& ctx)
                 if (mixed) {
                     std::array<double, 3> e{};
                     for (std::size_t c = 0; c < 3; ++c) {
-                        e.at(c) = color::perceptualEncode(std::max(0.0, double{p[c]}));
+                        e.at(c) = perceptualEncodeFast(std::max(0.0, double{p[c]}));
                     }
                     const Hsv hsv = toHsv(e);
                     const double change = bandValue(mix, hsv.hue) * smoothstep(0.0, 0.6, hsv.saturation);
-                    grey = color::perceptualDecode(color::perceptualEncode(grey) *
+                    grey = perceptualDecodeFast(perceptualEncodeFast(grey) *
                                                    std::exp2(kMixReach * change));
                 }
                 p[0] = p[1] = p[2] = static_cast<float>(grey);

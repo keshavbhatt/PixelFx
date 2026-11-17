@@ -6,6 +6,7 @@
 //   curve and colour a RAW needs to look as its camera's JPEG does.
 #include "ops/hue_bands.h"
 #include "ops/ops.h"
+#include "ops/value_table.h"
 
 #include <array>
 #include <cmath>
@@ -80,12 +81,12 @@ void calibrationApply(Image& image, const Settings& s, const OpContext& ctx)
                 }
                 if (tint != 0.0) {
                     const double lightness =
-                        color::perceptualEncode(std::max(0.0, color::luminance(v[0], v[1], v[2])));
+                        perceptualEncodeFast(std::max(0.0, color::luminance(v[0], v[1], v[2])));
                     const double w = tint * (1.0 - smoothstep(0.0, 0.5, lightness));
                     const std::array<double, 3> shift = {w * 0.5, -w, w * 0.5};
                     for (std::size_t c = 0; c < 3; ++c) {
-                        v.at(c) = color::perceptualDecode(
-                            std::max(0.0, color::perceptualEncode(std::max(0.0, v.at(c))) + shift.at(c)));
+                        v.at(c) = perceptualDecodeFast(
+                            std::max(0.0, perceptualEncodeFast(std::max(0.0, v.at(c))) + shift.at(c)));
                     }
                 }
                 for (std::size_t c = 0; c < 3; ++c) {

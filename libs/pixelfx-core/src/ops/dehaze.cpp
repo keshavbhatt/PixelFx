@@ -62,7 +62,6 @@ struct Encoded
 
 Encoded encode(const Image& image, int threads)
 {
-    static const ValueTable table([](double v) { return color::perceptualEncode(v); });
     Encoded e;
     for (Plane& c : e.channels) {
         c = Plane(image.width(), image.height());
@@ -75,13 +74,13 @@ Encoded encode(const Image& image, int threads)
             for (int x = 0; x < image.width(); ++x, p += 4) {
                 float smallest = std::numeric_limits<float>::max();
                 for (std::size_t c = 0; c < 3; ++c) {
-                    const auto v = static_cast<float>(table(std::max(0.0, double{p[c]})));
+                    const auto v = static_cast<float>(perceptualEncodeFast(std::max(0.0, double{p[c]})));
                     e.channels.at(c).at(x, y) = v;
                     smallest = std::min(smallest, v);
                 }
                 e.dark.at(x, y) = smallest;
                 e.luma.at(x, y) =
-                    static_cast<float>(table(std::max(0.0, color::luminance(p[0], p[1], p[2]))));
+                    static_cast<float>(perceptualEncodeFast(std::max(0.0, color::luminance(p[0], p[1], p[2]))));
             }
         }
     });
@@ -141,8 +140,6 @@ void dehazeApply(Image& image, const Settings& s, const OpContext& ctx)
     const GuidedCoefficients k =
         guidedCoefficients(e.luma, minFilter(relative, radius, ctx.threads), sigma, 1e-3, ctx.threads);
 
-    static const ValueTable encodeValue([](double v) { return color::perceptualEncode(v); });
-    static const ValueTable decodeValue([](double v) { return color::perceptualDecode(v); });
     const double scale = 1.0 / factor;
     parallelFor(image.height(), ctx.threads, [&](int y0, int y1) {
         for (int y = y0; y < y1; ++y) {
@@ -150,12 +147,12 @@ void dehazeApply(Image& image, const Settings& s, const OpContext& ctx)
             const double sy = ((y + 0.5) * scale) - 0.5;
             for (int x = 0; x < image.width(); ++x, p += 4) {
                 const double sx = ((x + 0.5) * scale) - 0.5;
-                const double luma = encodeValue(std::max(0.0, color::luminance(p[0], p[1], p[2])));
+                const double luma = perceptualEncodeFast(std::max(0.0, color::luminance(p[0], p[1], p[2])));
                 const double h = std::clamp((double{sampleBilinear(k.slope, sx, sy)} * luma) +
                                                 double{sampleBilinear(k.offset, sx, sy)},
                                             0.0, 1.0);
                 for (std::size_t c = 0; c < 3; ++c) {
-                    const double v = encodeValue(std::max(0.0, double{p[c]}));
+                    const double v = perceptualEncodeFast(std::max(0.0, double{p[c]}));
                     const double a = haze.at(c);
                     double out = v;
                     if (amount > 0.0) {
@@ -165,7 +162,7 @@ void dehazeApply(Image& image, const Settings& s, const OpContext& ctx)
                         // Adding haze: more where the scene already reads as far away.
                         out = v + ((a - v) * (-amount) * (0.3 + (0.5 * h)));
                     }
-                    p[c] = static_cast<float>(decodeValue(std::max(0.0, out)));
+                    p[c] = static_cast<float>(perceptualDecodeFast(std::max(0.0, out)));
                 }
             }
         }
