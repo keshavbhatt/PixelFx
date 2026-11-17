@@ -48,6 +48,18 @@ Band blend(const std::array<Band, 8>& bands, double hue)
             a.luminance + (t * (b.luminance - a.luminance))};
 }
 
+/// `degrees` moved into 0 up to 360; it is at most one turn out.
+double wrapDegrees(double degrees)
+{
+    if (degrees < 0.0) {
+        return degrees + 360.0;
+    }
+    if (degrees >= 360.0) {
+        return degrees - 360.0;
+    }
+    return degrees;
+}
+
 /// `h` in degrees from 0 up to 360.
 void hsvToRgb(double h, double s, double v, double* rgb)
 {
@@ -121,8 +133,7 @@ void mixerApply(Image& image, const Settings& s, const OpContext& ctx)
                 const double v = hsv.value;
                 const Band change = blend(bands, hue);
                 const double weight = smoothstep(0.0, 0.2, sat); // near-grey pixels barely move
-                double newHue = hue + (change.hue * kHueReach * weight); // within 30 degrees of 0 to 360
-                newHue = newHue < 0.0 ? newHue + 360.0 : (newHue >= 360.0 ? newHue - 360.0 : newHue);
+                const double newHue = wrapDegrees(hue + (change.hue * kHueReach * weight));
                 const double newSat = std::clamp(sat * (1.0 + (change.saturation * weight)), 0.0, 1.0);
                 const double newV = v * (1.0 + (change.luminance * kLuminanceReach * weight));
                 std::array<double, 3> out{};

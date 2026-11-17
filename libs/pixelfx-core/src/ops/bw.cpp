@@ -48,8 +48,7 @@ void blackAndWhiteApply(Image& image, const Settings& s, const OpContext& ctx)
                     }
                     const Hsv hsv = toHsv(e);
                     const double change = bandValue(mix, hsv.hue) * smoothstep(0.0, 0.6, hsv.saturation);
-                    grey = perceptualDecodeFast(perceptualEncodeFast(grey) *
-                                                   std::exp2(kMixReach * change));
+                    grey = perceptualDecodeFast(perceptualEncodeFast(grey) * std::exp2(kMixReach * change));
                 }
                 p[0] = p[1] = p[2] = static_cast<float>(grey);
             }

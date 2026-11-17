@@ -4,9 +4,8 @@
 #include <algorithm>
 #include <cmath>
 #include <functional>
-#include <vector>
-
 #include <pfx/color.h>
+#include <vector>
 
 namespace pfx::detail {
 

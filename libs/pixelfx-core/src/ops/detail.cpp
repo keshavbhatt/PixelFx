@@ -31,7 +31,8 @@ Plane perceptualLuma(const Image& image, int threads)
         for (int y = y0; y < y1; ++y) {
             const float* p = image.row(y);
             for (int x = 0; x < image.width(); ++x, p += 4) {
-                out.at(x, y) = static_cast<float>(perceptualEncodeFast(std::max(0.0, color::luminance(p[0], p[1], p[2]))));
+                out.at(x, y) = static_cast<float>(
+                    perceptualEncodeFast(std::max(0.0, color::luminance(p[0], p[1], p[2]))));
             }
         }
     });

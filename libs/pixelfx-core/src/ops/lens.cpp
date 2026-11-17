@@ -168,8 +168,8 @@ Plane edgeStrength(const Image& image)
     for (int y = 0; y < image.height(); ++y) {
         const float* p = image.row(y);
         for (int x = 0; x < image.width(); ++x, p += 4) {
-            luma.at(x, y) = static_cast<float>(
-                perceptualEncodeFast(std::max(0.0, color::luminance(p[0], p[1], p[2]))));
+            luma.at(x, y) =
+                static_cast<float>(perceptualEncodeFast(std::max(0.0, color::luminance(p[0], p[1], p[2]))));
         }
     }
     Plane edges(image.width(), image.height());

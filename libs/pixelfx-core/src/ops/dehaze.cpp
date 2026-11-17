@@ -79,8 +79,8 @@ Encoded encode(const Image& image, int threads)
                     smallest = std::min(smallest, v);
                 }
                 e.dark.at(x, y) = smallest;
-                e.luma.at(x, y) =
-                    static_cast<float>(perceptualEncodeFast(std::max(0.0, color::luminance(p[0], p[1], p[2]))));
+                e.luma.at(x, y) = static_cast<float>(
+                    perceptualEncodeFast(std::max(0.0, color::luminance(p[0], p[1], p[2]))));
             }
         }
     });
