@@ -45,6 +45,7 @@
 | `report-bug.html`, `crash-notice.html` | 2026-11-07 (`mocks/reviews/report-bug.md`) | approved 2026-11-07 (reports go to GitHub issues only) |
 | `pro-sheet.html`, `pro-gate.html`, `pro-export.html`, `pro-trial-end.html` | 2026-11-08 (`mocks/reviews/pro.md`) | approved 2026-11-08 (the free limit of 10 photos per run; no trial recap) |
 | 18 new looks and four retuned, as contact sheets rendered by the library (not in the repository: the test photos are not ours) | 2026-11-12 (PROGRESS, the looks) | approved 2026-11-12 (the panel's layout is unchanged; the looks listed colour, film, black and white) |
+| `settings.html`, every page (six: Batch folded into Performance and General) | 2026-11-17 (`mocks/reviews/settings.md`) | waiting |
 
 ## Waiting for the owner (2026-11-05, updated 2026-11-12)
 
@@ -94,6 +95,14 @@ Decisions the work stopped at; everything else went ahead within the approved mo
 16. The photo information panel (FEATURES O7): built 2026-11-06.
 
 ## Sessions (newest first)
+
+### 2026-11-17 (Settings mocks)
+
+- `settings.html` draws every page of the Settings sheet: General, Editor, Export, Looks and
+  presets, Performance, Advanced, a click on the sidebar each (or `?page=`). Rows are settings
+  PixelFx keeps today, plus the monitor profile (T4) and the graphics-card preview (E18), which
+  come with those features. Batch is folded in (two settings), a departure from T1 for the
+  owner. Review in `mocks/reviews/settings.md`; waiting for approval.
 
 ### 2026-11-17 (built-in looks as files)
 
