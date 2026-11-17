@@ -5,7 +5,7 @@ the section of the running version.
 
 ## [2.0.3] - unreleased
 
-Eighteen new looks, and Settings with a page for each part of PixelFx.
+Eighteen new looks, Settings with a page for each part of PixelFx, and a quicker preview.
 
 ### Added
 
@@ -13,7 +13,6 @@ Eighteen new looks, and Settings with a page for each part of PixelFx.
   New there: where exports go and how they are named, the counts of your looks and presets with
   their folders, Clear recent presets, Copy diagnostics, and Restore default settings.
 - A switch to turn off the notification when a batch finishes while PixelFx is in the background.
-
 - 18 new looks, 31 in all. Color: Bright and airy, Moody, Lush, Autumn, Dusk, Neon and Crisp.
   Film: Warm film, Cross process, Vintage, Instant, Chrome and Bleach bypass. B&W: Silver, Dark
   sky, Infrared, Street and Cyanotype.
