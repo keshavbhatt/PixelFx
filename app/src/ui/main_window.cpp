@@ -205,6 +205,7 @@ MainWindow::MainWindow(core::Settings& settings, QWidget* parent)
     m_adjust->setOneGroupAtATime(m_settings.oneGroupAtATime());
     connect(m_adjust, &AdjustPanel::oneGroupAtATimeChanged, this,
             [this](bool on) { m_settings.setOneGroupAtATime(on); });
+    connect(&m_settings, &core::Settings::oneGroupAtATimeChanged, m_adjust, &AdjustPanel::setOneGroupAtATime);
 
     applyGeneralSettings();
     connectPresets();
@@ -740,7 +741,7 @@ void MainWindow::buildBatch()
             showToast(tr("Batch done: %1").arg(summary));
         }
         // Someone working elsewhere hears that the batch is done.
-        if (!isActiveWindow()) {
+        if (!isActiveWindow() && m_settings.notifyBatchDone()) {
             m_notifier->notify(tr("Batch done"), summary);
         }
     });
@@ -1329,6 +1330,8 @@ void MainWindow::connectPresets()
     connectPresetAmount();
     m_presets->setFavorites(m_settings.favoritePresets());
     m_presets->setRecent(m_settings.recentPresets());
+    connect(&m_settings, &core::Settings::recentPresetsChanged, this,
+            [this] { m_presets->setRecent(m_settings.recentPresets()); });
     m_presets->setClosedCategories(m_settings.closedPresetCategories());
     connect(m_presets, &PresetsPanel::favoritesChanged, this,
             [this](const QStringList& ids) { m_settings.setFavoritePresets(ids); });
@@ -1734,7 +1737,6 @@ void MainWindow::applyPreset(const core::PresetEntry& entry)
     m_appliedPreset = AppliedPreset{entry, before, m_document.settings()};
     m_presets->setApplied(entry.id, entry.name, 100.0);
     m_settings.notePresetUsed(entry.id);
-    m_presets->setRecent(m_settings.recentPresets());
 }
 
 void MainWindow::connectPresetAmount()
@@ -1823,10 +1825,20 @@ void MainWindow::savePreset()
     showToast(tr("Saved preset %1").arg(sheet.name()));
 }
 
+SettingsSheet* MainWindow::newSettingsSheet()
+{
+    auto* sheet = new SettingsSheet(m_settings, core::LookLibrary::defaultFolder(), m_library.folder(), this);
+    connect(sheet, &SettingsSheet::importRequested, this, [this, sheet] {
+        importPresets();
+        sheet->refreshCounts();
+    });
+    return sheet;
+}
+
 void MainWindow::openSettings()
 {
-    SettingsSheet sheet(m_settings, this);
-    sheet.exec();
+    const std::unique_ptr<SettingsSheet> sheet(newSettingsSheet());
+    sheet->exec();
 }
 
 void MainWindow::connectWhiteBalance()

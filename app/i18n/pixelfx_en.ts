@@ -234,30 +234,6 @@
     </message>
 </context>
 <context>
-    <name>pixelfx::ui::RecipePicker</name>
-    <message numerus="yes">
-        <source>%n looks</source>
-        <translation>
-            <numerusform>%n look</numerusform>
-            <numerusform>%n looks</numerusform>
-        </translation>
-    </message>
-    <message numerus="yes">
-        <source>%n presets</source>
-        <translation>
-            <numerusform>%n preset</numerusform>
-            <numerusform>%n presets</numerusform>
-        </translation>
-    </message>
-    <message numerus="yes">
-        <source>%n found</source>
-        <translation>
-            <numerusform>%n found</numerusform>
-            <numerusform>%n found</numerusform>
-        </translation>
-    </message>
-</context>
-<context>
     <name>pixelfx::ui::ProGate</name>
     <message numerus="yes">
         <source>Batch %n photos with Pro</source>
@@ -309,6 +285,47 @@
         <translation>
             <numerusform>Pro trial: %n day left</numerusform>
             <numerusform>Pro trial: %n days left</numerusform>
+        </translation>
+    </message>
+</context>
+<context>
+    <name>pixelfx::ui::RecipePicker</name>
+    <message numerus="yes">
+        <source>%n looks</source>
+        <translation>
+            <numerusform>%n look</numerusform>
+            <numerusform>%n looks</numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>%n presets</source>
+        <translation>
+            <numerusform>%n preset</numerusform>
+            <numerusform>%n presets</numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>%n found</source>
+        <translation>
+            <numerusform>%n found</numerusform>
+            <numerusform>%n found</numerusform>
+        </translation>
+    </message>
+</context>
+<context>
+    <name>pixelfx::ui::SettingsSheet</name>
+    <message numerus="yes">
+        <source>%n looks</source>
+        <translation>
+            <numerusform>%n look</numerusform>
+            <numerusform>%n looks</numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>%n presets</source>
+        <translation>
+            <numerusform>%n preset</numerusform>
+            <numerusform>%n presets</numerusform>
         </translation>
     </message>
 </context>

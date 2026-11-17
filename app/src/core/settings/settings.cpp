@@ -369,7 +369,10 @@ bool Settings::oneGroupAtATime() const
 
 void Settings::setOneGroupAtATime(bool on)
 {
-    m_settings->setValue(key(keys::kOneGroupAtATime), on);
+    if (on != oneGroupAtATime()) {
+        m_settings->setValue(key(keys::kOneGroupAtATime), on);
+        Q_EMIT oneGroupAtATimeChanged(on);
+    }
 }
 
 QStringList Settings::favoritePresets() const
@@ -404,6 +407,13 @@ void Settings::notePresetUsed(const QString& id)
     recent.removeAll(id);
     recent.prepend(id);
     m_settings->setValue(key(keys::kRecentPresets), recent.mid(0, kRecent));
+    Q_EMIT recentPresetsChanged();
+}
+
+void Settings::clearRecentPresets()
+{
+    m_settings->remove(key(keys::kRecentPresets));
+    Q_EMIT recentPresetsChanged();
 }
 
 QStringList Settings::closedPresetCategories() const
@@ -424,6 +434,34 @@ bool Settings::showWhatsNew() const
 void Settings::setShowWhatsNew(bool on)
 {
     m_settings->setValue(key(keys::kShowWhatsNew), on);
+}
+
+bool Settings::notifyBatchDone() const
+{
+    return m_settings->value(key(keys::kNotifyBatchDone), true).toBool();
+}
+
+void Settings::setNotifyBatchDone(bool on)
+{
+    m_settings->setValue(key(keys::kNotifyBatchDone), on);
+}
+
+void Settings::restoreDefaults()
+{
+    for (const char* name :
+         {keys::kTheme, keys::kCanvasBackground, keys::kNotifyBatchDone, keys::kShowWhatsNew,
+          keys::kRememberEdits, keys::kOpenAsLeft, keys::kOneGroupAtATime, keys::kClippingWarnings,
+          keys::kExportFolder, keys::kExportNameTemplate, keys::kExportIfExists, keys::kExportKeepMetadata,
+          keys::kExportKeepLocation, keys::kExportColorSpace, keys::kBatchAtOnce}) {
+        m_settings->remove(key(name));
+    }
+    Q_EMIT themeChanged(theme());
+    Q_EMIT canvasBackgroundChanged(canvasBackground());
+    Q_EMIT rememberEditsChanged(rememberEdits());
+    Q_EMIT openAsLeftChanged(openAsLeft());
+    Q_EMIT oneGroupAtATimeChanged(oneGroupAtATime());
+    Q_EMIT clippingWarningsChanged(clippingWarnings());
+    Q_EMIT batchAtOnceChanged(batchAtOnce());
 }
 
 QString Settings::whatsNewSeen() const

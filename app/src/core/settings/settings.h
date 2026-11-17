@@ -108,6 +108,7 @@ public:
     [[nodiscard]] QStringList recentPresets() const;
     /// Puts `id` first in Recent, which keeps the last 12.
     void notePresetUsed(const QString& id);
+    void clearRecentPresets();
     /// The preset categories the user closed in the Presets tab.
     [[nodiscard]] QStringList closedPresetCategories() const;
     void setClosedPresetCategories(const QStringList& names);
@@ -117,12 +118,19 @@ public:
     /// What's new opens at the first start of a new version unless this is off.
     [[nodiscard]] bool showWhatsNew() const;
     void setShowWhatsNew(bool on);
+    /// A batch that ends while PixelFx is in the background sends a notification.
+    [[nodiscard]] bool notifyBatchDone() const;
+    void setNotifyBatchDone(bool on);
     /// The version What's new was last shown for (or recorded on a first install).
     [[nodiscard]] QString whatsNewSeen() const;
     void setWhatsNewSeen(const QString& version);
     /// The note that the Pro trial has ended was shown (it shows once).
     [[nodiscard]] bool trialEndShown() const;
     void setTrialEndShown(bool shown);
+
+    /// Puts every setting of the Settings sheet back to how it was at install; lists, favourites,
+    /// the window and the export choices that sheet does not show are kept.
+    void restoreDefaults();
 
     /// Carries the last image folder over from PixelFx 1's settings file, once. Returns true
     /// when something was migrated.
@@ -139,6 +147,8 @@ Q_SIGNALS:
     void clippingWarningsChanged(bool on);
     void themeChanged(pixelfx::core::Settings::Theme theme);
     void batchAtOnceChanged(int count);
+    void oneGroupAtATimeChanged(bool on);
+    void recentPresetsChanged();
 
 private:
     std::unique_ptr<QSettings> m_settings;

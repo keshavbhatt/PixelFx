@@ -9,7 +9,8 @@
 //   PIXELFX_DEBUG_CROP=<ratio>[,<deg>] enter Crop mode with a ratio chip ("Free", "3:2") and
 //                                      a straightening angle once the photo is open
 //   PIXELFX_DEBUG_SHEET=<name>         with GRAB, grab the window with that sheet open: export,
-//                                      settings, preset, shortcuts, watermark, look, newlook, preview,
+//                                      settings[:general|editor|export|looks|performance|advanced],
+//                                      preset, shortcuts, watermark, look, newlook, preview,
 //                                      lookpreview (the large preview opened from the look editor),
 //                                      about, notices, diagnostics, whatsnew, paste, pro (PixelFx
 //                                      Pro), progate (the prompt for a batch of 47 photos)
@@ -284,8 +285,14 @@ bool grabMenu(pixelfx::ui::MainWindow& window, const QString& grab)
 // A sheet of the app (PIXELFX_DEBUG_SHEET), or nullptr.
 QDialog* appSheet(pixelfx::ui::MainWindow& window, const QString& name)
 {
-    if (name == u"settings"_s) {
-        return new pixelfx::ui::SettingsSheet(window.settings(), &window);
+    if (name.startsWith(u"settings"_s)) {
+        using Sheet = pixelfx::ui::SettingsSheet;
+        Sheet* sheet = window.newSettingsSheet();
+        const QStringList pages{u"general"_s, u"editor"_s,      u"export"_s,
+                                u"looks"_s,   u"performance"_s, u"advanced"_s};
+        sheet->showPage(
+            static_cast<Sheet::Page>(std::max<qsizetype>(0, pages.indexOf(name.section(u':', 1)))));
+        return sheet;
     }
     if (name == u"shortcuts"_s) {
         return new pixelfx::ui::ShortcutsSheet(&window);

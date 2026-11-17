@@ -10,7 +10,7 @@
 | M3 Editor | released in 2.0.0 (2026-11-08): a 24 MP edit renders and saves in 1.1 s, the fuzzers run clean. Left: the monitor profile (T4); the GPU preview is 2.1 (E18) |
 | M4 Looks and presets | released in 2.0.0; the built-in looks ship as files since 2026-11-17 (L3). Left: a second real Lightroom preset set for the 95% target (P5) |
 | M5 Batch | released in 2.0.0. Left: the batch engine moves from the app into the library (C6); a 500-photo run within the memory budget is not recorded yet |
-| M6 Polish and text | released in 2.0.0. Left: the Settings sheet's other pages (T1); the panel widths and last mode remembered (S2) |
+| M6 Polish and text | released in 2.0.0; every Settings page since 2026-11-17 (T1). Left: the panel widths and last mode remembered (S2) |
 | M7 Packaging and release | Snap Store stable since 2.0.0 (now 2.0.2), amd64 only (ADR-015); Microsoft Store live 2026-11-12; Flathub submitted 2026-11-12 (flathub/flathub#11145). Left: the arm64 snap, macOS |
 
 ## Mock approvals
@@ -45,7 +45,7 @@
 | `report-bug.html`, `crash-notice.html` | 2026-11-07 (`mocks/reviews/report-bug.md`) | approved 2026-11-07 (reports go to GitHub issues only) |
 | `pro-sheet.html`, `pro-gate.html`, `pro-export.html`, `pro-trial-end.html` | 2026-11-08 (`mocks/reviews/pro.md`) | approved 2026-11-08 (the free limit of 10 photos per run; no trial recap) |
 | 18 new looks and four retuned, as contact sheets rendered by the library (not in the repository: the test photos are not ours) | 2026-11-12 (PROGRESS, the looks) | approved 2026-11-12 (the panel's layout is unchanged; the looks listed colour, film, black and white) |
-| `settings.html`, every page (six: Batch folded into Performance and General) | 2026-11-17 (`mocks/reviews/settings.md`) | waiting |
+| `settings.html`, every page (six: Batch folded into Performance and General) | 2026-11-17 (`mocks/reviews/settings.md`) | approved 2026-11-17 (six pages; the notification switch, Restore default settings and Show folder kept; the monitor profile and the preview rows with their features) |
 
 ## Waiting for the owner (2026-11-05, updated 2026-11-12)
 
@@ -102,7 +102,14 @@ Decisions the work stopped at; everything else went ahead within the approved mo
   presets, Performance, Advanced, a click on the sidebar each (or `?page=`). Rows are settings
   PixelFx keeps today, plus the monitor profile (T4) and the graphics-card preview (E18), which
   come with those features. Batch is folded in (two settings), a departure from T1 for the
-  owner. Review in `mocks/reviews/settings.md`; waiting for approval.
+  owner. Review in `mocks/reviews/settings.md`. Approved by the owner the same day, then built:
+  `SettingsSheet` with the six pages, `Settings::restoreDefaults` (only the settings on these
+  pages; favourites, recents, the window and the Export sheet's other choices stay),
+  `notifyBatchDone`, `clearRecentPresets`, and the adjust panel's One group open at a time
+  following the setting both ways. Segments and lists keep their own width, as drawn; the mock's
+  checkboxes became switches, as Settings has always had (`reviews/settings.md`, after approval).
+- `PIXELFX_DEBUG_SHEET=settings:<page>` grabs one page; `tst_settings_sheet` covers every page's
+  writing, the counts, Clear recent and Restore defaults.
 
 ### 2026-11-17 (built-in looks as files)
 

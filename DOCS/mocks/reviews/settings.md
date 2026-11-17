@@ -55,14 +55,14 @@ and looks" reads "Looks and presets", the order of the editor's tabs.
   smallest window (1024 by 640) the sheet keeps 40 px above and below.
 - Contrast on `--panel`, from the tokens: labels and helper lines `--muted` 7.0:1 dark, 6.8:1
   light; values `--text` 14.1:1 and 16.0:1; the selected page `--accent` on `--accentSoft` 6.0:1
-  and 4.9:1; the monitor and card names `--faint` 5.1:1 and 5.2:1. Checkbox borders are
-  `--faint` (5.1:1 and 5.2:1); a segmented control's chosen part is filled `--accentSoft` with
-  `--accent` text (6.0:1 and 4.9:1).
+  and 4.9:1; the monitor and card names `--faint` 5.1:1 and 5.2:1. A switch that is off is
+  `--track` (3.0:1), on is `--accentStrong`; a segmented control's chosen part is filled
+  `--accentSoft` with `--accent` text (6.0:1 and 4.9:1).
 
 ## Lenses
 
 1. **Accessibility.** Text and controls pass (above). Targets: small buttons 26 px tall,
-   segmented parts about 30 px, a 16 px checkbox counts with its label, sidebar rows 34 px. Up and
+   segmented parts about 30 px, switches 34 by 20 px with their label, sidebar rows 34 px. Up and
    Down move between pages in the sidebar, Tab goes into the page; the focus ring is the
    standard one. The sidebar is named "Settings pages". Nothing relies on colour alone: the
    selected page and the chosen segment are filled, not only tinted.
@@ -96,3 +96,8 @@ Restore default settings, because both are about the app itself, not a photo.
 
 - Six short pages; no page scrolls.
 - No row for a feature that does not exist yet ships before its feature.
+
+## After approval (2026-11-17)
+
+- The mock drew the on and off rows as checkboxes; Settings has always used switches (the first
+  approved mock too). The mock now shows switches, as built.

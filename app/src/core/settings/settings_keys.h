@@ -49,6 +49,7 @@ inline constexpr auto kRecentPresets = "presets/recent";
 inline constexpr auto kClosedPresetCategories = "presets/closedCategories";
 inline constexpr auto kClippingWarnings = "display/clippingWarnings";
 inline constexpr auto kShowWhatsNew = "whatsNew/show";
+inline constexpr auto kNotifyBatchDone = "notifications/batchDone";
 inline constexpr auto kWhatsNewSeen = "whatsNew/seenVersion";
 inline constexpr auto kTrialEndShown = "pro/trialEndShown";
 

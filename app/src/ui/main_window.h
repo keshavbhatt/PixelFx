@@ -61,6 +61,8 @@ public:
     void exportPhoto();
     /// The Export sheet for the open photo, set up with its picture and the sizes kept under Mine.
     [[nodiscard]] class ExportSheet* newExportSheet();
+    /// The Settings sheet, its Import button wired to the window's import.
+    [[nodiscard]] class SettingsSheet* newSettingsSheet();
     [[nodiscard]] services::Exporter& exporter() { return m_exporter; }
 
     [[nodiscard]] services::Document& document() { return m_document; }
