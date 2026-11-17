@@ -3,7 +3,7 @@
 cmake_minimum_required(VERSION 3.21)
 
 project(pixelfx
-    VERSION 2.0.3
+    VERSION 2.0.4
     DESCRIPTION "Quick photo editor with looks, presets and batch editing"
     HOMEPAGE_URL "https://github.com/keshavbhatt/PixelFx"
     LANGUAGES CXX

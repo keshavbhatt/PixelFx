@@ -46,6 +46,7 @@
 | `pro-sheet.html`, `pro-gate.html`, `pro-export.html`, `pro-trial-end.html` | 2026-11-08 (`mocks/reviews/pro.md`) | approved 2026-11-08 (the free limit of 10 photos per run; no trial recap) |
 | 18 new looks and four retuned, as contact sheets rendered by the library (not in the repository: the test photos are not ours) | 2026-11-12 (PROGRESS, the looks) | approved 2026-11-12 (the panel's layout is unchanged; the looks listed colour, film, black and white) |
 | `settings.html`, every page (six: Batch folded into Performance and General) | 2026-11-17 (`mocks/reviews/settings.md`) | approved 2026-11-17 (six pages; the notification switch, Restore default settings and Show folder kept; the monitor profile and the preview rows with their features) |
+| `export.html`, Save to as a list (issue #4), and the same list in `settings.html` | 2026-11-17 (`mocks/reviews/export-save-to.md`) | approved 2026-11-17 |
 | `editor-panel-widths.html` (S2) | 2026-11-17 (`mocks/reviews/editor-panel-widths.md`) | dropped 2026-11-17 (owner: too little value for the corner cases resizing brings; the mock and review removed) |
 
 ## Waiting for the owner (2026-11-05, updated 2026-11-12)
@@ -96,6 +97,19 @@ Decisions the work stopped at; everything else went ahead within the approved mo
 16. The photo information panel (FEATURES O7): built 2026-11-06.
 
 ## Sessions (newest first)
+
+### 2026-11-17 (PixelFx 2.0.4, issue #4)
+
+- GitHub issue #4 (2.0.2 snap): Export had no way back to "Next to the photo" once a folder was
+  chosen, and clicking the path did nothing. 2.0.3 was already on stable, so the fix is 2.0.4.
+- `SaveFolderList` (`ui/save_folder_list`): Next to the photo, the default folder
+  (`Settings::defaultExportFolder`, Pictures/PixelFx), the last other folder chosen (kept in
+  `export/recentFolder`), a line and Choose a folder..., which opens the folder picker; Cancel
+  keeps the choice before. A folder reads parent › name, the closed list shortens it in the middle
+  so the folder's own name stays, and the tooltip has the full path. Used by Export and by
+  Settings, Export; the Change button and the path label are gone. Tests in `tst_export_sheet`
+  and `tst_settings_sheet`.
+- Released 2.0.4: version, changelog, metainfo release; tagged v2.0.4 (owner).
 
 ### 2026-11-17 (PixelFx 2.0.3)
 

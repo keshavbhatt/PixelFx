@@ -3,6 +3,16 @@
 All notable changes to PixelFx. The format follows Keep a Changelog; the What's new sheet shows
 the section of the running version.
 
+## [2.0.4] - 2026-11-17
+
+Save exports next to the photo again.
+
+### Fixed
+
+- Export's Save to is now a list: Next to the photo, Pictures › PixelFx, the last folder you chose,
+  and Choose a folder. Before, a photo could not go back beside the original once another folder
+  was chosen. A long folder name is shortened in the middle, and the full path is in its tooltip.
+
 ## [2.0.3] - 2026-11-17
 
 Eighteen new looks, Settings with a page for each part of PixelFx, and a quicker preview.

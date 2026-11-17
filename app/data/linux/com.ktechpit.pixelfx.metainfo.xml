@@ -92,6 +92,11 @@
   </provides>
   <content_rating type="oars-1.1"/>
   <releases>
+    <release version="2.0.4" date="2026-11-17" type="stable">
+      <description>
+        <p>Export can save next to the photo again: Save to lists Next to the photo, Pictures › PixelFx, the last folder you chose, and Choose a folder.</p>
+      </description>
+    </release>
     <release version="2.0.3" date="2026-11-17" type="stable">
       <description>
         <p>Eighteen new looks, 31 in all, listed by kind: colour, film, then black and white. Settings has a page for each part of PixelFx, and the photo keeps up with the sliders while you edit.</p>
