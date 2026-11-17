@@ -10,7 +10,7 @@
 | M3 Editor | released in 2.0.0 (2026-11-08): a 24 MP edit renders and saves in 1.1 s, the fuzzers run clean. Left: the GPU preview, 2.1 (E18); the monitor profile dropped (T4, owner, 2026-11-17) |
 | M4 Looks and presets | released in 2.0.0; the built-in looks ship as files since 2026-11-17 (L3). Left: a second real Lightroom preset set for the 95% target (P5) |
 | M5 Batch | released in 2.0.0. Left: the batch engine moves from the app into the library (C6); a 500-photo run within the memory budget is not recorded yet |
-| M6 Polish and text | released in 2.0.0; every Settings page since 2026-11-17 (T1). Left: the panel widths remembered (S2; the last mode dropped, owner, 2026-11-17) |
+| M6 Polish and text | released in 2.0.0; every Settings page since 2026-11-17 (T1). S2 done with the window geometry and state; panel widths and the last mode dropped (owner, 2026-11-17) |
 | M7 Packaging and release | Snap Store stable since 2.0.0 (now 2.0.2), amd64 only (ADR-015); Microsoft Store live 2026-11-12; Flathub submitted 2026-11-12 (flathub/flathub#11145). Left: the arm64 snap, macOS |
 
 ## Mock approvals
@@ -46,7 +46,7 @@
 | `pro-sheet.html`, `pro-gate.html`, `pro-export.html`, `pro-trial-end.html` | 2026-11-08 (`mocks/reviews/pro.md`) | approved 2026-11-08 (the free limit of 10 photos per run; no trial recap) |
 | 18 new looks and four retuned, as contact sheets rendered by the library (not in the repository: the test photos are not ours) | 2026-11-12 (PROGRESS, the looks) | approved 2026-11-12 (the panel's layout is unchanged; the looks listed colour, film, black and white) |
 | `settings.html`, every page (six: Batch folded into Performance and General) | 2026-11-17 (`mocks/reviews/settings.md`) | approved 2026-11-17 (six pages; the notification switch, Restore default settings and Show folder kept; the monitor profile and the preview rows with their features) |
-| `editor-panel-widths.html` (S2) | 2026-11-17 (`mocks/reviews/editor-panel-widths.md`) | waiting |
+| `editor-panel-widths.html` (S2) | 2026-11-17 (`mocks/reviews/editor-panel-widths.md`) | dropped 2026-11-17 (owner: too little value for the corner cases resizing brings; the mock and review removed) |
 
 ## Waiting for the owner (2026-11-05, updated 2026-11-12)
 
@@ -96,6 +96,12 @@ Decisions the work stopped at; everything else went ahead within the approved mo
 16. The photo information panel (FEATURES O7): built 2026-11-06.
 
 ## Sessions (newest first)
+
+### 2026-11-17 (panel widths dropped)
+
+- S2's last mode dropped first (PixelFx opens on the welcome screen), then its panel widths,
+  after their mock: resizing adds too little for the corner cases it brings to tiles, the Crop
+  panel and small windows (owner). S2 is done with the window geometry and state.
 
 ### 2026-11-17 (monitor profile dropped)
 
