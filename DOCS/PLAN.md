@@ -44,7 +44,7 @@ a catalogue manager (no import step, no database of photos).
 | D11 | Mocks before screens, with a written review per mock (DESIGN section 5) | The owner's process for every app |
 | D12 | The design is new; nothing from v1's layout is kept (owner, 2026-11-04) | v1's layout was a toolbar, a dock and floating dialogs |
 | D13 | libpixelfx is Apache-2.0 (owner, 2026-11-04; Q1) | Permissive with an explicit patent grant, which matters around image codecs |
-| D14 | 2.0 renders on the CPU; a GPU preview through Qt RHI follows in 2.1 (Q2) | Smaller 2.0, no GPU driver issues in snaps; the CPU path meets the 30 fps target |
+| D14 | The preview renders on the CPU; the GPU preview planned for 2.1 is dropped (owner, 2026-11-17) | Measured 2026-11-17: the CPU path did not meet 30 fps (colour edits 115 ms at 2048 px), but the cost was in a few operations and in starting threads, fixed on the CPU; a drag renders at half size. One implementation per operation, no GPU driver issues |
 | D15 | Camera RAW ships in 2.0 through LibRaw (Q3) | The main reason photographers would choose PixelFx over a simple editor |
 | D16 | What the licensing module gates (owner, 2026-11-04): recorded in the private notes, `DOCS/private/business.md` | Business decision, not published |
 | D17 | The owner's icon (2026-11-06): a lens ring around six spectrum blades, vector SVGs with a symbolic icon (Q5) | Keeps the colour wheel, adds the camera; crisp at 16 px, reads on light and dark |
@@ -125,8 +125,9 @@ The UI never says recipe, pipeline, op or step parameter (DESIGN section 5, lens
   geometry, then the stage before the changed group), so moving a slider in Effects does not
   re-run noise reduction.
 - Interactive preview path: render at screen resolution of the visible region first (one
-  pass), then refine; the app cancels stale requests by generation. A GPU path for pointwise
-  operations follows in 2.1 (D14).
+  pass), then refine; the app cancels stale requests by generation. A drag (live steps in quick
+  succession) renders from the preview source at half size, and the newest settings at full
+  size once it stops (D14).
 
 ### 5.3 Codecs, colour and metadata
 
@@ -166,7 +167,6 @@ pfx ops            # lists the registry: ids, ranges, units (also the source for
 | RAW | LibRaw | LGPL-2.1 or CDDL-1.0, dynamic |
 | Codecs | libjpeg-turbo, libpng, libtiff, libwebp, libheif + libde265 + dav1d, libavif, libjxl; OpenEXR optional | permissive / LGPL |
 | Metadata | Exif, XMP, ICC blobs through libvips (libexif) and codec boxes; no Exiv2 | LGPL |
-| GPU preview (2.1, D14) | Qt RHI in the app, CPU authoritative | Qt |
 | Tests | doctest, libFuzzer | MIT / Apache-2.0 |
 
 ---

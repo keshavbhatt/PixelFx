@@ -77,7 +77,7 @@ preview and export use resolution-independent parameters so they match (v1 defec
 | E16 | Reset a slider (double-click), a group, or everything | per row, global | KEEP | done (`AdjustPanel`) |
 | E17 | Edits remembered per photo in a sidecar (app library by default, or next to the photo) | none | KEEP | wip: app library by default, keyed by a file fingerprint so renames and moves keep the edit, written off the GUI thread (`core::SidecarStore`, `Document`); Remember edits in Settings; next to the photo later (owner, 2026-11-06) |
 | E17b | Zoom: Fit (Ctrl+0), 100% (Ctrl+1), in and out (Ctrl+= and Ctrl+-, the wheel), pan by dragging; the sharp full-size picture loads around the view with a busy ring | Zoom in and out | KEEP | done (`Canvas`, the zoom bar of `editor.html`; `editor-zoom-loading.html`) |
-| E18 | GPU-accelerated preview with automatic CPU fallback | none | KEEP 2.1 (PLAN D14) | |
+| E18 | GPU-accelerated preview with automatic CPU fallback | none | DROP (owner, 2026-11-17) | Replaced by a quicker CPU preview: colour conversions through tables, a thread pool, and a drag drawn at half size until it stops (PROGRESS 2026-11-17) |
 | E19 | Local adjustments: brush, linear and radial gradient masks | none | LATER | |
 | E20 | Spot heal: click or brush over a blemish, dust spot or small object; the patch is found automatically and blended; spots are stored in the recipe (relative coordinates), editable and removable | none | KEEP (sells: the app is a "retouching" app, owner 2026-11-04) | done: Heal mode (R) from `heal.html`, spots and brush strokes, patch picked, source draggable, size, feather, opacity, Show spots (V), Reveal dust (D), list, undo; stored as `heal.spots` (recipes version 2) on the upright photo |
 | E20b | Clone brush, red eye removal | none | LATER | |
@@ -178,12 +178,12 @@ preview and export use resolution-independent parameters so they match (v1 defec
 
 | # | Feature | v1 | Decision | Status / class |
 |---|---|---|---|---|
-| T1 | Settings sheet with sidebar (General, Editor, Export, Looks and presets, Performance, Advanced), writes straight to settings | one checkbox | KEEP | done 2026-11-17: the six pages of `settings.html` (`SettingsSheet`); Batch folded into Performance and General (owner, 2026-11-17); the preview row (E18) comes with that feature; the monitor profile dropped (T4) |
+| T1 | Settings sheet with sidebar (General, Editor, Export, Looks and presets, Performance, Advanced), writes straight to settings | one checkbox | KEEP | done 2026-11-17: the six pages of `settings.html` (`SettingsSheet`); Batch folded into Performance and General (owner, 2026-11-17); the monitor profile (T4) and the preview row (E18) dropped |
 | T2 | Native or Qt file dialogs | yes | DROP (portal dialogs always; the kit's rule) | |
 | T3 | Canvas background (dark grey, middle grey, black, white) | none | KEEP | done: Dark gray, Middle gray, Black, White in Settings, applied at once (`Canvas`) |
 | T4 | Display colour management (monitor profile) | none | DROP (owner, 2026-11-17) | Plasma 6 and recent GNOME on Wayland apply the monitor profile to every window themselves; Windows and X11 would need code per platform |
 | T5 | Sidecar location (app library by default, next to the photo as an option, PLAN D18) and "on open" behaviour | none | KEEP | wip: Remember edits (the app's library) and On open (as it was left, or the original) in Settings; next to the photo later (owner, 2026-11-06) |
-| T6 | Batch thread count, preview backend | none | KEEP | wip: Photos at a time (Automatic, 1, 2, 4, 8) in Settings (2026-11-06); the preview backend with the GPU preview (E18, 2.1) |
+| T6 | Batch thread count | none | KEEP | done: Photos at a time (Automatic, 1, 2, 4, 8) in Settings, Performance (2026-11-06); the preview backend dropped with E18 (owner, 2026-11-17) |
 
 ## K. Accounts and licensing (never in user-facing release text)
 

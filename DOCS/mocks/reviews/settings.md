@@ -13,10 +13,9 @@ nothing to confirm, and each page fits without scrolling.
 - FEATURES T1: a sheet with a sidebar of General, Editor, Export, Batch, Presets and looks,
   Performance and Advanced. 2.0 built the sheet with one General page (Appearance, Editing,
   Display, Performance); the rest are this mock.
-- Every row is a setting PixelFx already keeps (`core/settings/settings_keys.h`) or one a
-  scheduled feature brings: the preview on the graphics card (E18, 2.1), which appears with its
-  feature, not before. The monitor profile (T4) was in this mock and was dropped (owner,
-  2026-11-17).
+- Every row is a setting PixelFx already keeps (`core/settings/settings_keys.h`). The monitor
+  profile (T4) and the preview on the graphics card (E18) were in this mock and were dropped
+  (owner, 2026-11-17).
 - Rows that are new as settings: the batch notification switch (S6 notifies always today),
   Restore default settings, and the counts with Show folder on Looks and presets.
 
@@ -33,8 +32,7 @@ nothing to confirm, and each page fits without scrolling.
   belong to a photo, not to PixelFx.
 - **Looks and presets**: the user's looks and presets counted, each with Show folder; Import
   presets and looks; Recent presets with Clear recent.
-- **Performance**: Preview (graphics card or processor, the card's name, and what happens when its
-  driver fails); Batch (Photos at a time, moved from General, as built).
+- **Performance**: Batch (Photos at a time, moved from General, as built).
 - **Advanced**: Diagnostics (Copy, Open the log folder, as in About); Restore default
   settings, which asks first and says what stays.
 
@@ -73,8 +71,7 @@ and looks" reads "Looks and presets", the order of the editor's tabs.
 4. **Interaction.** Every change applies at once (theme, canvas, clipping, colour management,
    the preview), as the built General page does. Only Restore default settings asks first,
    because undo cannot bring the settings back.
-5. **Writing.** "Draw the preview with: Graphics card, Processor" in place of GPU and CPU. Labels
-   name the thing, the line beside the control says what it does. Words match the rest of the
+5. **Writing.** Labels name the thing, the line beside the control says what it does. Words match the rest of the
    app: Show folder, Clear recent, Import presets and looks, Open the log folder, Show this
    after each update.
 

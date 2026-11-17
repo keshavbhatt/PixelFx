@@ -7,7 +7,7 @@
 | M0 Analysis and contract | done |
 | M1 Library core | done (2026-11-04) |
 | M2 App skeleton | done; Windows and macOS build and test in CI on every push (macOS skips one test, item 4 below) |
-| M3 Editor | released in 2.0.0 (2026-11-08): a 24 MP edit renders and saves in 1.1 s, the fuzzers run clean. Left: the GPU preview, 2.1 (E18); the monitor profile dropped (T4, owner, 2026-11-17) |
+| M3 Editor | released in 2.0.0 (2026-11-08): a 24 MP edit renders and saves in 1.1 s, the fuzzers run clean. The GPU preview (E18) and the monitor profile (T4) dropped (owner, 2026-11-17); the CPU preview made quicker instead |
 | M4 Looks and presets | released in 2.0.0; the built-in looks ship as files since 2026-11-17 (L3). Left: a second real Lightroom preset set for the 95% target (P5) |
 | M5 Batch | released in 2.0.0. Left: the batch engine moves from the app into the library (C6); a 500-photo run within the memory budget is not recorded yet |
 | M6 Polish and text | released in 2.0.0; every Settings page since 2026-11-17 (T1). S2 done with the window geometry and state; panel widths and the last mode dropped (owner, 2026-11-17) |
@@ -70,7 +70,7 @@ Decisions the work stopped at; everything else went ahead within the approved mo
     shipped); the main menu leaves out Save edit with the file;
     Copy to clipboard has no shortcut (the mock's
     Ctrl+Shift+C is Copy settings).
-9. Still to plan: GPU preview (the monitor profile dropped, owner, 2026-11-17); sidecars next to the photo later (owner,
+9. Still to plan: nothing for the preview (the GPU preview and the monitor profile dropped, owner, 2026-11-17); sidecars next to the photo later (owner,
     2026-11-06). The batch-end notification is done on Linux (ADR-011).
 10. Online guide: done 2026-11-06, the GitHub wiki (main menu and About).
 11. Small choices made with the approved About, What's new and grading mocks, easy to change:
@@ -96,6 +96,34 @@ Decisions the work stopped at; everything else went ahead within the approved mo
 16. The photo information panel (FEATURES O7): built 2026-11-06.
 
 ## Sessions (newest first)
+
+### 2026-11-17 (a quicker preview instead of the GPU preview)
+
+- Measured before deciding (2048 px preview, every core, mains power): light alone 14 ms, with
+  colour 115 ms, every group 216 ms; at 3840 px 40, 371 and 660 ms. PLAN D14's 30 fps did not
+  hold, and the cost sat in a few places: the mixer and grading (about 50 ms each, `pow` per
+  pixel in double), dehaze (70 ms), texture, clarity and grain (about 30 ms each). The owner
+  chose the CPU route over the GPU preview (E18 and the Settings row dropped).
+- `perceptualEncodeFast` and `perceptualDecodeFast` (`ops/value_table.h`): the perceptual
+  encoding through tables built once (within 3e-5), for every per-pixel use; detail and dehaze
+  share them instead of keeping their own. The mixer's hue wraps without `fmod`.
+- `parallelFor` runs on a pool started once, the caller among its threads, in four chunks per
+  thread; a chunk's exception is raised in the caller once the rest finish. Before, every call
+  started and joined its own threads, dozens per render.
+- `RenderScheduler::request(settings, live)`: live steps in quick succession (under 150 ms
+  apart: a slider, curve point, wheel or crop being dragged, through `Document::setSettings`)
+  render from the source at half size, and the newest settings at full size 120 ms after the
+  last step. Undo, presets, crops and hover previews always render at full size. `isBusy` holds
+  until that full-size picture, so grabs and tests see it. `tst_render_scheduler`.
+- Output unchanged: four test photos at 2048 px with the mixer, grading, clarity, texture,
+  dehaze and vignette, and with a B&W mix, differ by at most 1/255 from before. A haze map
+  worked out at 512 px instead of 1024 was tried and left out: removing haze moved up to 7% of
+  pixels by more than 2/255.
+- Timings after (same machine on battery, 1.3 GHz, before and after measured side by side):
+  2048 px colour 210 to 103 ms, every group 389 to 276 ms; while dragging 28 and 155 ms. 3840 px
+  colour 558 to 277 ms, every group 1022 to 727 ms; while dragging 93 and 268 ms. Dehaze's haze
+  map (fixed, about 70 ms) is what remains with every group on.
+- Checks: library 174/174 with the golden images, app 46/46 with WERROR, make lint.
 
 ### 2026-11-17 (panel widths dropped)
 

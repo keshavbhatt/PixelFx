@@ -20,6 +20,8 @@ Eighteen new looks, and Settings with a page for each part of PixelFx.
 
 ### Changed
 
+- The photo keeps up with the sliders: colour edits draw about twice as fast, and while a slider
+  is dragged the photo is drawn at half size, then sharp as soon as it stops.
 - Looks are listed by kind: Color first, then Film, then B&W.
 - Four looks retuned: Cool is cooler, Pastel is softer, Matte keeps the photo's colour, and Teal
   and orange leaves dark hair its own colour.
