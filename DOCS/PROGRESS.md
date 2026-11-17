@@ -7,7 +7,7 @@
 | M0 Analysis and contract | done |
 | M1 Library core | done (2026-11-04) |
 | M2 App skeleton | done; Windows and macOS build and test in CI on every push (macOS skips one test, item 4 below) |
-| M3 Editor | released in 2.0.0 (2026-11-08): a 24 MP edit renders and saves in 1.1 s, the fuzzers run clean. Left: the monitor profile (T4); the GPU preview is 2.1 (E18) |
+| M3 Editor | released in 2.0.0 (2026-11-08): a 24 MP edit renders and saves in 1.1 s, the fuzzers run clean. Left: the GPU preview, 2.1 (E18); the monitor profile dropped (T4, owner, 2026-11-17) |
 | M4 Looks and presets | released in 2.0.0; the built-in looks ship as files since 2026-11-17 (L3). Left: a second real Lightroom preset set for the 95% target (P5) |
 | M5 Batch | released in 2.0.0. Left: the batch engine moves from the app into the library (C6); a 500-photo run within the memory budget is not recorded yet |
 | M6 Polish and text | released in 2.0.0; every Settings page since 2026-11-17 (T1). Left: the panel widths and last mode remembered (S2) |
@@ -69,7 +69,7 @@ Decisions the work stopped at; everything else went ahead within the approved mo
     shipped); the main menu leaves out Save edit with the file;
     Copy to clipboard has no shortcut (the mock's
     Ctrl+Shift+C is Copy settings).
-9. Still to plan: monitor profile, GPU preview; sidecars next to the photo later (owner,
+9. Still to plan: GPU preview (the monitor profile dropped, owner, 2026-11-17); sidecars next to the photo later (owner,
     2026-11-06). The batch-end notification is done on Linux (ADR-011).
 10. Online guide: done 2026-11-06, the GitHub wiki (main menu and About).
 11. Small choices made with the approved About, What's new and grading mocks, easy to change:
@@ -95,6 +95,13 @@ Decisions the work stopped at; everything else went ahead within the approved mo
 16. The photo information panel (FEATURES O7): built 2026-11-06.
 
 ## Sessions (newest first)
+
+### 2026-11-17 (monitor profile dropped)
+
+- The owner dropped T4: on Wayland, KDE Plasma 6 and recent GNOME apply the monitor profile to
+  every window themselves, so PixelFx applying it too would correct colours twice; Windows and
+  X11 would need code per platform and, through colord, new sandbox permissions. The Color
+  management row left `settings.html`.
 
 ### 2026-11-17 (Settings mocks)
 

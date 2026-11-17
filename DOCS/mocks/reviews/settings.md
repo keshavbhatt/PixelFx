@@ -14,8 +14,9 @@ nothing to confirm, and each page fits without scrolling.
   Performance and Advanced. 2.0 built the sheet with one General page (Appearance, Editing,
   Display, Performance); the rest are this mock.
 - Every row is a setting PixelFx already keeps (`core/settings/settings_keys.h`) or one a
-  scheduled feature brings: the monitor profile (T4) and the preview on the graphics card (E18),
-  both 2.1. Those two rows appear with their features, not before.
+  scheduled feature brings: the preview on the graphics card (E18, 2.1), which appears with its
+  feature, not before. The monitor profile (T4) was in this mock and was dropped (owner,
+  2026-11-17).
 - Rows that are new as settings: the batch notification switch (S6 notifies always today),
   Restore default settings, and the counts with Show folder on Looks and presets.
 
@@ -25,8 +26,7 @@ nothing to confirm, and each page fits without scrolling.
   notify when PixelFx is in the background); Updates (What's new: Show this after each update, the
   switch the What's new sheet has).
 - **Editor**: Editing (Remember edits, On open, as built); Adjustments (One group open at a time,
-  the switch of the group heading menu); Display (Clipping warnings, as built; Color management,
-  T4, with the monitor's name and one line on why).
+  the switch of the group heading menu); Display (Clipping warnings, as built).
 - **Export**: what new exports start with: Save to, File name with its tokens, If it exists,
   Metadata, Color space. The same settings as the Export sheet, which remembers each choice; a
   change in either place shows in the other. Format, quality and size stay in the sheet: they
