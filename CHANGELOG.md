@@ -3,7 +3,7 @@
 All notable changes to PixelFx. The format follows Keep a Changelog; the What's new sheet shows
 the section of the running version.
 
-## [2.0.3] - unreleased
+## [2.0.3] - 2026-11-17
 
 Eighteen new looks, Settings with a page for each part of PixelFx, and a quicker preview.
 

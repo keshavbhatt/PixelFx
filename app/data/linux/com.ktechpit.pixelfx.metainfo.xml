@@ -17,7 +17,7 @@
       expect, and batch editing of many photos at once.
     </p>
     <ul>
-      <li>Looks: Vivid, Warm, Film, Golden hour, Teal and orange, Noir and more, each tile showing your own photo, with a strength slider. Bring your own .cube LUTs, or make your own look from steps.</li>
+      <li>31 looks in colour, film and black and white, such as Vivid, Warm, Film, Golden hour, Teal and orange and Noir, each tile showing your own photo, with a strength slider. Bring your own .cube LUTs, or make your own look from steps.</li>
       <li>Light, colour, curves, colour mixer, colour grading, detail, effects and optics, with a histogram and clipping warnings.</li>
       <li>Presets: save the whole edit or only parts of it, apply them with one click, and bring your Lightroom and Camera Raw presets (.xmp).</li>
       <li>Crop and rotate, straighten with a dial or a drawn line, fix leaning buildings, and square a page or a wall from its four corners.</li>
@@ -92,6 +92,11 @@
   </provides>
   <content_rating type="oars-1.1"/>
   <releases>
+    <release version="2.0.3" date="2026-11-17" type="stable">
+      <description>
+        <p>Eighteen new looks, 31 in all, listed by kind: colour, film, then black and white. Settings has a page for each part of PixelFx, and the photo keeps up with the sliders while you edit.</p>
+      </description>
+    </release>
     <release version="2.0.2" date="2026-11-10" type="stable">
       <description>
         <p>Discover more apps by the developer of PixelFx from About and the main menu. What's new opens at a useful size and can be resized.</p>

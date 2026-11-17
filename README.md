@@ -32,8 +32,8 @@
 ## Features
 
 **Looks, one click each**
-- Built-in looks such as Vivid, Warm, Film, Golden hour, Teal and orange and Noir, each tile
-  showing your photo, with a strength slider.
+- 31 built-in looks in colour, film and black and white, such as Vivid, Warm, Film, Golden hour,
+  Teal and orange and Noir, each tile showing your photo, with a strength slider.
 - Make your own looks from steps, or bring your `.cube` and HaldCLUT LUTs.
 
 **Presets**

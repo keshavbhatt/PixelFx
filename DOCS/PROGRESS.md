@@ -97,6 +97,14 @@ Decisions the work stopped at; everything else went ahead within the approved mo
 
 ## Sessions (newest first)
 
+### 2026-11-17 (PixelFx 2.0.3)
+
+- Released 2.0.3: 31 looks (18 new), every Settings page, the quicker preview. Version 2.0.3 in
+  `CMakeLists.txt`, the changelog dated, the metainfo release stable, and "31 built-in looks" in
+  the snap description, the metainfo description and the README. Tagged v2.0.3 with the owner's
+  go-ahead; the snap publishes to stable from CI. The Microsoft Store and Flathub follow by hand
+  (the MSIX and the trailer v2 in Partner Center; the Flathub manifest's tag and commit).
+
 ### 2026-11-17 (a quicker preview instead of the GPU preview)
 
 - Measured before deciding (2048 px preview, every core, mains power): light alone 14 ms, with
