@@ -119,9 +119,7 @@ ExportOptions Settings::exportOptions() const
     o.sizePreset = m_settings->value(key(keys::kExportSizePreset)).toString();
     o.fitInside = m_settings->value(key(keys::kExportFitInside), false).toBool();
     o.watermark = m_settings->value(key(keys::kExportWatermark)).toString();
-    const QString pictures = QStandardPaths::writableLocation(QStandardPaths::PicturesLocation);
-    const QString defaultFolder = (pictures.isEmpty() ? QDir::homePath() : pictures) + u"/PixelFx"_s;
-    o.folder = m_settings->value(key(keys::kExportFolder), defaultFolder).toString();
+    o.folder = m_settings->value(key(keys::kExportFolder), defaultExportFolder()).toString();
     o.nameTemplate = m_settings->value(key(keys::kExportNameTemplate), o.nameTemplate).toString();
     o.ifExists = ifExistsFromKey(m_settings->value(key(keys::kExportIfExists)).toString());
     o.customSize = QSize(std::max(0, m_settings->value(key(keys::kExportCustomWidth), 0).toInt()),
@@ -151,6 +149,22 @@ void Settings::setExportOptions(const ExportOptions& options)
     m_settings->setValue(key(keys::kExportDpi), options.dpi);
     m_settings->setValue(key(keys::kExportSharpen), sharpenKey(options.sharpen));
     m_settings->setValue(key(keys::kExportColorSpace), colorSpaceKey(options.colorSpace));
+}
+
+QString Settings::defaultExportFolder()
+{
+    const QString pictures = QStandardPaths::writableLocation(QStandardPaths::PicturesLocation);
+    return (pictures.isEmpty() ? QDir::homePath() : pictures) + u"/PixelFx"_s;
+}
+
+QString Settings::exportRecentFolder() const
+{
+    return m_settings->value(key(keys::kExportRecentFolder)).toString();
+}
+
+void Settings::setExportRecentFolder(const QString& folder)
+{
+    m_settings->setValue(key(keys::kExportRecentFolder), folder);
 }
 
 std::vector<CustomSize> Settings::customSizes() const

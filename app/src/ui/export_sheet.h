@@ -26,7 +26,6 @@ class QWidget;
 
 namespace pixelfx::ui {
 
-class PathLabel;
 class SliderRow;
 
 /// The quality of a lossy format as a slider row ("Smaller file · Better image", 1 to 100,
@@ -51,6 +50,10 @@ public:
     ExportSheet(const QString& source, const QSize& photoSize, const core::ExportOptions& options,
                 QWidget* parent = nullptr);
     ~ExportSheet() override;
+
+    /// The last folder chosen other than the default, offered in Save to (Settings keeps it).
+    void setRecentFolder(const QString& folder);
+    [[nodiscard]] QString recentFolder() const;
 
     [[nodiscard]] core::ExportOptions options() const;
     /// Several photos at once: the title and button say "Export 4 photos".
@@ -90,7 +93,6 @@ private:
     class QLabel* m_file = nullptr;
     class QPushButton* m_exportButton = nullptr;
     class QPushButton* m_copyButton = nullptr;
-    void chooseFolder();
     /// Shows the warning when Overwrite and the name would write over the photo itself.
     void refreshOverwrites();
     [[nodiscard]] QWidget* formatRow(const QString& current);
@@ -152,7 +154,7 @@ private:
     class QPushButton* m_fit = nullptr;
     QCheckBox* m_metadata = nullptr;
     QCheckBox* m_location = nullptr;
-    PathLabel* m_folder = nullptr;
+    class SaveFolderList* m_folder = nullptr;
     QLineEdit* m_name = nullptr;
     QLabel* m_extension = nullptr;
     QComboBox* m_ifExists = nullptr;

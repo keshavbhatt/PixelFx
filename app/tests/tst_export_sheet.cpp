@@ -2,6 +2,7 @@
 #include "ui/export_sheet.h"
 #include "ui/frame_picker.h"
 #include "ui/message_line.h"
+#include "ui/save_folder_list.h"
 #include "ui/style.h"
 #include "ui/watermark_sheet.h"
 
@@ -9,12 +10,14 @@
 #include <QApplication>
 #include <QCheckBox>
 #include <QComboBox>
+#include <QDir>
 #include <QFile>
 #include <QLabel>
 #include <QLayout>
 #include <QLineEdit>
 #include <QMenu>
 #include <QPushButton>
+#include <QSignalSpy>
 #include <QScrollArea>
 #include <QScrollBar>
 #include <QTemporaryDir>
@@ -63,6 +66,39 @@ class TestExportSheet : public QObject
     Q_OBJECT
 
 private Q_SLOTS:
+    // Issue #4: back to "Next to the photo" after choosing a folder.
+    static void saveToListsTheFolders()
+    {
+        using pixelfx::ui::SaveFolderList;
+        SaveFolderList list;
+        list.setChoices(u"/home/me/Pictures/PixelFx"_s, u"/home/me/Work/Clients/Acme/Exports"_s, {});
+        QStringList texts;
+        for (int i = 0; i < list.count(); ++i) {
+            texts << list.itemText(i);
+        }
+        // A folder by its parent and name; a line before Choose a folder.
+        QCOMPARE(texts, (QStringList{u"Next to the photo"_s, u"Pictures \u203A PixelFx"_s,
+                                     u"Acme \u203A Exports"_s, QString(), u"Choose a folder..."_s}));
+        QCOMPARE(list.currentIndex(), 2);
+        QCOMPARE(list.itemData(2, Qt::ToolTipRole).toString(),
+                 QDir::toNativeSeparators(u"/home/me/Work/Clients/Acme/Exports"_s));
+
+        QSignalSpy chosen(&list, &SaveFolderList::folderChosen);
+        Q_EMIT list.activated(0);
+        QCOMPARE(chosen.count(), 1);
+        QVERIFY(chosen.at(0).at(0).toString().isEmpty()); // next to the photo
+        QVERIFY(list.folder().isEmpty());
+        QCOMPARE(list.currentIndex(), 0);
+        QCOMPARE(list.recent(), u"/home/me/Work/Clients/Acme/Exports"_s); // still offered
+        QCOMPARE(list.count(), 5);
+        Q_EMIT list.activated(1);
+        QCOMPARE(list.folder(), u"/home/me/Pictures/PixelFx"_s);
+
+        // The default folder is not listed twice.
+        list.setChoices(u"/home/me/Pictures/PixelFx"_s, u"/home/me/Pictures/PixelFx"_s, {});
+        QCOMPARE(list.count(), 4);
+    }
+
     void initTestCase() { pixelfx::ui::applyStyle(*qApp); }
 
     void untouchedSheetReturnsTheRememberedChoices()

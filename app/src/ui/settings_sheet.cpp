@@ -6,8 +6,8 @@
 #include "core/looks.h"
 #include "core/presets.h"
 #include "core/settings/settings.h"
-#include "ui/elided_label.h"
 #include "ui/export_sheet.h"
+#include "ui/save_folder_list.h"
 #include "ui/style.h"
 
 #include <QApplication>
@@ -17,7 +17,6 @@
 #include <QComboBox>
 #include <QDesktopServices>
 #include <QDir>
-#include <QFileDialog>
 #include <QFileInfo>
 #include <QFormLayout>
 #include <QFrame>
@@ -312,24 +311,14 @@ QWidget* SettingsSheet::buildExport()
 
 QWidget* SettingsSheet::exportFolderRow(const QString& path, QWidget* page)
 {
-    auto* folder = new PathLabel(ExportSheet::tr("Next to the photo"), page);
-    folder->setPath(path);
-    QPushButton* change = smallButton(ExportSheet::tr("Change..."), page);
-    connect(change, &QPushButton::clicked, this, [this, folder] {
-        const QString chosen = QFileDialog::getExistingDirectory(this, ExportSheet::tr("Save to"),
-                                                                 m_settings.exportOptions().folder);
-        if (!chosen.isEmpty()) {
-            changeExport([&](core::ExportOptions& options) { options.folder = chosen; });
-            folder->setPath(chosen);
-        }
+    auto* list = new SaveFolderList(page);
+    list->setChoices(core::Settings::defaultExportFolder(), path, m_settings.exportRecentFolder());
+    connect(list, &SaveFolderList::folderChosen, this, [this, list](const QString& folder) {
+        changeExport([&](core::ExportOptions& options) { options.folder = folder; });
+        m_settings.setExportRecentFolder(list->recent());
     });
-    auto* row = new QWidget(page);
-    auto* layout = new QHBoxLayout(row);
-    layout->setContentsMargins(0, 0, 0, 0);
-    layout->setSpacing(kGapItems);
-    layout->addWidget(folder, 1);
-    layout->addWidget(change);
-    return row;
+    list->setMaximumWidth(kNameWidth);
+    return list;
 }
 
 QWidget* SettingsSheet::exportMetadataBox(const core::ExportOptions& options, QWidget* page)

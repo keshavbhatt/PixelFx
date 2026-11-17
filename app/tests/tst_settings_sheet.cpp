@@ -3,6 +3,7 @@
 #include "core/presets.h"
 #include "core/settings/settings.h"
 #include "ui/canvas.h"
+#include "ui/save_folder_list.h"
 #include "ui/settings_sheet.h"
 #include "ui/shortcuts_sheet.h"
 #include "ui/style.h"
@@ -111,6 +112,11 @@ private Q_SLOTS:
         name->clear();
         Q_EMIT name->editingFinished(); // an empty name is not kept
         QCOMPARE(name->text(), u"{name}-{date}"_s);
+        // Save to: next to the photo is an empty folder, as Export reads it.
+        auto* saveTo = sheet.findChild<pixelfx::ui::SaveFolderList*>();
+        QVERIFY(saveTo != nullptr);
+        Q_EMIT saveTo->activated(0);
+        QVERIFY(settings.exportOptions().folder.isEmpty());
     }
 
     void looksPageCountsAndClearsRecent()

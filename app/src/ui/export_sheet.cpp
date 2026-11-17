@@ -1,14 +1,15 @@
 #include "ui/export_sheet.h"
 
 #include "core/describe.h"
+#include "core/settings/settings.h"
 #include "services/exporter.h"
 #include "services/licensing/license_service.h"
-#include "ui/elided_label.h"
 #include "ui/frame_picker.h"
 #include "ui/icon_text_button.h"
 #include "ui/icons.h"
 #include "ui/pro_gate.h"
 #include "ui/pro_sheet.h"
+#include "ui/save_folder_list.h"
 #include "ui/size_list.h"
 #include "ui/slider_row.h"
 #include "ui/style.h"
@@ -21,7 +22,6 @@
 #include <QCoreApplication>
 #include <QDate>
 #include <QDir>
-#include <QFileDialog>
 #include <QFileInfo>
 #include <QFormLayout>
 #include <QFrame>
@@ -548,18 +548,13 @@ void ExportSheet::refreshSize()
 
 QWidget* ExportSheet::folderRow()
 {
-    auto* row = new QWidget(this);
-    m_folder = new PathLabel(tr("Next to the photo"), row);
-    m_folder->setObjectName(u"mono"_s);
-    m_folder->setPath(m_folderPath);
-    auto* change = new QPushButton(tr("Change..."), row);
-    change->setObjectName(u"small"_s);
-    connect(change, &QPushButton::clicked, this, &ExportSheet::chooseFolder);
-    auto* folderLayout = new QHBoxLayout(row);
-    folderLayout->setContentsMargins(0, 0, 0, 0);
-    folderLayout->addWidget(m_folder, 1);
-    folderLayout->addWidget(change);
-    return row;
+    m_folder = new SaveFolderList(this);
+    m_folder->setChoices(core::Settings::defaultExportFolder(), m_folderPath, {});
+    connect(m_folder, &SaveFolderList::folderChosen, this, [this](const QString& folder) {
+        m_folderPath = folder;
+        refreshOverwrites();
+    });
+    return m_folder;
 }
 
 QWidget* ExportSheet::nameRow(const QString& nameTemplate)
@@ -701,14 +696,14 @@ void ExportSheet::updateForFormat()
     refreshOverwrites();
 }
 
-void ExportSheet::chooseFolder()
+void ExportSheet::setRecentFolder(const QString& folder)
 {
-    const QString folder = QFileDialog::getExistingDirectory(this, tr("Save to"), m_folderPath);
-    if (!folder.isEmpty()) {
-        m_folderPath = folder;
-        m_folder->setPath(folder);
-    }
-    refreshOverwrites();
+    m_folder->setChoices(core::Settings::defaultExportFolder(), m_folderPath, folder);
+}
+
+QString ExportSheet::recentFolder() const
+{
+    return m_folder->recent();
 }
 
 void ExportSheet::setPhotoCount(int count)

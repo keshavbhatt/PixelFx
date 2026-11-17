@@ -111,6 +111,8 @@ qt_add_library(pixelfx_ui STATIC
     preset_save_sheet.h
     setting_rows.cpp
     setting_rows.h
+    save_folder_list.cpp
+    save_folder_list.h
     settings_sheet.cpp
     settings_sheet.h
     sheet.cpp

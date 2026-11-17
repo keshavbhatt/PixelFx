@@ -296,6 +296,7 @@ ExportSheet* MainWindow::newExportSheet()
         new ExportSheet(m_document.info().path, m_document.outputSize(), m_settings.exportOptions(), this);
     sheet->setPreview(m_document.preview());
     sheet->setCustomSizes(m_settings.customSizes());
+    sheet->setRecentFolder(m_settings.exportRecentFolder());
     sheet->setPro(m_pro, [this, open = m_document.info().path](const QString& watermark) {
         return exportUses({open}, watermark);
     });
@@ -359,6 +360,7 @@ void MainWindow::exportPhoto()
     }
     if (result == ExportSheet::kCopyToClipboard) {
         m_settings.setExportOptions(sheet.options());
+        m_settings.setExportRecentFolder(sheet.recentFolder());
         copyToClipboard(sheet.options());
         return;
     }
@@ -367,6 +369,7 @@ void MainWindow::exportPhoto()
     }
     m_exportOptions = sheet.options();
     m_settings.setExportOptions(m_exportOptions);
+    m_settings.setExportRecentFolder(sheet.recentFolder());
     m_exportQueue = jobs;
     m_exportClaims = std::make_shared<core::NameClaims>();
     m_exportTotal = static_cast<int>(jobs.size());

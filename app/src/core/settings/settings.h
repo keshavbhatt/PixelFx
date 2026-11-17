@@ -52,6 +52,11 @@ public:
     /// The folder defaults to Pictures/PixelFx.
     [[nodiscard]] ExportOptions exportOptions() const;
     void setExportOptions(const ExportOptions& options);
+    /// Where exports go unless the user chooses: Pictures/PixelFx (the home folder without one).
+    [[nodiscard]] static QString defaultExportFolder();
+    /// The last folder chosen for exports other than the default, offered again in Save to.
+    [[nodiscard]] QString exportRecentFolder() const;
+    void setExportRecentFolder(const QString& folder);
     /// The sizes kept under "Mine" with Custom size.
     [[nodiscard]] std::vector<CustomSize> customSizes() const;
     void setCustomSizes(const std::vector<CustomSize>& sizes);
