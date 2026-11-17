@@ -110,6 +110,10 @@ Decisions the work stopped at; everything else went ahead within the approved mo
   Settings, Export; the Change button and the path label are gone. Tests in `tst_export_sheet`
   and `tst_settings_sheet`.
 - Released 2.0.4: version, changelog, metainfo release; tagged v2.0.4 (owner).
+- Microsoft Store, 2026-11-18: submission 3 with `PixelFx-2.0.4-x64.msix` (the owner uploaded it;
+  the browser tool cannot send a file that large), What's new for 2.0.3 and 2.0.4, and the trailer
+  v2 (`pixelfx-trailer-v2.mp4` with its thumbnail and caption, first in the listing) in place of
+  the first one. Submitted by the owner; in certification, publishing as soon as it passes.
 
 ### 2026-11-17 (PixelFx 2.0.3)
 
